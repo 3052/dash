@@ -150,8 +150,6 @@ type Representation struct {
    Width int `xml:"width,attr"`
 }
 
-////////////////////////////////
-
 func (r Representation) Default_KID() ([]byte, error) {
    for _, c := range r.ContentProtection {
       if c.SchemeIdUri == "urn:mpeg:dash:mp4protection:2011" {
@@ -161,6 +159,8 @@ func (r Representation) Default_KID() ([]byte, error) {
    }
    return nil, errors.New("default_KID")
 }
+
+////////////////////////////////
 
 func (i Initialization) Replace(id string) string {
    return strings.Replace(string(i), "$RepresentationID$", id, 1)
