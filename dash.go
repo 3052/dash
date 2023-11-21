@@ -72,6 +72,80 @@ func Representations(b []byte) ([]*Representation, error) {
    return rs, nil
 }
 
+func (r Representation) Video() bool {
+   return r.MimeType == "video/mp4"
+}
+
+func (r Representation) Audio() bool {
+   return r.MimeType == "audio/mp4"
+}
+
+func (r Representation) Ext() (string, bool) {
+   switch {
+   case r.Audio():
+      return ".m4a", true
+   case r.Video():
+      return ".m4v", true
+   }
+   return "", false
+}
+
+type ContentProtection struct {
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
+   // this might not exist
+   Default_KID string `xml:"default_KID,attr"`
+   // this might not exist
+   PSSH string `xml:"pssh"`
+}
+
+func (r Representation) Media() ([]string, bool) {
+   if r.SegmentTemplate == nil {
+      return nil, false
+   }
+   var refs []string
+   for _, segment := range r.SegmentTemplate.SegmentTimeline.S {
+      segment.T = r.SegmentTemplate.StartNumber
+      for segment.R >= 0 {
+         ref := func(s string) string {
+            s = strings.Replace(s, "$Number$", fmt.Sprint(segment.T), 1)
+            return strings.Replace(s, "$RepresentationID$", r.ID, 1)
+         }(r.SegmentTemplate.Media)
+         refs = append(refs, ref)
+         r.SegmentTemplate.StartNumber++
+         segment.R--
+         segment.T++
+      }
+   }
+   return refs, true
+}
+
+type AdaptationSet struct {
+   // this might be under Representation
+   ContentProtection []ContentProtection
+   // pointer because we want to edit these
+   Representation []*Representation
+   // this might not exist
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   // this might not exist, or might be under Representation
+   SegmentTemplate *SegmentTemplate
+   // this might not exist
+   Lang string `xml:"lang,attr"`
+   // this might be under Representation
+   MimeType string `xml:"mimeType,attr"`
+}
+
+func (r Representation) Initialization() (string, bool) {
+   if r.SegmentTemplate == nil {
+      return "", false
+   }
+   ref := func(s string) string {
+      return strings.Replace(s, "$RepresentationID$", r.ID, 1)
+   }(r.SegmentTemplate.Initialization)
+   return ref, true
+}
+
 func (r Representation) Default_KID() ([]byte, error) {
    for _, c := range r.ContentProtection {
       if c.SchemeIdUri == "urn:mpeg:dash:mp4protection:2011" {
@@ -91,82 +165,16 @@ func (r Representation) PSSH() ([]byte, error) {
    return nil, errors.New("PSSH")
 }
 
-func (r Representation) Video() bool {
-   return r.MimeType == "video/mp4"
-}
-
-func (r Representation) Audio() bool {
-   return r.MimeType == "audio/mp4"
-}
-
-func (r Representation) Ext() (string, bool) {
-   switch {
-   case r.Audio():
-      return ".m4a", true
-   case r.Video():
-      return ".m4v", true
-   }
-   return "", false
-}
-
 func (r Representation) Index() (int64, error) {
+   if r.SegmentBase == nil {
+      return 0, errors.New("SegmentBase")
+   }
    var i int64
    _, err := fmt.Sscan(r.SegmentBase.IndexRange, &i)
    if err != nil {
       return 0, err
    }
    return i, nil
-}
-
-func (r Representation) Initialization() string {
-   return strings.Replace(
-      r.SegmentTemplate.Initialization, "$RepresentationID$", r.ID, 1,
-   )
-}
-
-func (r Representation) Media() []string {
-   var refs []string
-   for _, segment := range r.SegmentTemplate.SegmentTimeline.S {
-      segment.T = r.SegmentTemplate.StartNumber
-      for segment.R >= 0 {
-         ref := func(s string) string {
-            s = strings.Replace(s, "$Number$", fmt.Sprint(segment.T), 1)
-            return strings.Replace(s, "$RepresentationID$", r.ID, 1)
-         }(r.SegmentTemplate.Media)
-         refs = append(refs, ref)
-         r.SegmentTemplate.StartNumber++
-         segment.R--
-         segment.T++
-      }
-   }
-   return refs
-}
-
-////////////////////////////////////////
-
-type ContentProtection struct {
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-   // this might not exist
-   Default_KID string `xml:"default_KID,attr"`
-   // this might not exist
-   PSSH string `xml:"pssh"`
-}
-
-type AdaptationSet struct {
-   // this might be under Representation
-   ContentProtection []ContentProtection
-   // this might not exist
-   Lang string `xml:"lang,attr"`
-   // this might be under Representation
-   MimeType string `xml:"mimeType,attr"`
-   // set want to edit these
-   Representation []*Representation
-   // this might not exist
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   // this might not exist, or might be under Representation
-   SegmentTemplate *SegmentTemplate
 }
 
 type Representation struct {
@@ -191,6 +199,8 @@ type Representation struct {
       IndexRange string `xml:"indexRange,attr"`
    }
 }
+
+////////////////////////////////////////
 
 type SegmentTemplate struct {
    SegmentTimeline struct {
