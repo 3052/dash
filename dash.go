@@ -45,33 +45,6 @@ func (r Representation) String() string {
    return string(b)
 }
 
-func Representations(b []byte) ([]*Representation, error) {
-   var s struct {
-      Period struct {
-         // this need to be pointer so we can avoid loop bug
-         AdaptationSet []*AdaptationSet
-      }
-   }
-   err := xml.Unmarshal(b, &s)
-   if err != nil {
-      return nil, err
-   }
-   var rs []*Representation
-   for _, a := range s.Period.AdaptationSet {
-      for _, r := range a.Representation {
-         if len(r.ContentProtection) == 0 {
-            r.ContentProtection = a.ContentProtection
-         }
-         if r.MimeType == "" {
-            r.MimeType = a.MimeType
-         }
-         r.adaptationSet = a
-         rs = append(rs, r)
-      }
-   }
-   return rs, nil
-}
-
 func (r Representation) Video() bool {
    return r.MimeType == "video/mp4"
 }
@@ -119,23 +92,6 @@ func (r Representation) Media() ([]string, bool) {
    return refs, true
 }
 
-type AdaptationSet struct {
-   // this might be under Representation
-   ContentProtection []ContentProtection
-   // pointer because we want to edit these
-   Representation []*Representation
-   // this might not exist
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   // this might not exist, or might be under Representation
-   SegmentTemplate *SegmentTemplate
-   // this might not exist
-   Lang string `xml:"lang,attr"`
-   // this might be under Representation
-   MimeType string `xml:"mimeType,attr"`
-}
-
 func (r Representation) Initialization() (string, bool) {
    if r.SegmentTemplate == nil {
       return "", false
@@ -177,6 +133,69 @@ func (r Representation) Index() (int64, error) {
    return i, nil
 }
 
+type SegmentTemplate struct {
+   SegmentTimeline struct {
+      S []struct {
+         // duration
+         D int `xml:"d,attr"`
+         // repeat. this may not exist
+         R int `xml:"r,attr"`
+         // time. this may not exist
+         T int `xml:"t,attr"`
+      }
+   }
+   StartNumber int `xml:"startNumber,attr"`
+   Initialization string `xml:"initialization,attr"`
+   Media string `xml:"media,attr"`
+}
+
+func Representations(b []byte) ([]*Representation, error) {
+   var s struct {
+      Period struct {
+         // this need to be pointer so we can avoid loop bug
+         AdaptationSet []*AdaptationSet
+      }
+   }
+   err := xml.Unmarshal(b, &s)
+   if err != nil {
+      return nil, err
+   }
+   var rs []*Representation
+   for _, a := range s.Period.AdaptationSet {
+      for _, r := range a.Representation {
+         if len(r.ContentProtection) == 0 {
+            r.ContentProtection = a.ContentProtection
+         }
+         if r.MimeType == "" {
+            r.MimeType = a.MimeType
+         }
+         if r.SegmentTemplate == nil {
+            r.SegmentTemplate = a.SegmentTemplate
+         }
+         r.adaptationSet = a
+         rs = append(rs, r)
+      }
+   }
+   return rs, nil
+}
+
+type AdaptationSet struct {
+   // this might be under Representation
+   ContentProtection []ContentProtection
+   // pointer because we want to edit these
+   Representation []*Representation
+   // this might not exist
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   // this might not exist, or might be under Representation
+   SegmentTemplate *SegmentTemplate
+   // this might not exist
+   Lang string `xml:"lang,attr"`
+   // this might be under Representation
+   MimeType string `xml:"mimeType,attr"`
+}
+
 type Representation struct {
    Bandwidth int `xml:"bandwidth,attr"`
    Codecs string `xml:"codecs,attr"`
@@ -198,22 +217,4 @@ type Representation struct {
    SegmentBase *struct {
       IndexRange string `xml:"indexRange,attr"`
    }
-}
-
-////////////////////////////////////////
-
-type SegmentTemplate struct {
-   SegmentTimeline struct {
-      S []struct {
-         // duration
-         D int `xml:"d,attr"`
-         // repeat. this may not exist
-         R int `xml:"r,attr"`
-         // time. this may not exist
-         T int `xml:"t,attr"`
-      }
-   }
-   StartNumber int `xml:"startNumber,attr"`
-   Initialization string `xml:"initialization,attr"`
-   Media string `xml:"media,attr"`
 }
