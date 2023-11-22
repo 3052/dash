@@ -184,8 +184,6 @@ type SegmentTemplate struct {
    Initialization string `xml:"initialization,attr"`
 }
 
-///////////////////////////////////
-
 func (r Representation) String() string {
    var b []byte
    if r.Width >= 1 {
