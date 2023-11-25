@@ -10,29 +10,6 @@ import (
    "strings"
 )
 
-type Representation struct {
-   Bandwidth int `xml:"bandwidth,attr"`
-   Codecs string `xml:"codecs,attr"`
-   ID string `xml:"id,attr"`
-   adaptationSet *AdaptationSet
-   // this might not exist
-   BaseURL string
-   // this might be under AdaptationSet
-   ContentProtection []ContentProtection
-   // this might not exist
-   Height int `xml:"height,attr"`
-   // this might be under AdaptationSet
-   MimeType string `xml:"mimeType,attr"`
-   // this might not exist
-   SegmentBase *struct {
-      IndexRange string `xml:"indexRange,attr"`
-   }
-   // this might not exist, or might be under AdaptationSet
-   SegmentTemplate *SegmentTemplate
-   // this might not exist
-   Width int `xml:"width,attr"`
-}
-
 func Representations(r io.Reader) ([]*Representation, error) {
    var s struct {
       Period struct {
@@ -47,6 +24,9 @@ func Representations(r io.Reader) ([]*Representation, error) {
    var rs []*Representation
    for _, a := range s.Period.AdaptationSet {
       for _, r := range a.Representation {
+         if r.Codecs == "" {
+            r.Codecs = a.Codecs
+         }
          if len(r.ContentProtection) == 0 {
             r.ContentProtection = a.ContentProtection
          }
@@ -61,6 +41,49 @@ func Representations(r io.Reader) ([]*Representation, error) {
       }
    }
    return rs, nil
+}
+
+type AdaptationSet struct {
+   // this might be under Representation
+   Codecs string `xml:"codecs,attr"`
+   // this might be under Representation
+   ContentProtection []ContentProtection
+   // this might not exist
+   Lang string `xml:"lang,attr"`
+   // this might be under Representation
+   MimeType string `xml:"mimeType,attr"`
+   // pointer because we want to edit these
+   Representation []*Representation
+   // this might not exist
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   // this might not exist, or might be under Representation
+   SegmentTemplate *SegmentTemplate
+}
+
+type Representation struct {
+   Bandwidth int `xml:"bandwidth,attr"`
+   ID string `xml:"id,attr"`
+   adaptationSet *AdaptationSet
+   // this might not exist
+   BaseURL string
+   // this might be under AdaptationSet
+   Codecs string `xml:"codecs,attr"`
+   // this might be under AdaptationSet
+   ContentProtection []ContentProtection
+   // this might not exist
+   Height int `xml:"height,attr"`
+   // this might be under AdaptationSet
+   MimeType string `xml:"mimeType,attr"`
+   // this might not exist
+   SegmentBase *struct {
+      IndexRange string `xml:"indexRange,attr"`
+   }
+   // this might not exist, or might be under AdaptationSet
+   SegmentTemplate *SegmentTemplate
+   // this might not exist
+   Width int `xml:"width,attr"`
 }
 
 type ContentProtection struct {
@@ -142,23 +165,6 @@ func (r Representation) PSSH() ([]byte, error) {
       }
    }
    return nil, errors.New("PSSH")
-}
-
-type AdaptationSet struct {
-   // this might be under Representation
-   ContentProtection []ContentProtection
-   // this might not exist
-   Lang string `xml:"lang,attr"`
-   // this might be under Representation
-   MimeType string `xml:"mimeType,attr"`
-   // pointer because we want to edit these
-   Representation []*Representation
-   // this might not exist
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   // this might not exist, or might be under Representation
-   SegmentTemplate *SegmentTemplate
 }
 
 func (r Representation) Lang() string {
