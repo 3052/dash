@@ -43,49 +43,6 @@ func Representations(r io.Reader) ([]*Representation, error) {
    return rs, nil
 }
 
-type AdaptationSet struct {
-   // this might be under Representation
-   Codecs string `xml:"codecs,attr"`
-   // this might be under Representation
-   ContentProtection []ContentProtection
-   // this might not exist
-   Lang string `xml:"lang,attr"`
-   // this might be under Representation
-   MimeType string `xml:"mimeType,attr"`
-   // pointer because we want to edit these
-   Representation []*Representation
-   // this might not exist
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   // this might not exist, or might be under Representation
-   SegmentTemplate *SegmentTemplate
-}
-
-type Representation struct {
-   Bandwidth int `xml:"bandwidth,attr"`
-   ID string `xml:"id,attr"`
-   adaptationSet *AdaptationSet
-   // this might not exist
-   BaseURL string
-   // this might be under AdaptationSet
-   Codecs string `xml:"codecs,attr"`
-   // this might be under AdaptationSet
-   ContentProtection []ContentProtection
-   // this might not exist
-   Height int `xml:"height,attr"`
-   // this might be under AdaptationSet
-   MimeType string `xml:"mimeType,attr"`
-   // this might not exist
-   SegmentBase *struct {
-      IndexRange string `xml:"indexRange,attr"`
-   }
-   // this might not exist, or might be under AdaptationSet
-   SegmentTemplate *SegmentTemplate
-   // this might not exist
-   Width int `xml:"width,attr"`
-}
-
 type ContentProtection struct {
    SchemeIdUri string `xml:"schemeIdUri,attr"`
    // this might not exist
@@ -190,6 +147,51 @@ type SegmentTemplate struct {
    Initialization string `xml:"initialization,attr"`
 }
 
+type Representation struct {
+   Bandwidth int `xml:"bandwidth,attr"`
+   ID string `xml:"id,attr"`
+   adaptationSet *AdaptationSet
+   // this might not exist
+   BaseURL string
+   // this might be under AdaptationSet
+   Codecs string `xml:"codecs,attr"`
+   // this might be under AdaptationSet
+   ContentProtection []ContentProtection
+   // this might not exist
+   Height int `xml:"height,attr"`
+   // this might be under AdaptationSet
+   MimeType string `xml:"mimeType,attr"`
+   // this might not exist
+   SegmentBase *struct {
+      IndexRange string `xml:"indexRange,attr"`
+   }
+   // this might not exist, or might be under AdaptationSet
+   SegmentTemplate *SegmentTemplate
+   // this might not exist
+   Width int `xml:"width,attr"`
+}
+
+type AdaptationSet struct {
+   // this might be under Representation
+   Codecs string `xml:"codecs,attr"`
+   // this might be under Representation
+   ContentProtection []ContentProtection
+   // this might not exist
+   Lang string `xml:"lang,attr"`
+   // this might be under Representation
+   MimeType string `xml:"mimeType,attr"`
+   // pointer because we want to edit these
+   Representation []*Representation
+   // this might not exist
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   // this might not exist, or might be under Representation
+   SegmentTemplate *SegmentTemplate
+}
+
+/////////////////////////////////
+
 func (r Representation) String() string {
    var b []byte
    if r.Width >= 1 {
@@ -217,11 +219,18 @@ func (r Representation) String() string {
       b = append(b, '\n')
    }
    b = fmt.Append(b, "type: ", r.MimeType)
-   if v := r.adaptationSet.Role; v != nil {
-      b = fmt.Append(b, "\nrole: ", v.Value)
+   if v, ok := r.Role(); ok {
+      b = fmt.Append(b, "\nrole: ", v)
    }
    if v := r.Lang(); v != "" {
       b = fmt.Append(b, "\nlanguage: ", v)
    }
    return string(b)
+}
+
+func (r Representation) Role() (string, bool) {
+   if r := r.adaptationSet.Role; r != nil {
+      return r.Value, true
+   }
+   return "", false
 }
