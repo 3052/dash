@@ -190,8 +190,6 @@ type AdaptationSet struct {
    SegmentTemplate *SegmentTemplate
 }
 
-/////////////////////////////////
-
 func (r Representation) String() string {
    var b []byte
    if r.Width >= 1 {
