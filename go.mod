@@ -1,3 +1,3 @@
-module 154.pages.dev/dash
+module 154.pages.dev/encoding
 
-go 1.21.0
+go 1.20
