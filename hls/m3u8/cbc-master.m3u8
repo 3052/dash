@@ -1,0 +1,26 @@
+#EXTM3U
+#EXT-X-VERSION:4
+#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio",NAME="English",LANGUAGE="eng",DEFAULT=YES,AUTOSELECT=YES,URI="QualityLevels(192000)/Manifest(audio_eng_aacl,format=m3u8-aapl,filter=desktop)"
+#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio",NAME="English (Descriptive)",LANGUAGE="eng",AUTOSELECT=YES,CHARACTERISTICS="public.accessibility.describes-video",URI="QualityLevels(192000)/Manifest(audiodv_eng_aacl,format=m3u8-aapl,filter=desktop)"
+#EXT-X-MEDIA:TYPE=CLOSED-CAPTIONS,GROUP-ID="CC",LANGUAGE="en",NAME="English",DEFAULT=YES,AUTOSELECT=YES,INSTREAM-ID="CC1"
+#EXT-X-STREAM-INF:BANDWIDTH=2767625,RESOLUTION=1280x720,CODECS="avc1.4d401f,mp4a.40.2",AUDIO="audio",CLOSED-CAPTIONS="CC"
+QualityLevels(2500080)/Manifest(video,format=m3u8-aapl,filter=desktop)
+#EXT-X-I-FRAME-STREAM-INF:BANDWIDTH=2767625,RESOLUTION=1280x720,CODECS="avc1.4d401f",URI="QualityLevels(2500080)/Manifest(video,format=m3u8-aapl,filter=desktop,type=keyframes)"
+#EXT-X-STREAM-INF:BANDWIDTH=3687831,RESOLUTION=1280x720,CODECS="avc1.4d401f,mp4a.40.2",AUDIO="audio",CLOSED-CAPTIONS="CC"
+QualityLevels(3400477)/Manifest(video,format=m3u8-aapl,filter=desktop)
+#EXT-X-I-FRAME-STREAM-INF:BANDWIDTH=3687831,RESOLUTION=1280x720,CODECS="avc1.4d401f",URI="QualityLevels(3400477)/Manifest(video,format=m3u8-aapl,filter=desktop,type=keyframes)"
+#EXT-X-STREAM-INF:BANDWIDTH=2052373,RESOLUTION=960x540,CODECS="avc1.4d401f,mp4a.40.2",AUDIO="audio",CLOSED-CAPTIONS="CC"
+QualityLevels(1800225)/Manifest(video,format=m3u8-aapl,filter=desktop)
+#EXT-X-I-FRAME-STREAM-INF:BANDWIDTH=2052373,RESOLUTION=960x540,CODECS="avc1.4d401f",URI="QualityLevels(1800225)/Manifest(video,format=m3u8-aapl,filter=desktop,type=keyframes)"
+#EXT-X-STREAM-INF:BANDWIDTH=1234677,RESOLUTION=640x360,CODECS="avc1.42c01e,mp4a.40.2",AUDIO="audio",CLOSED-CAPTIONS="CC"
+QualityLevels(1000131)/Manifest(video,format=m3u8-aapl,filter=desktop)
+#EXT-X-I-FRAME-STREAM-INF:BANDWIDTH=1234677,RESOLUTION=640x360,CODECS="avc1.42c01e",URI="QualityLevels(1000131)/Manifest(video,format=m3u8-aapl,filter=desktop,type=keyframes)"
+#EXT-X-STREAM-INF:BANDWIDTH=825809,RESOLUTION=640x360,CODECS="avc1.42c01e,mp4a.40.2",AUDIO="audio",CLOSED-CAPTIONS="CC"
+QualityLevels(600064)/Manifest(video,format=m3u8-aapl,filter=desktop)
+#EXT-X-I-FRAME-STREAM-INF:BANDWIDTH=825809,RESOLUTION=640x360,CODECS="avc1.42c01e",URI="QualityLevels(600064)/Manifest(video,format=m3u8-aapl,filter=desktop,type=keyframes)"
+#EXT-X-STREAM-INF:BANDWIDTH=621388,RESOLUTION=416x234,CODECS="avc1.42c00d,mp4a.40.2",AUDIO="audio",CLOSED-CAPTIONS="CC"
+QualityLevels(400044)/Manifest(video,format=m3u8-aapl,filter=desktop)
+#EXT-X-I-FRAME-STREAM-INF:BANDWIDTH=621388,RESOLUTION=416x234,CODECS="avc1.42c00d",URI="QualityLevels(400044)/Manifest(video,format=m3u8-aapl,filter=desktop,type=keyframes)"
+#EXT-X-STREAM-INF:BANDWIDTH=204384,CODECS="mp4a.40.2",AUDIO="audio",CLOSED-CAPTIONS="CC"
+QualityLevels(192000)/Manifest(audiodv_eng_aacl,format=m3u8-aapl,filter=desktop)
+
