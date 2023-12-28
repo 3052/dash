@@ -75,18 +75,6 @@ func (r Representation) Ext() (string, bool) {
    return "", false
 }
 
-func (r Representation) Index() (int64, error) {
-   if r.SegmentBase == nil {
-      return 0, errors.New("SegmentBase")
-   }
-   var i int64
-   _, err := fmt.Sscan(r.SegmentBase.IndexRange, &i)
-   if err != nil {
-      return 0, err
-   }
-   return i, nil
-}
-
 func (r Representation) Initialization() (string, bool) {
    if v := r.SegmentTemplate; v != nil {
       if v := v.Initialization; v != "" {
