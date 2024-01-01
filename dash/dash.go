@@ -3,44 +3,22 @@ package dash
 import (
    "encoding/base64"
    "encoding/hex"
-   "encoding/xml"
    "errors"
    "fmt"
-   "io"
    "strings"
 )
 
-func Representations(r io.Reader) ([]*Representation, error) {
-   var s struct {
-      Period struct {
-         // this need to be pointer so we can avoid loop bug
-         AdaptationSet []*AdaptationSet
-      }
+func (r Representation) Sidx_Moof() (uint32, uint32, error) {
+   if r.SegmentBase == nil {
+      return 0, 0, errors.New("SegmentBase")
    }
-   err := xml.NewDecoder(r).Decode(&s)
+   var start uint32
+   var end uint32
+   _, err := fmt.Sscanf(r.SegmentBase.IndexRange, "%v-%v", &start, &end)
    if err != nil {
-      return nil, err
+      return 0, 0, err
    }
-   var rs []*Representation
-   for _, a := range s.Period.AdaptationSet {
-      for _, r := range a.Representation {
-         if r.Codecs == "" {
-            r.Codecs = a.Codecs
-         }
-         if len(r.ContentProtection) == 0 {
-            r.ContentProtection = a.ContentProtection
-         }
-         if r.MimeType == "" {
-            r.MimeType = a.MimeType
-         }
-         if r.SegmentTemplate == nil {
-            r.SegmentTemplate = a.SegmentTemplate
-         }
-         r.adaptationSet = a
-         rs = append(rs, r)
-      }
-   }
-   return rs, nil
+   return start, end+1, nil
 }
 
 type ContentProtection struct {
