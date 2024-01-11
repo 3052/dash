@@ -6,23 +6,6 @@ import (
    "testing"
 )
 
-func Test_Info(t *testing.T) {
-   for name := range tests {
-      reps, err := read_file(name)
-      if err != nil {
-         t.Fatal(err)
-      }
-      fmt.Println(name)
-      for i, rep := range reps {
-         if i >= 1 {
-            fmt.Println()
-         }
-         fmt.Println(rep)
-      }
-      fmt.Println()
-   }
-}
-
 var tests = map[string]string{
    "mpd/amc.mpd": "",
    "mpd/hulu.mpd": "content-0",
@@ -42,4 +25,21 @@ func read_file(name string) ([]*Representation, error) {
       return nil, err
    }
    return m.Representation(tests[name])
+}
+
+func Test_Info(t *testing.T) {
+   for name := range tests {
+      reps, err := read_file(name)
+      if err != nil {
+         t.Fatal(err)
+      }
+      fmt.Println(name)
+      for i, rep := range reps {
+         if i >= 1 {
+            fmt.Println()
+         }
+         fmt.Println(rep)
+      }
+      fmt.Println()
+   }
 }
