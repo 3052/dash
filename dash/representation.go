@@ -8,6 +8,61 @@ import (
    "strings"
 )
 
+func (r Representation) String() string {
+   var b []byte
+   if r.Width >= 1 {
+      b = fmt.Append(b, "width: ", r.Width)
+   }
+   if r.Height >= 1 {
+      if b != nil {
+         b = append(b, '\n')
+      }
+      b = fmt.Append(b, "height: ", r.Height)
+   }
+   if r.Bandwidth >= 1 {
+      if b != nil {
+         b = append(b, '\n')
+      }
+      b = fmt.Append(b, "bandwidth: ", r.Bandwidth)
+   }
+   if r.Codecs != "" {
+      if b != nil {
+         b = append(b, '\n')
+      }
+      b = fmt.Append(b, "codecs: ", r.Codecs)
+   }
+   if b != nil {
+      b = append(b, '\n')
+   }
+   b = fmt.Append(b, "type: ", r.MimeType)
+   if v, ok := r.Role(); ok {
+      b = fmt.Append(b, "\nrole: ", v)
+   }
+   if v, ok := r.Lang(); ok {
+      b = fmt.Append(b, "\nlanguage: ", v)
+   }
+   return string(b)
+}
+
+func (r Representation) Media() ([]string, bool) {
+   t := r.SegmentTemplate
+   if t == nil {
+      return nil, false
+   }
+   var media []string
+   for _, segment := range t.SegmentTimeline.S {
+      for segment.R >= 0 {
+         number := fmt.Sprint(t.StartNumber)
+         medium := strings.Replace(t.Media, "$Number$", number, 1)
+         medium = strings.Replace(medium, "$RepresentationID$", r.ID, 1)
+         media = append(media, medium)
+         segment.R--
+         t.StartNumber++
+      }
+   }
+   return media, true
+}
+
 func (m Media) Representation(period string) ([]*Representation, error) {
    var rs []*Representation
    for _, p := range m.Period {
@@ -47,10 +102,6 @@ func (r Representation) Sidx_Moof() (uint32, uint32, error) {
    return start, end+1, nil
 }
 
-func (r Representation) Audio() bool {
-   return r.MimeType == "audio/mp4"
-}
-
 func (r Representation) Default_KID() ([]byte, error) {
    for _, c := range r.ContentProtection {
       if c.SchemeIdUri == "urn:mpeg:dash:mp4protection:2011" {
@@ -59,16 +110,6 @@ func (r Representation) Default_KID() ([]byte, error) {
       }
    }
    return nil, errors.New("default_KID")
-}
-
-func (r Representation) Ext() (string, bool) {
-   switch {
-   case r.Audio():
-      return ".m4a", true
-   case r.Video():
-      return ".m4v", true
-   }
-   return "", false
 }
 
 func (r Representation) Initialization() (string, bool) {
@@ -80,25 +121,6 @@ func (r Representation) Initialization() (string, bool) {
    return "", false
 }
 
-func (r Representation) Media() ([]string, bool) {
-   t := r.SegmentTemplate
-   if t == nil {
-      return nil, false
-   }
-   var media []string
-   for _, segment := range t.SegmentTimeline.S {
-      for segment.R >= 0 {
-         number := fmt.Sprint(t.StartNumber)
-         medium := strings.Replace(t.Media, "$Number$", number, 1)
-         medium = strings.Replace(medium, "$RepresentationID$", r.ID, 1)
-         media = append(media, medium)
-         segment.R--
-         t.StartNumber++
-      }
-   }
-   return media, true
-}
-
 func (r Representation) PSSH() ([]byte, error) {
    for _, c := range r.ContentProtection {
       if c.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
@@ -106,14 +128,6 @@ func (r Representation) PSSH() ([]byte, error) {
       }
    }
    return nil, errors.New("PSSH")
-}
-
-func (r Representation) Lang() string {
-   return r.adaptationSet.Lang
-}
-
-func (r Representation) Video() bool {
-   return r.MimeType == "video/mp4"
 }
 
 type Representation struct {
@@ -140,45 +154,16 @@ type Representation struct {
    Width int `xml:"width,attr"`
 }
 
-func (r Representation) String() string {
-   var b []byte
-   if r.Width >= 1 {
-      b = fmt.Append(b, "width: ", r.Width)
-   }
-   if r.Height >= 1 {
-      if b != nil {
-         b = append(b, '\n')
-      }
-      b = fmt.Append(b, "height: ", r.Height)
-   }
-   if r.Bandwidth >= 1 {
-      if b != nil {
-         b = append(b, '\n')
-      }
-      b = fmt.Append(b, "bandwidth: ", r.Bandwidth)
-   }
-   if r.Codecs != "" {
-      if b != nil {
-         b = append(b, '\n')
-      }
-      b = fmt.Append(b, "codecs: ", r.Codecs)
-   }
-   if b != nil {
-      b = append(b, '\n')
-   }
-   b = fmt.Append(b, "type: ", r.MimeType)
-   if v, ok := r.Role(); ok {
-      b = fmt.Append(b, "\nrole: ", v)
-   }
-   if v := r.Lang(); v != "" {
-      b = fmt.Append(b, "\nlanguage: ", v)
-   }
-   return string(b)
-}
-
 func (r Representation) Role() (string, bool) {
    if r := r.adaptationSet.Role; r != nil {
       return r.Value, true
+   }
+   return "", false
+}
+
+func (r Representation) Lang() (string, bool) {
+   if v := r.adaptationSet.Lang; v != "" {
+      return v, true
    }
    return "", false
 }

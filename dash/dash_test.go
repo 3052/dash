@@ -6,21 +6,6 @@ import (
    "testing"
 )
 
-func Test_Ext(t *testing.T) {
-   for name := range tests {
-      reps, err := read_file(name)
-      if err != nil {
-         t.Fatal(err)
-      }
-      fmt.Println(name)
-      for _, rep := range reps {
-         v, ok := rep.Ext()
-         fmt.Printf("%q %v\n", v, ok)
-      }
-      fmt.Println()
-   }
-}
-
 func Test_SegmentBase(t *testing.T) {
    reps, err := read_file("mpd/hulu.mpd")
    if err != nil {
