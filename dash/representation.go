@@ -41,7 +41,32 @@ func (r Representation) String() string {
    if v, ok := r.Lang(); ok {
       b = fmt.Append(b, "\nlanguage: ", v)
    }
+   b = fmt.Append(b, "\nid: ", r.ID)
    return string(b)
+}
+
+type Representation struct {
+   Bandwidth int `xml:"bandwidth,attr"`
+   ID string `xml:"id,attr"`
+   adaptationSet *AdaptationSet
+   // this might not exist
+   BaseURL string
+   // this might be under AdaptationSet
+   Codecs string `xml:"codecs,attr"`
+   // this might be under AdaptationSet
+   ContentProtection []ContentProtection
+   // this might not exist
+   Height int `xml:"height,attr"`
+   // this might be under AdaptationSet
+   MimeType string `xml:"mimeType,attr"`
+   // this might not exist
+   SegmentBase *struct {
+      IndexRange string `xml:"indexRange,attr"`
+   }
+   // this might not exist, or might be under AdaptationSet
+   SegmentTemplate *SegmentTemplate
+   // this might not exist
+   Width int `xml:"width,attr"`
 }
 
 func (r Representation) Media() ([]string, bool) {
@@ -128,30 +153,6 @@ func (r Representation) PSSH() ([]byte, error) {
       }
    }
    return nil, errors.New("PSSH")
-}
-
-type Representation struct {
-   Bandwidth int `xml:"bandwidth,attr"`
-   ID string `xml:"id,attr"`
-   adaptationSet *AdaptationSet
-   // this might not exist
-   BaseURL string
-   // this might be under AdaptationSet
-   Codecs string `xml:"codecs,attr"`
-   // this might be under AdaptationSet
-   ContentProtection []ContentProtection
-   // this might not exist
-   Height int `xml:"height,attr"`
-   // this might be under AdaptationSet
-   MimeType string `xml:"mimeType,attr"`
-   // this might not exist
-   SegmentBase *struct {
-      IndexRange string `xml:"indexRange,attr"`
-   }
-   // this might not exist, or might be under AdaptationSet
-   SegmentTemplate *SegmentTemplate
-   // this might not exist
-   Width int `xml:"width,attr"`
 }
 
 func (r Representation) Role() (string, bool) {
