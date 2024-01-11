@@ -7,7 +7,7 @@ import (
 
 type Media struct {
    Period []struct {
-      AdaptationSet []*AdaptationSet
+      AdaptationSet []AdaptationSet
       ID string `xml:"id,attr"`
    }
 }
@@ -49,7 +49,7 @@ type AdaptationSet struct {
    // this might be under Representation
    MimeType string `xml:"mimeType,attr"`
    // pointer because we want to edit these
-   Representation []*Representation
+   Representation []Representation
    // this might not exist
    Role *struct {
       Value string `xml:"value,attr"`

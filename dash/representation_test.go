@@ -6,12 +6,12 @@ import (
    "testing"
 )
 
-var tests = map[string]string{
-   "mpd/amc.mpd": "",
-   "mpd/hulu.mpd": "content-0",
-   "mpd/nbc.mpd": "",
-   "mpd/paramount.mpd": "0",
-   "mpd/roku.mpd": "1",
+var tests = []string{
+   "mpd/amc.mpd",
+   "mpd/hulu.mpd",
+   "mpd/nbc.mpd",
+   "mpd/paramount.mpd",
+   "mpd/roku.mpd",
 }
 
 func read_file(name string) ([]*Representation, error) {

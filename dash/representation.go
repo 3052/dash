@@ -8,47 +8,9 @@ import (
    "strings"
 )
 
-func (r Representation) String() string {
-   var b []byte
-   if r.Width >= 1 {
-      b = fmt.Append(b, "width: ", r.Width)
-   }
-   if r.Height >= 1 {
-      if b != nil {
-         b = append(b, '\n')
-      }
-      b = fmt.Append(b, "height: ", r.Height)
-   }
-   if r.Bandwidth >= 1 {
-      if b != nil {
-         b = append(b, '\n')
-      }
-      b = fmt.Append(b, "bandwidth: ", r.Bandwidth)
-   }
-   if r.Codecs != "" {
-      if b != nil {
-         b = append(b, '\n')
-      }
-      b = fmt.Append(b, "codecs: ", r.Codecs)
-   }
-   if b != nil {
-      b = append(b, '\n')
-   }
-   b = fmt.Append(b, "type: ", r.MimeType)
-   if v, ok := r.Role(); ok {
-      b = fmt.Append(b, "\nrole: ", v)
-   }
-   if v, ok := r.Lang(); ok {
-      b = fmt.Append(b, "\nlanguage: ", v)
-   }
-   b = fmt.Append(b, "\nid: ", r.ID)
-   return string(b)
-}
-
 type Representation struct {
    Bandwidth int `xml:"bandwidth,attr"`
    ID string `xml:"id,attr"`
-   adaptationSet *AdaptationSet
    // this might not exist
    BaseURL string
    // this might be under AdaptationSet
@@ -67,52 +29,6 @@ type Representation struct {
    SegmentTemplate *SegmentTemplate
    // this might not exist
    Width int `xml:"width,attr"`
-}
-
-func (r Representation) Media() ([]string, bool) {
-   t := r.SegmentTemplate
-   if t == nil {
-      return nil, false
-   }
-   var media []string
-   for _, segment := range t.SegmentTimeline.S {
-      for segment.R >= 0 {
-         number := fmt.Sprint(t.StartNumber)
-         medium := strings.Replace(t.Media, "$Number$", number, 1)
-         medium = strings.Replace(medium, "$RepresentationID$", r.ID, 1)
-         media = append(media, medium)
-         segment.R--
-         t.StartNumber++
-      }
-   }
-   return media, true
-}
-
-func (m Media) Representation(period string) ([]*Representation, error) {
-   var rs []*Representation
-   for _, p := range m.Period {
-      if p.ID == period {
-         for _, a := range p.AdaptationSet {
-            for _, r := range a.Representation {
-               if r.Codecs == "" {
-                  r.Codecs = a.Codecs
-               }
-               if len(r.ContentProtection) == 0 {
-                  r.ContentProtection = a.ContentProtection
-               }
-               if r.MimeType == "" {
-                  r.MimeType = a.MimeType
-               }
-               if r.SegmentTemplate == nil {
-                  r.SegmentTemplate = a.SegmentTemplate
-               }
-               r.adaptationSet = a
-               rs = append(rs, r)
-            }
-         }
-      }
-   }
-   return rs, nil
 }
 
 func (r Representation) Sidx_Moof() (uint32, uint32, error) {
@@ -155,16 +71,21 @@ func (r Representation) PSSH() ([]byte, error) {
    return nil, errors.New("PSSH")
 }
 
-func (r Representation) Role() (string, bool) {
-   if r := r.adaptationSet.Role; r != nil {
-      return r.Value, true
+func (r Representation) Media() ([]string, bool) {
+   t := r.SegmentTemplate
+   if t == nil {
+      return nil, false
    }
-   return "", false
-}
-
-func (r Representation) Lang() (string, bool) {
-   if v := r.adaptationSet.Lang; v != "" {
-      return v, true
+   var media []string
+   for _, segment := range t.SegmentTimeline.S {
+      for segment.R >= 0 {
+         number := fmt.Sprint(t.StartNumber)
+         medium := strings.Replace(t.Media, "$Number$", number, 1)
+         medium = strings.Replace(medium, "$RepresentationID$", r.ID, 1)
+         media = append(media, medium)
+         segment.R--
+         t.StartNumber++
+      }
    }
-   return "", false
+   return media, true
 }
