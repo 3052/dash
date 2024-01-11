@@ -3,12 +3,14 @@ package main
 import (
    "flag"
    "fmt"
+   "net/url"
 )
 
 type flags struct {
    address string
    id string
    period string
+   url *url.URL
 }
 
 func main() {
@@ -24,7 +26,7 @@ func main() {
       }
       if f.id != "" {
          if rep, ok := f.pick(reps); ok {
-            if err := download(rep); err != nil {
+            if err := f.download(rep); err != nil {
                panic(err)
             }
          }
