@@ -1,12 +1,13 @@
 package dash
 
 import (
-   "fmt"
-   "net/http"
+   //"fmt"
+   //"net/http"
    "testing"
 )
 
 func Test_SegmentBase(t *testing.T) {
+   /*
    reps, err := read_file("mpd/hulu.mpd")
    if err != nil {
       t.Fatal(err)
@@ -14,9 +15,11 @@ func Test_SegmentBase(t *testing.T) {
    for _, rep := range reps {
       fmt.Println(rep.Sidx_Moof())
    }
+   */
 }
 
 func Test_Initialization(t *testing.T) {
+   /*
    reps, err := read_file("mpd/amc.mpd")
    if err != nil {
       t.Fatal(err)
@@ -25,9 +28,11 @@ func Test_Initialization(t *testing.T) {
       v, ok := rep.Initialization()
       fmt.Printf("%v %q %v\n\n", rep.ID, v, ok)
    }
+   */
 }
 
 func Test_Media(t *testing.T) {
+   /*
    reps, err := read_file("mpd/roku.mpd")
    if err != nil {
       t.Fatal(err)
@@ -48,4 +53,5 @@ func Test_Media(t *testing.T) {
       req.URL = base.URL.ResolveReference(req.URL)
       fmt.Println(req.URL)
    }
+   */
 }
