@@ -1,8 +1,11 @@
 package main
 
 import (
+   "154.pages.dev/encoding/dash"
    "flag"
    "net/url"
+   "os"
+   "text/template"
 )
 
 type flags struct {
@@ -28,8 +31,11 @@ func main() {
             }
          }
       } else {
-         err := execute(media)
+         tmpl, err := new(template.Template).Parse(dash.Template)
          if err != nil {
+            panic(err)
+         }
+         if err := tmpl.Execute(os.Stdout, media); err != nil {
             panic(err)
          }
       }

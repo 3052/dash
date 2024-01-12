@@ -8,7 +8,6 @@ import (
    "net/url"
    "os"
    "path"
-   "text/template"
 )
 
 func (f flags) pick(media *dash.Media) (*dash.Representation, bool) {
@@ -22,19 +21,6 @@ func (f flags) pick(media *dash.Media) (*dash.Representation, bool) {
       }
    }
    return nil, false
-}
-
-func execute(media *dash.Media) error {
-   tmpl, err := new(template.Template).Parse(dash.Template)
-   if err != nil {
-      return err
-   }
-   file, err := os.Create("dash.html")
-   if err != nil {
-      return err
-   }
-   defer file.Close()
-   return tmpl.Execute(file, media)
 }
 
 func (f *flags) manifest() (*dash.Media, error) {

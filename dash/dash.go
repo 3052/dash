@@ -5,8 +5,7 @@ import (
    "io"
 )
 
-const Template = `
-<style>
+const Template = `<style>
 table {
    border-collapse: collapse;
    margin: 9px;
@@ -35,35 +34,35 @@ th {
    <th>ID</th>
    <th>period</th>
 </tr>
-{{ range $period := .Period }}
-   {{ range $adaptation := .AdaptationSet }}
-      {{ range .Representation }}
+{{ range $period := .Period -}}
+   {{ range $adaptation := .AdaptationSet -}}
+      {{ range .Representation -}}
 <tr>
    <td>{{ .Width }}</td>
    <td>{{ .Height }}</td>
    <td>{{ .Bandwidth }}</td>
-         {{ if .Codecs }}
+         {{ if .Codecs -}}
    <td>{{ .Codecs }}</td>
-         {{ else }}
+         {{ else -}}
    <td>{{ $adaptation.Codecs }}</td>
-         {{ end }}
-         {{ if .MimeType }}
+         {{ end -}}
+         {{ if .MimeType -}}
    <td>{{ .MimeType }}</td>
-         {{ else }}
+         {{ else -}}
    <td>{{ $adaptation.MimeType }}</td>
-         {{ end }}
-         {{ if $adaptation.Role }}
+         {{ end -}}
+         {{ if $adaptation.Role -}}
    <td>{{ $adaptation.Role.Value }}</td>
-         {{ else }}
+         {{ else -}}
    <td></td>
-         {{ end }}
+         {{ end -}}
    <td>{{ $adaptation.Lang }}</td>
    <td>{{ .ID }}</td>
    <td>{{ $period.ID }}</td>
 </tr>
-      {{ end }}
-   {{ end }}
-{{ end }}
+      {{ end -}}
+   {{ end -}}
+{{ end -}}
 </table>
 `
 
