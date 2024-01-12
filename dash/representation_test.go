@@ -15,11 +15,11 @@ var tests = []string{
 }
 
 func Test_Info(t *testing.T) {
-   tmpl, err := template.ParseFiles("in.html")
+   tmpl, err := new(template.Template).Parse(Template)
    if err != nil {
       t.Fatal(err)
    }
-   dst, err := os.Create("out.html")
+   dst, err := os.Create("dash.html")
    if err != nil {
       t.Fatal(err)
    }

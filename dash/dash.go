@@ -57,3 +57,65 @@ type SegmentTemplate struct {
    // this may not exist
    Initialization string `xml:"initialization,attr"`
 }
+
+const Template = `
+<style>
+table {
+   border-collapse: collapse;
+   margin: 9px;
+}
+td {
+   border-style: solid;
+   border-width: thin;
+}
+td,
+th {
+   padding-bottom: 9px;
+   padding-left: 9px;
+   padding-right: 9px;
+   padding-top: 9px;
+}
+</style>
+<table>
+<tr>
+   <th>height</th>
+   <th>width</th>
+   <th>bandwidth</th>
+   <th>codecs</th>
+   <th>type</th>
+   <th>role</th>
+   <th>language</th>
+   <th>ID</th>
+   <th>period ID</th>
+</tr>
+{{ range $period := .Period }}
+   {{ range $adaptation := .AdaptationSet }}
+      {{ range .Representation }}
+<tr>
+   <td>{{ .Height }}</td>
+   <td>{{ .Width }}</td>
+   <td>{{ .Bandwidth }}</td>
+         {{ if .Codecs }}
+   <td>{{ .Codecs }}</td>
+         {{ else }}
+   <td>{{ $adaptation.Codecs }}</td>
+         {{ end }}
+         {{ if .MimeType }}
+   <td>{{ .MimeType }}</td>
+         {{ else }}
+   <td>{{ $adaptation.MimeType }}</td>
+         {{ end }}
+         {{ if $adaptation.Role }}
+   <td>{{ $adaptation.Role.Value }}</td>
+         {{ else }}
+   <td></td>
+         {{ end }}
+   <td>{{ $adaptation.Lang }}</td>
+   <td>{{ .ID }}</td>
+   <td>{{ $period.ID }}</td>
+</tr>
+      {{ end }}
+   {{ end }}
+{{ end }}
+</table>
+`

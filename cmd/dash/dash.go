@@ -10,6 +10,45 @@ import (
    "path"
 )
 
+func (f flags) pick(reps []*dash.Representation) (*dash.Representation, bool) {
+   for _, rep := range reps {
+      if rep.ID == f.id {
+         return rep, true
+      }
+   }
+   return nil, false
+}
+
+func execute(media *dash.Media) error {
+   tmpl, err := new(template.Template).Parse(dash.Template)
+   if err != nil {
+      return err
+   }
+   file, err := os.Create("dash.html")
+   if err != nil {
+      return err
+   }
+   defer file.Close()
+   return tmpl.Execute(file, media)
+}
+
+func (f *flags) manifest() (*dash.Media, error) {
+   res, err := http.Get(f.address)
+   if err != nil {
+      return nil, err
+   }
+   defer res.Body.Close()
+   if res.StatusCode != http.StatusOK {
+      return nil, errors.New(res.Status)
+   }
+   f.url = res.Request.URL
+   var media dash.Media
+   if err := media.Decode(res.Body); err != nil {
+      return nil, err
+   }
+   return &media, nil
+}
+
 func (f flags) download(rep *dash.Representation) error {
    initialization, ok := rep.Initialization()
    if !ok {
@@ -58,30 +97,4 @@ func create(address *url.URL) error {
       return err
    }
    return nil
-}
-
-func (f flags) pick(reps []*dash.Representation) (*dash.Representation, bool) {
-   for _, rep := range reps {
-      if rep.ID == f.id {
-         return rep, true
-      }
-   }
-   return nil, false
-}
-
-func (f *flags) manifest() ([]*dash.Representation, error) {
-   res, err := http.Get(f.address)
-   if err != nil {
-      return nil, err
-   }
-   defer res.Body.Close()
-   if res.StatusCode != http.StatusOK {
-      return nil, errors.New(res.Status)
-   }
-   f.url = res.Request.URL
-   var media dash.Media
-   if err := media.Decode(res.Body); err != nil {
-      return nil, err
-   }
-   return media.Representation(f.period)
 }

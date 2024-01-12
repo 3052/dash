@@ -18,7 +18,7 @@ type Representation struct {
    // this might be under AdaptationSet
    ContentProtection []ContentProtection
    // this might not exist
-   Height int `xml:"height,attr"`
+   Height *int `xml:"height,attr"`
    // this might be under AdaptationSet
    MimeType string `xml:"mimeType,attr"`
    // this might not exist
@@ -28,7 +28,7 @@ type Representation struct {
    // this might not exist, or might be under AdaptationSet
    SegmentTemplate *SegmentTemplate
    // this might not exist
-   Width int `xml:"width,attr"`
+   Width *int `xml:"width,attr"`
 }
 
 func (r Representation) Sidx_Moof() (uint32, uint32, error) {
