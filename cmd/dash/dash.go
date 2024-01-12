@@ -8,12 +8,17 @@ import (
    "net/url"
    "os"
    "path"
+   "text/template"
 )
 
-func (f flags) pick(reps []*dash.Representation) (*dash.Representation, bool) {
-   for _, rep := range reps {
-      if rep.ID == f.id {
-         return rep, true
+func (f flags) pick(media *dash.Media) (*dash.Representation, bool) {
+   for _, period := range media.Period {
+      for _, adaptation := range period.AdaptationSet {
+         for _, representation := range adaptation.Representation {
+            if representation.ID == f.id {
+               return &representation, true
+            }
+         }
       }
    }
    return nil, false
