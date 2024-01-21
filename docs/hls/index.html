@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="doc2go">
+    <link href="../_/css/main.css" rel="stylesheet" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../_/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../_/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../_/icons/favicon-16x16.png">
+    <link rel="shortcut icon" href="../_/icons/favicon.ico">
+    <title>hls</title>
+</head>
+  <body>
+    <nav>
+        <a href="..">154.pages.dev/encoding</a>/hls<a href="#pkg-index">Index</a>
+      </nav><main><h2 id="pkg-overview">package hls</h2>
+<pre class="chroma"><span class="kn">import</span> <span class="s">&#34;154.pages.dev/encoding/hls&#34;</span></pre>
+<h3 id="pkg-index">Index</h3>
+<ul>
+  <li>
+      <a href="#Block">type Block</a>
+      <ul>
+          <li><a href="#New_Block">func New_Block(key []byte) (*Block, error)</a></li>
+          <li><a href="#Block.Decrypt">func (b Block) Decrypt(text, iv []byte) []byte</a></li>
+          <li><a href="#Block.Decrypt_Key">func (b Block) Decrypt_Key(text []byte) []byte</a></li>
+          </ul>
+      </li>
+  <li>
+      <a href="#Master">type Master</a>
+      </li>
+  <li>
+      <a href="#Media">type Media</a>
+      <ul>
+          <li><a href="#Media.Ext">func (Media) Ext() string</a></li>
+          <li><a href="#Media.String">func (m Media) String() string</a></li>
+          <li><a href="#Media.URI">func (m Media) URI() string</a></li>
+          </ul>
+      </li>
+  <li>
+      <a href="#Mixed">type Mixed</a>
+      </li>
+  <li>
+      <a href="#Scanner">type Scanner</a>
+      <ul>
+          <li><a href="#New_Scanner">func New_Scanner(body io.Reader) Scanner</a></li>
+          <li><a href="#Scanner.Master">func (s Scanner) Master() (*Master, error)</a></li>
+          <li><a href="#Scanner.Segment">func (s Scanner) Segment() (*Segment, error)</a></li>
+          </ul>
+      </li>
+  <li>
+      <a href="#Segment">type Segment</a>
+      <ul>
+          <li><a href="#Segment.IV">func (s Segment) IV() ([]byte, error)</a></li>
+          </ul>
+      </li>
+  <li>
+      <a href="#Stream">type Stream</a>
+      <ul>
+          <li><a href="#Stream.Ext">func (Stream) Ext() string</a></li>
+          <li><a href="#Stream.String">func (m Stream) String() string</a></li>
+          <li><a href="#Stream.URI">func (m Stream) URI() string</a></li>
+          </ul>
+      </li>
+  </ul><h3 id="pkg-types">Types</h3>
+  <h3 id="Block">type Block</h3>
+    <pre class="chroma"><span class="kd">type</span> <span class="nx">Block</span> <span class="kd">struct</span> <span class="p">{</span>
+	<a href="https://pkg.go.dev/crypto/cipher"><span class="nx">cipher</span></a><span class="p">.</span><a href="https://pkg.go.dev/crypto/cipher#Block"><span class="nx">Block</span></a>
+	<span class="c1">// contains filtered or unexported fields
+</span><span class="c1"></span><span class="p">}</span></pre>
+    <h4 id="New_Block">func New_Block</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="nf">New_Block</span><span class="p">(</span><span class="nx">key</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span> <span class="p">(</span><span class="o">*</span><a href="#Block"><span class="nx">Block</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <h4 id="Block.Decrypt">func (Block) Decrypt</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">b</span> <a href="#Block"><span class="nx">Block</span></a><span class="p">)</span> <span class="nf">Decrypt</span><span class="p">(</span><span class="nx">text</span><span class="p">,</span> <span class="nx">iv</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a></pre>
+  <h4 id="Block.Decrypt_Key">func (Block) Decrypt_Key</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">b</span> <a href="#Block"><span class="nx">Block</span></a><span class="p">)</span> <span class="nf">Decrypt_Key</span><span class="p">(</span><span class="nx">text</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a></pre>
+  <h3 id="Master">type Master</h3>
+    <pre class="chroma"><span class="kd">type</span> <span class="nx">Master</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span id="Master.Media"><span class="nx">Media</span></span>  <span class="p">[]</span><a href="#Media"><span class="nx">Media</span></a>
+	<span id="Master.Stream"><span class="nx">Stream</span></span> <span class="p">[]</span><a href="#Stream"><span class="nx">Stream</span></a>
+<span class="p">}</span></pre>
+    <h3 id="Media">type Media</h3>
+    <pre class="chroma"><span class="kd">type</span> <span class="nx">Media</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span id="Media.Group_ID"><span class="nx">Group_ID</span></span>        <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
+	<span id="Media.Type"><span class="nx">Type</span></span>            <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
+	<span id="Media.Name"><span class="nx">Name</span></span>            <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
+	<span id="Media.Characteristics"><span class="nx">Characteristics</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
+	<span id="Media.Raw_URI"><span class="nx">Raw_URI</span></span>         <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
+<span class="p">}</span></pre>
+    <h4 id="Media.Ext">func (Media) Ext</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><a href="#Media"><span class="nx">Media</span></a><span class="p">)</span> <span class="nf">Ext</span><span class="p">()</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+  <h4 id="Media.String">func (Media) String</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <a href="#Media"><span class="nx">Media</span></a><span class="p">)</span> <span class="nf">String</span><span class="p">()</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+  <h4 id="Media.URI">func (Media) URI</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <a href="#Media"><span class="nx">Media</span></a><span class="p">)</span> <span class="nf">URI</span><span class="p">()</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+  <h3 id="Mixed">type Mixed</h3>
+    <pre class="chroma"><span class="kd">type</span> <span class="nx">Mixed</span> <span class="kd">interface</span> <span class="p">{</span>
+	<span id="Mixed.Ext"><span class="nf">Ext</span></span><span class="p">()</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
+	<span id="Mixed.URI"><span class="nf">URI</span></span><span class="p">()</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
+<span class="p">}</span></pre>
+    <h3 id="Scanner">type Scanner</h3>
+    <pre class="chroma"><span class="kd">type</span> <span class="nx">Scanner</span> <span class="kd">struct</span> <span class="p">{</span>
+	<a href="https://pkg.go.dev/text/scanner"><span class="nx">scanner</span></a><span class="p">.</span><a href="https://pkg.go.dev/text/scanner#Scanner"><span class="nx">Scanner</span></a>
+	<span class="c1">// contains filtered or unexported fields
+</span><span class="c1"></span><span class="p">}</span></pre>
+    <h4 id="New_Scanner">func New_Scanner</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="nf">New_Scanner</span><span class="p">(</span><span class="nx">body</span> <a href="https://pkg.go.dev/io"><span class="nx">io</span></a><span class="p">.</span><a href="https://pkg.go.dev/io#Reader"><span class="nx">Reader</span></a><span class="p">)</span> <a href="#Scanner"><span class="nx">Scanner</span></a></pre>
+  <h4 id="Scanner.Master">func (Scanner) Master</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <a href="#Scanner"><span class="nx">Scanner</span></a><span class="p">)</span> <span class="nf">Master</span><span class="p">()</span> <span class="p">(</span><span class="o">*</span><a href="#Master"><span class="nx">Master</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <h4 id="Scanner.Segment">func (Scanner) Segment</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <a href="#Scanner"><span class="nx">Scanner</span></a><span class="p">)</span> <span class="nf">Segment</span><span class="p">()</span> <span class="p">(</span><span class="o">*</span><a href="#Segment"><span class="nx">Segment</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <h3 id="Segment">type Segment</h3>
+    <pre class="chroma"><span class="kd">type</span> <span class="nx">Segment</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span id="Segment.Key"><span class="nx">Key</span></span>    <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
+	<span id="Segment.Map"><span class="nx">Map</span></span>    <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
+	<span id="Segment.Raw_IV"><span class="nx">Raw_IV</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
+	<span id="Segment.URI"><span class="nx">URI</span></span>    <span class="p">[]</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
+<span class="p">}</span></pre>
+    <h4 id="Segment.IV">func (Segment) IV</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <a href="#Segment"><span class="nx">Segment</span></a><span class="p">)</span> <span class="nf">IV</span><span class="p">()</span> <span class="p">([]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <h3 id="Stream">type Stream</h3>
+    <pre class="chroma"><span class="kd">type</span> <span class="nx">Stream</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span id="Stream.Bandwidth"><span class="nx">Bandwidth</span></span>  <a href="https://pkg.go.dev/builtin#int64"><span class="kt">int64</span></a>
+	<span id="Stream.Raw_URI"><span class="nx">Raw_URI</span></span>    <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
+	<span id="Stream.Audio"><span class="nx">Audio</span></span>      <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
+	<span id="Stream.Codecs"><span class="nx">Codecs</span></span>     <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
+	<span id="Stream.Resolution"><span class="nx">Resolution</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
+<span class="p">}</span></pre>
+    <h4 id="Stream.Ext">func (Stream) Ext</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><a href="#Stream"><span class="nx">Stream</span></a><span class="p">)</span> <span class="nf">Ext</span><span class="p">()</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+  <h4 id="Stream.String">func (Stream) String</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <a href="#Stream"><span class="nx">Stream</span></a><span class="p">)</span> <span class="nf">String</span><span class="p">()</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+  <h4 id="Stream.URI">func (Stream) URI</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <a href="#Stream"><span class="nx">Stream</span></a><span class="p">)</span> <span class="nf">URI</span><span class="p">()</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+  </main>
+    <hr>
+    <footer>
+      <small id="generated-by-footer">
+        Generated with <a href="https://abhinav.github.io/doc2go/">doc2go</a>
+      </small>
+    </footer>
+    <script src="../_/js/permalink.js"></script>
+  </body>
+</html>

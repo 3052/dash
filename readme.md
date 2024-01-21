@@ -22,19 +22,9 @@ Data parsers and formatters
 ## Contact
 
 <dl>
-   <dt>
-   email
-   </dt>
-   <dd>
-   srpen6@gmail.com
-   </dd>
-   <dt>
-   Discord
-   </dt>
-   <dd>
-   srpen6
-   </dd>
-   <dd>
-   https://discord.com/invite/WWq6rFb8Rf
-   </dd>
+   <dt>email</dt>
+   <dd>srpen6@gmail.com</dd>
+   <dt>Discord</dt>
+   <dd>srpen6</dd>
+   <dd>https://discord.com/invite/WWq6rFb8Rf</dd>
 </dl>

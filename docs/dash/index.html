@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="doc2go">
+    <link href="../_/css/main.css" rel="stylesheet" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../_/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../_/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../_/icons/favicon-16x16.png">
+    <link rel="shortcut icon" href="../_/icons/favicon.ico">
+    <title>dash</title>
+</head>
+  <body>
+    <nav>
+        <a href="..">154.pages.dev/encoding</a>/dash<a href="#pkg-index">Index</a>
+      </nav><main><h2 id="pkg-overview">package dash</h2>
+<pre class="chroma"><span class="kn">import</span> <span class="s">&#34;154.pages.dev/encoding/dash&#34;</span></pre>
+<h3 id="pkg-index">Index</h3>
+<ul>
+  <li><a href="#pkg-constants">Constants</a></li><li>
+      <a href="#AdaptationSet">type AdaptationSet</a>
+      </li>
+  <li>
+      <a href="#ContentProtection">type ContentProtection</a>
+      </li>
+  <li>
+      <a href="#Media">type Media</a>
+      <ul>
+          <li><a href="#Media.Decode">func (m *Media) Decode(r io.Reader) error</a></li>
+          </ul>
+      </li>
+  <li>
+      <a href="#Representation">type Representation</a>
+      <ul>
+          <li><a href="#Representation.Default_KID">func (r Representation) Default_KID() ([]byte, error)</a></li>
+          <li><a href="#Representation.Initialization">func (r Representation) Initialization() (string, bool)</a></li>
+          <li><a href="#Representation.Media">func (r Representation) Media() ([]string, bool)</a></li>
+          <li><a href="#Representation.PSSH">func (r Representation) PSSH() ([]byte, error)</a></li>
+          <li><a href="#Representation.Sidx_Moof">func (r Representation) Sidx_Moof() (uint32, uint32, error)</a></li>
+          </ul>
+      </li>
+  <li>
+      <a href="#SegmentTemplate">type SegmentTemplate</a>
+      </li>
+  </ul><h3 id="pkg-constants">Constants</h3>
+  <pre class="chroma"><span class="kd">const</span> <span id="Template"><span class="nx">Template</span></span> <span class="p">=</span> <span class="s">`&lt;style&gt;
+</span><span class="s">table {
+</span><span class="s">   border-collapse: collapse;
+</span><span class="s">   margin: 9px;
+</span><span class="s">}
+</span><span class="s">td {
+</span><span class="s">   border-style: solid;
+</span><span class="s">   border-width: thin;
+</span><span class="s">}
+</span><span class="s">td,
+</span><span class="s">th {
+</span><span class="s">   padding-bottom: 9px;
+</span><span class="s">   padding-left: 9px;
+</span><span class="s">   padding-right: 9px;
+</span><span class="s">   padding-top: 9px;
+</span><span class="s">}
+</span><span class="s">&lt;/style&gt;
+</span><span class="s">&lt;table&gt;
+</span><span class="s">&lt;tr&gt;
+</span><span class="s">   &lt;th&gt;width&lt;/th&gt;
+</span><span class="s">   &lt;th&gt;height&lt;/th&gt;
+</span><span class="s">   &lt;th&gt;bandwidth&lt;/th&gt;
+</span><span class="s">   &lt;th&gt;codecs&lt;/th&gt;
+</span><span class="s">   &lt;th&gt;type&lt;/th&gt;
+</span><span class="s">   &lt;th&gt;role&lt;/th&gt;
+</span><span class="s">   &lt;th&gt;language&lt;/th&gt;
+</span><span class="s">   &lt;th&gt;ID&lt;/th&gt;
+</span><span class="s">   &lt;th&gt;period&lt;/th&gt;
+</span><span class="s">&lt;/tr&gt;
+</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">$period</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="na">.Period</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
+</span><span class="s">   </span><span class="cp">{{</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">$adaptation</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="na">.AdaptationSet</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
+</span><span class="s">      </span><span class="cp">{{</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="na">.Representation</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
+</span><span class="s">&lt;tr&gt;
+</span><span class="s">   &lt;td&gt;</span><span class="cp">{{</span><span class="w"> </span><span class="na">.Width</span><span class="w"> </span><span class="cp">}}</span><span class="s">&lt;/td&gt;
+</span><span class="s">   &lt;td&gt;</span><span class="cp">{{</span><span class="w"> </span><span class="na">.Height</span><span class="w"> </span><span class="cp">}}</span><span class="s">&lt;/td&gt;
+</span><span class="s">   &lt;td&gt;</span><span class="cp">{{</span><span class="w"> </span><span class="na">.Bandwidth</span><span class="w"> </span><span class="cp">}}</span><span class="s">&lt;/td&gt;
+</span><span class="s">         </span><span class="cp">{{</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="na">.Codecs</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
+</span><span class="s">   &lt;td&gt;</span><span class="cp">{{</span><span class="w"> </span><span class="na">.Codecs</span><span class="w"> </span><span class="cp">}}</span><span class="s">&lt;/td&gt;
+</span><span class="s">         </span><span class="cp">{{</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
+</span><span class="s">   &lt;td&gt;</span><span class="cp">{{</span><span class="w"> </span><span class="nx">$adaptation</span><span class="na">.Codecs</span><span class="w"> </span><span class="cp">}}</span><span class="s">&lt;/td&gt;
+</span><span class="s">         </span><span class="cp">{{</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
+</span><span class="s">         </span><span class="cp">{{</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="na">.MimeType</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
+</span><span class="s">   &lt;td&gt;</span><span class="cp">{{</span><span class="w"> </span><span class="na">.MimeType</span><span class="w"> </span><span class="cp">}}</span><span class="s">&lt;/td&gt;
+</span><span class="s">         </span><span class="cp">{{</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
+</span><span class="s">   &lt;td&gt;</span><span class="cp">{{</span><span class="w"> </span><span class="nx">$adaptation</span><span class="na">.MimeType</span><span class="w"> </span><span class="cp">}}</span><span class="s">&lt;/td&gt;
+</span><span class="s">         </span><span class="cp">{{</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
+</span><span class="s">         </span><span class="cp">{{</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nx">$adaptation</span><span class="na">.Role</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
+</span><span class="s">   &lt;td&gt;</span><span class="cp">{{</span><span class="w"> </span><span class="nx">$adaptation</span><span class="na">.Role.Value</span><span class="w"> </span><span class="cp">}}</span><span class="s">&lt;/td&gt;
+</span><span class="s">         </span><span class="cp">{{</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
+</span><span class="s">   &lt;td&gt;&lt;/td&gt;
+</span><span class="s">         </span><span class="cp">{{</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
+</span><span class="s">   &lt;td&gt;</span><span class="cp">{{</span><span class="w"> </span><span class="nx">$adaptation</span><span class="na">.Lang</span><span class="w"> </span><span class="cp">}}</span><span class="s">&lt;/td&gt;
+</span><span class="s">   &lt;td&gt;</span><span class="cp">{{</span><span class="w"> </span><span class="na">.ID</span><span class="w"> </span><span class="cp">}}</span><span class="s">&lt;/td&gt;
+</span><span class="s">   &lt;td&gt;</span><span class="cp">{{</span><span class="w"> </span><span class="nx">$period</span><span class="na">.ID</span><span class="w"> </span><span class="cp">}}</span><span class="s">&lt;/td&gt;
+</span><span class="s">&lt;/tr&gt;
+</span><span class="s">      </span><span class="cp">{{</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
+</span><span class="s">   </span><span class="cp">{{</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
+</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
+</span><span class="s">&lt;/table&gt;
+</span><span class="s">`</span></pre>
+  <h3 id="pkg-types">Types</h3>
+  <h3 id="AdaptationSet">type AdaptationSet</h3>
+    <pre class="chroma"><span class="kd">type</span> <span class="nx">AdaptationSet</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span class="c1">// this might be under Representation
+</span><span class="c1"></span>	<span id="AdaptationSet.Codecs"><span class="nx">Codecs</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;codecs,attr&#34;`</span>
+	<span class="c1">// this might be under Representation
+</span><span class="c1"></span>	<span id="AdaptationSet.ContentProtection"><span class="nx">ContentProtection</span></span> <span class="p">[]</span><a href="#ContentProtection"><span class="nx">ContentProtection</span></a>
+	<span class="c1">// this might not exist
+</span><span class="c1"></span>	<span id="AdaptationSet.Lang"><span class="nx">Lang</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;lang,attr&#34;`</span>
+	<span class="c1">// this might be under Representation
+</span><span class="c1"></span>	<span id="AdaptationSet.MimeType"><span class="nx">MimeType</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;mimeType,attr&#34;`</span>
+	<span class="c1">// pointer because we want to edit these
+</span><span class="c1"></span>	<span id="AdaptationSet.Representation"><span class="nx">Representation</span></span> <span class="p">[]</span><a href="#Representation"><span class="nx">Representation</span></a>
+	<span class="c1">// this might not exist
+</span><span class="c1"></span>	<span id="AdaptationSet.Role"><span class="nx">Role</span></span> <span class="o">*</span><span class="kd">struct</span> <span class="p">{</span>
+		<span id="AdaptationSet.Value"><span class="nx">Value</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;value,attr&#34;`</span>
+	<span class="p">}</span>
+	<span class="c1">// this might not exist, or might be under Representation
+</span><span class="c1"></span>	<span id="AdaptationSet.SegmentTemplate"><span class="nx">SegmentTemplate</span></span> <span class="o">*</span><a href="#SegmentTemplate"><span class="nx">SegmentTemplate</span></a>
+<span class="p">}</span></pre>
+    <h3 id="ContentProtection">type ContentProtection</h3>
+    <pre class="chroma"><span class="kd">type</span> <span class="nx">ContentProtection</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span id="ContentProtection.SchemeIdUri"><span class="nx">SchemeIdUri</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;schemeIdUri,attr&#34;`</span>
+	<span class="c1">// this might not exist
+</span><span class="c1"></span>	<span id="ContentProtection.Default_KID"><span class="nx">Default_KID</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;default_KID,attr&#34;`</span>
+	<span class="c1">// this might not exist
+</span><span class="c1"></span>	<span id="ContentProtection.PSSH"><span class="nx">PSSH</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;pssh&#34;`</span>
+<span class="p">}</span></pre>
+    <h3 id="Media">type Media</h3>
+    <pre class="chroma"><span class="kd">type</span> <span class="nx">Media</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span id="Media.Period"><span class="nx">Period</span></span> <span class="p">[]</span><span class="kd">struct</span> <span class="p">{</span>
+		<span id="Media.AdaptationSet"><span class="nx">AdaptationSet</span></span> <span class="p">[]</span><a href="#AdaptationSet"><span class="nx">AdaptationSet</span></a>
+		<span id="Media.ID"><span class="nx">ID</span></span>            <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;id,attr&#34;`</span>
+	<span class="p">}</span>
+<span class="p">}</span></pre>
+    <h4 id="Media.Decode">func (*Media) Decode</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <span class="o">*</span><a href="#Media"><span class="nx">Media</span></a><span class="p">)</span> <span class="nf">Decode</span><span class="p">(</span><span class="nx">r</span> <a href="https://pkg.go.dev/io"><span class="nx">io</span></a><span class="p">.</span><a href="https://pkg.go.dev/io#Reader"><span class="nx">Reader</span></a><span class="p">)</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <h3 id="Representation">type Representation</h3>
+    <pre class="chroma"><span class="kd">type</span> <span class="nx">Representation</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span id="Representation.Bandwidth"><span class="nx">Bandwidth</span></span> <a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a>    <span class="s">`xml:&#34;bandwidth,attr&#34;`</span>
+	<span id="Representation.ID"><span class="nx">ID</span></span>        <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;id,attr&#34;`</span>
+	<span class="c1">// this might not exist
+</span><span class="c1"></span>	<span id="Representation.BaseURL"><span class="nx">BaseURL</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
+	<span class="c1">// this might be under AdaptationSet
+</span><span class="c1"></span>	<span id="Representation.Codecs"><span class="nx">Codecs</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;codecs,attr&#34;`</span>
+	<span class="c1">// this might be under AdaptationSet
+</span><span class="c1"></span>	<span id="Representation.ContentProtection"><span class="nx">ContentProtection</span></span> <span class="p">[]</span><a href="#ContentProtection"><span class="nx">ContentProtection</span></a>
+	<span class="c1">// this might not exist
+</span><span class="c1"></span>	<span id="Representation.Height"><span class="nx">Height</span></span> <span class="o">*</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a> <span class="s">`xml:&#34;height,attr&#34;`</span>
+	<span class="c1">// this might be under AdaptationSet
+</span><span class="c1"></span>	<span id="Representation.MimeType"><span class="nx">MimeType</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;mimeType,attr&#34;`</span>
+	<span class="c1">// this might not exist
+</span><span class="c1"></span>	<span id="Representation.SegmentBase"><span class="nx">SegmentBase</span></span> <span class="o">*</span><span class="kd">struct</span> <span class="p">{</span>
+		<span id="Representation.IndexRange"><span class="nx">IndexRange</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;indexRange,attr&#34;`</span>
+	<span class="p">}</span>
+	<span class="c1">// this might not exist, or might be under AdaptationSet
+</span><span class="c1"></span>	<span id="Representation.SegmentTemplate"><span class="nx">SegmentTemplate</span></span> <span class="o">*</span><a href="#SegmentTemplate"><span class="nx">SegmentTemplate</span></a>
+	<span class="c1">// this might not exist
+</span><span class="c1"></span>	<span id="Representation.Width"><span class="nx">Width</span></span> <span class="o">*</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a> <span class="s">`xml:&#34;width,attr&#34;`</span>
+<span class="p">}</span></pre>
+    <h4 id="Representation.Default_KID">func (Representation) Default_KID</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Default_KID</span><span class="p">()</span> <span class="p">([]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <h4 id="Representation.Initialization">func (Representation) Initialization</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Initialization</span><span class="p">()</span> <span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
+  <h4 id="Representation.Media">func (Representation) Media</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Media</span><span class="p">()</span> <span class="p">([]</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
+  <h4 id="Representation.PSSH">func (Representation) PSSH</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">PSSH</span><span class="p">()</span> <span class="p">([]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <h4 id="Representation.Sidx_Moof">func (Representation) Sidx_Moof</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Sidx_Moof</span><span class="p">()</span> <span class="p">(</span><a href="https://pkg.go.dev/builtin#uint32"><span class="kt">uint32</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#uint32"><span class="kt">uint32</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <h3 id="SegmentTemplate">type SegmentTemplate</h3>
+    <pre class="chroma"><span class="kd">type</span> <span class="nx">SegmentTemplate</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span id="SegmentTemplate.Media"><span class="nx">Media</span></span>           <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;media,attr&#34;`</span>
+	<span id="SegmentTemplate.SegmentTimeline"><span class="nx">SegmentTimeline</span></span> <span class="kd">struct</span> <span class="p">{</span>
+		<span id="SegmentTemplate.S"><span class="nx">S</span></span> <span class="p">[]</span><span class="kd">struct</span> <span class="p">{</span>
+			<span class="c1">// duration
+</span><span class="c1"></span>			<span id="SegmentTemplate.D"><span class="nx">D</span></span> <a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a> <span class="s">`xml:&#34;d,attr&#34;`</span>
+			<span class="c1">// repeat. this may not exist
+</span><span class="c1"></span>			<span id="SegmentTemplate.R"><span class="nx">R</span></span> <a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a> <span class="s">`xml:&#34;r,attr&#34;`</span>
+		<span class="p">}</span>
+	<span class="p">}</span>
+	<span id="SegmentTemplate.StartNumber"><span class="nx">StartNumber</span></span> <a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a> <span class="s">`xml:&#34;startNumber,attr&#34;`</span>
+	<span class="c1">// this may not exist
+</span><span class="c1"></span>	<span id="SegmentTemplate.Initialization"><span class="nx">Initialization</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;initialization,attr&#34;`</span>
+<span class="p">}</span></pre>
+    </main>
+    <hr>
+    <footer>
+      <small id="generated-by-footer">
+        Generated with <a href="https://abhinav.github.io/doc2go/">doc2go</a>
+      </small>
+    </footer>
+    <script src="../_/js/permalink.js"></script>
+  </body>
+</html>
