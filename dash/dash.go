@@ -5,6 +5,25 @@ import (
    "io"
 )
 
+type Adaptation struct {
+   // this might be under Representation
+   Codecs string `xml:"codecs,attr"`
+   // this might be under Representation
+   ContentProtection []ContentProtection
+   // this might not exist
+   Lang string `xml:"lang,attr"`
+   // this might be under Representation
+   MimeType string `xml:"mimeType,attr"`
+   // pointer because we want to edit these
+   Representation []Representation
+   // this might not exist
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   // this might not exist, or might be under Representation
+   SegmentTemplate *SegmentTemplate
+}
+
 const Template = `<style>
 table {
    border-collapse: collapse;
@@ -66,25 +85,6 @@ th {
 </table>
 `
 
-type AdaptationSet struct {
-   // this might be under Representation
-   Codecs string `xml:"codecs,attr"`
-   // this might be under Representation
-   ContentProtection []ContentProtection
-   // this might not exist
-   Lang string `xml:"lang,attr"`
-   // this might be under Representation
-   MimeType string `xml:"mimeType,attr"`
-   // pointer because we want to edit these
-   Representation []Representation
-   // this might not exist
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   // this might not exist, or might be under Representation
-   SegmentTemplate *SegmentTemplate
-}
-
 type ContentProtection struct {
    SchemeIdUri string `xml:"schemeIdUri,attr"`
    // this might not exist
@@ -95,7 +95,7 @@ type ContentProtection struct {
 
 type Media struct {
    Period []struct {
-      AdaptationSet []AdaptationSet
+      AdaptationSet []Adaptation
       ID string `xml:"id,attr"`
    }
 }

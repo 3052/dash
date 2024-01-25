@@ -20,15 +20,30 @@ func reader(name string) (*Media, error) {
    return &m, nil
 }
 
+type looper func(Adaptation, Representation) bool
+
+func (f looper) loop(m *Media) {
+   for _, period := range m.Period {
+      for _, adapt := range period.AdaptationSet {
+         for _, represent := range adapt.Representation {
+            if !f(adapt, represent) {
+               return
+            }
+         }
+      }
+   }
+}
+
 func Test_SegmentBase(t *testing.T) {
    m, err := reader("mpd/hulu.mpd")
    if err != nil {
       t.Fatal(err)
    }
-   looper(m, func(r Representation) bool {
+   var f looper = func(_ Adaptation, r Representation) bool {
       fmt.Println(r.Sidx_Moof())
       return true
-   })
+   }
+   f.loop(m)
 }
 
 func Test_Initialization(t *testing.T) {
@@ -36,23 +51,12 @@ func Test_Initialization(t *testing.T) {
    if err != nil {
       t.Fatal(err)
    }
-   looper(m, func(r Representation) bool {
+   var f looper = func(_ Adaptation, r Representation) bool {
       v, ok := r.Initialization()
       fmt.Printf("%v %q %v\n\n", r.ID, v, ok)
       return true
-   })
-}
-
-func looper(m *Media, fn func(Representation) bool) {
-   for _, period := range m.Period {
-      for _, adaptation := range period.AdaptationSet {
-         for _, representation := range adaptation.Representation {
-            if !fn(representation) {
-               return
-            }
-         }
-      }
    }
+   f.loop(m)
 }
 
 func Test_Media(t *testing.T) {
@@ -64,7 +68,7 @@ func Test_Media(t *testing.T) {
    if err != nil {
       t.Fatal(err)
    }
-   looper(media_struct, func(r Representation) bool {
+   var f looper = func(_ Adaptation, r Representation) bool {
       media_string, ok := r.Media()
       if !ok {
          t.Fatal("Representation.Media")
@@ -77,5 +81,6 @@ func Test_Media(t *testing.T) {
          fmt.Println(ref)
       }
       return false
-   })
+   }
+   f.loop(media_struct)
 }
