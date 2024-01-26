@@ -8,6 +8,42 @@ import (
    "strings"
 )
 
+// wikipedia.org/wiki/Mutator_method
+func (r Representation) GetMimeType(a AdaptationSet) string {
+   if r.MimeType != "" {
+      return r.MimeType
+   }
+   return a.MimeType
+}
+
+func (r Representation) Initialization() (string, bool) {
+   if v := r.SegmentTemplate; v != nil {
+      if v := v.Initialization; v != "" {
+         return strings.Replace(v, "$RepresentationID$", r.ID, 1), true
+      }
+   }
+   return "", false
+}
+
+func (r Representation) Default_KID() ([]byte, error) {
+   for _, c := range r.ContentProtection {
+      if c.SchemeIdUri == "urn:mpeg:dash:mp4protection:2011" {
+         c.Default_KID = strings.ReplaceAll(c.Default_KID, "-", "")
+         return hex.DecodeString(c.Default_KID)
+      }
+   }
+   return nil, errors.New("default_KID")
+}
+
+func (r Representation) PSSH() ([]byte, error) {
+   for _, c := range r.ContentProtection {
+      if c.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
+         return base64.StdEncoding.DecodeString(c.PSSH)
+      }
+   }
+   return nil, errors.New("PSSH")
+}
+
 type Representation struct {
    Bandwidth int `xml:"bandwidth,attr"`
    ID string `xml:"id,attr"`
@@ -24,7 +60,7 @@ type Representation struct {
    // this might not exist
    SegmentBase *struct {
       IndexRange string `xml:"indexRange,attr"`
-   }
+   } `xml:"SegmentBase"`
    // this might not exist, or might be under AdaptationSet
    SegmentTemplate *SegmentTemplate
    // this might not exist
@@ -41,34 +77,6 @@ func (r Representation) Sidx_Moof() (uint32, uint32, error) {
       return 0, 0, err
    }
    return start, end+1, nil
-}
-
-func (r Representation) Default_KID() ([]byte, error) {
-   for _, c := range r.ContentProtection {
-      if c.SchemeIdUri == "urn:mpeg:dash:mp4protection:2011" {
-         c.Default_KID = strings.ReplaceAll(c.Default_KID, "-", "")
-         return hex.DecodeString(c.Default_KID)
-      }
-   }
-   return nil, errors.New("default_KID")
-}
-
-func (r Representation) Initialization() (string, bool) {
-   if v := r.SegmentTemplate; v != nil {
-      if v := v.Initialization; v != "" {
-         return strings.Replace(v, "$RepresentationID$", r.ID, 1), true
-      }
-   }
-   return "", false
-}
-
-func (r Representation) PSSH() ([]byte, error) {
-   for _, c := range r.ContentProtection {
-      if c.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
-         return base64.StdEncoding.DecodeString(c.PSSH)
-      }
-   }
-   return nil, errors.New("PSSH")
 }
 
 func (r Representation) Media() ([]string, bool) {

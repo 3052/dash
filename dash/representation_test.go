@@ -1,10 +1,37 @@
 package dash
 
 import (
+   "encoding/xml"
    "os"
    "testing"
    "text/template"
 )
+
+func Test_Info(t *testing.T) {
+   tmpl, err := new(template.Template).Parse(Template)
+   if err != nil {
+      t.Fatal(err)
+   }
+   file, err := os.Create("dash.html")
+   if err != nil {
+      t.Fatal(err)
+   }
+   defer file.Close()
+   for _, name := range tests {
+      file.WriteString(name)
+      text, err := os.ReadFile(name)
+      if err != nil {
+         t.Fatal(err)
+      }
+      var m MPD
+      if err := xml.Unmarshal(text, &m); err != nil {
+         t.Fatal(err)
+      }
+      if err := tmpl.Execute(file, m); err != nil {
+         t.Fatal(err)
+      }
+   }
+}
 
 var tests = []string{
    "mpd/amc.mpd",
@@ -12,33 +39,4 @@ var tests = []string{
    "mpd/nbc.mpd",
    "mpd/paramount.mpd",
    "mpd/roku.mpd",
-}
-
-func Test_Info(t *testing.T) {
-   tmpl, err := new(template.Template).Parse(Template)
-   if err != nil {
-      t.Fatal(err)
-   }
-   dst, err := os.Create("dash.html")
-   if err != nil {
-      t.Fatal(err)
-   }
-   defer dst.Close()
-   for _, name := range tests {
-      dst.WriteString(name)
-      func() {
-         src, err := os.Open(name)
-         if err != nil {
-            t.Fatal(err)
-         }
-         defer src.Close()
-         var m Media
-         if err := m.Decode(src); err != nil {
-            t.Fatal(err)
-         }
-         if err := tmpl.Execute(dst, m); err != nil {
-            t.Fatal(err)
-         }
-      }()
-   }
 }

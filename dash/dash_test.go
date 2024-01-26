@@ -1,28 +1,28 @@
 package dash
 
 import (
+   "encoding/xml"
    "fmt"
    "net/url"
    "os"
    "testing"
 )
 
-func reader(name string) (*Media, error) {
-   file, err := os.Open(name)
+func reader(name string) (*MPD, error) {
+   text, err := os.ReadFile(name)
    if err != nil {
       return nil, err
    }
-   defer file.Close()
-   var m Media
-   if err := m.Decode(file); err != nil {
+   m := new(MPD)
+   if err := xml.Unmarshal(text, &m); err != nil {
       return nil, err
    }
-   return &m, nil
+   return m, nil
 }
 
-type looper func(Adaptation, Representation) bool
+type looper func(AdaptationSet, Representation) bool
 
-func (f looper) loop(m *Media) {
+func (f looper) loop(m *MPD) {
    for _, period := range m.Period {
       for _, adapt := range period.AdaptationSet {
          for _, represent := range adapt.Representation {
@@ -39,7 +39,7 @@ func Test_SegmentBase(t *testing.T) {
    if err != nil {
       t.Fatal(err)
    }
-   var f looper = func(_ Adaptation, r Representation) bool {
+   var f looper = func(_ AdaptationSet, r Representation) bool {
       fmt.Println(r.Sidx_Moof())
       return true
    }
@@ -51,7 +51,7 @@ func Test_Initialization(t *testing.T) {
    if err != nil {
       t.Fatal(err)
    }
-   var f looper = func(_ Adaptation, r Representation) bool {
+   var f looper = func(_ AdaptationSet, r Representation) bool {
       v, ok := r.Initialization()
       fmt.Printf("%v %q %v\n\n", r.ID, v, ok)
       return true
@@ -68,7 +68,7 @@ func Test_Media(t *testing.T) {
    if err != nil {
       t.Fatal(err)
    }
-   var f looper = func(_ Adaptation, r Representation) bool {
+   var f looper = func(_ AdaptationSet, r Representation) bool {
       media_string, ok := r.Media()
       if !ok {
          t.Fatal("Representation.Media")
