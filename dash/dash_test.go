@@ -8,17 +8,6 @@ import (
    "testing"
 )
 
-func Test_Initialization(t *testing.T) {
-   media, err := reader("mpd/amc.mpd")
-   if err != nil {
-      t.Fatal(err)
-   }
-   media.every(func(a Adaptation, r Representation) {
-      v, ok := r.Initialization(a)
-      fmt.Printf("%v %q %v\n\n", r.ID, v, ok)
-   })
-}
-
 func reader(name string) (*MPD, error) {
    text, err := os.ReadFile(name)
    if err != nil {
@@ -31,32 +20,24 @@ func reader(name string) (*MPD, error) {
    return media, nil
 }
 
-func (m MPD) some(f func(Adaptation, Representation) bool) {
-   for _, period := range m.Period {
-      for _, adapt := range period.AdaptationSet {
-         for _, represent := range adapt.Representation {
-            if f(adapt, represent) {
-               return
-            }
-         }
-      }
-   }
-}
-
-func (m MPD) every(f func(Adaptation, Representation)) {
-   m.some(func(a Adaptation, r Representation) bool {
-      f(a, r)
-      return false
-   })
-}
-
 func Test_SegmentBase(t *testing.T) {
    media, err := reader("mpd/hulu.mpd")
    if err != nil {
       t.Fatal(err)
    }
-   media.every(func(_ Adaptation, r Representation) {
+   media.Every(func(r Representation) {
       fmt.Println(r.Sidx_Moof())
+   })
+}
+
+func Test_Initialization(t *testing.T) {
+   media, err := reader("mpd/amc.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   media.Every(func(r Representation) {
+      v, ok := r.Initialization()
+      fmt.Printf("%v %q %v\n\n", r.ID, v, ok)
    })
 }
 
@@ -69,7 +50,7 @@ func Test_Media(t *testing.T) {
    if err != nil {
       t.Fatal(err)
    }
-   roku.some(func(_ Adaptation, r Representation) bool {
+   roku.Some(func(r Representation) bool {
       media, ok := r.Media()
       if !ok {
          t.Fatal("Representation.Media")
