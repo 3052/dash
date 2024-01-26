@@ -23,11 +23,11 @@ func Test_Info(t *testing.T) {
       if err != nil {
          t.Fatal(err)
       }
-      var m MPD
-      if err := xml.Unmarshal(text, &m); err != nil {
+      var media MPD
+      if err := xml.Unmarshal(text, &media); err != nil {
          t.Fatal(err)
       }
-      if err := tmpl.Execute(file, m); err != nil {
+      if err := tmpl.Execute(file, media); err != nil {
          t.Fatal(err)
       }
    }
