@@ -14,7 +14,16 @@ func Test_SegmentBase(t *testing.T) {
       t.Fatal(err)
    }
    media.Every(func(r Representation) {
-      fmt.Printf("%+v\n", r.SegmentBase)
+      var start, end int
+      err := r.SegmentBase.Initialization.Range.Scan(&start, &end)
+      if err != nil {
+         t.Fatal(err)
+      }
+      fmt.Print(start, " ", end, " ")
+      if err := r.SegmentBase.IndexRange.Scan(&start, &end); err != nil {
+         t.Fatal(err)
+      }
+      fmt.Println(start, end)
    })
 }
 
