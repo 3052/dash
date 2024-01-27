@@ -8,6 +8,19 @@ import (
    "strings"
 )
 
+type IndexRange struct {
+   Start int
+   End int
+}
+
+func (i *IndexRange) UnmarshalText(b []byte) error {
+   _, err := fmt.Sscanf(string(b), "%v-%v", &i.Start, &i.End)
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
 type Representation struct {
    Bandwidth int `xml:"bandwidth,attr"`
    ID string `xml:"id,attr"`
@@ -23,7 +36,7 @@ type Representation struct {
    MimeType string `xml:"mimeType,attr"`
    // this might not exist
    SegmentBase *struct {
-      IndexRange string `xml:"indexRange,attr"`
+      IndexRange IndexRange `xml:"indexRange,attr"`
    }
    // this might not exist, or might be under AdaptationSet
    SegmentTemplate *SegmentTemplate
@@ -86,16 +99,4 @@ func (r Representation) PSSH() ([]byte, error) {
       }
    }
    return nil, errors.New("PSSH")
-}
-
-func (r Representation) Sidx_Moof() (uint32, uint32, error) {
-   if r.SegmentBase == nil {
-      return 0, 0, errors.New("SegmentBase")
-   }
-   var start, end uint32
-   _, err := fmt.Sscanf(r.SegmentBase.IndexRange, "%v-%v", &start, &end)
-   if err != nil {
-      return 0, 0, err
-   }
-   return start, end+1, nil
 }

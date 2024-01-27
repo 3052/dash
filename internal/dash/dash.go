@@ -2,6 +2,7 @@ package main
 
 import (
    "154.pages.dev/encoding/dash"
+   "encoding/xml"
    "errors"
    "fmt"
    "net/http"
@@ -10,7 +11,7 @@ import (
    "path"
 )
 
-func (f flags) pick(media *dash.Media) (*dash.Representation, bool) {
+func (f flags) pick(media *dash.MPD) (*dash.Representation, bool) {
    for _, period := range media.Period {
       for _, adaptation := range period.AdaptationSet {
          for _, representation := range adaptation.Representation {
@@ -23,7 +24,7 @@ func (f flags) pick(media *dash.Media) (*dash.Representation, bool) {
    return nil, false
 }
 
-func (f *flags) manifest() (*dash.Media, error) {
+func (f *flags) manifest() (*dash.MPD, error) {
    res, err := http.Get(f.address)
    if err != nil {
       return nil, err
@@ -33,11 +34,11 @@ func (f *flags) manifest() (*dash.Media, error) {
       return nil, errors.New(res.Status)
    }
    f.url = res.Request.URL
-   var media dash.Media
-   if err := media.Decode(res.Body); err != nil {
+   media := new(dash.MPD)
+   if err := xml.NewDecoder(res.Body).Decode(media); err != nil {
       return nil, err
    }
-   return &media, nil
+   return media, nil
 }
 
 func (f flags) download(rep *dash.Representation) error {

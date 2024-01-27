@@ -8,6 +8,16 @@ import (
    "testing"
 )
 
+func Test_SegmentBase(t *testing.T) {
+   media, err := reader("mpd/hulu.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   media.Every(func(r Representation) {
+      fmt.Printf("%+v\n", r.SegmentBase)
+   })
+}
+
 func reader(name string) (*MPD, error) {
    text, err := os.ReadFile(name)
    if err != nil {
@@ -18,16 +28,6 @@ func reader(name string) (*MPD, error) {
       return nil, err
    }
    return media, nil
-}
-
-func Test_SegmentBase(t *testing.T) {
-   media, err := reader("mpd/hulu.mpd")
-   if err != nil {
-      t.Fatal(err)
-   }
-   media.Every(func(r Representation) {
-      fmt.Println(r.Sidx_Moof())
-   })
 }
 
 func Test_Initialization(t *testing.T) {

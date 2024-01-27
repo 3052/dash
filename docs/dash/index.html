@@ -14,7 +14,7 @@
   <body>
     <nav>
         <a href="..">154.pages.dev/encoding</a>/dash<span class="navbar-right">
-          v1.16.0 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
+          v1.16.1 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
       </nav>
     <main><h2 id="pkg-overview">package dash</h2>
 <pre class="chroma"><span class="kn">import</span> <span class="s">&#34;154.pages.dev/encoding/dash&#34;</span></pre>
@@ -25,6 +25,12 @@
       </li>
   <li>
       <a href="#ContentProtection">type ContentProtection</a>
+      </li>
+  <li>
+      <a href="#IndexRange">type IndexRange</a>
+      <ul>
+          <li><a href="#IndexRange.UnmarshalText">func (i *IndexRange) UnmarshalText(b []byte) error</a></li>
+          </ul>
       </li>
   <li>
       <a href="#MPD">type MPD</a>
@@ -41,7 +47,6 @@
           <li><a href="#Representation.Initialization">func (r Representation) Initialization() (string, bool)</a></li>
           <li><a href="#Representation.Media">func (r Representation) Media() ([]string, bool)</a></li>
           <li><a href="#Representation.PSSH">func (r Representation) PSSH() ([]byte, error)</a></li>
-          <li><a href="#Representation.Sidx_Moof">func (r Representation) Sidx_Moof() (uint32, uint32, error)</a></li>
           </ul>
       </li>
   <li>
@@ -136,7 +141,14 @@
 	<span class="c1">// this might not exist
 </span><span class="c1"></span>	<span id="ContentProtection.PSSH"><span class="nx">PSSH</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;pssh&#34;`</span>
 <span class="p">}</span></pre>
-    <h3 id="MPD">type MPD</h3>
+    <h3 id="IndexRange">type IndexRange</h3>
+    <pre class="chroma"><span class="kd">type</span> <span class="nx">IndexRange</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span id="IndexRange.Start"><span class="nx">Start</span></span> <a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a>
+	<span id="IndexRange.End"><span class="nx">End</span></span>   <a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a>
+<span class="p">}</span></pre>
+    <h4 id="IndexRange.UnmarshalText">func (*IndexRange) UnmarshalText</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">i</span> <span class="o">*</span><a href="#IndexRange"><span class="nx">IndexRange</span></a><span class="p">)</span> <span class="nf">UnmarshalText</span><span class="p">(</span><span class="nx">b</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <h3 id="MPD">type MPD</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">MPD</span> <span class="kd">struct</span> <span class="p">{</span>
 	<span id="MPD.Period"><span class="nx">Period</span></span> <span class="p">[]</span><span class="kd">struct</span> <span class="p">{</span>
 		<span id="MPD.AdaptationSet"><span class="nx">AdaptationSet</span></span> <span class="p">[]</span><a href="#AdaptationSet"><span class="nx">AdaptationSet</span></a>
@@ -163,7 +175,7 @@
 </span><span class="c1"></span>	<span id="Representation.MimeType"><span class="nx">MimeType</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;mimeType,attr&#34;`</span>
 	<span class="c1">// this might not exist
 </span><span class="c1"></span>	<span id="Representation.SegmentBase"><span class="nx">SegmentBase</span></span> <span class="o">*</span><span class="kd">struct</span> <span class="p">{</span>
-		<span id="Representation.IndexRange"><span class="nx">IndexRange</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;indexRange,attr&#34;`</span>
+		<span id="Representation.IndexRange"><span class="nx">IndexRange</span></span> <a href="#IndexRange"><span class="nx">IndexRange</span></a> <span class="s">`xml:&#34;indexRange,attr&#34;`</span>
 	<span class="p">}</span>
 	<span class="c1">// this might not exist, or might be under AdaptationSet
 </span><span class="c1"></span>	<span id="Representation.SegmentTemplate"><span class="nx">SegmentTemplate</span></span> <span class="o">*</span><a href="#SegmentTemplate"><span class="nx">SegmentTemplate</span></a>
@@ -180,8 +192,6 @@
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Media</span><span class="p">()</span> <span class="p">([]</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
   <h4 id="Representation.PSSH">func (Representation) PSSH</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">PSSH</span><span class="p">()</span> <span class="p">([]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
-  <h4 id="Representation.Sidx_Moof">func (Representation) Sidx_Moof</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Sidx_Moof</span><span class="p">()</span> <span class="p">(</span><a href="https://pkg.go.dev/builtin#uint32"><span class="kt">uint32</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#uint32"><span class="kt">uint32</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
   <h3 id="SegmentTemplate">type SegmentTemplate</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">SegmentTemplate</span> <span class="kd">struct</span> <span class="p">{</span>
 	<span id="SegmentTemplate.Media"><span class="nx">Media</span></span>           <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;media,attr&#34;`</span>
