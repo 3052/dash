@@ -53,10 +53,7 @@ func (f flags) download(rep *dash.Representation) error {
    if err := create(address); err != nil {
       return err
    }
-   media, ok := rep.Media()
-   if !ok {
-      return errors.New("dash.Represenation.Media")
-   }
+   media := rep.Media()
    for i, ref := range media {
       // with DASH, initialization and media URLs are relative to the MPD URL
       address, err := f.url.Parse(ref)

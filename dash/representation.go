@@ -8,41 +8,15 @@ import (
    "strings"
 )
 
-type IndexRange struct {
-   Start int
-   End int
-}
-
-func (i *IndexRange) UnmarshalText(b []byte) error {
-   _, err := fmt.Sscanf(string(b), "%v-%v", &i.Start, &i.End)
+func (r Range) Scan(start, end *uint32) error {
+   _, err := fmt.Sscanf(string(r), "%v-%v", start, end)
    if err != nil {
       return err
    }
    return nil
 }
 
-type Representation struct {
-   Bandwidth int `xml:"bandwidth,attr"`
-   ID string `xml:"id,attr"`
-   // this might not exist
-   BaseURL string
-   // this might be under AdaptationSet
-   Codecs string `xml:"codecs,attr"`
-   // this might be under AdaptationSet
-   ContentProtection []ContentProtection
-   // this might not exist
-   Height *int `xml:"height,attr"`
-   // this might be under AdaptationSet
-   MimeType string `xml:"mimeType,attr"`
-   // this might not exist
-   SegmentBase *struct {
-      IndexRange IndexRange `xml:"indexRange,attr"`
-   }
-   // this might not exist, or might be under AdaptationSet
-   SegmentTemplate *SegmentTemplate
-   // this might not exist
-   Width *int `xml:"width,attr"`
-}
+type Range string
 
 func (r Representation) Default_KID() ([]byte, error) {
    for _, c := range r.ContentProtection {
@@ -73,25 +47,6 @@ func (r Representation) Initialization() (string, bool) {
    return "", false
 }
 
-func (r Representation) Media() ([]string, bool) {
-   t := r.SegmentTemplate
-   if t == nil {
-      return nil, false
-   }
-   var media []string
-   for _, segment := range t.SegmentTimeline.S {
-      for segment.R >= 0 {
-         number := fmt.Sprint(t.StartNumber)
-         medium := strings.Replace(t.Media, "$Number$", number, 1)
-         medium = strings.Replace(medium, "$RepresentationID$", r.ID, 1)
-         media = append(media, medium)
-         segment.R--
-         t.StartNumber++
-      }
-   }
-   return media, true
-}
-
 func (r Representation) PSSH() ([]byte, error) {
    for _, c := range r.ContentProtection {
       if c.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
@@ -99,4 +54,50 @@ func (r Representation) PSSH() ([]byte, error) {
       }
    }
    return nil, errors.New("PSSH")
+}
+
+type Representation struct {
+   Bandwidth int `xml:"bandwidth,attr"`
+   ID string `xml:"id,attr"`
+   // this might not exist
+   BaseURL string
+   // this might be under AdaptationSet
+   Codecs string `xml:"codecs,attr"`
+   // this might be under AdaptationSet
+   ContentProtection []ContentProtection
+   // this might not exist
+   Height *int `xml:"height,attr"`
+   // this might be under AdaptationSet
+   MimeType string `xml:"mimeType,attr"`
+   // this might not exist
+   SegmentBase *struct {
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+      IndexRange Range `xml:"indexRange,attr"`
+   }
+   // this might not exist, or might be under AdaptationSet
+   SegmentTemplate *SegmentTemplate
+   // this might not exist
+   Width *int `xml:"width,attr"`
+}
+
+// return a slice so we can measure progress
+func (r Representation) Media() []string {
+   st := r.SegmentTemplate
+   if st == nil {
+      return nil
+   }
+   var media []string
+   for _, segment := range st.SegmentTimeline.S {
+      for segment.R >= 0 {
+         number := fmt.Sprint(st.StartNumber)
+         medium := strings.Replace(st.Media, "$Number$", number, 1)
+         medium = strings.Replace(medium, "$RepresentationID$", r.ID, 1)
+         media = append(media, medium)
+         segment.R--
+         st.StartNumber++
+      }
+   }
+   return media
 }
