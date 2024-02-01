@@ -95,11 +95,19 @@ type MPD struct {
    }
 }
 
-func (m MPD) Every(f func(Representation)) {
-   m.Some(func(r Representation) bool {
-      f(r)
-      return false
-   })
+type SegmentTemplate struct {
+   Media string `xml:"media,attr"`
+   SegmentTimeline struct {
+      S []struct {
+         // duration
+         D int `xml:"d,attr"`
+         // repeat. this may not exist
+         R int `xml:"r,attr"`
+      }
+   }
+   StartNumber int `xml:"startNumber,attr"`
+   // this may not exist
+   Initialization string `xml:"initialization,attr"`
 }
 
 func (m MPD) Some(f func(Representation) bool) {
@@ -118,7 +126,7 @@ func (m MPD) Some(f func(Representation) bool) {
             if represent.SegmentTemplate == nil {
                represent.SegmentTemplate = adapt.SegmentTemplate
             }
-            if f(represent) {
+            if !f(represent) {
                return
             }
          }
@@ -126,17 +134,9 @@ func (m MPD) Some(f func(Representation) bool) {
    }
 }
 
-type SegmentTemplate struct {
-   Media string `xml:"media,attr"`
-   SegmentTimeline struct {
-      S []struct {
-         // duration
-         D int `xml:"d,attr"`
-         // repeat. this may not exist
-         R int `xml:"r,attr"`
-      }
-   }
-   StartNumber int `xml:"startNumber,attr"`
-   // this may not exist
-   Initialization string `xml:"initialization,attr"`
+func (m MPD) Every(f func(Representation)) {
+   m.Some(func(r Representation) bool {
+      f(r)
+      return true
+   })
 }
