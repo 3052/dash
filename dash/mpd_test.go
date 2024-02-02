@@ -7,14 +7,6 @@ import (
    "testing"
 )
 
-var tests = []string{
-   "mpd/amc.mpd",
-   "mpd/hulu.mpd",
-   "mpd/nbc.mpd",
-   "mpd/paramount.mpd",
-   "mpd/roku.mpd",
-}
-
 func Test_ContentProtection(t *testing.T) {
    for _, test := range tests {
       text, err := os.ReadFile(test)
@@ -25,17 +17,21 @@ func Test_ContentProtection(t *testing.T) {
       if err := xml.Unmarshal(text, &media); err != nil {
          t.Fatal(err)
       }
-      for _, period := range media.Period {
-         for _, adapt := range period.AdaptationSet {
-            for _, represent := range adapt.Representation {
-               fmt.Printf("%v %q ", test, period.ID)
-               _, err := represent.Default_KID()
-               fmt.Print(err, " ")
-               _, err = represent.PSSH()
-               fmt.Print(err, " ")
-               fmt.Printf("%q %q\n", adapt.MimeType, represent.MimeType)
-            }
-         }
-      }
+      media.Every(func(m MPD, i Index) {
+         fmt.Printf("%v %q ", test, i.GetPeriod(m).ID)
+         _, err := represent.Default_KID()
+         fmt.Print(err, " ")
+         _, err = represent.PSSH()
+         fmt.Print(err, " ")
+         fmt.Printf("%q %q\n", adapt.MimeType, represent.MimeType)
+      })
    }
+}
+
+var tests = []string{
+   "mpd/amc.mpd",
+   "mpd/hulu.mpd",
+   "mpd/nbc.mpd",
+   "mpd/paramount.mpd",
+   "mpd/roku.mpd",
 }

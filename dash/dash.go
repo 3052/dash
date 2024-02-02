@@ -46,32 +46,6 @@ func (r Representation) Initialization() (string, bool) {
    return "", false
 }
 
-type Representation struct {
-   Bandwidth int `xml:"bandwidth,attr"`
-   ID string `xml:"id,attr"`
-   // this might not exist
-   BaseURL string
-   // this might be under AdaptationSet
-   Codecs string `xml:"codecs,attr"`
-   // this might be under AdaptationSet
-   ContentProtection []ContentProtection
-   // this might not exist
-   Height *int `xml:"height,attr"`
-   // this might be under AdaptationSet
-   MimeType string `xml:"mimeType,attr"`
-   // this might not exist
-   SegmentBase *struct {
-      Initialization struct {
-         Range Range `xml:"range,attr"`
-      }
-      IndexRange Range `xml:"indexRange,attr"`
-   }
-   // this might not exist, or might be under AdaptationSet
-   SegmentTemplate *SegmentTemplate
-   // this might not exist
-   Width *int `xml:"width,attr"`
-}
-
 // return a slice so we can measure progress
 func (r Representation) Media() []string {
    st := r.SegmentTemplate
@@ -161,25 +135,6 @@ th {
 {{ end -}}
 </table>
 `
-
-type AdaptationSet struct {
-   // this might be under Representation
-   Codecs string `xml:"codecs,attr"`
-   // this might be under Representation
-   ContentProtection []ContentProtection
-   // this might not exist
-   Lang string `xml:"lang,attr"`
-   // this might be under Representation
-   MimeType string `xml:"mimeType,attr"`
-   // pointer because we want to edit these
-   Representation []Representation
-   // this might not exist
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   // this might not exist, or might be under Representation
-   SegmentTemplate *SegmentTemplate
-}
 
 type ContentProtection struct {
    SchemeIdUri string `xml:"schemeIdUri,attr"`
