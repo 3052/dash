@@ -1,5 +1,23 @@
 package dash
 
+import "strings"
+
+func (i Index) Default_KID(m MPD) (string, bool) {
+   for _, cp := range i.ContentProtection(m) {
+      if cp.SchemeIdUri == "urn:mpeg:dash:mp4protection:2011" {
+         return strings.ReplaceAll(cp.Default_KID, "-", ""), true
+      }
+   }
+   return "", false
+}
+
+func (i Index) ContentProtection(m MPD) []ContentProtection {
+   if a := i.GetAdaptation(m); a.ContentProtection != nil {
+      return a.ContentProtection
+   }
+   return i.GetRepresentation(m).ContentProtection
+}
+
 type Index struct {
    Period int
    AdaptationSet int
@@ -48,44 +66,11 @@ type AdaptationSet struct {
    SegmentTemplate *SegmentTemplate
 }
 
-type Representation struct {
-   Bandwidth int `xml:"bandwidth,attr"`
-   ID string `xml:"id,attr"`
-   // this might not exist
-   BaseURL string
-   // this might be under AdaptationSet
-   Codecs string `xml:"codecs,attr"`
-   // this might be under AdaptationSet
-   ContentProtection []ContentProtection
-   // this might not exist
-   Height *int `xml:"height,attr"`
-   // this might be under AdaptationSet
-   MimeType string `xml:"mimeType,attr"`
-   // this might not exist
-   SegmentBase *struct {
-      Initialization struct {
-         Range Range `xml:"range,attr"`
-      }
-      IndexRange Range `xml:"indexRange,attr"`
-   }
-   // this might not exist, or might be under AdaptationSet
-   SegmentTemplate *SegmentTemplate
-   // this might not exist
-   Width *int `xml:"width,attr"`
-}
-
 func (i Index) Codecs(m MPD) string {
    if a := i.GetAdaptation(m); a.Codecs != "" {
       return a.Codecs
    }
    return i.GetRepresentation(m).Codecs
-}
-
-func (i Index) ContentProtection(m MPD) []ContentProtection {
-   if a := i.GetAdaptation(m); a.ContentProtection != nil {
-      return a.ContentProtection
-   }
-   return i.GetRepresentation(m).ContentProtection
 }
 
 func (i Index) MimeType(m MPD) string {
