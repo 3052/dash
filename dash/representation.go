@@ -8,16 +8,6 @@ import (
    "strings"
 )
 
-func (r Range) Scan(start, end *uint32) error {
-   _, err := fmt.Sscanf(string(r), "%v-%v", start, end)
-   if err != nil {
-      return err
-   }
-   return nil
-}
-
-type Range string
-
 func (r Representation) Default_KID() ([]byte, error) {
    for _, c := range r.ContentProtection {
       if c.SchemeIdUri == "urn:mpeg:dash:mp4protection:2011" {

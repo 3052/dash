@@ -1,5 +1,17 @@
 package dash
 
+import "fmt"
+
+func (r Range) Scan(start, end *uint32) error {
+   _, err := fmt.Sscanf(string(r), "%v-%v", start, end)
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
+type Range string
+
 const Template = `<style>
 table {
    border-collapse: collapse;
