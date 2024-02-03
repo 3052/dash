@@ -5,6 +5,13 @@ import (
    "strings"
 )
 
+func (m MPD) Every(f func(Pointer)) {
+   m.Some(func(p Pointer) bool {
+      f(p)
+      return true
+   })
+}
+
 func (m MPD) Some(f func(Pointer) bool) {
    for _, period := range m.Period {
       for _, adapt := range period.AdaptationSet {
@@ -27,6 +34,13 @@ type Pointer struct {
    Representation *Representation
 }
 
+func (p Pointer) Codecs() string {
+   if a := p.AdaptationSet; a.Codecs != "" {
+      return a.Codecs
+   }
+   return p.Representation.Codecs
+}
+
 func (p Pointer) Ext() (string, bool) {
    switch p.MimeType() {
    case "audio/mp4":
@@ -37,18 +51,14 @@ func (p Pointer) Ext() (string, bool) {
    return "", false
 }
 
-func (p Pointer) Codecs() string {
-   if a := p.AdaptationSet; a.Codecs != "" {
-      return a.Codecs
+func (p Pointer) Initialization() (string, bool) {
+   if st := p.segmentTemplate(); st != nil {
+      if i := st.Initialization; i != "" {
+         i = strings.Replace(i, "$RepresentationID$", p.Representation.ID, 1)
+         return i, true
+      }
    }
-   return p.Representation.Codecs
-}
-
-func (p Pointer) MimeType() string {
-   if a := p.AdaptationSet; a.MimeType != "" {
-      return a.MimeType
-   }
-   return p.Representation.MimeType
+   return "", false
 }
 
 // return a slice so we can measure progress
@@ -71,11 +81,11 @@ func (p Pointer) Media() []string {
    return media
 }
 
-func (m MPD) Every(f func(Pointer)) {
-   m.Some(func(p Pointer) bool {
-      f(p)
-      return true
-   })
+func (p Pointer) MimeType() string {
+   if a := p.AdaptationSet; a.MimeType != "" {
+      return a.MimeType
+   }
+   return p.Representation.MimeType
 }
 
 func (p Pointer) PSSH() (string, bool) {
@@ -99,14 +109,4 @@ func (p Pointer) segmentTemplate() *SegmentTemplate {
       return a.SegmentTemplate
    }
    return p.Representation.SegmentTemplate
-}
-
-func (p Pointer) Initialization() (string, bool) {
-   if st := p.segmentTemplate(); st != nil {
-      if i := st.Initialization; i != "" {
-         i = strings.Replace(i, "$RepresentationID$", p.Representation.ID, 1)
-         return i, true
-      }
-   }
-   return "", false
 }

@@ -2,21 +2,6 @@ package dash
 
 import "strings"
 
-type SegmentTemplate struct {
-   Media string `xml:"media,attr"`
-   SegmentTimeline struct {
-      S []struct {
-         // duration
-         D int `xml:"d,attr"`
-         // repeat. this may not exist
-         R int `xml:"r,attr"`
-      }
-   }
-   StartNumber int `xml:"startNumber,attr"`
-   // this may not exist
-   Initialization string `xml:"initialization,attr"`
-}
-
 const Template = `<style>
 table {
    border-collapse: collapse;
@@ -78,23 +63,6 @@ th {
 </table>
 `
 
-type Range string
-
-func (r Range) Cut() (string, string, bool) {
-   return strings.Cut(string(r), "-")
-}
-
-// media presentation description
-// wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP
-type MPD struct {
-   Period []*Period
-}
-
-type Period struct {
-   AdaptationSet []*AdaptationSet
-   ID string `xml:"id,attr"`
-}
-
 type AdaptationSet struct {
    // this might be under Representation
    Codecs string `xml:"codecs,attr"`
@@ -112,6 +80,29 @@ type AdaptationSet struct {
    }
    // this might not exist, or might be under Representation
    SegmentTemplate *SegmentTemplate
+}
+
+type ContentProtection struct {
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
+   // this might not exist
+   PSSH string `xml:"pssh"`
+}
+
+// media presentation description
+// wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP
+type MPD struct {
+   Period []*Period
+}
+
+type Period struct {
+   AdaptationSet []*AdaptationSet
+   ID string `xml:"id,attr"`
+}
+
+type Range string
+
+func (r Range) Cut() (string, string, bool) {
+   return strings.Cut(string(r), "-")
 }
 
 type Representation struct {
@@ -140,8 +131,17 @@ type Representation struct {
    Width *int `xml:"width,attr"`
 }
 
-type ContentProtection struct {
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-   // this might not exist
-   PSSH string `xml:"pssh"`
+type SegmentTemplate struct {
+   Media string `xml:"media,attr"`
+   SegmentTimeline struct {
+      S []struct {
+         // duration
+         D int `xml:"d,attr"`
+         // repeat. this may not exist
+         R int `xml:"r,attr"`
+      }
+   }
+   StartNumber int `xml:"startNumber,attr"`
+   // this may not exist
+   Initialization string `xml:"initialization,attr"`
 }
