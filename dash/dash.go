@@ -89,66 +89,10 @@ type ContentProtection struct {
    PSSH string `xml:"pssh"`
 }
 
-type Representation struct {
-   Bandwidth int `xml:"bandwidth,attr"`
-   ID string `xml:"id,attr"`
-   // this might not exist
-   BaseURL string
-   // this might be under AdaptationSet
-   Codecs string `xml:"codecs,attr"`
-   // this might be under AdaptationSet
-   ContentProtection []ContentProtection
-   // this might not exist
-   Height *int `xml:"height,attr"`
-   // this might be under AdaptationSet
-   MimeType string `xml:"mimeType,attr"`
-   // this might not exist
-   SegmentBase *struct {
-      Initialization struct {
-         Range Range `xml:"range,attr"`
-      }
-      IndexRange Range `xml:"indexRange,attr"`
-   }
-   // this might not exist, or might be under AdaptationSet
-   SegmentTemplate *SegmentTemplate
-   // this might not exist
-   Width *int `xml:"width,attr"`
-}
-
 type Range string
 
 func (r Range) Cut() (string, string, bool) {
    return strings.Cut(string(r), "-")
-}
-
-// media presentation description
-// wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP
-type MPD struct {
-   Period []Period
-}
-
-type Period struct {
-   AdaptationSet []AdaptationSet
-   ID string `xml:"id,attr"`
-}
-
-type AdaptationSet struct {
-   // this might be under Representation
-   Codecs string `xml:"codecs,attr"`
-   // this might be under Representation
-   ContentProtection []ContentProtection
-   // this might not exist
-   Lang string `xml:"lang,attr"`
-   // this might be under Representation
-   MimeType string `xml:"mimeType,attr"`
-   // pointer because we want to edit these
-   Representation []Representation
-   // this might not exist
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   // this might not exist, or might be under Representation
-   SegmentTemplate *SegmentTemplate
 }
 
 func (r Representation) PSSH() (string, bool) {
@@ -197,4 +141,60 @@ func (r Representation) Initialization() (string, bool) {
       }
    }
    return "", false
+}
+
+// media presentation description
+// wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP
+type MPD struct {
+   Period []*Period
+}
+
+type Period struct {
+   AdaptationSet []*AdaptationSet
+   ID string `xml:"id,attr"`
+}
+
+type AdaptationSet struct {
+   // this might be under Representation
+   Codecs string `xml:"codecs,attr"`
+   // this might be under Representation
+   ContentProtection []ContentProtection
+   // this might not exist
+   Lang string `xml:"lang,attr"`
+   // this might be under Representation
+   MimeType string `xml:"mimeType,attr"`
+   // pointer because we want to edit these
+   Representation []*Representation
+   // this might not exist
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   // this might not exist, or might be under Representation
+   SegmentTemplate *SegmentTemplate
+}
+
+type Representation struct {
+   Bandwidth int `xml:"bandwidth,attr"`
+   ID string `xml:"id,attr"`
+   // this might not exist
+   BaseURL string
+   // this might be under AdaptationSet
+   Codecs string `xml:"codecs,attr"`
+   // this might be under AdaptationSet
+   ContentProtection []ContentProtection
+   // this might not exist
+   Height *int `xml:"height,attr"`
+   // this might be under AdaptationSet
+   MimeType string `xml:"mimeType,attr"`
+   // this might not exist
+   SegmentBase *struct {
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+      IndexRange Range `xml:"indexRange,attr"`
+   }
+   // this might not exist, or might be under AdaptationSet
+   SegmentTemplate *SegmentTemplate
+   // this might not exist
+   Width *int `xml:"width,attr"`
 }
