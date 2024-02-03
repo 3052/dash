@@ -1,9 +1,6 @@
 package dash
 
-import (
-   "strconv"
-   "strings"
-)
+import "strings"
 
 type SegmentTemplate struct {
    Media string `xml:"media,attr"`
@@ -93,54 +90,6 @@ type Range string
 
 func (r Range) Cut() (string, string, bool) {
    return strings.Cut(string(r), "-")
-}
-
-func (r Representation) PSSH() (string, bool) {
-   for _, c := range r.ContentProtection {
-      if c.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
-         return c.PSSH, true
-      }
-   }
-   return "", false
-}
-
-// return a slice so we can measure progress
-func (r Representation) Media() []string {
-   st := r.SegmentTemplate
-   if st == nil {
-      return nil
-   }
-   var media []string
-   for _, segment := range st.SegmentTimeline.S {
-      for segment.R >= 0 {
-         number := strconv.Itoa(st.StartNumber)
-         medium := strings.Replace(st.Media, "$Number$", number, 1)
-         medium = strings.Replace(medium, "$RepresentationID$", r.ID, 1)
-         media = append(media, medium)
-         segment.R--
-         st.StartNumber++
-      }
-   }
-   return media
-}
-
-func (r Representation) Ext() (string, bool) {
-   switch r.MimeType {
-   case "audio/mp4":
-      return ".m4a", true
-   case "video/mp4":
-      return ".m4v", true
-   }
-   return "", false
-}
-
-func (r Representation) Initialization() (string, bool) {
-   if v := r.SegmentTemplate; v != nil {
-      if v := v.Initialization; v != "" {
-         return strings.Replace(v, "$RepresentationID$", r.ID, 1), true
-      }
-   }
-   return "", false
 }
 
 // media presentation description

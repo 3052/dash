@@ -7,7 +7,7 @@ import (
    "testing"
 )
 
-func Test_ContentProtection(t *testing.T) {
+func Test_Pointer(t *testing.T) {
    for _, test := range tests {
       text, err := os.ReadFile(test)
       if err != nil {
@@ -17,13 +17,13 @@ func Test_ContentProtection(t *testing.T) {
       if err := xml.Unmarshal(text, &media); err != nil {
          t.Fatal(err)
       }
-      media.Every(func(m MPD, i Index) {
-         fmt.Printf("%v %q ", test, i.GetPeriod(m).ID)
-         _, err := represent.Default_KID()
-         fmt.Print(err, " ")
-         _, err = represent.PSSH()
-         fmt.Print(err, " ")
-         fmt.Printf("%q %q\n", adapt.MimeType, represent.MimeType)
+      media.Every(func(p Pointer) {
+         fmt.Printf("name:%v period:%q ", test, p.Period.ID)
+         _, ok := p.Default_KID()
+         fmt.Printf("kid:%v ", ok)
+         _, ok = p.PSSH()
+         fmt.Printf("pssh:%v ", ok)
+         fmt.Printf("mimeType:%q\n", p.MimeType)
       })
    }
 }
