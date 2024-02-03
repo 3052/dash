@@ -72,7 +72,6 @@ type AdaptationSet struct {
    Lang string `xml:"lang,attr"`
    // this might be under Representation
    MimeType string `xml:"mimeType,attr"`
-   // pointer because we want to edit these
    Representation []*Representation
    // this might not exist
    Role *struct {
