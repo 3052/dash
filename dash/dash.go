@@ -78,14 +78,6 @@ th {
 </table>
 `
 
-type ContentProtection struct {
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-   // this might not exist
-   Default_KID string `xml:"default_KID,attr"`
-   // this might not exist
-   PSSH string `xml:"pssh"`
-}
-
 type Range string
 
 func (r Range) Cut() (string, string, bool) {
@@ -146,4 +138,10 @@ type Representation struct {
    SegmentTemplate *SegmentTemplate
    // this might not exist
    Width *int `xml:"width,attr"`
+}
+
+type ContentProtection struct {
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
+   // this might not exist
+   PSSH string `xml:"pssh"`
 }
