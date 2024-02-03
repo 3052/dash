@@ -1,9 +1,20 @@
 package dash
 
 import (
+   "encoding/base64"
+   "errors"
    "strconv"
    "strings"
 )
+
+func (p Pointer) PSSH() ([]byte, error) {
+   for _, c := range p.contentProtection() {
+      if c.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
+         return base64.StdEncoding.DecodeString(c.PSSH)
+      }
+   }
+   return nil, errors.New("Pointer.PSSH")
+}
 
 func (m MPD) Every(f func(Pointer)) {
    m.Some(func(p Pointer) bool {
@@ -86,15 +97,6 @@ func (p Pointer) MimeType() string {
       return a.MimeType
    }
    return p.Representation.MimeType
-}
-
-func (p Pointer) PSSH() (string, bool) {
-   for _, c := range p.contentProtection() {
-      if c.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
-         return c.PSSH, true
-      }
-   }
-   return "", false
 }
 
 func (p Pointer) contentProtection() []ContentProtection {

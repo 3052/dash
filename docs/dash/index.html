@@ -14,7 +14,7 @@
   <body>
     <nav>
         <a href="..">154.pages.dev/encoding</a>/dash<span class="navbar-right">
-          v1.16.5 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
+          v1.16.6 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
       </nav>
     <main><h2 id="pkg-overview">package dash</h2>
 <pre class="chroma"><span class="kn">import</span> <span class="s">&#34;154.pages.dev/encoding/dash&#34;</span></pre>
@@ -44,13 +44,13 @@
           <li><a href="#Pointer.Initialization">func (p Pointer) Initialization() (string, bool)</a></li>
           <li><a href="#Pointer.Media">func (p Pointer) Media() []string</a></li>
           <li><a href="#Pointer.MimeType">func (p Pointer) MimeType() string</a></li>
-          <li><a href="#Pointer.PSSH">func (p Pointer) PSSH() (string, bool)</a></li>
+          <li><a href="#Pointer.PSSH">func (p Pointer) PSSH() ([]byte, error)</a></li>
           </ul>
       </li>
   <li>
       <a href="#Range">type Range</a>
       <ul>
-          <li><a href="#Range.Cut">func (r Range) Cut() (string, string, bool)</a></li>
+          <li><a href="#Range.Scan">func (r Range) Scan(start, end any) error</a></li>
           </ul>
       </li>
   <li>
@@ -130,9 +130,8 @@
 	<span class="c1">// this might not exist
 </span><span class="c1"></span>	<span id="AdaptationSet.Lang"><span class="nx">Lang</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;lang,attr&#34;`</span>
 	<span class="c1">// this might be under Representation
-</span><span class="c1"></span>	<span id="AdaptationSet.MimeType"><span class="nx">MimeType</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;mimeType,attr&#34;`</span>
-	<span class="c1">// pointer because we want to edit these
-</span><span class="c1"></span>	<span id="AdaptationSet.Representation"><span class="nx">Representation</span></span> <span class="p">[]</span><span class="o">*</span><a href="#Representation"><span class="nx">Representation</span></a>
+</span><span class="c1"></span>	<span id="AdaptationSet.MimeType"><span class="nx">MimeType</span></span>       <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;mimeType,attr&#34;`</span>
+	<span id="AdaptationSet.Representation"><span class="nx">Representation</span></span> <span class="p">[]</span><span class="o">*</span><a href="#Representation"><span class="nx">Representation</span></a>
 	<span class="c1">// this might not exist
 </span><span class="c1"></span>	<span id="AdaptationSet.Role"><span class="nx">Role</span></span> <span class="o">*</span><span class="kd">struct</span> <span class="p">{</span>
 		<span id="AdaptationSet.Value"><span class="nx">Value</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;value,attr&#34;`</span>
@@ -179,11 +178,11 @@ wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP
 <h4 id="Pointer.MimeType">func (Pointer) MimeType</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">p</span> <a href="#Pointer"><span class="nx">Pointer</span></a><span class="p">)</span> <span class="nf">MimeType</span><span class="p">()</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
   <h4 id="Pointer.PSSH">func (Pointer) PSSH</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">p</span> <a href="#Pointer"><span class="nx">Pointer</span></a><span class="p">)</span> <span class="nf">PSSH</span><span class="p">()</span> <span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">p</span> <a href="#Pointer"><span class="nx">Pointer</span></a><span class="p">)</span> <span class="nf">PSSH</span><span class="p">()</span> <span class="p">([]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
   <h3 id="Range">type Range</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">Range</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
-    <h4 id="Range.Cut">func (Range) Cut</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Range"><span class="nx">Range</span></a><span class="p">)</span> <span class="nf">Cut</span><span class="p">()</span> <span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
+    <h4 id="Range.Scan">func (Range) Scan</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Range"><span class="nx">Range</span></a><span class="p">)</span> <span class="nf">Scan</span><span class="p">(</span><span class="nx">start</span><span class="p">,</span> <span class="nx">end</span> <a href="https://pkg.go.dev/builtin#any"><span class="nx">any</span></a><span class="p">)</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
   <h3 id="Representation">type Representation</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">Representation</span> <span class="kd">struct</span> <span class="p">{</span>
 	<span id="Representation.Bandwidth"><span class="nx">Bandwidth</span></span> <a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a>    <span class="s">`xml:&#34;bandwidth,attr&#34;`</span>
