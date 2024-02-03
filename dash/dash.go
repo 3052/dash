@@ -1,6 +1,17 @@
 package dash
 
-import "strings"
+import "fmt"
+
+type Range string
+
+func (r Range) Scan() (int, int, error) {
+   var start, end int
+   _, err := fmt.Sscanf(string(r), "%v-%v", &start, &end)
+   if err != nil {
+      return 0, 0, err
+   }
+   return start, end, nil
+}
 
 const Template = `<style>
 table {
@@ -96,12 +107,6 @@ type MPD struct {
 type Period struct {
    AdaptationSet []*AdaptationSet
    ID string `xml:"id,attr"`
-}
-
-type Range string
-
-func (r Range) Cut() (string, string, bool) {
-   return strings.Cut(string(r), "-")
 }
 
 type Representation struct {

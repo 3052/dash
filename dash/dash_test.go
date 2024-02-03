@@ -8,6 +8,28 @@ import (
    "testing"
 )
 
+func Test_Range(t *testing.T) {
+   media, err := reader("mpd/hulu.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   media.Every(func(p Pointer) {
+      sb := p.Representation.SegmentBase
+      start, end, err := sb.Initialization.Range.Scan()
+      fmt.Printf("%v %v %v ", start, end, err)
+      start, end, err = sb.IndexRange.Scan()
+      fmt.Printf("%v %v %v\n", start, end, err)
+   })
+}
+
+var tests = []string{
+   "mpd/amc.mpd",
+   "mpd/hulu.mpd",
+   "mpd/nbc.mpd",
+   "mpd/paramount.mpd",
+   "mpd/roku.mpd",
+}
+
 func reader(name string) (*MPD, error) {
    text, err := os.ReadFile(name)
    if err != nil {
@@ -50,26 +72,4 @@ func Test_Initialization(t *testing.T) {
       v, ok := p.Initialization()
       fmt.Printf("%v %q %v\n\n", p.Representation.ID, v, ok)
    })
-}
-
-func Test_Range(t *testing.T) {
-   media, err := reader("mpd/hulu.mpd")
-   if err != nil {
-      t.Fatal(err)
-   }
-   media.Every(func(p Pointer) {
-      sb := p.Representation.SegmentBase
-      start, end, ok := sb.Initialization.Range.Cut()
-      fmt.Printf("%q %q %v ", start, end, ok)
-      start, end, ok = sb.IndexRange.Cut()
-      fmt.Printf("%q %q %v\n", start, end, ok)
-   })
-}
-
-var tests = []string{
-   "mpd/amc.mpd",
-   "mpd/hulu.mpd",
-   "mpd/nbc.mpd",
-   "mpd/paramount.mpd",
-   "mpd/roku.mpd",
 }
