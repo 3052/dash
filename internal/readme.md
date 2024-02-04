@@ -1,10 +1,5 @@
 # internal
 
-~~~
-hls NOT server language:go stars:>2 pushed:>2023-02-04
-m3u language:go pushed:>2023-02-04
-~~~
-
 ## github.com/adrienkohlbecker/m3u
 
 github.com/ushis/m3u
@@ -37,6 +32,10 @@ github.com/grafov/m3u8
 
 https://github.com/CharlesDerek/m3u8/issues/1
 
+## github.com/chym-127/m3u8\_downloader
+
+<https://github.com/chym-127/m3u8_downloader/issues/1>
+
 ## github.com/cxjava/m3u8-downloader
 
 github.com/grafov/m3u8
@@ -45,6 +44,18 @@ github.com/grafov/m3u8
 
 github.com/grafov/m3u8
 
+## github.com/d2gin/m3u8-download
+
+https://github.com/d2gin/m3u8-download/issues/1
+
+## github.com/davexpro/m3u8-dl
+
+https://github.com/davexpro/m3u8-dl/issues/1
+
+## github.com/dengWuuu/M3U8\_GO
+
+<https://github.com/dengWuuu/M3U8_GO/issues/1>
+
 ## github.com/diegostamigni/m3u-go
 
 https://github.com/diegostamigni/m3u-go/issues/1
@@ -52,6 +63,10 @@ https://github.com/diegostamigni/m3u-go/issues/1
 ## github.com/dirkarnez/m3udownloader
 
 https://github.com/dirkarnez/m3udownloader/issues/1
+
+## github.com/ericzhao007/m3u8-downloader
+
+https://github.com/ericzhao007/m3u8-downloader/issues/1
 
 ## github.com/eswarantg/m3u8reader
 
@@ -90,6 +105,10 @@ https://github.com/iyzyi/m3u8-downloader/issues/1
 ## github.com/jamesnetherton/m3u
 
 https://github.com/jamesnetherton/m3u/issues/8
+
+## github.com/JimmyLsc/m3u8\_downloader
+
+<https://github.com/JimmyLsc/m3u8_downloader/issues/1>
 
 ## github.com/linpinger/m3u8
 
@@ -136,6 +155,14 @@ https://github.com/TiregeRRR/m3u-go/issues/1
 add go.mod
 
 https://github.com/ushis/m3u/issues/3
+
+## github.com/xianliguang/xiaoe-tech-m3u8
+
+https://github.com/xianliguang/xiaoe-tech-m3u8/issues/1
+
+## github.com/yangshoulai/m3u8-downloader
+
+https://github.com/yangshoulai/m3u8-downloader/issues/1
 
 ## github.com/zishuzy/m3u8-downloader
 
