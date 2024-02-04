@@ -1,6 +1,100 @@
 package dash
 
-import "fmt"
+import (
+   "fmt"
+   "strconv"
+   "strings"
+)
+
+func (m MPD) Every(f func(Pointer)) {
+   m.Some(func(p Pointer) bool {
+      f(p)
+      return true
+   })
+}
+
+func (m MPD) Some(f func(Pointer) bool) {
+   for _, period := range m.Period {
+      for _, adapt := range period.AdaptationSet {
+         for _, represent := range adapt.Representation {
+            var p Pointer
+            p.AdaptationSet = adapt
+            p.Period = period
+            p.Representation = represent
+            if !f(p) {
+               return
+            }
+         }
+      }
+   }
+}
+
+type Pointer struct {
+   AdaptationSet *AdaptationSet
+   Period *Period
+   Representation *Representation
+}
+
+func (p Pointer) Codecs() string {
+   if a := p.AdaptationSet; a.Codecs != "" {
+      return a.Codecs
+   }
+   return p.Representation.Codecs
+}
+
+func (p Pointer) Ext() (string, bool) {
+   switch p.MimeType() {
+   case "audio/mp4":
+      return ".m4a", true
+   case "video/mp4":
+      return ".m4v", true
+   }
+   return "", false
+}
+
+func (p Pointer) Initialization() (string, bool) {
+   if st := p.segmentTemplate(); st != nil {
+      if i := st.Initialization; i != "" {
+         i = strings.Replace(i, "$RepresentationID$", p.Representation.ID, 1)
+         return i, true
+      }
+   }
+   return "", false
+}
+
+// return a slice so we can measure progress
+func (p Pointer) Media() []string {
+   replace := func(s string, i int) string {
+      s = strings.Replace(s, "$RepresentationID$", p.Representation.ID, 1)
+      return strings.Replace(s, "$Number$", strconv.Itoa(i), 1)
+   }
+   var media []string
+   if st := p.segmentTemplate(); st != nil {
+      for _, segment := range st.SegmentTimeline.S {
+         for segment.R >= 0 {
+            medium := replace(st.Media, st.StartNumber)
+            media = append(media, medium)
+            segment.R--
+            st.StartNumber++
+         }
+      }
+   }
+   return media
+}
+
+func (p Pointer) MimeType() string {
+   if a := p.AdaptationSet; a.MimeType != "" {
+      return a.MimeType
+   }
+   return p.Representation.MimeType
+}
+
+func (p Pointer) segmentTemplate() *SegmentTemplate {
+   if a := p.AdaptationSet; a.SegmentTemplate != nil {
+      return a.SegmentTemplate
+   }
+   return p.Representation.SegmentTemplate
+}
 
 type Range string
 
@@ -90,12 +184,6 @@ type AdaptationSet struct {
    }
    // this might not exist, or might be under Representation
    SegmentTemplate *SegmentTemplate
-}
-
-type ContentProtection struct {
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-   // this might not exist
-   PSSH string `xml:"pssh"`
 }
 
 // media presentation description

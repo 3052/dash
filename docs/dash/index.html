@@ -14,7 +14,7 @@
   <body>
     <nav>
         <a href="..">154.pages.dev/encoding</a>/dash<span class="navbar-right">
-          v1.16.7 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
+          v1.16.8 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
       </nav>
     <main><h2 id="pkg-overview">package dash</h2>
 <pre class="chroma"><span class="kn">import</span> <span class="s">&#34;154.pages.dev/encoding/dash&#34;</span></pre>
@@ -40,6 +40,7 @@
       <a href="#Pointer">type Pointer</a>
       <ul>
           <li><a href="#Pointer.Codecs">func (p Pointer) Codecs() string</a></li>
+          <li><a href="#Pointer.Default_KID">func (p Pointer) Default_KID() ([]byte, error)</a></li>
           <li><a href="#Pointer.Ext">func (p Pointer) Ext() (string, bool)</a></li>
           <li><a href="#Pointer.Initialization">func (p Pointer) Initialization() (string, bool)</a></li>
           <li><a href="#Pointer.Media">func (p Pointer) Media() []string</a></li>
@@ -143,6 +144,8 @@
     <pre class="chroma"><span class="kd">type</span> <span class="nx">ContentProtection</span> <span class="kd">struct</span> <span class="p">{</span>
 	<span id="ContentProtection.SchemeIdUri"><span class="nx">SchemeIdUri</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;schemeIdUri,attr&#34;`</span>
 	<span class="c1">// this might not exist
+</span><span class="c1"></span>	<span id="ContentProtection.Default_KID"><span class="nx">Default_KID</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;default_KID,attr&#34;`</span>
+	<span class="c1">// this might not exist
 </span><span class="c1"></span>	<span id="ContentProtection.PSSH"><span class="nx">PSSH</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;pssh&#34;`</span>
 <span class="p">}</span></pre>
     <h3 id="MPD">type MPD</h3>
@@ -168,6 +171,8 @@ wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP
 <span class="p">}</span></pre>
     <h4 id="Pointer.Codecs">func (Pointer) Codecs</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">p</span> <a href="#Pointer"><span class="nx">Pointer</span></a><span class="p">)</span> <span class="nf">Codecs</span><span class="p">()</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+  <h4 id="Pointer.Default_KID">func (Pointer) Default_KID</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">p</span> <a href="#Pointer"><span class="nx">Pointer</span></a><span class="p">)</span> <span class="nf">Default_KID</span><span class="p">()</span> <span class="p">([]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
   <h4 id="Pointer.Ext">func (Pointer) Ext</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">p</span> <a href="#Pointer"><span class="nx">Pointer</span></a><span class="p">)</span> <span class="nf">Ext</span><span class="p">()</span> <span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
   <h4 id="Pointer.Initialization">func (Pointer) Initialization</h4>
