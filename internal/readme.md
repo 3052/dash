@@ -13,6 +13,14 @@ github.com/ushis/m3u
 
 https://github.com/antoinecaputo/m3u/issues/5
 
+## github.com/asters1/m3u8
+
+https://github.com/asters1/m3u8/issues/1
+
+## github.com/asters1/mpv\_m3u8
+
+<https://github.com/asters1/mpv_m3u8/issues/1>
+
 ## github.com/bonaysoft/m3u8-downloader
 
 github.com/grafov/m3u8
@@ -45,9 +53,17 @@ https://github.com/diegostamigni/m3u-go/issues/1
 
 https://github.com/dirkarnez/m3udownloader/issues/1
 
+## github.com/eswarantg/m3u8reader
+
+https://github.com/eswarantg/m3u8reader/issues/11
+
 ## github.com/g0ngjie/tvlive
 
 https://github.com/g0ngjie/tvlive/issues/1
+
+## github.com/gogokit/m3u8
+
+https://github.com/gogokit/m3u8/issues/2
 
 ## github.com/grafov/m3u8
 
@@ -63,6 +79,10 @@ github.com/grafov/m3u8
 
 https://github.com/gsp412/m3u8/issues/2
 
+## github.com/hq2999/m3u8dl
+
+https://github.com/hq2999/m3u8dl/issues/1
+
 ## github.com/iyzyi/m3u8-downloader
 
 https://github.com/iyzyi/m3u8-downloader/issues/1
@@ -70,6 +90,14 @@ https://github.com/iyzyi/m3u8-downloader/issues/1
 ## github.com/jamesnetherton/m3u
 
 https://github.com/jamesnetherton/m3u/issues/8
+
+## github.com/linpinger/m3u8
+
+https://github.com/linpinger/m3u8/issues/1
+
+## github.com/luoxias/m3u8downer
+
+https://github.com/luoxias/m3u8downer/issues/1
 
 ## github.com/mattetti/m3u8Grabber
 
@@ -87,6 +115,10 @@ https://github.com/orestonce/m3u8d/issues/28
 
 https://github.com/pawanpaudel93/go-m3u-parser/issues/3
 
+## github.com/Re-volution/downlaod\_m3u8
+
+<https://github.com/Re-volution/downlaod_m3u8/issues/1>
+
 ## github.com/shaunschembri/restreamer
 
 github.com/grafov/m3u8
@@ -95,8 +127,16 @@ github.com/grafov/m3u8
 
 https://github.com/somombo/hlsdownloader/issues/2
 
+## github.com/TiregeRRR/m3u-go
+
+https://github.com/TiregeRRR/m3u-go/issues/1
+
 ## github.com/ushis/m3u
 
 add go.mod
 
 https://github.com/ushis/m3u/issues/3
+
+## github.com/zishuzy/m3u8-downloader
+
+https://github.com/zishuzy/m3u8-downloader/issues/1
