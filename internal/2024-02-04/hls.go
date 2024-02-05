@@ -6,26 +6,10 @@ import (
    "text/scanner"
 )
 
-type Media struct {
-   Group_ID string
-   Type string
-   Name string
-   Characteristics string
-   Raw_URI string
-}
-
-type Stream struct {
-   Bandwidth int64
-   Raw_URI string
-   Audio string
-   Codecs string
-   Resolution string
-}
-
 func (s Scanner) Segment() (*Segment, error) {
    var seg Segment
-   for s.line.Scan() != scanner.EOF {
-      line := s.line.TokenText()
+   for s.y.Scan() != scanner.EOF {
+      line := s.y.TokenText()
       var err error
       switch {
       case len(line) >= 1 && !strings.HasPrefix(line, "#"):
@@ -36,30 +20,30 @@ func (s Scanner) Segment() (*Segment, error) {
          }
       case strings.HasPrefix(line, "#EXT-X-KEY:"):
          seg.URI = nil
-         s.Init(strings.NewReader(line))
-         for s.Scan() != scanner.EOF {
-            switch s.TokenText() {
+         s.x.Init(strings.NewReader(line))
+         for s.x.Scan() != scanner.EOF {
+            switch s.x.TokenText() {
             case "IV":
-               s.Scan()
-               s.Scan()
-               seg.Raw_IV = s.TokenText()
+               s.x.Scan()
+               s.x.Scan()
+               seg.Raw_IV = s.x.TokenText()
             case "URI":
-               s.Scan()
-               s.Scan()
-               seg.Key, err = strconv.Unquote(s.TokenText())
+               s.x.Scan()
+               s.x.Scan()
+               seg.Key, err = strconv.Unquote(s.x.TokenText())
                if err != nil {
                   return nil, err
                }
             }
          }
       case strings.HasPrefix(line, "#EXT-X-MAP:"):
-         s.Init(strings.NewReader(line))
-         for s.Scan() != scanner.EOF {
-            switch s.TokenText() {
+         s.x.Init(strings.NewReader(line))
+         for s.x.Scan() != scanner.EOF {
+            switch s.x.TokenText() {
             case "URI":
-               s.Scan()
-               s.Scan()
-               seg.Map, err = strconv.Unquote(s.TokenText())
+               s.x.Scan()
+               s.x.Scan()
+               seg.Map, err = strconv.Unquote(s.x.TokenText())
                if err != nil {
                   return nil, err
                }
