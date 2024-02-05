@@ -1,9 +1,6 @@
 package hls
 
 import (
-   "crypto/aes"
-   "crypto/cipher"
-   "encoding/hex"
    "io"
    "strconv"
    "strings"
@@ -19,74 +16,12 @@ type Media struct {
    Raw_URI string
 }
 
-func (m Media) String() string {
-   var b strings.Builder
-   b.WriteString("group ID: ")
-   b.WriteString(m.Group_ID)
-   b.WriteString("\ntype: ")
-   b.WriteString(m.Type)
-   b.WriteString("\nname: ")
-   b.WriteString(m.Name)
-   if m.Characteristics != "" {
-      b.WriteString("\ncharacteristics: ")
-      b.WriteString(m.Characteristics)
-   }
-   return b.String()
-}
-
 type Stream struct {
    Bandwidth int64
    Raw_URI string
    Audio string
    Codecs string
    Resolution string
-}
-
-func (m Stream) String() string {
-   var b []byte
-   if m.Resolution != "" {
-      b = append(b, "resolution: "...)
-      b = append(b, m.Resolution...)
-      b = append(b, '\n')
-   }
-   b = append(b, "bandwidth: "...)
-   b = strconv.AppendInt(b, m.Bandwidth, 10)
-   if m.Codecs != "" {
-      b = append(b, "\ncodecs: "...)
-      b = append(b, m.Codecs...)
-   }
-   if m.Audio != "" {
-      b = append(b, "\naudio: "...)
-      b = append(b, m.Audio...)
-   }
-   return string(b)
-}
-type Block struct {
-   cipher.Block
-   key []byte
-}
-
-func New_Block(key []byte) (*Block, error) {
-   block, err := aes.NewCipher(key)
-   if err != nil {
-      return nil, err
-   }
-   return &Block{block, key}, nil
-}
-
-func (b Block) Decrypt(text, iv []byte) []byte {
-   cipher.NewCBCDecrypter(b.Block, iv).CryptBlocks(text, text)
-   if len(text) >= 1 {
-      pad := text[len(text)-1]
-      if len(text) >= int(pad) {
-         text = text[:len(text)-int(pad)]
-      }
-   }
-   return text
-}
-
-func (b Block) Decrypt_Key(text []byte) []byte {
-   return b.Decrypt(text, b.key)
 }
 
 func (s Scanner) Segment() (*Segment, error) {
@@ -142,27 +77,6 @@ type Segment struct {
    Map string
    Raw_IV string
    URI []string
-}
-
-func (s Segment) IV() ([]byte, error) {
-   up := strings.ToUpper(s.Raw_IV)
-   return hex.DecodeString(strings.TrimPrefix(up, "0X"))
-}
-
-func (Media) Ext() string {
-   return ".m4a"
-}
-
-func (m Media) URI() string {
-   return m.Raw_URI
-}
-
-func (Stream) Ext() string {
-   return ".m4v"
-}
-
-func (m Stream) URI() string {
-   return m.Raw_URI
 }
 
 func (s Scanner) Master() (*Master, error) {
@@ -234,11 +148,6 @@ func (s Scanner) Master() (*Master, error) {
       }
    }
    return &mas, nil
-}
-
-type Mixed interface {
-   Ext() string
-   URI() string
 }
 
 type Master struct {
