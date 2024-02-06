@@ -1,10 +1,14 @@
 # why
 
-## why not `strconv`?
-
-## why not `bufio`?
-
-## why not `fmt`?
+~~~
+goos: windows
+goarch: amd64
+cpu: Intel(R) Core(TM) i7-8700 CPU @ 3.20GHz
+Benchmark_RegExp-12               290432   4553 ns/op     915 B/op   15 allocs/op
+Benchmark_Scanner-12              796146   1594 ns/op     224 B/op   16 allocs/op
+Benchmark_Strconv_Cap-12         2807541    429.8 ns/op   384 B/op    2 allocs/op
+Benchmark_Strconv-12             2053395    582.3 ns/op   496 B/op    5 allocs/op
+~~~
 
 ## why not `encoding/csv`?
 
@@ -24,12 +28,8 @@ filter=desktop)"
 
 ## why not `regexp`?
 
-its slower and more memory:
+its slower and more memory
 
-~~~
-goos: windows
-goarch: amd64
-cpu: Intel(R) Core(TM) i7-8700 CPU @ 3.20GHz
-Benchmark_RegExp-12               282069   4286 ns/op   914 B/op   15 allocs/op
-Benchmark_Scanner-12              858847   1491 ns/op   224 B/op   16 allocs/op
-~~~
+## why not `text/scanner`?
+
+its slower and more allocations
