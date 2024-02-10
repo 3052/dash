@@ -7,28 +7,8 @@ import (
    "testing"
 )
 
-const media = `#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio",NAME="English",LANGUAGE="eng",DEFAULT=YES,AUTOSELECT=YES,URI="QualityLevels(192000)/Manifest(audio_eng_aacl,format=m3u8-aapl,filter=desktop)"`
-
-func TestStrconv(t *testing.T) {
-   for _, field := range split(media) {
-      fmt.Printf("%q\n", field)
-   }
-}
-
-func BenchmarkStrconv(b *testing.B) {
-   for n := 0; n < b.N; n++ {
-      _ = split(media)
-   }
-}
-
-func BenchmarkStrconvCap(b *testing.B) {
-   for n := 0; n < b.N; n++ {
-      _ = split_cap(media)
-   }
-}
-
-func split(s string) []string {
-   var field []string
+func split_cap(s string) []string {
+   field := make([]string, 0, strings.Count(s, ","))
    key, after, ok := strings.Cut(s, ":")
    if !ok {
       return nil
@@ -52,8 +32,28 @@ func split(s string) []string {
    }
 }
 
-func split_cap(s string) []string {
-   field := make([]string, 0, strings.Count(s, ","))
+const media = `#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio",NAME="English",LANGUAGE="eng",DEFAULT=YES,AUTOSELECT=YES,URI="QualityLevels(192000)/Manifest(audio_eng_aacl,format=m3u8-aapl,filter=desktop)"`
+
+func TestStrconv(t *testing.T) {
+   for _, field := range split(media) {
+      fmt.Printf("%q\n", field)
+   }
+}
+
+func BenchmarkStrconv(b *testing.B) {
+   for n := 0; n < b.N; n++ {
+      _ = split(media)
+   }
+}
+
+func BenchmarkStrconvCap(b *testing.B) {
+   for n := 0; n < b.N; n++ {
+      _ = split_cap(media)
+   }
+}
+
+func split(s string) []string {
+   var field []string
    key, after, ok := strings.Cut(s, ":")
    if !ok {
       return nil
