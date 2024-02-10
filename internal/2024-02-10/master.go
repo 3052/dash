@@ -1,6 +1,9 @@
 package hls
 
 import (
+   "crypto/aes"
+   "crypto/cipher"
+   "encoding/hex"
    "strconv"
    "strings"
 )
@@ -50,4 +53,11 @@ type VariantStream struct {
    Codecs string
    Resolution string
    URI string
+}
+
+func (v VariantStream) Ext() string {
+   if v.Resolution != "" {
+      return ".m4v"
+   }
+   return ".m4a"
 }
