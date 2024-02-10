@@ -8,45 +8,6 @@ import (
    "strings"
 )
 
-func (s Segment) IV() ([]byte, error) {
-   up := strings.ToUpper(s.RawIv)
-   return hex.DecodeString(strings.TrimPrefix(up, "0X"))
-}
-
-type Block struct {
-   cipher.Block
-   key []byte
-}
-
-func NewBlock(key []byte) (*Block, error) {
-   block, err := aes.NewCipher(key)
-   if err != nil {
-      return nil, err
-   }
-   return &Block{block, key}, nil
-}
-
-func (b Block) Decrypt(text, iv []byte) []byte {
-   cipher.NewCBCDecrypter(b.Block, iv).CryptBlocks(text, text)
-   if len(text) >= 1 {
-      pad := text[len(text)-1]
-      if len(text) >= int(pad) {
-         text = text[:len(text)-int(pad)]
-      }
-   }
-   return text
-}
-
-// datatracker.ietf.org/doc/html/rfc8216#section-3
-type MediaSegment struct {
-   // datatracker.ietf.org/doc/html/rfc8216#section-4.3.2.4
-   Key struct {
-      IV string
-      URI string
-   }
-   URI []string
-}
-
 func (m *MediaSegment) New(s string) {
    for s != "" {
       var line string
@@ -80,4 +41,33 @@ func (m *MediaSegment) New(s string) {
          m.URI = append(m.URI, line)
       }
    }
+}
+
+// datatracker.ietf.org/doc/html/rfc8216#section-3
+type MediaSegment struct {
+   // datatracker.ietf.org/doc/html/rfc8216#section-4.3.2.4
+   Key struct {
+      IV string
+      URI string
+   }
+   URI []string
+}
+
+func (m MediaSegment) IV() ([]byte, error) {
+   return hex.DecodeString(strings.TrimPrefix(m.Key.IV, "0X"))
+}
+
+func NewCipher(key []byte) (cipher.Block, error) {
+   return aes.NewCipher(key)
+}
+
+func Decrypt(b cipher.Block, iv, text []byte) []byte {
+   cipher.NewCBCDecrypter(b, iv).CryptBlocks(text, text)
+   if len(text) >= 1 {
+      pad := text[len(text)-1]
+      if len(text) >= int(pad) {
+         text = text[:len(text)-int(pad)]
+      }
+   }
+   return text
 }

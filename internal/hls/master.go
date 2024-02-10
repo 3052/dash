@@ -1,9 +1,6 @@
 package hls
 
 import (
-   "crypto/aes"
-   "crypto/cipher"
-   "encoding/hex"
    "strconv"
    "strings"
 )
