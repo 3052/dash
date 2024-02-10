@@ -9,7 +9,7 @@ import (
    "text/template"
 )
 
-func Test_Template(t *testing.T) {
+func TestTemplate(t *testing.T) {
    tmpl, err := new(template.Template).Parse(Template)
    if err != nil {
       t.Fatal(err)
@@ -35,7 +35,7 @@ func Test_Template(t *testing.T) {
    }
 }
 
-func Test_Range(t *testing.T) {
+func TestRange(t *testing.T) {
    media, err := reader("mpd/hulu.mpd")
    if err != nil {
       t.Fatal(err)
@@ -69,7 +69,7 @@ func reader(name string) (*MPD, error) {
    return media, nil
 }
 
-func Test_Media(t *testing.T) {
+func TestMedia(t *testing.T) {
    roku, err := reader("mpd/roku.mpd")
    if err != nil {
       t.Fatal(err)
@@ -90,7 +90,7 @@ func Test_Media(t *testing.T) {
    })
 }
 
-func Test_Initialization(t *testing.T) {
+func TestInitialization(t *testing.T) {
    media, err := reader("mpd/amc.mpd")
    if err != nil {
       t.Fatal(err)
