@@ -23,12 +23,17 @@ func split_cap(s string) []string {
       value, err := strconv.QuotedPrefix(after)
       if err != nil {
          value, after, _ = strings.Cut(after, ",")
-      }
-      field = append(field, value)
-      if err == nil {
+      } else {
          after = after[len(value):]
          _, after, _ = strings.Cut(after, ",")
       }
+      field = append(field, value)
+   }
+}
+
+func TestStrconvCap(t *testing.T) {
+   for _, field := range split_cap(media) {
+      fmt.Printf("%q\n", field)
    }
 }
 
@@ -68,11 +73,10 @@ func split(s string) []string {
       value, err := strconv.QuotedPrefix(after)
       if err != nil {
          value, after, _ = strings.Cut(after, ",")
-      }
-      field = append(field, value)
-      if err == nil {
+      } else {
          after = after[len(value):]
          _, after, _ = strings.Cut(after, ",")
       }
+      field = append(field, value)
    }
 }
