@@ -6,8 +6,82 @@ import (
    "io"
    "net/http"
    "os"
+   "sort"
    "testing"
 )
+
+func TestStream(t *testing.T) {
+   for _, name := range master_tests {
+      text, err := reverse(name)
+      if err != nil {
+         t.Fatal(err)
+      }
+      master, err := NewScanner(bytes.NewReader(text)).Master()
+      if err != nil {
+         t.Fatal(err)
+      }
+      fmt.Println(name)
+      for i, value := range master.Stream {
+         if i >= 1 {
+            fmt.Println()
+         }
+         fmt.Println(value)
+      }
+      fmt.Println()
+   }
+}
+
+var master_tests = []string{
+   "m3u8/cbc-master.m3u8.txt",
+   "m3u8/nbc-master.m3u8.txt",
+   "m3u8/roku-master.m3u8.txt",
+}
+
+func TestInfo(t *testing.T) {
+   for _, name := range master_tests {
+      text, err := reverse(name)
+      if err != nil {
+         t.Fatal(err)
+      }
+      fmt.Println(name)
+      master, err := NewScanner(bytes.NewReader(text)).Master()
+      if err != nil {
+         t.Fatal(err)
+      }
+      for i, value := range master.Stream {
+         if i >= 1 {
+            fmt.Println()
+         }
+         fmt.Println(value)
+      }
+      fmt.Println()
+      for i, value := range master.Media {
+         if i >= 1 {
+            fmt.Println()
+         }
+         fmt.Println(value)
+      }
+      fmt.Println()
+   }
+}
+
+func TestMedia(t *testing.T) {
+   for _, name := range master_tests {
+      text, err := reverse(name)
+      if err != nil {
+         t.Fatal(err)
+      }
+      master, err := NewScanner(bytes.NewReader(text)).Master()
+      if err != nil {
+         t.Fatal(err)
+      }
+      fmt.Println(name)
+      for _, media := range master.Media {
+         fmt.Println(media)
+      }
+      fmt.Println()
+   }
+}
 
 // gem.cbc.ca/downton-abbey/s01e04
 const hls_encrypt = "https://cbcrcott-gem.akamaized.net/95bc1901-988d-400a-a7a3-624284880413/CBC_DOWNTON_ABBEY_S01E04.ism/QualityLevels(400047)/Manifest(video,format=m3u8-aapl)"
