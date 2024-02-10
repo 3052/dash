@@ -16,7 +16,7 @@ type Block struct {
    key []byte
 }
 
-func New_Block(key []byte) (*Block, error) {
+func NewBlock(key []byte) (*Block, error) {
    block, err := aes.NewCipher(key)
    if err != nil {
       return nil, err
@@ -35,7 +35,7 @@ func (b Block) Decrypt(text, iv []byte) []byte {
    return text
 }
 
-func (b Block) Decrypt_Key(text []byte) []byte {
+func (b Block) DecryptKey(text []byte) []byte {
    return b.Decrypt(text, b.key)
 }
 
@@ -59,7 +59,7 @@ func (s Scanner) Segment() (*Segment, error) {
             case "IV":
                s.Scan()
                s.Scan()
-               seg.Raw_IV = s.TokenText()
+               seg.RawIv = s.TokenText()
             case "URI":
                s.Scan()
                s.Scan()
@@ -90,12 +90,12 @@ func (s Scanner) Segment() (*Segment, error) {
 type Segment struct {
    Key string
    Map string
-   Raw_IV string
+   RawIv string
    URI []string
 }
 
 func (s Segment) IV() ([]byte, error) {
-   up := strings.ToUpper(s.Raw_IV)
+   up := strings.ToUpper(s.RawIv)
    return hex.DecodeString(strings.TrimPrefix(up, "0X"))
 }
 
@@ -104,7 +104,7 @@ func (Media) Ext() string {
 }
 
 func (m Media) URI() string {
-   return m.Raw_URI
+   return m.RawUri
 }
 
 func (Stream) Ext() string {
@@ -112,7 +112,7 @@ func (Stream) Ext() string {
 }
 
 func (m Stream) URI() string {
-   return m.Raw_URI
+   return m.RawUri
 }
 
 func (s Scanner) Master() (*Master, error) {
@@ -134,7 +134,7 @@ func (s Scanner) Master() (*Master, error) {
             case "GROUP-ID":
                s.Scan()
                s.Scan()
-               med.Group_ID, err = strconv.Unquote(s.TokenText())
+               med.GroupId, err = strconv.Unquote(s.TokenText())
             case "NAME":
                s.Scan()
                s.Scan()
@@ -146,7 +146,7 @@ func (s Scanner) Master() (*Master, error) {
             case "URI":
                s.Scan()
                s.Scan()
-               med.Raw_URI, err = strconv.Unquote(s.TokenText())
+               med.RawUri, err = strconv.Unquote(s.TokenText())
             }
             if err != nil {
                return nil, err
@@ -179,7 +179,7 @@ func (s Scanner) Master() (*Master, error) {
             }
          }
          s.line.Scan()
-         str.Raw_URI = s.line.TokenText()
+         str.RawUri = s.line.TokenText()
          mas.Stream = append(mas.Stream, str)
       }
    }
@@ -201,7 +201,7 @@ type Scanner struct {
    scanner.Scanner
 }
 
-func New_Scanner(body io.Reader) Scanner {
+func NewScanner(body io.Reader) Scanner {
    var scan Scanner
    scan.line.Init(body)
    scan.line.IsIdentRune = func(r rune, i int) bool {

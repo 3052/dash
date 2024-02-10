@@ -9,19 +9,19 @@ import (
 
 const media = `#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio",NAME="English",LANGUAGE="eng",DEFAULT=YES,AUTOSELECT=YES,URI="QualityLevels(192000)/Manifest(audio_eng_aacl,format=m3u8-aapl,filter=desktop)"`
 
-func Test_Strconv(t *testing.T) {
+func TestStrconv(t *testing.T) {
    for _, field := range split(media) {
       fmt.Printf("%q\n", field)
    }
 }
 
-func Benchmark_Strconv(b *testing.B) {
+func BenchmarkStrconv(b *testing.B) {
    for n := 0; n < b.N; n++ {
       _ = split(media)
    }
 }
 
-func Benchmark_Strconv_Cap(b *testing.B) {
+func BenchmarkStrconvCap(b *testing.B) {
    for n := 0; n < b.N; n++ {
       _ = split_cap(media)
    }

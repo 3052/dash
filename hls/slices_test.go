@@ -8,13 +8,13 @@ import (
    "testing"
 )
 
-func Test_Stream(t *testing.T) {
+func TestStream(t *testing.T) {
    for _, name := range master_tests {
       text, err := reverse(name)
       if err != nil {
          t.Fatal(err)
       }
-      master, err := New_Scanner(bytes.NewReader(text)).Master()
+      master, err := NewScanner(bytes.NewReader(text)).Master()
       if err != nil {
          t.Fatal(err)
       }
@@ -46,14 +46,14 @@ var master_tests = []string{
    "m3u8/roku-master.m3u8.txt",
 }
 
-func Test_Info(t *testing.T) {
+func TestInfo(t *testing.T) {
    for _, name := range master_tests {
       text, err := reverse(name)
       if err != nil {
          t.Fatal(err)
       }
       fmt.Println(name)
-      master, err := New_Scanner(bytes.NewReader(text)).Master()
+      master, err := NewScanner(bytes.NewReader(text)).Master()
       if err != nil {
          t.Fatal(err)
       }
@@ -74,13 +74,13 @@ func Test_Info(t *testing.T) {
    }
 }
 
-func Test_Media(t *testing.T) {
+func TestMedia(t *testing.T) {
    for _, name := range master_tests {
       text, err := reverse(name)
       if err != nil {
          t.Fatal(err)
       }
-      master, err := New_Scanner(bytes.NewReader(text)).Master()
+      master, err := NewScanner(bytes.NewReader(text)).Master()
       if err != nil {
          t.Fatal(err)
       }

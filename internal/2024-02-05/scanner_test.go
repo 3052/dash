@@ -8,7 +8,7 @@ import (
    "unicode"
 )
 
-func Test_Scanner(t *testing.T) {
+func TestScanner(t *testing.T) {
    var s scanner.Scanner
    s.IsIdentRune = func(r rune, _ int) bool {
       return r == '-' || unicode.IsLetter(r)
@@ -19,7 +19,7 @@ func Test_Scanner(t *testing.T) {
    }
 }
 
-func Benchmark_Scanner(b *testing.B) {
+func BenchmarkScanner(b *testing.B) {
    var s scanner.Scanner
    s.IsIdentRune = func(r rune, _ int) bool {
       return r == '-' || unicode.IsLetter(r)

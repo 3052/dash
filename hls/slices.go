@@ -6,17 +6,17 @@ import (
 )
 
 type Media struct {
-   Group_ID string
+   GroupId string
    Type string
    Name string
    Characteristics string
-   Raw_URI string
+   RawUri string
 }
 
 func (m Media) String() string {
    var b strings.Builder
    b.WriteString("group ID: ")
-   b.WriteString(m.Group_ID)
+   b.WriteString(m.GroupId)
    b.WriteString("\ntype: ")
    b.WriteString(m.Type)
    b.WriteString("\nname: ")
@@ -30,7 +30,7 @@ func (m Media) String() string {
 
 type Stream struct {
    Bandwidth int64
-   Raw_URI string
+   RawUri string
    Audio string
    Codecs string
    Resolution string

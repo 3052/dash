@@ -12,7 +12,7 @@ import (
 // gem.cbc.ca/downton-abbey/s01e04
 const hls_encrypt = "https://cbcrcott-gem.akamaized.net/95bc1901-988d-400a-a7a3-624284880413/CBC_DOWNTON_ABBEY_S01E04.ism/QualityLevels(400047)/Manifest(video,format=m3u8-aapl)"
 
-func Test_Block(t *testing.T) {
+func TestBlock(t *testing.T) {
    res, err := http.Get(hls_encrypt)
    if err != nil {
       t.Fatal(err)
@@ -20,7 +20,7 @@ func Test_Block(t *testing.T) {
    if res.StatusCode != http.StatusOK {
       t.Fatal(res.Status)
    }
-   seg, err := New_Scanner(res.Body).Segment()
+   seg, err := NewScanner(res.Body).Segment()
    if err != nil {
       t.Fatal(err)
    }
@@ -36,7 +36,7 @@ func Test_Block(t *testing.T) {
       t.Fatal(err)
    }
    defer file.Close()
-   block, err := New_Block(key)
+   block, err := NewBlock(key)
    if err != nil {
       t.Fatal(err)
    }
@@ -57,7 +57,7 @@ func Test_Block(t *testing.T) {
          if err != nil {
             t.Fatal(err)
          }
-         text = block.Decrypt_Key(text)
+         text = block.DecryptKey(text)
          if _, err := file.Write(text); err != nil {
             t.Fatal(err)
          }
@@ -72,13 +72,13 @@ var segment_tests = []string{
    "m3u8/roku-segment.m3u8.txt",
 }
 
-func Test_Segment(t *testing.T) {
+func TestSegment(t *testing.T) {
    for _, test := range segment_tests {
       text, err := reverse(test)
       if err != nil {
          t.Fatal(err)
       }
-      seg, err := New_Scanner(bytes.NewReader(text)).Segment()
+      seg, err := NewScanner(bytes.NewReader(text)).Segment()
       if err != nil {
          t.Fatal(err)
       }
@@ -92,9 +92,9 @@ var raw_ivs = []string{
    "0x00000000000000000000000000000001",
 }
 
-func Test_Hex(t *testing.T) {
+func TestHex(t *testing.T) {
    for _, raw_iv := range raw_ivs {
-      iv, err := Segment{Raw_IV: raw_iv}.IV()
+      iv, err := Segment{RawIv: raw_iv}.IV()
       if err != nil {
          t.Fatal(err)
       }

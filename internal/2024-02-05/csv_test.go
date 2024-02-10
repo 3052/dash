@@ -7,7 +7,7 @@ import (
    "testing"
 )
 
-func Test_CSV(t *testing.T) {
+func TestCsv(t *testing.T) {
    {
       read := csv.NewReader(strings.NewReader(media))
       read.LazyQuotes = false

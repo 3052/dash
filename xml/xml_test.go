@@ -10,7 +10,7 @@ const dirty = `one two <root>
   <Month>31</Month>
 </root> three`
 
-func Test_Before(t *testing.T) {
+func TestBefore(t *testing.T) {
    _, after := Cut([]byte(dirty), []byte(" two "), nil)
    var root struct { Year, Month int }
    if err := Decode(after, &root); err != nil {
@@ -19,7 +19,7 @@ func Test_Before(t *testing.T) {
    fmt.Printf("%+v\n", root)
 }
 
-func Test_After(t *testing.T) {
+func TestAfter(t *testing.T) {
    _, after := Cut([]byte(dirty), nil, []byte("<root>"))
    var root struct { Year, Month int }
    if err := Decode(after, &root); err != nil {
@@ -28,7 +28,7 @@ func Test_After(t *testing.T) {
    fmt.Printf("%+v\n", root)
 }
 
-func Test_Both(t *testing.T) {
+func TestBoth(t *testing.T) {
    _, after := Cut([]byte(dirty), []byte(" two "), []byte("<root>"))
    var root struct { Year, Month int }
    if err := Decode(after, &root); err != nil {

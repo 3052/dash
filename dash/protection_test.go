@@ -7,7 +7,7 @@ import (
    "testing"
 )
 
-func Test_Protection(t *testing.T) {
+func TestProtection(t *testing.T) {
    for _, test := range tests {
       text, err := os.ReadFile(test)
       if err != nil {

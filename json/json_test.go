@@ -12,7 +12,7 @@ type date struct {
    Month int
 }
 
-func Test_After(t *testing.T) {
+func TestAfter(t *testing.T) {
    _, after := Cut(dirty, nil, []byte(`{"year"`))
    var value date
    err := Decode(after, &value)
@@ -22,7 +22,7 @@ func Test_After(t *testing.T) {
    fmt.Printf("%+v\n", value)
 }
 
-func Test_Both(t *testing.T) {
+func TestBoth(t *testing.T) {
    _, after := Cut(dirty, []byte(" two "), []byte(`{"year"`))
    var value date
    err := Decode(after, &value)
@@ -32,7 +32,7 @@ func Test_Both(t *testing.T) {
    fmt.Printf("%+v\n", value)
 }
 
-func Test_Before(t *testing.T) {
+func TestBefore(t *testing.T) {
    _, after := Cut(dirty, []byte(" two "), nil)
    var value date
    err := Decode(after, &value)
