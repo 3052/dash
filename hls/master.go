@@ -72,10 +72,7 @@ td {
 }
 td,
 th {
-   padding-bottom: 9px;
-   padding-left: 9px;
-   padding-right: 9px;
-   padding-top: 9px;
+   padding: 9px;
 }
 </style>
 <table>

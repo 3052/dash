@@ -14,14 +14,19 @@
   <body>
     <nav>
         <a href="..">154.pages.dev/encoding</a>/hls<span class="navbar-right">
-          v1.16.9 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
+          v1.17.2 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
       </nav>
     <main><h2 id="pkg-overview">package hls</h2>
 <pre class="chroma"><span class="kn">import</span> <span class="s">&#34;154.pages.dev/encoding/hls&#34;</span></pre>
 <h3 id="pkg-index">Index</h3>
 <ul>
-  <li><a href="#pkg-constants">Constants</a></li><li><a href="#Decrypt">func Decrypt(b cipher.Block, iv, text []byte) []byte</a></li>
-  <li><a href="#NewCipher">func NewCipher(key []byte) (cipher.Block, error)</a></li>
+  <li><a href="#pkg-constants">Constants</a></li><li>
+      <a href="#BlockMode">type BlockMode</a>
+      <ul>
+          <li><a href="#BlockMode.Decrypt">func (b BlockMode) Decrypt(text []byte) []byte</a></li>
+          <li><a href="#BlockMode.New">func (b *BlockMode) New(key []byte) error</a></li>
+          </ul>
+      </li>
   <li>
       <a href="#MasterPlaylist">type MasterPlaylist</a>
       <ul>
@@ -31,7 +36,6 @@
   <li>
       <a href="#MediaSegment">type MediaSegment</a>
       <ul>
-          <li><a href="#MediaSegment.IV">func (m MediaSegment) IV() ([]byte, error)</a></li>
           <li><a href="#MediaSegment.New">func (m *MediaSegment) New(s string)</a></li>
           </ul>
       </li>
@@ -53,10 +57,7 @@
 </span><span class="s">}
 </span><span class="s">td,
 </span><span class="s">th {
-</span><span class="s">   padding-bottom: 9px;
-</span><span class="s">   padding-left: 9px;
-</span><span class="s">   padding-right: 9px;
-</span><span class="s">   padding-top: 9px;
+</span><span class="s">   padding: 9px;
 </span><span class="s">}
 </span><span class="s">&lt;/style&gt;
 </span><span class="s">&lt;table&gt;
@@ -76,12 +77,15 @@
 </span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
 </span><span class="s">&lt;/table&gt;
 </span><span class="s">`</span></pre>
-  <h3 id="pkg-functions">Functions</h3>
-  <h3 id="Decrypt">func Decrypt</h3>
-    <pre class="chroma"><span class="kd">func</span> <span class="nf">Decrypt</span><span class="p">(</span><span class="nx">b</span> <a href="https://pkg.go.dev/crypto/cipher"><span class="nx">cipher</span></a><span class="p">.</span><a href="https://pkg.go.dev/crypto/cipher#Block"><span class="nx">Block</span></a><span class="p">,</span> <span class="nx">iv</span><span class="p">,</span> <span class="nx">text</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a></pre>
-    <h3 id="NewCipher">func NewCipher</h3>
-    <pre class="chroma"><span class="kd">func</span> <span class="nf">NewCipher</span><span class="p">(</span><span class="nx">key</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span> <span class="p">(</span><a href="https://pkg.go.dev/crypto/cipher"><span class="nx">cipher</span></a><span class="p">.</span><a href="https://pkg.go.dev/crypto/cipher#Block"><span class="nx">Block</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
-    <h3 id="pkg-types">Types</h3>
+  <h3 id="pkg-types">Types</h3>
+  <h3 id="BlockMode">type BlockMode</h3>
+    <pre class="chroma"><span class="kd">type</span> <span class="nx">BlockMode</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span class="c1">// contains filtered or unexported fields
+</span><span class="c1"></span><span class="p">}</span></pre>
+    <h4 id="BlockMode.Decrypt">func (BlockMode) Decrypt</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">b</span> <a href="#BlockMode"><span class="nx">BlockMode</span></a><span class="p">)</span> <span class="nf">Decrypt</span><span class="p">(</span><span class="nx">text</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a></pre>
+  <h4 id="BlockMode.New">func (*BlockMode) New</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">b</span> <span class="o">*</span><a href="#BlockMode"><span class="nx">BlockMode</span></a><span class="p">)</span> <span class="nf">New</span><span class="p">(</span><span class="nx">key</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
   <h3 id="MasterPlaylist">type MasterPlaylist</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">MasterPlaylist</span> <span class="p">[]</span><a href="#VariantStream"><span class="nx">VariantStream</span></a></pre>
     <p>datatracker.ietf.org/doc/html/rfc8216#section-4.3.4
@@ -97,9 +101,7 @@
 	<span id="MediaSegment.URI"><span class="nx">URI</span></span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
 <span class="p">}</span></pre>
     <p>datatracker.ietf.org/doc/html/rfc8216#section-3
-<h4 id="MediaSegment.IV">func (MediaSegment) IV</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <a href="#MediaSegment"><span class="nx">MediaSegment</span></a><span class="p">)</span> <span class="nf">IV</span><span class="p">()</span> <span class="p">([]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
-  <h4 id="MediaSegment.New">func (*MediaSegment) New</h4>
+<h4 id="MediaSegment.New">func (*MediaSegment) New</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <span class="o">*</span><a href="#MediaSegment"><span class="nx">MediaSegment</span></a><span class="p">)</span> <span class="nf">New</span><span class="p">(</span><span class="nx">s</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span></pre>
   <h3 id="VariantStream">type VariantStream</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">VariantStream</span> <span class="kd">struct</span> <span class="p">{</span>
