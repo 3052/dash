@@ -8,8 +8,19 @@ import (
    "strings"
 )
 
-func (m MediaSegment) IV() ([]byte, error) {
-   return hex.DecodeString(strings.TrimPrefix(m.Key.IV, "0X"))
+func Decrypt(b cipher.Block, iv, text []byte) []byte {
+   cipher.NewCBCDecrypter(b, iv).CryptBlocks(text, text)
+   if len(text) >= 1 {
+      pad := text[len(text)-1]
+      if len(text) >= int(pad) {
+         text = text[:len(text)-int(pad)]
+      }
+   }
+   return text
+}
+
+func NewCipher(key []byte) (cipher.Block, error) {
+   return aes.NewCipher(key)
 }
 
 // datatracker.ietf.org/doc/html/rfc8216#section-3
@@ -20,6 +31,10 @@ type MediaSegment struct {
       URI string
    }
    URI []string
+}
+
+func (m MediaSegment) IV() ([]byte, error) {
+   return hex.DecodeString(strings.TrimPrefix(m.Key.IV, "0X"))
 }
 
 func (m *MediaSegment) New(s string) {
@@ -42,6 +57,8 @@ func (m *MediaSegment) New(s string) {
             } else {
                line = line[len(value):]
                _, line, _ = strings.Cut(line, ",")
+               // github.com/golang/go/blob/go1.22.0/src/runtime/debug/mod.go#L240-L250
+               value, _ = strconv.Unquote(value)
             }
             switch key {
             case "IV":
@@ -55,19 +72,4 @@ func (m *MediaSegment) New(s string) {
          m.URI = append(m.URI, line)
       }
    }
-}
-
-func NewCipher(key []byte) (cipher.Block, error) {
-   return aes.NewCipher(key)
-}
-
-func Decrypt(b cipher.Block, iv, text []byte) []byte {
-   cipher.NewCBCDecrypter(b, iv).CryptBlocks(text, text)
-   if len(text) >= 1 {
-      pad := text[len(text)-1]
-      if len(text) >= int(pad) {
-         text = text[:len(text)-int(pad)]
-      }
-   }
-   return text
 }

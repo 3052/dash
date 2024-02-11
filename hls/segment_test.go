@@ -24,11 +24,6 @@ func TestSegment(t *testing.T) {
    }
 }
 
-var segment_names = []string{
-   "audio_eng_aacl.m3u8",
-   "video.m3u8",
-}
-
 func get(s string) (*url.URL, []byte, error) {
    res, err := http.Get(s)
    if err != nil {
@@ -79,8 +74,8 @@ func TestDecrypt(t *testing.T) {
       t.Fatal(err)
    }
    defer file.Close()
-   for _, raw_uri := range segment.URI {
-      uri, err := base.Parse(raw_uri)
+   for i := range 9 {
+      uri, err := base.Parse(segment.URI[i])
       if err != nil {
          t.Fatal(err)
       }
@@ -94,4 +89,9 @@ func TestDecrypt(t *testing.T) {
          t.Fatal(err)
       }
    }
+}
+
+var segment_names = []string{
+   "m3u8/audio_eng_aacl.m3u8",
+   "m3u8/video.m3u8",
 }
