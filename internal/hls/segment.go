@@ -8,6 +8,20 @@ import (
    "strings"
 )
 
+func (m MediaSegment) IV() ([]byte, error) {
+   return hex.DecodeString(strings.TrimPrefix(m.Key.IV, "0X"))
+}
+
+// datatracker.ietf.org/doc/html/rfc8216#section-3
+type MediaSegment struct {
+   // datatracker.ietf.org/doc/html/rfc8216#section-4.3.2.4
+   Key struct {
+      IV string
+      URI string
+   }
+   URI []string
+}
+
 func (m *MediaSegment) New(s string) {
    for s != "" {
       var line string
@@ -41,20 +55,6 @@ func (m *MediaSegment) New(s string) {
          m.URI = append(m.URI, line)
       }
    }
-}
-
-// datatracker.ietf.org/doc/html/rfc8216#section-3
-type MediaSegment struct {
-   // datatracker.ietf.org/doc/html/rfc8216#section-4.3.2.4
-   Key struct {
-      IV string
-      URI string
-   }
-   URI []string
-}
-
-func (m MediaSegment) IV() ([]byte, error) {
-   return hex.DecodeString(strings.TrimPrefix(m.Key.IV, "0X"))
 }
 
 func NewCipher(key []byte) (cipher.Block, error) {
