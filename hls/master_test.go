@@ -4,6 +4,7 @@ import (
    "fmt"
    "os"
    "testing"
+   "text/template"
 )
 
 func TestTemplate(t *testing.T) {
@@ -11,24 +12,19 @@ func TestTemplate(t *testing.T) {
    if err != nil {
       t.Fatal(err)
    }
-   file, err := os.Create("dash.html")
+   file, err := os.Create("ignore.html")
    if err != nil {
       t.Fatal(err)
    }
    defer file.Close()
-   for _, name := range tests {
-      file.WriteString(name)
-      text, err := os.ReadFile(name)
-      if err != nil {
-         t.Fatal(err)
-      }
-      var media MPD
-      if err := xml.Unmarshal(text, &media); err != nil {
-         t.Fatal(err)
-      }
-      if err := tmpl.Execute(file, media); err != nil {
-         t.Fatal(err)
-      }
+   text, err := os.ReadFile("m3u8/desktop_master.m3u8")
+   if err != nil {
+      t.Fatal(err)
+   }
+   var master MasterPlaylist
+   master.New(string(text))
+   if err := tmpl.Execute(file, master); err != nil {
+      t.Fatal(err)
    }
 }
 

@@ -28,6 +28,8 @@ func (m *MasterPlaylist) New(s string) {
             } else {
                line = line[len(value):]
                _, line, _ = strings.Cut(line, ",")
+               // github.com/golang/go/blob/go1.22.0/src/runtime/debug/mod.go#L240-L250
+               value, _ = strconv.Unquote(value)
             }
             switch key {
             case "BANDWIDTH":
@@ -44,6 +46,13 @@ func (m *MasterPlaylist) New(s string) {
    }
 }
 
+func (v VariantStream) Ext() string {
+   if v.Resolution != "" {
+      return ".m4v"
+   }
+   return ".m4a"
+}
+
 // datatracker.ietf.org/doc/html/rfc8216#section-4.3.4.2
 type VariantStream struct {
    Bandwidth string
@@ -52,9 +61,37 @@ type VariantStream struct {
    URI string
 }
 
-func (v VariantStream) Ext() string {
-   if v.Resolution != "" {
-      return ".m4v"
-   }
-   return ".m4a"
+const Template = `<style>
+table {
+   border-collapse: collapse;
+   margin: 9px;
 }
+td {
+   border-style: solid;
+   border-width: thin;
+}
+td,
+th {
+   padding-bottom: 9px;
+   padding-left: 9px;
+   padding-right: 9px;
+   padding-top: 9px;
+}
+</style>
+<table>
+<tr>
+   <th>index</th>
+   <th>bandwidth</th>
+   <th>codecs</th>
+   <th>resolution</th>
+</tr>
+{{ range $index, $_ := . -}}
+<tr>
+   <td>{{ $index }}</td>
+   <td>{{ .Bandwidth }}</td>
+   <td>{{ .Codecs }}</td>
+   <td>{{ .Resolution }}</td>
+</tr>
+{{ end -}}
+</table>
+`
