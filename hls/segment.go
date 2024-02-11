@@ -27,14 +27,14 @@ func NewCipher(key []byte) (cipher.Block, error) {
 type MediaSegment struct {
    // datatracker.ietf.org/doc/html/rfc8216#section-4.3.2.4
    Key struct {
-      IV string
-      URI string
+      Iv string
+      Uri string
    }
-   URI []string
+   Uri []string
 }
 
-func (m MediaSegment) IV() ([]byte, error) {
-   return hex.DecodeString(strings.TrimPrefix(m.Key.IV, "0X"))
+func (m MediaSegment) Iv() ([]byte, error) {
+   return hex.DecodeString(strings.TrimPrefix(m.Key.Iv, "0X"))
 }
 
 func (m *MediaSegment) New(s string) {
@@ -62,14 +62,14 @@ func (m *MediaSegment) New(s string) {
             }
             switch key {
             case "IV":
-               m.Key.IV = value
+               m.Key.Iv = value
             case "URI":
-               m.Key.URI = value
+               m.Key.Uri = value
             }
          }
       case "#EXTINF":
          line, s, _ = strings.Cut(s, "\r\n")
-         m.URI = append(m.URI, line)
+         m.Uri = append(m.Uri, line)
       }
    }
 }

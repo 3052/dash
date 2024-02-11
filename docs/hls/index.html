@@ -14,7 +14,7 @@
   <body>
     <nav>
         <a href="..">154.pages.dev/encoding</a>/hls<span class="navbar-right">
-          v1.16.9 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
+          v1.17.0 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
       </nav>
     <main><h2 id="pkg-overview">package hls</h2>
 <pre class="chroma"><span class="kn">import</span> <span class="s">&#34;154.pages.dev/encoding/hls&#34;</span></pre>
@@ -31,7 +31,7 @@
   <li>
       <a href="#MediaSegment">type MediaSegment</a>
       <ul>
-          <li><a href="#MediaSegment.IV">func (m MediaSegment) IV() ([]byte, error)</a></li>
+          <li><a href="#MediaSegment.Iv">func (m MediaSegment) Iv() ([]byte, error)</a></li>
           <li><a href="#MediaSegment.New">func (m *MediaSegment) New(s string)</a></li>
           </ul>
       </li>
@@ -53,10 +53,7 @@
 </span><span class="s">}
 </span><span class="s">td,
 </span><span class="s">th {
-</span><span class="s">   padding-bottom: 9px;
-</span><span class="s">   padding-left: 9px;
-</span><span class="s">   padding-right: 9px;
-</span><span class="s">   padding-top: 9px;
+</span><span class="s">   padding: 9px;
 </span><span class="s">}
 </span><span class="s">&lt;/style&gt;
 </span><span class="s">&lt;table&gt;
@@ -91,14 +88,14 @@
     <pre class="chroma"><span class="kd">type</span> <span class="nx">MediaSegment</span> <span class="kd">struct</span> <span class="p">{</span>
 	<span class="c1">// datatracker.ietf.org/doc/html/rfc8216#section-4.3.2.4
 </span><span class="c1"></span>	<span id="MediaSegment.Key"><span class="nx">Key</span></span> <span class="kd">struct</span> <span class="p">{</span>
-		<span id="MediaSegment.IV"><span class="nx">IV</span></span>  <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
-		<span id="MediaSegment.URI"><span class="nx">URI</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
+		<span id="MediaSegment.Iv"><span class="nx">Iv</span></span>  <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
+		<span id="MediaSegment.Uri"><span class="nx">Uri</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
 	<span class="p">}</span>
-	<span id="MediaSegment.URI"><span class="nx">URI</span></span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
+	<span id="MediaSegment.Uri"><span class="nx">Uri</span></span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
 <span class="p">}</span></pre>
     <p>datatracker.ietf.org/doc/html/rfc8216#section-3
-<h4 id="MediaSegment.IV">func (MediaSegment) IV</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <a href="#MediaSegment"><span class="nx">MediaSegment</span></a><span class="p">)</span> <span class="nf">IV</span><span class="p">()</span> <span class="p">([]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+<h4 id="MediaSegment.Iv">func (MediaSegment) Iv</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <a href="#MediaSegment"><span class="nx">MediaSegment</span></a><span class="p">)</span> <span class="nf">Iv</span><span class="p">()</span> <span class="p">([]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
   <h4 id="MediaSegment.New">func (*MediaSegment) New</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <span class="o">*</span><a href="#MediaSegment"><span class="nx">MediaSegment</span></a><span class="p">)</span> <span class="nf">New</span><span class="p">(</span><span class="nx">s</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span></pre>
   <h3 id="VariantStream">type VariantStream</h3>
@@ -106,7 +103,7 @@
 	<span id="VariantStream.Bandwidth"><span class="nx">Bandwidth</span></span>  <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
 	<span id="VariantStream.Codecs"><span class="nx">Codecs</span></span>     <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
 	<span id="VariantStream.Resolution"><span class="nx">Resolution</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
-	<span id="VariantStream.URI"><span class="nx">URI</span></span>        <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
+	<span id="VariantStream.Uri"><span class="nx">Uri</span></span>        <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
 <span class="p">}</span></pre>
     <p>datatracker.ietf.org/doc/html/rfc8216#section-4.3.4.2
 <h4 id="VariantStream.Ext">func (VariantStream) Ext</h4>

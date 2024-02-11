@@ -40,7 +40,7 @@ func (m *MasterPlaylist) New(s string) {
                stream.Resolution = value
             }
          }
-         stream.URI, s, _ = strings.Cut(s, "\r\n")
+         stream.Uri, s, _ = strings.Cut(s, "\r\n")
          *m = append(*m, stream)
       }
    }
@@ -58,7 +58,7 @@ type VariantStream struct {
    Bandwidth string
    Codecs string
    Resolution string
-   URI string
+   Uri string
 }
 
 const Template = `<style>
@@ -72,10 +72,7 @@ td {
 }
 td,
 th {
-   padding-bottom: 9px;
-   padding-left: 9px;
-   padding-right: 9px;
-   padding-top: 9px;
+   padding: 9px;
 }
 </style>
 <table>
