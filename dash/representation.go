@@ -1,65 +1,44 @@
 package dash
 
-const Template = `<style>
-table {
-   border-collapse: collapse;
-   margin: 9px;
-}
-td {
-   border-style: solid;
-   border-width: thin;
-}
-td,
-th {
-   padding-bottom: 9px;
-   padding-left: 9px;
-   padding-right: 9px;
-   padding-top: 9px;
-}
-</style>
-<table>
-<tr>
-   <th>width</th>
-   <th>height</th>
-   <th>bandwidth</th>
-   <th>codecs</th>
-   <th>type</th>
-   <th>role</th>
-   <th>language</th>
-   <th>ID</th>
-   <th>period</th>
-</tr>
+const ModeLine = `{{ $first := true -}}
 {{ range $period := .Period -}}
-   {{ range $adaptation := .AdaptationSet -}}
-      {{ range .Representation -}}
-<tr>
-   <td>{{ .Width }}</td>
-   <td>{{ .Height }}</td>
-   <td>{{ .Bandwidth }}</td>
-         {{ with .Codecs -}}
-   <td>{{ . }}</td>
-         {{ else -}}
-   <td>{{ $adaptation.Codecs }}</td>
-         {{ end -}}
-         {{ with .MimeType -}}
-   <td>{{ . }}</td>
-         {{ else -}}
-   <td>{{ $adaptation.MimeType }}</td>
-         {{ end -}}
-         {{ with $adaptation.Role -}}
-   <td>{{ .Value }}</td>
-         {{ else -}}
-   <td></td>
-         {{ end -}}
-   <td>{{ $adaptation.Lang }}</td>
-   <td>{{ .ID }}</td>
-   <td>{{ $period.ID }}</td>
-</tr>
-      {{ end -}}
-   {{ end -}}
+{{ range $adaptation := .AdaptationSet -}}
+{{ range .Representation -}}
+{{ if $first -}}
+   {{ $first = false -}}
+{{ else }}
 {{ end -}}
-</table>
-`
+{{ with .Width -}}
+width = {{ . }}
+{{ end -}}
+{{ with .Height -}}
+height = {{ . }}
+{{ end -}}
+bandwidth = {{ .Bandwidth }}
+{{ with .Codecs -}}
+codecs = {{ . }}
+{{ end -}}
+{{ with $adaptation.Codecs -}}
+codecs = {{ . }}
+{{ end -}}
+{{ with .MimeType -}}
+type = {{ . }}
+{{ else -}}
+type = {{ $adaptation.MimeType }}
+{{ end -}}
+{{ with $adaptation.Role -}}
+role = {{ .Value }}
+{{ end -}}
+{{ with $adaptation.Lang -}}
+lang = {{ . }}
+{{ end -}}
+id = {{ .ID }}
+{{ with $period.ID -}}
+period = {{ . }}
+{{ end -}}
+{{ end -}}
+{{ end -}}
+{{ end }}`
 
 type Representation struct {
    Bandwidth int `xml:"bandwidth,attr"`
@@ -71,7 +50,7 @@ type Representation struct {
    // this might be under AdaptationSet
    ContentProtection []ContentProtection
    // this might not exist
-   Height *int `xml:"height,attr"`
+   Height int `xml:"height,attr"`
    // this might be under AdaptationSet
    MimeType string `xml:"mimeType,attr"`
    // this might not exist
@@ -84,7 +63,7 @@ type Representation struct {
    // this might not exist, or might be under AdaptationSet
    SegmentTemplate *SegmentTemplate
    // this might not exist
-   Width *int `xml:"width,attr"`
+   Width int `xml:"width,attr"`
 }
 
 type AdaptationSet struct {
@@ -96,7 +75,7 @@ type AdaptationSet struct {
    Lang string `xml:"lang,attr"`
    // this might be under Representation
    MimeType string `xml:"mimeType,attr"`
-   Representation []*Representation
+   Representation []Representation
    // this might not exist
    Role *struct {
       Value string `xml:"value,attr"`
@@ -106,6 +85,6 @@ type AdaptationSet struct {
 }
 
 type Period struct {
-   AdaptationSet []*AdaptationSet
+   AdaptationSet []AdaptationSet
    ID string `xml:"id,attr"`
 }

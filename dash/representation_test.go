@@ -2,23 +2,22 @@ package dash
 
 import (
    "encoding/xml"
+   "fmt"
    "os"
    "testing"
    "text/template"
 )
 
-func TestTemplate(t *testing.T) {
-   tmpl, err := new(template.Template).Parse(Template)
+func TestModeLine(t *testing.T) {
+   tmpl, err := new(template.Template).Parse(ModeLine)
    if err != nil {
       t.Fatal(err)
    }
-   file, err := os.Create("dash.html")
-   if err != nil {
-      t.Fatal(err)
-   }
-   defer file.Close()
-   for _, name := range tests {
-      file.WriteString(name)
+   for i, name := range tests {
+      if i >= 1 {
+         fmt.Println()
+      }
+      fmt.Println(name)
       text, err := os.ReadFile(name)
       if err != nil {
          t.Fatal(err)
@@ -27,7 +26,7 @@ func TestTemplate(t *testing.T) {
       if err := xml.Unmarshal(text, &media); err != nil {
          t.Fatal(err)
       }
-      if err := tmpl.Execute(file, media); err != nil {
+      if err := tmpl.Execute(os.Stdout, media); err != nil {
          t.Fatal(err)
       }
    }

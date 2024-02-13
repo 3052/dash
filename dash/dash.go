@@ -56,9 +56,9 @@ func (m MPD) Some(f func(Pointer) bool) {
       for _, adapt := range period.AdaptationSet {
          for _, represent := range adapt.Representation {
             var p Pointer
-            p.AdaptationSet = adapt
-            p.Period = period
-            p.Representation = represent
+            p.AdaptationSet = &adapt
+            p.Period = &period
+            p.Representation = &represent
             if !f(p) {
                return
             }
@@ -148,7 +148,7 @@ func (r Range) Scan() (int, int, error) {
 // media presentation description
 // wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP
 type MPD struct {
-   Period []*Period
+   Period []Period
 }
 
 type SegmentTemplate struct {
