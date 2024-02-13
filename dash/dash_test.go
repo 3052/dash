@@ -6,22 +6,11 @@ import (
    "net/url"
    "os"
    "testing"
-   "text/template"
 )
 
-func TestTemplate(t *testing.T) {
-   tmpl, err := new(template.Template).Parse(Template)
-   if err != nil {
-      t.Fatal(err)
-   }
-   file, err := os.Create("dash.html")
-   if err != nil {
-      t.Fatal(err)
-   }
-   defer file.Close()
-   for _, name := range tests {
-      file.WriteString(name)
-      text, err := os.ReadFile(name)
+func TestProtection(t *testing.T) {
+   for _, test := range tests {
+      text, err := os.ReadFile(test)
       if err != nil {
          t.Fatal(err)
       }
@@ -29,9 +18,14 @@ func TestTemplate(t *testing.T) {
       if err := xml.Unmarshal(text, &media); err != nil {
          t.Fatal(err)
       }
-      if err := tmpl.Execute(file, media); err != nil {
-         t.Fatal(err)
-      }
+      media.Every(func(p Pointer) {
+         _, pssh := p.PSSH()
+         _, kid := p.Default_KID()
+         fmt.Printf(
+            "mpd:%v period:%q type:%v pssh:%v kid:%v\n",
+            test, p.Period.ID, p.MimeType(), pssh, kid,
+         )
+      })
    }
 }
 
