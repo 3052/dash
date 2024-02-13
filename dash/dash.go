@@ -9,6 +9,54 @@ import (
    "strings"
 )
 
+type Representation struct {
+   Bandwidth int `xml:"bandwidth,attr"`
+   ID string `xml:"id,attr"`
+   // this might not exist
+   BaseURL string
+   // this might be under AdaptationSet
+   Codecs string `xml:"codecs,attr"`
+   // this might be under AdaptationSet
+   ContentProtection []ContentProtection
+   // this might not exist
+   Height int `xml:"height,attr"`
+   // this might be under AdaptationSet
+   MimeType string `xml:"mimeType,attr"`
+   // this might not exist
+   SegmentBase *struct {
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+      IndexRange Range `xml:"indexRange,attr"`
+   }
+   // this might not exist, or might be under AdaptationSet
+   SegmentTemplate *SegmentTemplate
+   // this might not exist
+   Width int `xml:"width,attr"`
+}
+
+type AdaptationSet struct {
+   // this might be under Representation
+   Codecs string `xml:"codecs,attr"`
+   // this might be under Representation
+   ContentProtection []ContentProtection
+   // this might not exist
+   Lang string `xml:"lang,attr"`
+   // this might be under Representation
+   MimeType string `xml:"mimeType,attr"`
+   Representation []Representation
+   // this might not exist
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   // this might not exist, or might be under Representation
+   SegmentTemplate *SegmentTemplate
+}
+
+type Period struct {
+   AdaptationSet []AdaptationSet
+   ID string `xml:"id,attr"`
+}
 func (p Pointer) contentProtection() []ContentProtection {
    if a := p.AdaptationSet; a.ContentProtection != nil {
       return a.ContentProtection
@@ -43,28 +91,6 @@ func (p Pointer) Default_KID() ([]byte, error) {
       }
    }
    return nil, errors.New("Pointer.Default_KID")
-}
-func (m MPD) Every(f func(Pointer)) {
-   m.Some(func(p Pointer) bool {
-      f(p)
-      return true
-   })
-}
-
-func (m MPD) Some(f func(Pointer) bool) {
-   for _, period := range m.Period {
-      for _, adapt := range period.AdaptationSet {
-         for _, represent := range adapt.Representation {
-            var p Pointer
-            p.AdaptationSet = &adapt
-            p.Period = &period
-            p.Representation = &represent
-            if !f(p) {
-               return
-            }
-         }
-      }
-   }
 }
 
 type Pointer struct {
@@ -143,12 +169,6 @@ func (r Range) Scan() (int, int, error) {
       return 0, 0, err
    }
    return start, end, nil
-}
-
-// media presentation description
-// wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP
-type MPD struct {
-   Period []Period
 }
 
 type SegmentTemplate struct {

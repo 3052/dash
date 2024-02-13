@@ -14,7 +14,7 @@
   <body>
     <nav>
         <a href="..">154.pages.dev/encoding</a>/dash<span class="navbar-right">
-          v1.17.3 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
+          v1.17.4 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
       </nav>
     <main><h2 id="pkg-overview">package dash</h2>
 <pre class="chroma"><span class="kn">import</span> <span class="s">&#34;154.pages.dev/encoding/dash&#34;</span></pre>
@@ -29,8 +29,8 @@
   <li>
       <a href="#MPD">type MPD</a>
       <ul>
-          <li><a href="#MPD.Every">func (m MPD) Every(f func(Pointer))</a></li>
-          <li><a href="#MPD.Some">func (m MPD) Some(f func(Pointer) bool)</a></li>
+          <li><a href="#MPD.Contains">func (m MPD) Contains(f func(Pointer) bool) bool</a></li>
+          <li><a href="#MPD.Visit">func (m MPD) Visit(f func(Pointer))</a></li>
           </ul>
       </li>
   <li>
@@ -133,11 +133,12 @@
 <span class="p">}</span></pre>
     <p>media presentation description
 wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP
-<h4 id="MPD.Every">func (MPD) Every</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <a href="#MPD"><span class="nx">MPD</span></a><span class="p">)</span> <span class="nf">Every</span><span class="p">(</span><span class="nx">f</span> <span class="kd">func</span><span class="p">(</span><a href="#Pointer"><span class="nx">Pointer</span></a><span class="p">))</span></pre>
-  <h4 id="MPD.Some">func (MPD) Some</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <a href="#MPD"><span class="nx">MPD</span></a><span class="p">)</span> <span class="nf">Some</span><span class="p">(</span><span class="nx">f</span> <span class="kd">func</span><span class="p">(</span><a href="#Pointer"><span class="nx">Pointer</span></a><span class="p">)</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
-  <h3 id="Period">type Period</h3>
+<h4 id="MPD.Contains">func (MPD) Contains</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <a href="#MPD"><span class="nx">MPD</span></a><span class="p">)</span> <span class="nf">Contains</span><span class="p">(</span><span class="nx">f</span> <span class="kd">func</span><span class="p">(</span><a href="#Pointer"><span class="nx">Pointer</span></a><span class="p">)</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a></pre>
+  <h4 id="MPD.Visit">func (MPD) Visit</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <a href="#MPD"><span class="nx">MPD</span></a><span class="p">)</span> <span class="nf">Visit</span><span class="p">(</span><span class="nx">f</span> <span class="kd">func</span><span class="p">(</span><a href="#Pointer"><span class="nx">Pointer</span></a><span class="p">))</span></pre>
+  <p>godocs.io/flag#Visit
+<h3 id="Period">type Period</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">Period</span> <span class="kd">struct</span> <span class="p">{</span>
 	<span id="Period.AdaptationSet"><span class="nx">AdaptationSet</span></span> <span class="p">[]</span><a href="#AdaptationSet"><span class="nx">AdaptationSet</span></a>
 	<span id="Period.ID"><span class="nx">ID</span></span>            <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;id,attr&#34;`</span>

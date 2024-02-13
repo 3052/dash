@@ -3,38 +3,17 @@ package dash
 import (
    "encoding/xml"
    "fmt"
-   "net/url"
    "os"
    "testing"
+   "text/template"
 )
-
-func TestProtection(t *testing.T) {
-   for _, test := range tests {
-      text, err := os.ReadFile(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      var media MPD
-      if err := xml.Unmarshal(text, &media); err != nil {
-         t.Fatal(err)
-      }
-      media.Every(func(p Pointer) {
-         _, pssh := p.PSSH()
-         _, kid := p.Default_KID()
-         fmt.Printf(
-            "mpd:%v period:%q type:%v pssh:%v kid:%v\n",
-            test, p.Period.ID, p.MimeType(), pssh, kid,
-         )
-      })
-   }
-}
 
 func TestRange(t *testing.T) {
    media, err := reader("mpd/hulu.mpd")
    if err != nil {
       t.Fatal(err)
    }
-   media.Every(func(p Pointer) {
+   media.Visit(func(p Pointer) {
       sb := p.Representation.SegmentBase
       start, end, err := sb.Initialization.Range.Scan()
       fmt.Printf("%v %v %v ", start, end, err)
@@ -63,34 +42,47 @@ func reader(name string) (*MPD, error) {
    return media, nil
 }
 
-func TestMedia(t *testing.T) {
-   roku, err := reader("mpd/roku.mpd")
+func TestModeLine(t *testing.T) {
+   tmpl, err := new(template.Template).Parse(ModeLine)
    if err != nil {
       t.Fatal(err)
    }
-   base, err := url.Parse("http://example.com")
-   if err != nil {
-      t.Fatal(err)
-   }
-   roku.Some(func(p Pointer) bool {
-      for _, ref := range p.Media() {
-         media, err := base.Parse(ref)
-         if err != nil {
-            t.Fatal(err)
-         }
-         fmt.Println(media)
+   for i, name := range tests {
+      if i >= 1 {
+         fmt.Println()
       }
-      return false
-   })
+      fmt.Println(name)
+      text, err := os.ReadFile(name)
+      if err != nil {
+         t.Fatal(err)
+      }
+      var media MPD
+      if err := xml.Unmarshal(text, &media); err != nil {
+         t.Fatal(err)
+      }
+      if err := tmpl.Execute(os.Stdout, media); err != nil {
+         t.Fatal(err)
+      }
+   }
 }
 
-func TestInitialization(t *testing.T) {
-   media, err := reader("mpd/amc.mpd")
-   if err != nil {
-      t.Fatal(err)
+func TestProtection(t *testing.T) {
+   for _, test := range tests {
+      text, err := os.ReadFile(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      var media MPD
+      if err := xml.Unmarshal(text, &media); err != nil {
+         t.Fatal(err)
+      }
+      media.Visit(func(p Pointer) {
+         _, pssh := p.PSSH()
+         _, kid := p.Default_KID()
+         fmt.Printf(
+            "mpd:%v period:%q type:%v pssh:%v kid:%v\n",
+            test, p.Period.ID, p.MimeType(), pssh, kid,
+         )
+      })
    }
-   media.Every(func(p Pointer) {
-      v, ok := p.Initialization()
-      fmt.Printf("%v %q %v\n\n", p.Representation.ID, v, ok)
-   })
 }
