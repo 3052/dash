@@ -14,7 +14,7 @@
   <body>
     <nav>
         <a href="..">154.pages.dev/encoding</a>/hls<span class="navbar-right">
-          v1.17.4 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
+          v1.17.5 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
       </nav>
     <main><h2 id="pkg-overview">package hls</h2>
 <pre class="chroma"><span class="kn">import</span> <span class="s">&#34;154.pages.dev/encoding/hls&#34;</span></pre>
@@ -46,36 +46,19 @@
           </ul>
       </li>
   </ul><h3 id="pkg-constants">Constants</h3>
-  <pre class="chroma"><span class="kd">const</span> <span id="Template"><span class="nx">Template</span></span> <span class="p">=</span> <span class="s">`&lt;style&gt;
-</span><span class="s">table {
-</span><span class="s">   border-collapse: collapse;
-</span><span class="s">   margin: 9px;
-</span><span class="s">}
-</span><span class="s">td {
-</span><span class="s">   border-style: solid;
-</span><span class="s">   border-width: thin;
-</span><span class="s">}
-</span><span class="s">td,
-</span><span class="s">th {
-</span><span class="s">   padding: 9px;
-</span><span class="s">}
-</span><span class="s">&lt;/style&gt;
-</span><span class="s">&lt;table&gt;
-</span><span class="s">&lt;tr&gt;
-</span><span class="s">   &lt;th&gt;index&lt;/th&gt;
-</span><span class="s">   &lt;th&gt;bandwidth&lt;/th&gt;
-</span><span class="s">   &lt;th&gt;codecs&lt;/th&gt;
-</span><span class="s">   &lt;th&gt;resolution&lt;/th&gt;
-</span><span class="s">&lt;/tr&gt;
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">$index</span><span class="o">,</span><span class="w"> </span><span class="nx">$_</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="na">.</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s">&lt;tr&gt;
-</span><span class="s">   &lt;td&gt;</span><span class="cp">{{</span><span class="w"> </span><span class="nx">$index</span><span class="w"> </span><span class="cp">}}</span><span class="s">&lt;/td&gt;
-</span><span class="s">   &lt;td&gt;</span><span class="cp">{{</span><span class="w"> </span><span class="na">.Bandwidth</span><span class="w"> </span><span class="cp">}}</span><span class="s">&lt;/td&gt;
-</span><span class="s">   &lt;td&gt;</span><span class="cp">{{</span><span class="w"> </span><span class="na">.Codecs</span><span class="w"> </span><span class="cp">}}</span><span class="s">&lt;/td&gt;
-</span><span class="s">   &lt;td&gt;</span><span class="cp">{{</span><span class="w"> </span><span class="na">.Resolution</span><span class="w"> </span><span class="cp">}}</span><span class="s">&lt;/td&gt;
-</span><span class="s">&lt;/tr&gt;
+  <pre class="chroma"><span class="kd">const</span> <span id="ModeLine"><span class="nx">ModeLine</span></span> <span class="p">=</span> <span class="s">`
+</span><span class="s"></span><span class="cp">{{-</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">$index</span><span class="o">,</span><span class="w"> </span><span class="nx">$_</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="na">.</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
+</span><span class="s">   </span><span class="cp">{{</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="nx">$index</span><span class="w"> </span><span class="cp">}}</span><span class="s">
+</span><span class="s">index = </span><span class="cp">{{</span><span class="w"> </span><span class="na">.</span><span class="w"> </span><span class="cp">}}</span><span class="s">
+</span><span class="s">   </span><span class="cp">{{-</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
+</span><span class="s">index = 0
+</span><span class="s">   </span><span class="cp">{{-</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="cp">}}</span><span class="s">
+</span><span class="s">bandwidth = </span><span class="cp">{{</span><span class="w"> </span><span class="na">.Bandwidth</span><span class="w"> </span><span class="cp">}}</span><span class="s">
+</span><span class="s">codecs = </span><span class="cp">{{</span><span class="w"> </span><span class="na">.Codecs</span><span class="w"> </span><span class="cp">}}</span><span class="s">
+</span><span class="s">   </span><span class="cp">{{-</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="na">.Resolution</span><span class="w"> </span><span class="cp">}}</span><span class="s">
+</span><span class="s">resolution = </span><span class="cp">{{</span><span class="w"> </span><span class="na">.</span><span class="w"> </span><span class="cp">}}</span><span class="s">
+</span><span class="s">   </span><span class="cp">{{-</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="cp">}}</span><span class="s">
 </span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s">&lt;/table&gt;
 </span><span class="s">`</span></pre>
   <h3 id="pkg-types">Types</h3>
   <h3 id="BlockMode">type BlockMode</h3>

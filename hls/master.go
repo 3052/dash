@@ -61,34 +61,17 @@ type VariantStream struct {
    URI string
 }
 
-const Template = `<style>
-table {
-   border-collapse: collapse;
-   margin: 9px;
-}
-td {
-   border-style: solid;
-   border-width: thin;
-}
-td,
-th {
-   padding: 9px;
-}
-</style>
-<table>
-<tr>
-   <th>index</th>
-   <th>bandwidth</th>
-   <th>codecs</th>
-   <th>resolution</th>
-</tr>
-{{ range $index, $_ := . -}}
-<tr>
-   <td>{{ $index }}</td>
-   <td>{{ .Bandwidth }}</td>
-   <td>{{ .Codecs }}</td>
-   <td>{{ .Resolution }}</td>
-</tr>
+const ModeLine = `
+{{- range $index, $_ := . -}}
+   {{ with $index }}
+index = {{ . }}
+   {{- else -}}
+index = 0
+   {{- end }}
+bandwidth = {{ .Bandwidth }}
+codecs = {{ .Codecs }}
+   {{- with .Resolution }}
+resolution = {{ . }}
+   {{- end }}
 {{ end -}}
-</table>
 `
