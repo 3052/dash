@@ -5,6 +5,15 @@ import (
    "strings"
 )
 
+func (m MasterPlaylist) Index(i int) (*VariantStream, bool) {
+   for index, stream := range m {
+      if index == i {
+         return &stream, true
+      }
+   }
+   return nil, false
+}
+
 // datatracker.ietf.org/doc/html/rfc8216#section-4.3.4
 type MasterPlaylist []VariantStream
 
