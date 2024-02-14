@@ -1,10 +1,37 @@
 package dash
 
 import (
+   "encoding/xml"
    "fmt"
    "net/url"
+   "os"
    "testing"
+   "text/template"
 )
+
+func TestModeLine(t *testing.T) {
+   line, err := new(template.Template).Parse(ModeLine)
+   if err != nil {
+      t.Fatal(err)
+   }
+   for i, name := range tests {
+      if i >= 1 {
+         fmt.Println()
+      }
+      fmt.Println(name)
+      text, err := os.ReadFile(name)
+      if err != nil {
+         t.Fatal(err)
+      }
+      var media MPD
+      if err := xml.Unmarshal(text, &media); err != nil {
+         t.Fatal(err)
+      }
+      if err := line.Execute(os.Stdout, media); err != nil {
+         t.Fatal(err)
+      }
+   }
+}
 
 func TestInitialization(t *testing.T) {
    media, err := reader("mpd/amc.mpd")

@@ -1,44 +1,46 @@
 package dash
 
-const ModeLine = `{{ $first := true -}}
-{{ range $period := .Period -}}
-{{ range $adaptation := .AdaptationSet -}}
-{{ range .Representation -}}
-{{ if $first -}}
-   {{ $first = false -}}
-{{ else }}
-{{ end -}}
-{{ with .Width -}}
-width = {{ . }}
-{{ end -}}
-{{ with .Height -}}
-height = {{ . }}
-{{ end -}}
-bandwidth = {{ .Bandwidth }}
-{{ with .Codecs -}}
-codecs = {{ . }}
-{{ end -}}
-{{ with $adaptation.Codecs -}}
-codecs = {{ . }}
-{{ end -}}
-{{ with .MimeType -}}
-type = {{ . }}
-{{ else -}}
-type = {{ $adaptation.MimeType }}
-{{ end -}}
-{{ with $adaptation.Role -}}
-role = {{ .Value }}
-{{ end -}}
-{{ with $adaptation.Lang -}}
-lang = {{ . }}
-{{ end -}}
-id = {{ .ID }}
-{{ with $period.ID -}}
-period = {{ . }}
-{{ end -}}
-{{ end -}}
-{{ end -}}
-{{ end }}`
+const ModeLine = 
+"{{ $first := true }}" +
+"{{ range $period := .Period }}" +
+   "{{ range $adaptation := .AdaptationSet }}" +
+      "{{ range .Representation }}" +
+         "{{ if $first }}" +
+            "{{ $first = false }}" +
+         "{{ else }}" +
+"\n" +
+         "{{ end }}" +
+         "{{ with .Width }}" +
+"width = {{ . }}\n" +
+         "{{ end }}" +
+         "{{ with .Height }}" +
+"height = {{ . }}\n" +
+         "{{ end }}" +
+"bandwidth = {{ .Bandwidth }}\n" +
+         "{{ with .Codecs }}" +
+"codecs = {{ . }}\n" +
+         "{{ end }}" +
+         "{{ with $adaptation.Codecs }}" +
+"codecs = {{ . }}\n" +
+         "{{ end }}" +
+         "{{ with .MimeType }}" +
+"type = {{ . }}\n" +
+         "{{ else }}" +
+"type = {{ $adaptation.MimeType }}\n" +
+         "{{ end }}" +
+         "{{ with $adaptation.Role }}" +
+"role = {{ .Value }}\n" +
+         "{{ end }}" +
+         "{{ with $adaptation.Lang }}" +
+"lang = {{ . }}\n" +
+         "{{ end }}" +
+"id = {{ .ID }}\n" +
+         "{{ with $period.ID }}" +
+"period = {{ . }}\n" +
+         "{{ end }}" +
+      "{{ end }}" +
+   "{{ end }}" +
+"{{ end }}"
 
 // media presentation description
 // wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP

@@ -14,7 +14,7 @@
   <body>
     <nav>
         <a href="..">154.pages.dev/encoding</a>/dash<span class="navbar-right">
-          v1.17.5 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
+          v1.17.6 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
       </nav>
     <main><h2 id="pkg-overview">package dash</h2>
 <pre class="chroma"><span class="kn">import</span> <span class="s">&#34;154.pages.dev/encoding/dash&#34;</span></pre>
@@ -61,45 +61,46 @@
       <a href="#SegmentTemplate">type SegmentTemplate</a>
       </li>
   </ul><h3 id="pkg-constants">Constants</h3>
-  <pre class="chroma"><span class="kd">const</span> <span id="ModeLine"><span class="nx">ModeLine</span></span> <span class="p">=</span> <span class="s">`</span><span class="cp">{{</span><span class="w"> </span><span class="nx">$first</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="k">true</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">$period</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="na">.Period</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="nx">$adaptation</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="na">.AdaptationSet</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">range</span><span class="w"> </span><span class="na">.Representation</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="nx">$first</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s">   </span><span class="cp">{{</span><span class="w"> </span><span class="nx">$first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">false</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="cp">}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="na">.Width</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s">width = </span><span class="cp">{{</span><span class="w"> </span><span class="na">.</span><span class="w"> </span><span class="cp">}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="na">.Height</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s">height = </span><span class="cp">{{</span><span class="w"> </span><span class="na">.</span><span class="w"> </span><span class="cp">}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s">bandwidth = </span><span class="cp">{{</span><span class="w"> </span><span class="na">.Bandwidth</span><span class="w"> </span><span class="cp">}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="na">.Codecs</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s">codecs = </span><span class="cp">{{</span><span class="w"> </span><span class="na">.</span><span class="w"> </span><span class="cp">}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="nx">$adaptation</span><span class="na">.Codecs</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s">codecs = </span><span class="cp">{{</span><span class="w"> </span><span class="na">.</span><span class="w"> </span><span class="cp">}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="na">.MimeType</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s">type = </span><span class="cp">{{</span><span class="w"> </span><span class="na">.</span><span class="w"> </span><span class="cp">}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s">type = </span><span class="cp">{{</span><span class="w"> </span><span class="nx">$adaptation</span><span class="na">.MimeType</span><span class="w"> </span><span class="cp">}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="nx">$adaptation</span><span class="na">.Role</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s">role = </span><span class="cp">{{</span><span class="w"> </span><span class="na">.Value</span><span class="w"> </span><span class="cp">}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="nx">$adaptation</span><span class="na">.Lang</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s">lang = </span><span class="cp">{{</span><span class="w"> </span><span class="na">.</span><span class="w"> </span><span class="cp">}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s">id = </span><span class="cp">{{</span><span class="w"> </span><span class="na">.ID</span><span class="w"> </span><span class="cp">}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="nx">$period</span><span class="na">.ID</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s">period = </span><span class="cp">{{</span><span class="w"> </span><span class="na">.</span><span class="w"> </span><span class="cp">}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="cp">-}}</span><span class="s">
-</span><span class="s"></span><span class="cp">{{</span><span class="w"> </span><span class="k">end</span><span class="w"> </span><span class="cp">}}</span><span class="s">`</span></pre>
+  <pre class="chroma"><span class="kd">const</span> <span id="ModeLine"><span class="nx">ModeLine</span></span> <span class="p">=</span> <span class="s">&#34;{{ $first := true }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ range $period := .Period }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ range $adaptation := .AdaptationSet }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ range .Representation }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ if $first }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ $first = false }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ else }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;\n&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ end }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ with .Width }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;width = {{ . }}\n&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ end }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ with .Height }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;height = {{ . }}\n&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ end }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;bandwidth = {{ .Bandwidth }}\n&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ with .Codecs }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;codecs = {{ . }}\n&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ end }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ with $adaptation.Codecs }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;codecs = {{ . }}\n&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ end }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ with .MimeType }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;type = {{ . }}\n&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ else }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;type = {{ $adaptation.MimeType }}\n&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ end }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ with $adaptation.Role }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;role = {{ .Value }}\n&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ end }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ with $adaptation.Lang }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;lang = {{ . }}\n&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ end }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;id = {{ .ID }}\n&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ with $period.ID }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;period = {{ . }}\n&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ end }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ end }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ end }}&#34;</span> <span class="o">+</span>
+	<span class="s">&#34;{{ end }}&#34;</span></pre>
   <h3 id="pkg-types">Types</h3>
   <h3 id="AdaptationSet">type AdaptationSet</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">AdaptationSet</span> <span class="kd">struct</span> <span class="p">{</span>
