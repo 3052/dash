@@ -8,8 +8,6 @@ type Rate float64
 
 type Size float64
 
-type Percent float64
-
 func (c Cardinal) String() string {
    units := []unit_measure{
       {1, ""},
@@ -58,11 +56,6 @@ type unit_measure struct {
    name string
 }
 
-func (p Percent) String() string {
-   unit := unit_measure{factor: 100}
-   return label(float64(p), unit)
-}
-
 func label(value float64, unit unit_measure) string {
    var prec int
    if unit.factor != 1 {
@@ -70,4 +63,11 @@ func label(value float64, unit unit_measure) string {
       value *= unit.factor
    }
    return strconv.FormatFloat(value, 'f', prec, 64) + unit.name
+}
+
+type Percent float64
+
+func (p Percent) String() string {
+   unit := unit_measure{100, " %"}
+   return label(float64(p), unit)
 }
