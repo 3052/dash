@@ -8,6 +8,13 @@ import (
    "strings"
 )
 
+func (p Pointer) segment_template() *SegmentTemplate {
+   if a := p.AdaptationSet; a.SegmentTemplate != nil {
+      return a.SegmentTemplate
+   }
+   return p.Representation.SegmentTemplate
+}
+
 func (p Pointer) Media() []string {
    st := p.segment_template()
    if st == nil {
@@ -172,13 +179,6 @@ func (p Pointer) MimeType() string {
       return a.MimeType
    }
    return p.Representation.MimeType
-}
-
-func (p Pointer) segment_template() *SegmentTemplate {
-   if a := p.AdaptationSet; a.SegmentTemplate != nil {
-      return a.SegmentTemplate
-   }
-   return p.Representation.SegmentTemplate
 }
 
 type Range string
