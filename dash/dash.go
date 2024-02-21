@@ -5,9 +5,50 @@ import (
    "encoding/hex"
    "errors"
    "fmt"
-   "strconv"
    "strings"
 )
+
+func (p Pointer) Media() []string {
+   st := p.segment_template()
+   if st == nil {
+      return nil
+   }
+   replace := func(s, old string) string {
+      s = strings.Replace(s, "$RepresentationID$", p.Representation.ID, 1)
+      return strings.Replace(s, old, fmt.Sprint(st.StartNumber), 1)
+   }
+   var media []string
+   for _, segment := range st.SegmentTimeline.S {
+      for segment.R >= 0 {
+         var medium string
+         if strings.Contains(st.Media, "$Time$") {
+            medium = replace(st.Media, "$Time$")
+            st.StartNumber += segment.D
+         } else {
+            medium = replace(st.Media, "$Number$")
+            st.StartNumber++
+         }
+         media = append(media, medium)
+         segment.R--
+      }
+   }
+   return media
+}
+
+type SegmentTemplate struct {
+   Media string `xml:"media,attr"`
+   SegmentTimeline struct {
+      S []struct {
+         // duration
+         D int `xml:"d,attr"`
+         // repeat. this may not exist
+         R int `xml:"r,attr"`
+      }
+   }
+   StartNumber int `xml:"startNumber,attr"`
+   // this may not exist
+   Initialization string `xml:"initialization,attr"`
+}
 
 type Representation struct {
    Bandwidth int `xml:"bandwidth,attr"`
@@ -117,33 +158,13 @@ func (p Pointer) Ext() (string, bool) {
 }
 
 func (p Pointer) Initialization() (string, bool) {
-   if st := p.segmentTemplate(); st != nil {
+   if st := p.segment_template(); st != nil {
       if i := st.Initialization; i != "" {
          i = strings.Replace(i, "$RepresentationID$", p.Representation.ID, 1)
          return i, true
       }
    }
    return "", false
-}
-
-// return a slice so we can measure progress
-func (p Pointer) Media() []string {
-   replace := func(s string, i int) string {
-      s = strings.Replace(s, "$RepresentationID$", p.Representation.ID, 1)
-      return strings.Replace(s, "$Number$", strconv.Itoa(i), 1)
-   }
-   var media []string
-   if st := p.segmentTemplate(); st != nil {
-      for _, segment := range st.SegmentTimeline.S {
-         for segment.R >= 0 {
-            medium := replace(st.Media, st.StartNumber)
-            media = append(media, medium)
-            segment.R--
-            st.StartNumber++
-         }
-      }
-   }
-   return media
 }
 
 func (p Pointer) MimeType() string {
@@ -153,7 +174,7 @@ func (p Pointer) MimeType() string {
    return p.Representation.MimeType
 }
 
-func (p Pointer) segmentTemplate() *SegmentTemplate {
+func (p Pointer) segment_template() *SegmentTemplate {
    if a := p.AdaptationSet; a.SegmentTemplate != nil {
       return a.SegmentTemplate
    }
@@ -171,17 +192,3 @@ func (r Range) Scan() (int, int, error) {
    return start, end, nil
 }
 
-type SegmentTemplate struct {
-   Media string `xml:"media,attr"`
-   SegmentTimeline struct {
-      S []struct {
-         // duration
-         D int `xml:"d,attr"`
-         // repeat. this may not exist
-         R int `xml:"r,attr"`
-      }
-   }
-   StartNumber int `xml:"startNumber,attr"`
-   // this may not exist
-   Initialization string `xml:"initialization,attr"`
-}
