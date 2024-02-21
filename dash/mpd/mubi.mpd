@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Created with Unified Streaming Platform (version=1.11.17-26567) -->
+<MPD
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="urn:mpeg:dash:schema:mpd:2011"
+  xmlns:cenc="urn:mpeg:cenc:2013"
+  xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
+  type="static"
+  mediaPresentationDuration="PT1H31M56.083333S"
+  maxSegmentDuration="PT2M"
+  minBufferTime="PT10S"
+  profiles="urn:mpeg:dash:profile:isoff-live:2011,urn:com:dashif:dash264">
+  <Period
+    id="1"
+    duration="PT1H31M56.083333S">
+    <BaseURL>dash/</BaseURL>
+    <AdaptationSet
+      id="1"
+      group="1"
+      contentType="audio"
+      lang="en"
+      segmentAlignment="true"
+      audioSamplingRate="48000"
+      mimeType="audio/mp4"
+      codecs="mp4a.40.2"
+      startWithSAP="1">
+      <AudioChannelConfiguration
+        schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011"
+        value="2" />
+      <!-- Common Encryption -->
+      <ContentProtection
+        schemeIdUri="urn:mpeg:dash:mp4protection:2011"
+        value="cenc"
+        cenc:default_KID="CA215A25-BB2D-43F0-BD09-5FC671C984EE">
+      </ContentProtection>
+      <!-- Marlin -->
+      <ContentProtection
+        schemeIdUri="urn:uuid:5E629AF5-38DA-4063-8977-97FFBD9902D4">
+        <MarlinContentIds
+          xmlns="urn:marlin:mas:1-0:services:schemas:mpd">
+          <MarlinContentId>urn:marlin:kid:ca215a25bb2d43f0bd095fc671c984ee</MarlinContentId>
+        </MarlinContentIds>
+      </ContentProtection>
+      <!-- PlayReady -->
+      <ContentProtection
+        schemeIdUri="urn:uuid:9A04F079-9840-4286-AB92-E65BE0885F95"
+        value="MSPR 2.0">
+      </ContentProtection>
+      <!-- Widevine -->
+      <ContentProtection
+        schemeIdUri="urn:uuid:EDEF8BA9-79D6-4ACE-A3C8-27DCD51D21ED">
+      </ContentProtection>
+      <Label>audio_main_en</Label>
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <SegmentTemplate
+        timescale="48000"
+        initialization="drm_playlist.0ff148ef80-$RepresentationID$.dash"
+        media="drm_playlist.0ff148ef80-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="96256" r="2" />
+          <S d="95232" />
+          <S d="96256" r="2" />
+          <S d="95232" />
+          <S d="96256" r="2" />
+          <S d="95232" />
+          <S d="96256" r="2" />
+          <S d="95232" />
+          <S d="96256" r="2" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation
+        id="audio_eng=268840"
+        bandwidth="268840">
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="2"
+      group="3"
+      contentType="text"
+      lang="de"
+      mimeType="application/mp4"
+      codecs="stpp"
+      startWithSAP="1">
+      <Label>text_subtitle_de</Label>
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
+      <SegmentTemplate
+        timescale="1000"
+        initialization="drm_playlist.0ff148ef80-$RepresentationID$.dash"
+        media="drm_playlist.0ff148ef80-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="2000" r="2755" />
+          <S d="2100" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation
+        id="textstream_deu=1000"
+        bandwidth="1000">
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="3"
+      group="3"
+      contentType="text"
+      lang="en"
+      mimeType="application/mp4"
+      codecs="stpp"
+      startWithSAP="1">
+      <Label>text_subtitle_en</Label>
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
+      <SegmentTemplate
+        timescale="1000"
+        initialization="drm_playlist.0ff148ef80-$RepresentationID$.dash"
+        media="drm_playlist.0ff148ef80-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="2000" r="2754" />
+          <S d="1459" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation
+        id="textstream_eng=1000"
+        bandwidth="1000">
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="4"
+      group="3"
+      contentType="text"
+      lang="en"
+      mimeType="application/mp4"
+      codecs="stpp"
+      startWithSAP="1">
+      <Label>text_caption_en</Label>
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="caption" />
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
+      <SegmentTemplate
+        timescale="1000"
+        initialization="drm_playlist.0ff148ef80-$RepresentationID$.dash"
+        media="drm_playlist.0ff148ef80-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="2000" r="2755" />
+          <S d="917" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation
+        id="textstream_eng_1=1000"
+        bandwidth="1000">
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="5"
+      group="3"
+      contentType="text"
+      lang="fr"
+      mimeType="application/mp4"
+      codecs="stpp"
+      startWithSAP="1">
+      <Label>text_subtitle_fr</Label>
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
+      <SegmentTemplate
+        timescale="1000"
+        initialization="drm_playlist.0ff148ef80-$RepresentationID$.dash"
+        media="drm_playlist.0ff148ef80-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="2000" r="2753" />
+          <S d="2458" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation
+        id="textstream_fra=1000"
+        bandwidth="1000">
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="6"
+      group="3"
+      contentType="text"
+      lang="it"
+      mimeType="application/mp4"
+      codecs="stpp"
+      startWithSAP="1">
+      <Label>text_subtitle_it</Label>
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
+      <SegmentTemplate
+        timescale="1000"
+        initialization="drm_playlist.0ff148ef80-$RepresentationID$.dash"
+        media="drm_playlist.0ff148ef80-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="2000" r="2561" />
+          <S d="1259" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation
+        id="textstream_ita=1000"
+        bandwidth="1000">
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="7"
+      group="3"
+      contentType="text"
+      lang="nl"
+      mimeType="application/mp4"
+      codecs="stpp"
+      startWithSAP="1">
+      <Label>text_subtitle_nl</Label>
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
+      <SegmentTemplate
+        timescale="1000"
+        initialization="drm_playlist.0ff148ef80-$RepresentationID$.dash"
+        media="drm_playlist.0ff148ef80-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="2000" r="2755" />
+          <S d="2100" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation
+        id="textstream_nld=1000"
+        bandwidth="1000">
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="8"
+      group="3"
+      contentType="text"
+      lang="pt"
+      mimeType="application/mp4"
+      codecs="stpp"
+      startWithSAP="1">
+      <Label>text_subtitle_pt</Label>
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
+      <SegmentTemplate
+        timescale="1000"
+        initialization="drm_playlist.0ff148ef80-$RepresentationID$.dash"
+        media="drm_playlist.0ff148ef80-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="2000" r="2756" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation
+        id="textstream_por=1000"
+        bandwidth="1000">
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="9"
+      group="3"
+      contentType="text"
+      lang="es"
+      mimeType="application/mp4"
+      codecs="stpp"
+      startWithSAP="1">
+      <Label>text_subtitle_es</Label>
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
+      <SegmentTemplate
+        timescale="1000"
+        initialization="drm_playlist.0ff148ef80-$RepresentationID$.dash"
+        media="drm_playlist.0ff148ef80-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="2000" r="2754" />
+          <S d="659" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation
+        id="textstream_spa=1000"
+        bandwidth="1000">
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="10"
+      group="3"
+      contentType="text"
+      lang="tr"
+      mimeType="application/mp4"
+      codecs="stpp"
+      startWithSAP="1">
+      <Label>text_subtitle_tr</Label>
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="subtitle" />
+      <SegmentTemplate
+        timescale="1000"
+        initialization="drm_playlist.0ff148ef80-$RepresentationID$.dash"
+        media="drm_playlist.0ff148ef80-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="2000" r="2561" />
+          <S d="1351" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation
+        id="textstream_tur=1000"
+        bandwidth="1000">
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="11"
+      group="4"
+      contentType="image"
+      par="5:4"
+      width="1380"
+      height="1104"
+      sar="1:1"
+      mimeType="image/jpeg"
+      codecs="jpeg">
+      <!-- Common Encryption -->
+      <ContentProtection
+        schemeIdUri="urn:mpeg:dash:mp4protection:2011"
+        value="cenc"
+        cenc:default_KID="CA215A25-BB2D-43F0-BD09-5FC671C984EE">
+      </ContentProtection>
+      <!-- Marlin -->
+      <ContentProtection
+        schemeIdUri="urn:uuid:5E629AF5-38DA-4063-8977-97FFBD9902D4">
+        <MarlinContentIds
+          xmlns="urn:marlin:mas:1-0:services:schemas:mpd">
+          <MarlinContentId>urn:marlin:kid:ca215a25bb2d43f0bd095fc671c984ee</MarlinContentId>
+        </MarlinContentIds>
+      </ContentProtection>
+      <!-- PlayReady -->
+      <ContentProtection
+        schemeIdUri="urn:uuid:9A04F079-9840-4286-AB92-E65BE0885F95"
+        value="MSPR 2.0">
+      </ContentProtection>
+      <!-- Widevine -->
+      <ContentProtection
+        schemeIdUri="urn:uuid:EDEF8BA9-79D6-4ACE-A3C8-27DCD51D21ED">
+      </ContentProtection>
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <SegmentTemplate
+        timescale="12288"
+        media="drm_playlist.0ff148ef80-$RepresentationID$-t-$Time$.jpg">
+        <SegmentTimeline>
+          <S t="0" d="1474560" r="45" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation
+        id="img=8000"
+        bandwidth="8000">
+        <EssentialProperty
+          schemeIdUri="http://dashif.org/guidelines/thumbnail_tile"
+          value="3x4" />
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="12"
+      group="2"
+      contentType="video"
+      par="5:3"
+      minBandwidth="300168"
+      maxBandwidth="5499998"
+      maxWidth="1800"
+      maxHeight="1080"
+      segmentAlignment="true"
+      sar="1:1"
+      frameRate="24"
+      mimeType="video/mp4"
+      startWithSAP="1">
+      <!-- Common Encryption -->
+      <ContentProtection
+        schemeIdUri="urn:mpeg:dash:mp4protection:2011"
+        value="cenc"
+        cenc:default_KID="CA215A25-BB2D-43F0-BD09-5FC671C984EE">
+      </ContentProtection>
+      <!-- Marlin -->
+      <ContentProtection
+        schemeIdUri="urn:uuid:5E629AF5-38DA-4063-8977-97FFBD9902D4">
+        <MarlinContentIds
+          xmlns="urn:marlin:mas:1-0:services:schemas:mpd">
+          <MarlinContentId>urn:marlin:kid:ca215a25bb2d43f0bd095fc671c984ee</MarlinContentId>
+        </MarlinContentIds>
+      </ContentProtection>
+      <!-- PlayReady -->
+      <ContentProtection
+        schemeIdUri="urn:uuid:9A04F079-9840-4286-AB92-E65BE0885F95"
+        value="MSPR 2.0">
+      </ContentProtection>
+      <!-- Widevine -->
+      <ContentProtection
+        schemeIdUri="urn:uuid:EDEF8BA9-79D6-4ACE-A3C8-27DCD51D21ED">
+      </ContentProtection>
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <SegmentTemplate
+        timescale="600"
+        initialization="drm_playlist.0ff148ef80-$RepresentationID$.dash"
+        media="drm_playlist.0ff148ef80-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="1200" r="2757" />
+          <S d="50" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation
+        id="video=300168"
+        bandwidth="300168"
+        width="480"
+        height="288"
+        codecs="avc1.4D401E"
+        scanType="progressive">
+      </Representation>
+      <Representation
+        id="video=700151"
+        bandwidth="700151"
+        width="600"
+        height="360"
+        codecs="avc1.4D401E"
+        scanType="progressive">
+      </Representation>
+      <Representation
+        id="video=1200167"
+        bandwidth="1200167"
+        width="810"
+        height="486"
+        codecs="avc1.4D401F"
+        scanType="progressive">
+      </Representation>
+      <Representation
+        id="video=2500084"
+        bandwidth="2500084"
+        width="960"
+        height="576"
+        codecs="avc1.4D401F"
+        scanType="progressive">
+      </Representation>
+      <Representation
+        id="video=3200094"
+        bandwidth="3200094"
+        width="1200"
+        height="720"
+        codecs="avc1.4D401F"
+        scanType="progressive">
+      </Representation>
+      <Representation
+        id="video=4500013"
+        bandwidth="4500013"
+        width="1200"
+        height="720"
+        codecs="avc1.4D401F"
+        scanType="progressive">
+      </Representation>
+      <Representation
+        id="video=5499998"
+        bandwidth="5499998"
+        width="1800"
+        height="1080"
+        codecs="avc1.640028"
+        scanType="progressive">
+      </Representation>
+    </AdaptationSet>
+  </Period>
+</MPD>
