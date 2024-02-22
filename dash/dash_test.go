@@ -56,7 +56,7 @@ func TestProtection(t *testing.T) {
          _, kid := p.Default_KID()
          fmt.Printf(
             "mpd:%v period:%q type:%v pssh:%v kid:%v\n",
-            test, p.Period.ID, p.MimeType(), pssh, kid,
+            test, p.Period.ID, p.mime_type(), pssh, kid,
          )
       })
    }

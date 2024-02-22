@@ -14,7 +14,7 @@
   <body>
     <nav>
         <a href="..">154.pages.dev/encoding</a>/dash<span class="navbar-right">
-          v1.18.2 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
+          v1.18.3 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
       </nav>
     <main><h2 id="pkg-overview">package dash</h2>
 <pre class="chroma"><span class="kn">import</span> <span class="s">&#34;154.pages.dev/encoding/dash&#34;</span></pre>
@@ -40,12 +40,10 @@
   <li>
       <a href="#Pointer">type Pointer</a>
       <ul>
-          <li><a href="#Pointer.Codecs">func (p Pointer) Codecs() string</a></li>
           <li><a href="#Pointer.Default_KID">func (p Pointer) Default_KID() ([]byte, error)</a></li>
           <li><a href="#Pointer.Ext">func (p Pointer) Ext() (string, bool)</a></li>
           <li><a href="#Pointer.Initialization">func (p Pointer) Initialization() (string, bool)</a></li>
           <li><a href="#Pointer.Media">func (p Pointer) Media() []string</a></li>
-          <li><a href="#Pointer.MimeType">func (p Pointer) MimeType() string</a></li>
           <li><a href="#Pointer.PSSH">func (p Pointer) PSSH() ([]byte, error)</a></li>
           </ul>
       </li>
@@ -100,8 +98,7 @@ wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <a href="#MPD"><span class="nx">MPD</span></a><span class="p">)</span> <span class="nf">String</span><span class="p">()</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
   <h4 id="MPD.Visit">func (MPD) Visit</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <a href="#MPD"><span class="nx">MPD</span></a><span class="p">)</span> <span class="nf">Visit</span><span class="p">(</span><span class="nx">f</span> <span class="kd">func</span><span class="p">(</span><a href="#Pointer"><span class="nx">Pointer</span></a><span class="p">))</span></pre>
-  <p>godocs.io/flag#Visit
-<h3 id="Period">type Period</h3>
+  <h3 id="Period">type Period</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">Period</span> <span class="kd">struct</span> <span class="p">{</span>
 	<span id="Period.AdaptationSet"><span class="nx">AdaptationSet</span></span> <span class="p">[]</span><a href="#AdaptationSet"><span class="nx">AdaptationSet</span></a>
 	<span id="Period.ID"><span class="nx">ID</span></span>            <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;id,attr&#34;`</span>
@@ -112,9 +109,7 @@ wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP
 	<span id="Pointer.Period"><span class="nx">Period</span></span>         <span class="o">*</span><a href="#Period"><span class="nx">Period</span></a>
 	<span id="Pointer.Representation"><span class="nx">Representation</span></span> <span class="o">*</span><a href="#Representation"><span class="nx">Representation</span></a>
 <span class="p">}</span></pre>
-    <h4 id="Pointer.Codecs">func (Pointer) Codecs</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">p</span> <a href="#Pointer"><span class="nx">Pointer</span></a><span class="p">)</span> <span class="nf">Codecs</span><span class="p">()</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
-  <h4 id="Pointer.Default_KID">func (Pointer) Default_KID</h4>
+    <h4 id="Pointer.Default_KID">func (Pointer) Default_KID</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">p</span> <a href="#Pointer"><span class="nx">Pointer</span></a><span class="p">)</span> <span class="nf">Default_KID</span><span class="p">()</span> <span class="p">([]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
   <h4 id="Pointer.Ext">func (Pointer) Ext</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">p</span> <a href="#Pointer"><span class="nx">Pointer</span></a><span class="p">)</span> <span class="nf">Ext</span><span class="p">()</span> <span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
@@ -122,8 +117,6 @@ wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">p</span> <a href="#Pointer"><span class="nx">Pointer</span></a><span class="p">)</span> <span class="nf">Initialization</span><span class="p">()</span> <span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
   <h4 id="Pointer.Media">func (Pointer) Media</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">p</span> <a href="#Pointer"><span class="nx">Pointer</span></a><span class="p">)</span> <span class="nf">Media</span><span class="p">()</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
-  <h4 id="Pointer.MimeType">func (Pointer) MimeType</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">p</span> <a href="#Pointer"><span class="nx">Pointer</span></a><span class="p">)</span> <span class="nf">MimeType</span><span class="p">()</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
   <h4 id="Pointer.PSSH">func (Pointer) PSSH</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">p</span> <a href="#Pointer"><span class="nx">Pointer</span></a><span class="p">)</span> <span class="nf">PSSH</span><span class="p">()</span> <span class="p">([]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
   <h3 id="Range">type Range</h3>
