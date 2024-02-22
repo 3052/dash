@@ -14,13 +14,13 @@
   <body>
     <nav>
         <a href="..">154.pages.dev/encoding</a>/dash<span class="navbar-right">
-          v1.18.1 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
+          v1.18.2 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
       </nav>
     <main><h2 id="pkg-overview">package dash</h2>
 <pre class="chroma"><span class="kn">import</span> <span class="s">&#34;154.pages.dev/encoding/dash&#34;</span></pre>
 <h3 id="pkg-index">Index</h3>
 <ul>
-  <li><a href="#pkg-constants">Constants</a></li><li>
+  <li>
       <a href="#AdaptationSet">type AdaptationSet</a>
       </li>
   <li>
@@ -30,6 +30,7 @@
       <a href="#MPD">type MPD</a>
       <ul>
           <li><a href="#MPD.Contains">func (m MPD) Contains(f func(Pointer) bool) bool</a></li>
+          <li><a href="#MPD.String">func (m MPD) String() string</a></li>
           <li><a href="#MPD.Visit">func (m MPD) Visit(f func(Pointer))</a></li>
           </ul>
       </li>
@@ -60,51 +61,10 @@
   <li>
       <a href="#SegmentTemplate">type SegmentTemplate</a>
       </li>
-  </ul><h3 id="pkg-constants">Constants</h3>
-  <pre class="chroma"><span class="kd">const</span> <span id="ModeLine"><span class="nx">ModeLine</span></span> <span class="p">=</span> <span class="s">&#34;{{ $first := true }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ range $period := .Period }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ range $adaptation := .AdaptationSet }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ range .Representation }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ if $first }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ $first = false }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ else }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;\n&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ end }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ with .Width }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;width = {{ . }}\n&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ end }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ with .Height }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;height = {{ . }}\n&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ end }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;bandwidth = {{ .Bandwidth }}\n&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ with .Codecs }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;codecs = {{ . }}\n&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ end }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ with $adaptation.Codecs }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;codecs = {{ . }}\n&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ end }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ with .MimeType }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;type = {{ . }}\n&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ else }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;type = {{ $adaptation.MimeType }}\n&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ end }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ with $adaptation.Role }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;role = {{ .Value }}\n&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ end }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ with $adaptation.Lang }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;lang = {{ . }}\n&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ end }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;id = {{ .ID }}\n&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ with $period.ID }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;period = {{ . }}\n&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ end }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ end }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ end }}&#34;</span> <span class="o">+</span>
-	<span class="s">&#34;{{ end }}&#34;</span></pre>
-  <h3 id="pkg-types">Types</h3>
+  </ul><h3 id="pkg-types">Types</h3>
   <h3 id="AdaptationSet">type AdaptationSet</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">AdaptationSet</span> <span class="kd">struct</span> <span class="p">{</span>
-	<span class="c1">// this might be under Representation
+	<span class="c1">// this might not exist, or might be under Representation
 </span><span class="c1"></span>	<span id="AdaptationSet.Codecs"><span class="nx">Codecs</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;codecs,attr&#34;`</span>
 	<span class="c1">// this might be under Representation
 </span><span class="c1"></span>	<span id="AdaptationSet.ContentProtection"><span class="nx">ContentProtection</span></span> <span class="p">[]</span><a href="#ContentProtection"><span class="nx">ContentProtection</span></a>
@@ -136,6 +96,8 @@
 wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP
 <h4 id="MPD.Contains">func (MPD) Contains</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <a href="#MPD"><span class="nx">MPD</span></a><span class="p">)</span> <span class="nf">Contains</span><span class="p">(</span><span class="nx">f</span> <span class="kd">func</span><span class="p">(</span><a href="#Pointer"><span class="nx">Pointer</span></a><span class="p">)</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a></pre>
+  <h4 id="MPD.String">func (MPD) String</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <a href="#MPD"><span class="nx">MPD</span></a><span class="p">)</span> <span class="nf">String</span><span class="p">()</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
   <h4 id="MPD.Visit">func (MPD) Visit</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <a href="#MPD"><span class="nx">MPD</span></a><span class="p">)</span> <span class="nf">Visit</span><span class="p">(</span><span class="nx">f</span> <span class="kd">func</span><span class="p">(</span><a href="#Pointer"><span class="nx">Pointer</span></a><span class="p">))</span></pre>
   <p>godocs.io/flag#Visit
@@ -174,7 +136,7 @@ wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP
 	<span id="Representation.ID"><span class="nx">ID</span></span>        <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;id,attr&#34;`</span>
 	<span class="c1">// this might not exist
 </span><span class="c1"></span>	<span id="Representation.BaseURL"><span class="nx">BaseURL</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
-	<span class="c1">// this might be under AdaptationSet
+	<span class="c1">// this might not exist, or might be under AdaptationSet
 </span><span class="c1"></span>	<span id="Representation.Codecs"><span class="nx">Codecs</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;codecs,attr&#34;`</span>
 	<span class="c1">// this might be under AdaptationSet
 </span><span class="c1"></span>	<span id="Representation.ContentProtection"><span class="nx">ContentProtection</span></span> <span class="p">[]</span><a href="#ContentProtection"><span class="nx">ContentProtection</span></a>

@@ -8,38 +8,22 @@ import (
    "strings"
 )
 
-func (p Pointer) segment_template() *SegmentTemplate {
-   if a := p.AdaptationSet; a.SegmentTemplate != nil {
-      return a.SegmentTemplate
+type AdaptationSet struct {
+   // this might not exist, or might be under Representation
+   Codecs string `xml:"codecs,attr"`
+   // this might be under Representation
+   ContentProtection []ContentProtection
+   // this might not exist
+   Lang string `xml:"lang,attr"`
+   // this might be under Representation
+   MimeType string `xml:"mimeType,attr"`
+   Representation []Representation
+   // this might not exist
+   Role *struct {
+      Value string `xml:"value,attr"`
    }
-   return p.Representation.SegmentTemplate
-}
-
-func (p Pointer) Media() []string {
-   st := p.segment_template()
-   if st == nil {
-      return nil
-   }
-   replace := func(s, old string) string {
-      s = strings.Replace(s, "$RepresentationID$", p.Representation.ID, 1)
-      return strings.Replace(s, old, fmt.Sprint(st.StartNumber), 1)
-   }
-   var media []string
-   for _, segment := range st.SegmentTimeline.S {
-      for segment.R >= 0 {
-         var medium string
-         if strings.Contains(st.Media, "$Time$") {
-            medium = replace(st.Media, "$Time$")
-            st.StartNumber += segment.D
-         } else {
-            medium = replace(st.Media, "$Number$")
-            st.StartNumber++
-         }
-         media = append(media, medium)
-         segment.R--
-      }
-   }
-   return media
+   // this might not exist, or might be under Representation
+   SegmentTemplate *SegmentTemplate
 }
 
 type SegmentTemplate struct {
@@ -55,50 +39,6 @@ type SegmentTemplate struct {
    StartNumber int `xml:"startNumber,attr"`
    // this may not exist
    Initialization string `xml:"initialization,attr"`
-}
-
-type Representation struct {
-   Bandwidth int `xml:"bandwidth,attr"`
-   ID string `xml:"id,attr"`
-   // this might not exist
-   BaseURL string
-   // this might be under AdaptationSet
-   Codecs string `xml:"codecs,attr"`
-   // this might be under AdaptationSet
-   ContentProtection []ContentProtection
-   // this might not exist
-   Height int `xml:"height,attr"`
-   // this might be under AdaptationSet
-   MimeType string `xml:"mimeType,attr"`
-   // this might not exist
-   SegmentBase *struct {
-      Initialization struct {
-         Range Range `xml:"range,attr"`
-      }
-      IndexRange Range `xml:"indexRange,attr"`
-   }
-   // this might not exist, or might be under AdaptationSet
-   SegmentTemplate *SegmentTemplate
-   // this might not exist
-   Width int `xml:"width,attr"`
-}
-
-type AdaptationSet struct {
-   // this might be under Representation
-   Codecs string `xml:"codecs,attr"`
-   // this might be under Representation
-   ContentProtection []ContentProtection
-   // this might not exist
-   Lang string `xml:"lang,attr"`
-   // this might be under Representation
-   MimeType string `xml:"mimeType,attr"`
-   Representation []Representation
-   // this might not exist
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   // this might not exist, or might be under Representation
-   SegmentTemplate *SegmentTemplate
 }
 
 type Period struct {
@@ -154,26 +94,6 @@ func (p Pointer) Codecs() string {
    return p.Representation.Codecs
 }
 
-func (p Pointer) Ext() (string, bool) {
-   switch p.MimeType() {
-   case "audio/mp4":
-      return ".m4a", true
-   case "video/mp4":
-      return ".m4v", true
-   }
-   return "", false
-}
-
-func (p Pointer) Initialization() (string, bool) {
-   if st := p.segment_template(); st != nil {
-      if i := st.Initialization; i != "" {
-         i = strings.Replace(i, "$RepresentationID$", p.Representation.ID, 1)
-         return i, true
-      }
-   }
-   return "", false
-}
-
 func (p Pointer) MimeType() string {
    if a := p.AdaptationSet; a.MimeType != "" {
       return a.MimeType
@@ -192,3 +112,85 @@ func (r Range) Scan() (int, int, error) {
    return start, end, nil
 }
 
+func (p Pointer) segment_template() (*SegmentTemplate, bool) {
+   if st := p.AdaptationSet.SegmentTemplate; st != nil {
+      return st, true
+   }
+   if st := p.Representation.SegmentTemplate; st != nil {
+      return st, true
+   }
+   return nil, false
+}
+
+func (p Pointer) Initialization() (string, bool) {
+   if st, ok := p.segment_template(); ok {
+      if i := st.Initialization; i != "" {
+         i = strings.Replace(i, "$RepresentationID$", p.Representation.ID, 1)
+         return i, true
+      }
+   }
+   return "", false
+}
+
+func (p Pointer) Media() []string {
+   st, ok := p.segment_template()
+   if !ok {
+      return nil
+   }
+   replace := func(s, old string) string {
+      s = strings.Replace(s, "$RepresentationID$", p.Representation.ID, 1)
+      return strings.Replace(s, old, fmt.Sprint(st.StartNumber), 1)
+   }
+   var media []string
+   for _, segment := range st.SegmentTimeline.S {
+      for segment.R >= 0 {
+         var medium string
+         if strings.Contains(st.Media, "$Time$") {
+            medium = replace(st.Media, "$Time$")
+            st.StartNumber += segment.D
+         } else {
+            medium = replace(st.Media, "$Number$")
+            st.StartNumber++
+         }
+         media = append(media, medium)
+         segment.R--
+      }
+   }
+   return media
+}
+
+func (p Pointer) Ext() (string, bool) {
+   switch p.MimeType() {
+   case "audio/mp4":
+      return ".m4a", true
+   case "video/mp4":
+      return ".m4v", true
+   }
+   return "", false
+}
+
+type Representation struct {
+   Bandwidth int `xml:"bandwidth,attr"`
+   ID string `xml:"id,attr"`
+   // this might not exist
+   BaseURL string
+   // this might not exist, or might be under AdaptationSet
+   Codecs string `xml:"codecs,attr"`
+   // this might be under AdaptationSet
+   ContentProtection []ContentProtection
+   // this might not exist
+   Height int `xml:"height,attr"`
+   // this might be under AdaptationSet
+   MimeType string `xml:"mimeType,attr"`
+   // this might not exist
+   SegmentBase *struct {
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+      IndexRange Range `xml:"indexRange,attr"`
+   }
+   // this might not exist, or might be under AdaptationSet
+   SegmentTemplate *SegmentTemplate
+   // this might not exist
+   Width int `xml:"width,attr"`
+}
