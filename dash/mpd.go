@@ -32,8 +32,6 @@ func (m MPD) Visit(f func(Pointer)) {
    })
 }
 
-////////////////
-
 func (m MPD) String() string {
    var b []byte
    m.Visit(func(p Pointer) {
