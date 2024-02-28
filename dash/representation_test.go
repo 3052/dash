@@ -7,24 +7,6 @@ import (
    "testing"
 )
 
-func TestString(t *testing.T) {
-   for i, name := range tests {
-      if i >= 1 {
-         fmt.Println()
-      }
-      fmt.Println(name)
-      text, err := os.ReadFile(name)
-      if err != nil {
-         t.Fatal(err)
-      }
-      var media MPD
-      if err := xml.Unmarshal(text, &media); err != nil {
-         t.Fatal(err)
-      }
-      fmt.Println(media)
-   }
-}
-
 func TestMedia(t *testing.T) {
    tests := [][]string{
       // startNumber == nil
@@ -46,6 +28,24 @@ func TestMedia(t *testing.T) {
          }
          return true
       })
+   }
+}
+
+func TestString(t *testing.T) {
+   for i, name := range tests {
+      if i >= 1 {
+         fmt.Println()
+      }
+      fmt.Println(name)
+      text, err := os.ReadFile(name)
+      if err != nil {
+         t.Fatal(err)
+      }
+      var media MPD
+      if err := xml.Unmarshal(text, &media); err != nil {
+         t.Fatal(err)
+      }
+      fmt.Println(media)
    }
 }
 
