@@ -93,6 +93,16 @@ type Representation struct {
    Width int `xml:"width,attr"`
 }
 
+func (r Representation) codecs() (string, bool) {
+   if v := r.Codecs; v != "" {
+      return v, true
+   }
+   if v := r.adaptation_set.Codecs; v != "" {
+      return v, true
+   }
+   return "", false
+}
+
 func (r Representation) mime_type() string {
    if v := r.MimeType; v != "" {
       return v
@@ -100,44 +110,91 @@ func (r Representation) mime_type() string {
    return v.adaptation_set.MimeType
 }
 
-///////////////
+func (r Representation) Ext() (string, bool) {
+   switch r.mime_type() {
+   case "audio/mp4":
+      return ".m4a", true
+   case "video/mp4":
+      return ".m4v", true
+   }
+   return "", false
+}
 
-func (p Pointer) content_protection() []ContentProtection {
-   if v := p.adaptation_set.ContentProtection; v != nil {
+func (r Representation) segment_template() (*SegmentTemplate, bool) {
+   if v := r.SegmentTemplate; v != nil {
+      return v, true
+   }
+   if v := r.adaptation_set.SegmentTemplate; v != nil {
+      return v, true
+   }
+   return nil, false
+}
+
+func (r Representation) content_protection() []ContentProtection {
+   if v := r.ContentProtection; v != nil {
       return v
    }
-   return p.Representation.ContentProtection
+   return r.adaptation_set.ContentProtection
 }
 
-// media presentation description
-// wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP
-type MPD struct {
-   Period []period
+func (r Representation) Default_KID() ([]byte, error) {
+   for _, c := range r.content_protection() {
+      if c.SchemeIdUri == "urn:mpeg:dash:mp4protection:2011" {
+         c.Default_KID = strings.ReplaceAll(c.Default_KID, "-", "")
+         return hex.DecodeString(c.Default_KID)
+      }
+   }
+   return nil, errors.New("Representation.Default_KID")
 }
 
-func (m MPD) Contains(f func(Pointer) bool) bool {
-   for _, period := range m.Period {
-      for _, adapt := range period.AdaptationSet {
-         for _, represent := range adapt.Representation {
-            var p Pointer
-            p.adaptation_set = &adapt
-            p.period = &period
-            p.Representation = &represent
-            if f(p) {
-               return true
-            }
+func (r Representation) PSSH() ([]byte, error) {
+   for _, c := range r.content_protection() {
+      if c.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
+         if c.PSSH != "" {
+            return base64.StdEncoding.DecodeString(c.PSSH)
          }
       }
    }
-   return false
+   return nil, errors.New("Representation.PSSH")
 }
 
-func (m MPD) Visit(f func(Pointer)) {
-   m.Contains(func(p Pointer) bool {
-      f(p)
-      return false
-   })
+func (r Representation) Initialization() (string, bool) {
+   if st, ok := r.segment_template(); ok {
+      if i := st.Initialization; i != "" {
+         return strings.Replace(i, "$RepresentationID$", r.ID, 1), true
+      }
+   }
+   return "", false
 }
+
+func (r Representation) Media() []string {
+   st, ok := r.segment_template()
+   if !ok {
+      return nil
+   }
+   replace := func(s, old string) string {
+      s = strings.Replace(s, "$RepresentationID$", r.ID, 1)
+      return strings.Replace(s, old, fmt.Sprint(st.StartNumber), 1)
+   }
+   var media []string
+   for _, segment := range st.SegmentTimeline.S {
+      for segment.R >= 0 {
+         var medium string
+         if strings.Contains(st.Media, "$Time$") {
+            medium = replace(st.Media, "$Time$")
+            st.StartNumber += segment.D
+         } else {
+            medium = replace(st.Media, "$Number$")
+            st.StartNumber++
+         }
+         media = append(media, medium)
+         segment.R--
+      }
+   }
+   return media
+}
+
+///////////////
 
 func (m MPD) String() string {
    var b []byte
@@ -178,90 +235,32 @@ func (m MPD) String() string {
    return string(b)
 }
 
-func (p Pointer) Default_KID() ([]byte, error) {
-   for _, c := range p.content_protection() {
-      if c.SchemeIdUri == "urn:mpeg:dash:mp4protection:2011" {
-         c.Default_KID = strings.ReplaceAll(c.Default_KID, "-", "")
-         return hex.DecodeString(c.Default_KID)
-      }
-   }
-   return nil, errors.New("Pointer.Default_KID")
+// media presentation description
+// wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP
+type MPD struct {
+   Period []period
 }
 
-func (p Pointer) Ext() (string, bool) {
-   switch p.mime_type() {
-   case "audio/mp4":
-      return ".m4a", true
-   case "video/mp4":
-      return ".m4v", true
-   }
-   return "", false
-}
-
-func (p Pointer) Initialization() (string, bool) {
-   if st, ok := p.segment_template(); ok {
-      if i := st.Initialization; i != "" {
-         i = strings.Replace(i, "$RepresentationID$", p.Representation.ID, 1)
-         return i, true
-      }
-   }
-   return "", false
-}
-
-func (p Pointer) Media() []string {
-   st, ok := p.segment_template()
-   if !ok {
-      return nil
-   }
-   replace := func(s, old string) string {
-      s = strings.Replace(s, "$RepresentationID$", p.Representation.ID, 1)
-      return strings.Replace(s, old, fmt.Sprint(st.StartNumber), 1)
-   }
-   var media []string
-   for _, segment := range st.SegmentTimeline.S {
-      for segment.R >= 0 {
-         var medium string
-         if strings.Contains(st.Media, "$Time$") {
-            medium = replace(st.Media, "$Time$")
-            st.StartNumber += segment.D
-         } else {
-            medium = replace(st.Media, "$Number$")
-            st.StartNumber++
-         }
-         media = append(media, medium)
-         segment.R--
-      }
-   }
-   return media
-}
-
-func (p Pointer) PSSH() ([]byte, error) {
-   for _, c := range p.content_protection() {
-      if c.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
-         if c.PSSH != "" {
-            return base64.StdEncoding.DecodeString(c.PSSH)
+func (m MPD) Contains(f func(Pointer) bool) bool {
+   for _, period := range m.Period {
+      for _, adapt := range period.AdaptationSet {
+         for _, represent := range adapt.Representation {
+            var p Pointer
+            p.adaptation_set = &adapt
+            p.period = &period
+            p.Representation = &represent
+            if f(p) {
+               return true
+            }
          }
       }
    }
-   return nil, errors.New("Pointer.PSSH")
+   return false
 }
 
-func (p Pointer) codecs() (string, bool) {
-   if v := p.adaptation_set.Codecs; v != "" {
-      return v, true
-   }
-   if v := p.Representation.Codecs; v != "" {
-      return v, true
-   }
-   return "", false
-}
-
-func (p Pointer) segment_template() (*SegmentTemplate, bool) {
-   if v := p.adaptation_set.SegmentTemplate; v != nil {
-      return v, true
-   }
-   if v := p.Representation.SegmentTemplate; v != nil {
-      return v, true
-   }
-   return nil, false
+func (m MPD) Visit(f func(Pointer)) {
+   m.Contains(func(p Pointer) bool {
+      f(p)
+      return false
+   })
 }
