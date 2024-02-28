@@ -8,10 +8,111 @@ import (
    "strings"
 )
 
+type Range string
+
+func (r Range) Scan() (int, int, error) {
+   var start, end int
+   _, err := fmt.Sscanf(string(r), "%v-%v", &start, &end)
+   if err != nil {
+      return 0, 0, err
+   }
+   return start, end, nil
+}
+
+type ContentProtection struct {
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
+   // this might not exist
+   Default_KID string `xml:"default_KID,attr"`
+   // this might not exist
+   PSSH string `xml:"pssh"`
+}
+
+type SegmentTemplate struct {
+   Media string `xml:"media,attr"`
+   SegmentTimeline struct {
+      S []struct {
+         // duration
+         D int `xml:"d,attr"`
+         // repeat. this may not exist
+         R int `xml:"r,attr"`
+      }
+   }
+   StartNumber int `xml:"startNumber,attr"`
+   // this may not exist
+   Initialization string `xml:"initialization,attr"`
+}
+
+type adaptation_set struct {
+   period *period
+   // this might not exist, or might be under Representation
+   Codecs string `xml:"codecs,attr"`
+   // this might be under Representation
+   ContentProtection []ContentProtection
+   // this might not exist
+   Lang string `xml:"lang,attr"`
+   // this might be under Representation
+   MimeType string `xml:"mimeType,attr"`
+   Representation []Representation
+   // this might not exist
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   // this might not exist, or might be under Representation
+   SegmentTemplate *SegmentTemplate
+}
+
+type period struct {
+   AdaptationSet []adaptation_set
+   ID string `xml:"id,attr"`
+}
+
+type Representation struct {
+   adaptation_set *adaptation_set
+   Bandwidth int `xml:"bandwidth,attr"`
+   ID string `xml:"id,attr"`
+   // this might not exist
+   BaseURL string
+   // this might not exist, or might be under AdaptationSet
+   Codecs string `xml:"codecs,attr"`
+   // this might be under AdaptationSet
+   ContentProtection []ContentProtection
+   // this might not exist
+   Height int `xml:"height,attr"`
+   // this might be under AdaptationSet
+   MimeType string `xml:"mimeType,attr"`
+   // this might not exist
+   SegmentBase *struct {
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+      IndexRange Range `xml:"indexRange,attr"`
+   }
+   // this might not exist, or might be under AdaptationSet
+   SegmentTemplate *SegmentTemplate
+   // this might not exist
+   Width int `xml:"width,attr"`
+}
+
+func (r Representation) mime_type() string {
+   if v := r.MimeType; v != "" {
+      return v
+   }
+   return v.adaptation_set.MimeType
+}
+
+///////////////
+
+func (p Pointer) content_protection() []ContentProtection {
+   if v := p.adaptation_set.ContentProtection; v != nil {
+      return v
+   }
+   return p.Representation.ContentProtection
+}
+
 // media presentation description
 // wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP
 type MPD struct {
-   Period []Period
+   Period []period
 }
 
 func (m MPD) Contains(f func(Pointer) bool) bool {
@@ -19,8 +120,8 @@ func (m MPD) Contains(f func(Pointer) bool) bool {
       for _, adapt := range period.AdaptationSet {
          for _, represent := range adapt.Representation {
             var p Pointer
-            p.AdaptationSet = &adapt
-            p.Period = &period
+            p.adaptation_set = &adapt
+            p.period = &period
             p.Representation = &represent
             if f(p) {
                return true
@@ -62,55 +163,19 @@ func (m MPD) String() string {
          c = fmt.Append(c, "\ncodecs = ", v)
       }
       c = fmt.Append(c, "\ntype = ", p.mime_type())
-      if v := p.AdaptationSet.Role; v != nil {
+      if v := p.adaptation_set.Role; v != nil {
          c = fmt.Append(c, "\nrole = ", v.Value)
       }
-      if v := p.AdaptationSet.Lang; v != "" {
+      if v := p.adaptation_set.Lang; v != "" {
          c = fmt.Append(c, "\nlang = ", v)
       }
       c = fmt.Append(c, "\nid = ", p.Representation.ID)
-      if v := p.Period.ID; v != "" {
+      if v := p.period.ID; v != "" {
          c = fmt.Append(c, "\nperiod = ", v)
       }
       b = append(b, c...)
    })
    return string(b)
-}
-type AdaptationSet struct {
-   // this might not exist, or might be under Representation
-   Codecs string `xml:"codecs,attr"`
-   // this might be under Representation
-   ContentProtection []ContentProtection
-   // this might not exist
-   Lang string `xml:"lang,attr"`
-   // this might be under Representation
-   MimeType string `xml:"mimeType,attr"`
-   Representation []Representation
-   // this might not exist
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   // this might not exist, or might be under Representation
-   SegmentTemplate *SegmentTemplate
-}
-
-type ContentProtection struct {
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-   // this might not exist
-   Default_KID string `xml:"default_KID,attr"`
-   // this might not exist
-   PSSH string `xml:"pssh"`
-}
-
-type Period struct {
-   AdaptationSet []AdaptationSet
-   ID string `xml:"id,attr"`
-}
-
-type Pointer struct {
-   AdaptationSet *AdaptationSet
-   Period *Period
-   Representation *Representation
 }
 
 func (p Pointer) Default_KID() ([]byte, error) {
@@ -182,7 +247,7 @@ func (p Pointer) PSSH() ([]byte, error) {
 }
 
 func (p Pointer) codecs() (string, bool) {
-   if v := p.AdaptationSet.Codecs; v != "" {
+   if v := p.adaptation_set.Codecs; v != "" {
       return v, true
    }
    if v := p.Representation.Codecs; v != "" {
@@ -191,78 +256,12 @@ func (p Pointer) codecs() (string, bool) {
    return "", false
 }
 
-func (p Pointer) content_protection() []ContentProtection {
-   if v := p.AdaptationSet.ContentProtection; v != nil {
-      return v
-   }
-   return p.Representation.ContentProtection
-}
-
-func (p Pointer) mime_type() string {
-   if v := p.AdaptationSet.MimeType; v != "" {
-      return v
-   }
-   return p.Representation.MimeType
-}
-
 func (p Pointer) segment_template() (*SegmentTemplate, bool) {
-   if v := p.AdaptationSet.SegmentTemplate; v != nil {
+   if v := p.adaptation_set.SegmentTemplate; v != nil {
       return v, true
    }
    if v := p.Representation.SegmentTemplate; v != nil {
       return v, true
    }
    return nil, false
-}
-
-type Range string
-
-func (r Range) Scan() (int, int, error) {
-   var start, end int
-   _, err := fmt.Sscanf(string(r), "%v-%v", &start, &end)
-   if err != nil {
-      return 0, 0, err
-   }
-   return start, end, nil
-}
-
-type Representation struct {
-   Bandwidth int `xml:"bandwidth,attr"`
-   ID string `xml:"id,attr"`
-   // this might not exist
-   BaseURL string
-   // this might not exist, or might be under AdaptationSet
-   Codecs string `xml:"codecs,attr"`
-   // this might be under AdaptationSet
-   ContentProtection []ContentProtection
-   // this might not exist
-   Height int `xml:"height,attr"`
-   // this might be under AdaptationSet
-   MimeType string `xml:"mimeType,attr"`
-   // this might not exist
-   SegmentBase *struct {
-      Initialization struct {
-         Range Range `xml:"range,attr"`
-      }
-      IndexRange Range `xml:"indexRange,attr"`
-   }
-   // this might not exist, or might be under AdaptationSet
-   SegmentTemplate *SegmentTemplate
-   // this might not exist
-   Width int `xml:"width,attr"`
-}
-
-type SegmentTemplate struct {
-   Media string `xml:"media,attr"`
-   SegmentTimeline struct {
-      S []struct {
-         // duration
-         D int `xml:"d,attr"`
-         // repeat. this may not exist
-         R int `xml:"r,attr"`
-      }
-   }
-   StartNumber int `xml:"startNumber,attr"`
-   // this may not exist
-   Initialization string `xml:"initialization,attr"`
 }
