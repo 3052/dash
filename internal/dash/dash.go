@@ -2,46 +2,16 @@ package main
 
 import (
    "154.pages.dev/encoding/dash"
-   "encoding/xml"
    "errors"
    "fmt"
+   "io"
    "net/http"
    "net/url"
    "os"
    "path"
 )
 
-func (f flags) pick(media *dash.MPD) (*dash.Representation, bool) {
-   for _, period := range media.Period {
-      for _, adaptation := range period.AdaptationSet {
-         for _, representation := range adaptation.Representation {
-            if representation.ID == f.id {
-               return &representation, true
-            }
-         }
-      }
-   }
-   return nil, false
-}
-
-func (f *flags) manifest() (*dash.MPD, error) {
-   res, err := http.Get(f.address)
-   if err != nil {
-      return nil, err
-   }
-   defer res.Body.Close()
-   if res.StatusCode != http.StatusOK {
-      return nil, errors.New(res.Status)
-   }
-   f.url = res.Request.URL
-   media := new(dash.MPD)
-   if err := xml.NewDecoder(res.Body).Decode(media); err != nil {
-      return nil, err
-   }
-   return media, nil
-}
-
-func (f flags) download(rep *dash.Representation) error {
+func (f flags) download(rep dash.Representation) error {
    initialization, ok := rep.Initialization()
    if !ok {
       return errors.New("dash.Representation.Initialization")
@@ -87,3 +57,20 @@ func create(address *url.URL) error {
    }
    return nil
 }
+func (f *flags) manifest() ([]dash.Representation, error) {
+   res, err := http.Get(f.address)
+   if err != nil {
+      return nil, err
+   }
+   defer res.Body.Close()
+   if res.StatusCode != http.StatusOK {
+      return nil, errors.New(res.Status)
+   }
+   f.url = res.Request.URL
+   text, err := io.ReadAll(res.Body)
+   if err != nil {
+      return nil, err
+   }
+   return dash.Unmarshal(text)
+}
+

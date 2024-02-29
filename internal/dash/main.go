@@ -1,11 +1,9 @@
 package main
 
 import (
-   "154.pages.dev/encoding/dash"
    "flag"
+   "fmt"
    "net/url"
-   "os"
-   "text/template"
 )
 
 type flags struct {
@@ -20,23 +18,24 @@ func main() {
    flag.StringVar(&f.id, "id", "", "ID")
    flag.Parse()
    if f.address != "" {
-      media, err := f.manifest()
+      reps, err := f.manifest()
       if err != nil {
          panic(err)
       }
       if f.id != "" {
-         if rep, ok := f.pick(media); ok {
-            if err := f.download(rep); err != nil {
-               panic(err)
+         for _, rep := range reps {
+            if rep.ID == f.id {
+               if err := f.download(rep); err != nil {
+                  panic(err)
+               }
             }
          }
       } else {
-         tmpl, err := new(template.Template).Parse(dash.Template)
-         if err != nil {
-            panic(err)
-         }
-         if err := tmpl.Execute(os.Stdout, media); err != nil {
-            panic(err)
+         for i, rep := range reps {
+            if i >= 1 {
+               fmt.Println()
+            }
+            fmt.Println(rep)
          }
       }
    } else {
