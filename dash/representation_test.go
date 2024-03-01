@@ -48,23 +48,6 @@ func TestInitialization(t *testing.T) {
    }
 }
 
-func TestProtection(t *testing.T) {
-   for _, test := range tests {
-      reps, err := reader(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, rep := range reps {
-         _, pssh := rep.PSSH()
-         _, kid := rep.Default_KID()
-         fmt.Printf(
-            "mpd:%v period:%q type:%v pssh:%v kid:%v\n",
-            test, rep.adaptation_set.period.ID, rep.mime_type(), pssh, kid,
-         )
-      }
-   }
-}
-
 var media_tests = [][]string{
    // startNumber == nil
    {"mpd/mubi.mpd", "new-york-edge2.mubicdn.net/stream/43cac9f0138aaa566a429be4542ff21c/65df1dc5/728eb9fc/mubi-films/325455/passages_eng_zxx_1800x1080_50000_mezz40828/ae8c88ed4e/drm_playlist.0ff148ef80.ism/default/"},
@@ -83,6 +66,23 @@ func TestMedia(t *testing.T) {
       }
       for _, media := range reps[0].Media() {
          fmt.Println(test[1] + media)
+      }
+   }
+}
+
+func TestProtection(t *testing.T) {
+   for _, test := range tests {
+      reps, err := reader(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, rep := range reps {
+         _, pssh := rep.PSSH()
+         _, kid := rep.Default_KID()
+         fmt.Printf(
+            "mpd:%v period:%q type:%v pssh:%v kid:%v\n",
+            test, rep.adaptation_set.period.ID, rep.mime_type(), pssh, kid,
+         )
       }
    }
 }

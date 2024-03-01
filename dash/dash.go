@@ -1,24 +1,11 @@
 package dash
 
-import "fmt"
-
 type ContentProtection struct {
    SchemeIdUri string `xml:"schemeIdUri,attr"`
    // this might not exist
    Default_KID string `xml:"default_KID,attr"`
    // this might not exist
    PSSH string `xml:"pssh"`
-}
-
-type Range string
-
-func (r Range) Scan() (int, int, error) {
-   var start, end int
-   _, err := fmt.Sscanf(string(r), "%v-%v", &start, &end)
-   if err != nil {
-      return 0, 0, err
-   }
-   return start, end, nil
 }
 
 type SegmentTemplate struct {

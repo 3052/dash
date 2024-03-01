@@ -1,13 +1,16 @@
 package dash
 
 import (
-   "encoding/base64"
-   "encoding/hex"
    "encoding/xml"
-   "errors"
    "strconv"
    "strings"
 )
+
+type Range string
+
+func (r Range) Cut() (string, string, bool) {
+   return strings.Cut(string(r), "-")
+}
 
 type Representation struct {
    adaptation_set *adaptation_set
@@ -36,8 +39,6 @@ type Representation struct {
    Width int64 `xml:"width,attr"`
 }
 
-// media presentation description
-// wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP
 func Unmarshal(b []byte) ([]Representation, error) {
    var s struct {
       Period []period
@@ -59,16 +60,6 @@ func Unmarshal(b []byte) ([]Representation, error) {
    return rs, nil
 }
 
-func (r Representation) Default_KID() ([]byte, error) {
-   for _, c := range r.content_protection() {
-      if c.SchemeIdUri == "urn:mpeg:dash:mp4protection:2011" {
-         c.Default_KID = strings.ReplaceAll(c.Default_KID, "-", "")
-         return hex.DecodeString(c.Default_KID)
-      }
-   }
-   return nil, errors.New("Representation.Default_KID")
-}
-
 func (r Representation) Ext() (string, bool) {
    switch r.mime_type() {
    case "audio/mp4":
@@ -86,17 +77,6 @@ func (r Representation) Initialization() (string, bool) {
       }
    }
    return "", false
-}
-
-func (r Representation) PSSH() ([]byte, error) {
-   for _, c := range r.content_protection() {
-      if c.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
-         if c.PSSH != "" {
-            return base64.StdEncoding.DecodeString(c.PSSH)
-         }
-      }
-   }
-   return nil, errors.New("Representation.PSSH")
 }
 
 func (r Representation) codecs() (string, bool) {
@@ -199,4 +179,24 @@ func (r Representation) String() string {
       b = append(b, v...)
    }
    return string(b)
+}
+
+func (r Representation) Default_KID() (string, bool) {
+   for _, c := range r.content_protection() {
+      if c.SchemeIdUri == "urn:mpeg:dash:mp4protection:2011" {
+         return strings.ReplaceAll(c.Default_KID, "-", ""), true
+      }
+   }
+   return "", false
+}
+
+func (r Representation) PSSH() (string, bool) {
+   for _, c := range r.content_protection() {
+      if c.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
+         if c.PSSH != "" {
+            return c.PSSH, true
+         }
+      }
+   }
+   return "", false
 }
