@@ -5,6 +5,19 @@ import (
    "testing"
 )
 
+func TestRange(t *testing.T) {
+   reps, err := reader("mpd/hulu.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   for _, rep := range reps {
+      a, b, err := rep.SegmentBase.Initialization.Range.Scan()
+      fmt.Print(a, " ", b, " ", err, " ")
+      a, b, err = rep.SegmentBase.IndexRange.Scan()
+      fmt.Print(a, " ", b, " ", err, "\n")
+   }
+}
+
 func TestProtection(t *testing.T) {
    for _, test := range tests {
       reps, err := reader(test)
@@ -19,18 +32,5 @@ func TestProtection(t *testing.T) {
             test, rep.adaptation_set.period.ID, rep.mime_type(), pssh, kid,
          )
       }
-   }
-}
-
-func TestRange(t *testing.T) {
-   reps, err := reader("mpd/hulu.mpd")
-   if err != nil {
-      t.Fatal(err)
-   }
-   for _, rep := range reps {
-      a, b, ok := rep.SegmentBase.Initialization.Range.Cut()
-      fmt.Print(a, " ", b, " ", ok, " ")
-      a, b, ok = rep.SegmentBase.IndexRange.Cut()
-      fmt.Print(a, " ", b, " ", ok, "\n")
    }
 }
