@@ -1,11 +1,151 @@
 package dash
 
-type ContentProtection struct {
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-   // this might not exist
-   Default_KID string `xml:"default_KID,attr"`
-   // this might not exist
-   PSSH string `xml:"pssh"`
+import (
+   "encoding/xml"
+   "strconv"
+   "strings"
+)
+
+func Unmarshal(b []byte) ([]Representation, error) {
+   var s struct {
+      Period []period
+   }
+   err := xml.Unmarshal(b, &s)
+   if err != nil {
+      return nil, err
+   }
+   var rs []Representation
+   for _, p := range s.Period {
+      for _, a := range p.AdaptationSet {
+         a.period = &p
+         for _, r := range a.Representation {
+            r.adaptation_set = &a
+            rs = append(rs, r)
+         }
+      }
+   }
+   return rs, nil
+}
+
+func (r Representation) Ext() (string, bool) {
+   switch r.mime_type() {
+   case "audio/mp4":
+      return ".m4a", true
+   case "video/mp4":
+      return ".m4v", true
+   }
+   return "", false
+}
+
+func (r Representation) Initialization() (string, bool) {
+   if st, ok := r.segment_template(); ok {
+      if i := st.Initialization; i != "" {
+         return strings.Replace(i, "$RepresentationID$", r.ID, 1), true
+      }
+   }
+   return "", false
+}
+
+func (r Representation) codecs() (string, bool) {
+   if v := r.Codecs; v != "" {
+      return v, true
+   }
+   if v := r.adaptation_set.Codecs; v != "" {
+      return v, true
+   }
+   return "", false
+}
+
+func (r Representation) content_protection() []ContentProtection {
+   if v := r.ContentProtection; v != nil {
+      return v
+   }
+   return r.adaptation_set.ContentProtection
+}
+
+func (r Representation) mime_type() string {
+   if v := r.MimeType; v != "" {
+      return v
+   }
+   return r.adaptation_set.MimeType
+}
+
+func (r Representation) segment_template() (*SegmentTemplate, bool) {
+   if v := r.SegmentTemplate; v != nil {
+      return v, true
+   }
+   if v := r.adaptation_set.SegmentTemplate; v != nil {
+      return v, true
+   }
+   return nil, false
+}
+
+func (r Representation) Media() []string {
+   st, ok := r.segment_template()
+   if !ok {
+      return nil
+   }
+   replace := func(s, old string) string {
+      s = strings.Replace(s, "$RepresentationID$", r.ID, 1)
+      return strings.Replace(s, old, strconv.Itoa(st.StartNumber), 1)
+   }
+   var media []string
+   for _, segment := range st.SegmentTimeline.S {
+      for segment.R >= 0 {
+         var medium string
+         if strings.Contains(st.Media, "$Time$") {
+            medium = replace(st.Media, "$Time$")
+            st.StartNumber += segment.D
+         } else {
+            medium = replace(st.Media, "$Number$")
+            st.StartNumber++
+         }
+         media = append(media, medium)
+         segment.R--
+      }
+   }
+   return media
+}
+
+func (r Representation) String() string {
+   var b []byte
+   if v := r.Width; v >= 1 {
+      b = append(b, "width = "...)
+      b = strconv.AppendInt(b, v, 10)
+   }
+   if v := r.Height; v >= 1 {
+      if b != nil {
+         b = append(b, '\n')
+      }
+      b = append(b, "height = "...)
+      b = strconv.AppendInt(b, v, 10)
+   }
+   if b != nil {
+      b = append(b, '\n')
+   }
+   b = append(b, "bandwidth = "...)
+   b = strconv.AppendInt(b, r.Bandwidth, 10)
+   if v, ok := r.codecs(); ok {
+      b = append(b, "\ncodecs = "...)
+      b = append(b, v...)
+   }
+   b = append(b, "\ntype = "...)
+   b = append(b, r.mime_type()...)
+   if v := r.adaptation_set.Role; v != nil {
+      b = append(b, "\nrole = "...)
+      b = append(b, v.Value...)
+   }
+   if v := r.adaptation_set.Lang; v != "" {
+      b = append(b, "\nlang = "...)
+      b = append(b, v...)
+   }
+   b = append(b, "\nid = "...)
+   b = append(b, r.ID...)
+   if v := r.adaptation_set.period.ID; v != "" {
+      b = append(b, "\nperiod = "...)
+      b = append(b, v...)
+   }
+   return string(b)
 }
 
 type SegmentTemplate struct {
