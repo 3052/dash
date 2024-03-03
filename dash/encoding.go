@@ -17,9 +17,6 @@ type ContentProtection struct {
 
 type Default_KID string
 
-
-
-
 func (d Default_KID) Decode() ([]byte, error) {
    s := strings.ReplaceAll(string(d), "-", "")
    return hex.DecodeString(s)
