@@ -28,15 +28,24 @@ func (p PSSH) Decode() ([]byte, error) {
    return base64.StdEncoding.DecodeString(string(p))
 }
 
-type Range string
-
-func (r Range) Scan() (int, int, error) {
-   var start, end int
-   _, err := fmt.Sscanf(string(r), "%v-%v", &start, &end)
-   if err != nil {
-      return 0, 0, err
+func (r Representation) Default_KID() (Default_KID, bool) {
+   for _, c := range r.content_protection() {
+      if c.SchemeIdUri == "urn:mpeg:dash:mp4protection:2011" {
+         return c.Default_KID, true
+      }
    }
-   return start, end, nil
+   return "", false
+}
+
+func (r Representation) PSSH() (PSSH, bool) {
+   for _, c := range r.content_protection() {
+      if c.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
+         if c.PSSH != "" {
+            return c.PSSH, true
+         }
+      }
+   }
+   return "", false
 }
 
 type Representation struct {
@@ -56,9 +65,9 @@ type Representation struct {
    // this might not exist
    SegmentBase *struct {
       Initialization struct {
-         Range Range `xml:"range,attr"`
+         Range RawRange `xml:"range,attr"`
       }
-      IndexRange Range `xml:"indexRange,attr"`
+      IndexRange RawRange `xml:"indexRange,attr"`
    }
    // this might not exist, or might be under AdaptationSet
    SegmentTemplate *SegmentTemplate
@@ -66,22 +75,18 @@ type Representation struct {
    Width int64 `xml:"width,attr"`
 }
 
-func (r Representation) Default_KID() (Default_KID, bool) {
-   for _, c := range r.content_protection() {
-      if c.SchemeIdUri == "urn:mpeg:dash:mp4protection:2011" {
-         return c.Default_KID, true
-      }
-   }
-   return "", false
+type RawRange string
+
+type Range struct {
+   Start uint64
+   End uint64
 }
 
-func (r Representation) PSSH() (PSSH, bool) {
-   for _, c := range r.content_protection() {
-      if c.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
-         if c.PSSH != "" {
-            return c.PSSH, true
-         }
-      }
+func (r RawRange) Scan() (*Range, error) {
+   var v Range
+   _, err := fmt.Sscanf(string(r), "%v-%v", &v.Start, &v.End)
+   if err != nil {
+      return nil, err
    }
-   return "", false
+   return &v, nil
 }

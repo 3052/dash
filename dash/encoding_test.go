@@ -11,10 +11,10 @@ func TestRange(t *testing.T) {
       t.Fatal(err)
    }
    for _, rep := range reps {
-      a, b, err := rep.SegmentBase.Initialization.Range.Scan()
-      fmt.Print(a, " ", b, " ", err, " ")
-      a, b, err = rep.SegmentBase.IndexRange.Scan()
-      fmt.Print(a, " ", b, " ", err, "\n")
+      r, err := rep.SegmentBase.Initialization.Range.Scan()
+      fmt.Print(r.Start, " ", r.End, " ", err, " ")
+      r, err = rep.SegmentBase.IndexRange.Scan()
+      fmt.Print(r.Start, " ", r.End, " ", err, "\n")
    }
 }
 
