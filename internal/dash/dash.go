@@ -57,6 +57,7 @@ func create(address *url.URL) error {
    }
    return nil
 }
+
 func (f *flags) manifest() ([]dash.Representation, error) {
    res, err := http.Get(f.address)
    if err != nil {
@@ -73,4 +74,3 @@ func (f *flags) manifest() ([]dash.Representation, error) {
    }
    return dash.Unmarshal(text)
 }
-
