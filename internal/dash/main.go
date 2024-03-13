@@ -4,6 +4,7 @@ import (
    "flag"
    "fmt"
    "net/url"
+   "sort"
 )
 
 type flags struct {
@@ -15,7 +16,7 @@ type flags struct {
 func main() {
    var f flags
    flag.StringVar(&f.address, "a", "", "address")
-   flag.StringVar(&f.id, "id", "", "ID")
+   flag.StringVar(&f.id, "i", "", "ID")
    flag.Parse()
    if f.address != "" {
       reps, err := f.manifest()
@@ -31,6 +32,9 @@ func main() {
             }
          }
       } else {
+         sort.Slice(reps, func(i, j int) bool {
+            return reps[j].Bandwidth < reps[i].Bandwidth
+         })
          for i, rep := range reps {
             if i >= 1 {
                fmt.Println()
