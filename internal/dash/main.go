@@ -23,13 +23,18 @@ func main() {
       if err != nil {
          panic(err)
       }
-      if f.id != "" {
-         for _, rep := range reps {
+      index := func() int {
+         for i, rep := range reps {
             if rep.ID == f.id {
-               if err := f.download(rep); err != nil {
-                  panic(err)
-               }
+               return i
             }
+         }
+         return -1
+      }()
+      if index >= 0 {
+         err := f.download(reps[index])
+         if err != nil {
+            panic(err)
          }
       } else {
          sort.Slice(reps, func(i, j int) bool {

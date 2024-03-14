@@ -6,6 +6,18 @@ import (
    "strings"
 )
 
+func (r Representation) Ext() (string, bool) {
+   switch r.mime_type() {
+   case "application/mp4":
+      return ".m4s", true
+   case "audio/mp4":
+      return ".m4a", true
+   case "video/mp4":
+      return ".m4v", true
+   }
+   return "", false
+}
+
 func Unmarshal(b []byte) ([]Representation, error) {
    var s struct {
       Period []period
@@ -25,16 +37,6 @@ func Unmarshal(b []byte) ([]Representation, error) {
       }
    }
    return rs, nil
-}
-
-func (r Representation) Ext() (string, bool) {
-   switch r.mime_type() {
-   case "audio/mp4":
-      return ".m4a", true
-   case "video/mp4":
-      return ".m4v", true
-   }
-   return "", false
 }
 
 func (r Representation) Initialization() (string, bool) {
