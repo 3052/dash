@@ -28,36 +28,6 @@ func (f *flags) manifest() ([]dash.Representation, error) {
    return dash.Unmarshal(text)
 }
 
-func (f flags) download(rep dash.Representation) error {
-   initialization, ok := rep.Initialization()
-   if !ok {
-      return errors.New("dash.Representation.Initialization")
-   }
-   address, err := f.url.Parse(initialization)
-   if err != nil {
-      return err
-   }
-   if err := create(address); err != nil {
-      return err
-   }
-   return f.create(rep.Media())
-}
-
-func (f flags) create(media []string) error {
-   for i, medium := range media {
-      // with DASH, initialization and media URLs are relative to the MPD URL
-      url, err := f.url.Parse(medium)
-      if err != nil {
-         return err
-      }
-      fmt.Println(len(media)-i)
-      if err := create(url); err != nil {
-         return err
-      }
-   }
-   return nil
-}
-
 func create(url *url.URL) error {
    res, err := http.Get(url.String())
    if err != nil {
@@ -73,4 +43,49 @@ func create(url *url.URL) error {
       return err
    }
    return nil
+}
+
+func (f flags) download(rep dash.Representation) error {
+   initialization, ok := rep.Initialization()
+   if !ok {
+      return errors.New("dash.Representation.Initialization")
+   }
+   address, err := f.url.Parse(initialization)
+   if err != nil {
+      return err
+   }
+   if err := create(address); err != nil {
+      return err
+   }
+   media := rep.Media()
+   errs := make(chan error)
+   for channel := range f.channels {
+      go f.loop(media, channel, errs)
+   }
+   for range f.channels {
+      err := <-errs
+      if err != nil {
+         return err
+      }
+   }
+   return nil
+}
+
+func (f flags) loop(media []string, channel int, errs chan error) {
+   for i := channel; i < len(media); i += f.channels {
+      // with DASH, initialization and media URLs are relative to the MPD URL
+      url, err := f.url.Parse(media[i])
+      if err != nil {
+         errs <- err
+         return
+      }
+      fmt.Printf(
+         "channel:%v i:%v len:%v\n", channel, i, len(media),
+      )
+      if err := create(url); err != nil {
+         errs <- err
+         return
+      }
+   }
+   errs <- nil
 }

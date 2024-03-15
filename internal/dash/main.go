@@ -5,16 +5,19 @@ import (
    "fmt"
    "net/url"
    "sort"
+   "time"
 )
 
 type flags struct {
    address string
    id string
    url *url.URL
+   channels int
 }
 
 func main() {
    var f flags
+   flag.IntVar(&f.channels, "c", 3, "channels")
    flag.StringVar(&f.address, "a", "", "address")
    flag.StringVar(&f.id, "i", "", "ID")
    flag.Parse()
@@ -32,10 +35,12 @@ func main() {
          return -1
       }()
       if index >= 0 {
+         begin := time.Now()
          err := f.download(reps[index])
          if err != nil {
             panic(err)
          }
+         fmt.Println(time.Since(begin))
       } else {
          sort.Slice(reps, func(i, j int) bool {
             return reps[j].Bandwidth < reps[i].Bandwidth
