@@ -37,38 +37,38 @@ func (f flags) download(rep dash.Representation) error {
    if err != nil {
       return err
    }
-   file, err := os.Create(path.Base(initialization))
-   if err != nil {
+   if err := create(address); err != nil {
       return err
    }
-   defer file.Close()
-   if err := write(address, file); err != nil {
-      return err
-   }
-   media := rep.Media()
-   for i, ref := range media {
+   return f.create(rep.Media())
+}
+
+func (f flags) create(media []string) error {
+   for i, medium := range media {
       // with DASH, initialization and media URLs are relative to the MPD URL
-      address, err := f.url.Parse(ref)
+      url, err := f.url.Parse(medium)
       if err != nil {
          return err
       }
       fmt.Println(len(media)-i)
-      if err := write(address, file); err != nil {
+      if err := create(url); err != nil {
          return err
       }
    }
    return nil
 }
 
-func write(address *url.URL, file *os.File) error {
-   res, err := http.Get(address.String())
+func create(url *url.URL) error {
+   res, err := http.Get(url.String())
    if err != nil {
       return err
    }
    defer res.Body.Close()
-   if res.StatusCode != http.StatusOK {
-      return errors.New(res.Status)
+   file, err := os.Create(path.Base(url.Path))
+   if err != nil {
+      return err
    }
+   defer file.Close()
    if _, err := file.ReadFrom(res.Body); err != nil {
       return err
    }
