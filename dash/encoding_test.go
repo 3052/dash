@@ -5,7 +5,7 @@ import (
    "testing"
 )
 
-func TestProtection(t *testing.T) {
+func TestPsshKid(t *testing.T) {
    for _, test := range tests {
       reps, err := reader(test)
       if err != nil {
@@ -15,9 +15,8 @@ func TestProtection(t *testing.T) {
          if i >= 1 {
             fmt.Println()
          }
-         protect := rep.Protection()
+         protect := rep.content_protection()
          fmt.Println("mpd =", test)
-         fmt.Println("period =", rep.adaptation_set.period.ID)
          fmt.Println("protect == nil", protect == nil)
          fmt.Println("type =", rep.mime_type())
          if protect != nil {

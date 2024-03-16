@@ -6,11 +6,22 @@ import (
    "strings"
 )
 
-func (r Representation) Protection() []ContentProtection {
-   if v := r.ContentProtection; v != nil {
-      return v
+type adaptation_set struct {
+   // this might not exist, or might be under Representation
+   Codecs string `xml:"codecs,attr"`
+   // this might be under Representation
+   ContentProtection []ContentProtection
+   // this might not exist
+   Lang string `xml:"lang,attr"`
+   // this might be under Representation
+   MimeType string `xml:"mimeType,attr"`
+   Representation []Representation
+   // this might not exist
+   Role *struct {
+      Value string `xml:"value,attr"`
    }
-   return r.adaptation_set.ContentProtection
+   // this might not exist, or might be under Representation
+   SegmentTemplate *SegmentTemplate
 }
 
 func (r Representation) Ext() (string, bool) {
@@ -25,7 +36,9 @@ func (r Representation) Ext() (string, bool) {
 
 func Unmarshal(b []byte) ([]Representation, error) {
    var s struct {
-      Period []period
+      Period []struct {
+         AdaptationSet []adaptation_set
+      }
    }
    err := xml.Unmarshal(b, &s)
    if err != nil {
@@ -34,7 +47,6 @@ func Unmarshal(b []byte) ([]Representation, error) {
    var rs []Representation
    for _, p := range s.Period {
       for _, a := range p.AdaptationSet {
-         a.period = &p
          for _, r := range a.Representation {
             r.adaptation_set = &a
             rs = append(rs, r)
@@ -114,10 +126,6 @@ func (r Representation) String() string {
    }
    b = append(b, "\nid = "...)
    b = append(b, r.ID...)
-   if v := r.adaptation_set.period.ID; v != "" {
-      b = append(b, "\nperiod = "...)
-      b = append(b, v...)
-   }
    return string(b)
 }
 
@@ -129,6 +137,13 @@ func (r Representation) codecs() (string, bool) {
       return v, true
    }
    return "", false
+}
+
+func (r Representation) content_protection() []ContentProtection {
+   if v := r.ContentProtection; v != nil {
+      return v
+   }
+   return r.adaptation_set.ContentProtection
 }
 
 func (r Representation) mime_type() string {
@@ -161,28 +176,4 @@ type SegmentTemplate struct {
    StartNumber int `xml:"startNumber,attr"`
    // this may not exist
    Initialization string `xml:"initialization,attr"`
-}
-
-type adaptation_set struct {
-   period *period
-   // this might not exist, or might be under Representation
-   Codecs string `xml:"codecs,attr"`
-   // this might be under Representation
-   ContentProtection []ContentProtection
-   // this might not exist
-   Lang string `xml:"lang,attr"`
-   // this might be under Representation
-   MimeType string `xml:"mimeType,attr"`
-   Representation []Representation
-   // this might not exist
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   // this might not exist, or might be under Representation
-   SegmentTemplate *SegmentTemplate
-}
-
-type period struct {
-   AdaptationSet []adaptation_set
-   ID string `xml:"id,attr"`
 }

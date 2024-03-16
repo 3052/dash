@@ -6,6 +6,15 @@ import (
    "testing"
 )
 
+var tests = []string{
+   "mpd/amc.mpd",
+   "mpd/hulu.mpd",
+   "mpd/mubi.mpd",
+   "mpd/nbc.mpd",
+   "mpd/paramount.mpd",
+   "mpd/roku.mpd",
+}
+
 func TestString(t *testing.T) {
    for i, name := range tests {
       if i >= 1 {
@@ -23,14 +32,6 @@ func TestString(t *testing.T) {
          fmt.Println(rep)
       }
    }
-}
-
-var tests = []string{
-   "mpd/amc.mpd",
-   "mpd/hulu.mpd",
-   "mpd/nbc.mpd",
-   "mpd/paramount.mpd",
-   "mpd/roku.mpd",
 }
 
 var media_tests = [][]string{
