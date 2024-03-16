@@ -6,16 +6,13 @@ import (
    "testing"
 )
 
-const name = "../../testdata/mubi-stpp/textstream_eng=1000-1174000.dash"
-
 func TestText(t *testing.T) {
-   file, err := os.Open(name)
+   text, err := os.ReadFile("text.xml")
    if err != nil {
       t.Fatal(err)
    }
-   defer file.Close()
    var mark Markup
-   if err := mark.Decode(file); err != nil {
+   if err := mark.Unmarshal(text); err != nil {
       t.Fatal(err)
    }
    fmt.Println(WebVtt)

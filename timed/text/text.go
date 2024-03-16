@@ -1,10 +1,7 @@
 package text
 
 import (
-   "154.pages.dev/sofia"
-   "errors"
    "html"
-   "io"
    "encoding/xml"
    "strings"
 )
@@ -19,16 +16,8 @@ type Markup struct {
    } `xml:"body"`
 }
 
-func (m *Markup) Decode(r io.Reader) error {
-   var file sofia.File
-   err := file.Decode(r)
-   if err != nil {
-      return err
-   }
-   if len(file.MediaData.Data) != 1 {
-      return errors.New("sofia.MediaDataBox.Data")
-   }
-   return xml.Unmarshal(file.MediaData.Data[0], m)
+func (m *Markup) Unmarshal(b []byte) error {
+   return xml.Unmarshal(b, m)
 }
 
 type Paragraph struct {
