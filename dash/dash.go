@@ -6,10 +6,15 @@ import (
    "strings"
 )
 
+func (r Representation) Protection() []ContentProtection {
+   if v := r.ContentProtection; v != nil {
+      return v
+   }
+   return r.adaptation_set.ContentProtection
+}
+
 func (r Representation) Ext() (string, bool) {
    switch r.mime_type() {
-   case "application/mp4":
-      return ".m4s", true
    case "audio/mp4":
       return ".m4a", true
    case "video/mp4":
@@ -124,13 +129,6 @@ func (r Representation) codecs() (string, bool) {
       return v, true
    }
    return "", false
-}
-
-func (r Representation) content_protection() []ContentProtection {
-   if v := r.ContentProtection; v != nil {
-      return v
-   }
-   return r.adaptation_set.ContentProtection
 }
 
 func (r Representation) mime_type() string {

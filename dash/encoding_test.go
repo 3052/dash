@@ -5,6 +5,31 @@ import (
    "testing"
 )
 
+func TestProtection(t *testing.T) {
+   for _, test := range tests {
+      reps, err := reader(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for i, rep := range reps {
+         if i >= 1 {
+            fmt.Println()
+         }
+         protect := rep.Protection()
+         fmt.Println("mpd =", test)
+         fmt.Println("period =", rep.adaptation_set.period.ID)
+         fmt.Println("protect == nil", protect == nil)
+         fmt.Println("type =", rep.mime_type())
+         if protect != nil {
+            _, pssh := rep.PSSH()
+            _, kid := rep.Default_KID()
+            fmt.Println("kid =", kid)
+            fmt.Println("pssh =", pssh)
+         }
+      }
+   }
+}
+
 func TestRange(t *testing.T) {
    reps, err := reader("mpd/hulu.mpd")
    if err != nil {
@@ -15,22 +40,5 @@ func TestRange(t *testing.T) {
       fmt.Print(r.Start, " ", r.End, " ", err, " ")
       r, err = rep.SegmentBase.IndexRange.Scan()
       fmt.Print(r.Start, " ", r.End, " ", err, "\n")
-   }
-}
-
-func TestProtection(t *testing.T) {
-   for _, test := range tests {
-      reps, err := reader(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, rep := range reps {
-         _, pssh := rep.PSSH()
-         _, kid := rep.Default_KID()
-         fmt.Printf(
-            "mpd:%v period:%q type:%v pssh:%v kid:%v\n",
-            test, rep.adaptation_set.period.ID, rep.mime_type(), pssh, kid,
-         )
-      }
    }
 }
