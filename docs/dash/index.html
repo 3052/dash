@@ -14,7 +14,7 @@
   <body>
     <nav>
         <a href="..">154.pages.dev/encoding</a>/dash<span class="navbar-right">
-          v1.19.1 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
+          v1.19.4 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
       </nav>
     <main><h2 id="pkg-overview">package dash</h2>
 <pre class="chroma"><span class="kn">import</span> <span class="s">&#34;154.pages.dev/encoding/dash&#34;</span></pre>
@@ -48,12 +48,12 @@
       <a href="#Representation">type Representation</a>
       <ul>
           <li><a href="#Unmarshal">func Unmarshal(b []byte) ([]Representation, error)</a></li>
+          <li><a href="#Representation.Clear">func (r Representation) Clear() bool</a></li>
           <li><a href="#Representation.Default_KID">func (r Representation) Default_KID() (Default_KID, bool)</a></li>
           <li><a href="#Representation.Ext">func (r Representation) Ext() (string, bool)</a></li>
           <li><a href="#Representation.Initialization">func (r Representation) Initialization() (string, bool)</a></li>
           <li><a href="#Representation.Media">func (r Representation) Media() []string</a></li>
           <li><a href="#Representation.PSSH">func (r Representation) PSSH() (PSSH, bool)</a></li>
-          <li><a href="#Representation.Protection">func (r Representation) Protection() []ContentProtection</a></li>
           <li><a href="#Representation.String">func (r Representation) String() string</a></li>
           </ul>
       </li>
@@ -115,6 +115,8 @@
 </span><span class="c1"></span><span class="p">}</span></pre>
     <h4 id="Unmarshal">func Unmarshal</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="nf">Unmarshal</span><span class="p">(</span><span class="nx">b</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span> <span class="p">([]</span><a href="#Representation"><span class="nx">Representation</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <h4 id="Representation.Clear">func (Representation) Clear</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Clear</span><span class="p">()</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a></pre>
   <h4 id="Representation.Default_KID">func (Representation) Default_KID</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Default_KID</span><span class="p">()</span> <span class="p">(</span><a href="#Default_KID"><span class="nx">Default_KID</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
   <h4 id="Representation.Ext">func (Representation) Ext</h4>
@@ -125,8 +127,6 @@
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Media</span><span class="p">()</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
   <h4 id="Representation.PSSH">func (Representation) PSSH</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">PSSH</span><span class="p">()</span> <span class="p">(</span><a href="#PSSH"><span class="nx">PSSH</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
-  <h4 id="Representation.Protection">func (Representation) Protection</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Protection</span><span class="p">()</span> <span class="p">[]</span><a href="#ContentProtection"><span class="nx">ContentProtection</span></a></pre>
   <h4 id="Representation.String">func (Representation) String</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">String</span><span class="p">()</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
   <h3 id="SegmentTemplate">type SegmentTemplate</h3>

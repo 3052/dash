@@ -7,26 +7,6 @@ import (
    "strings"
 )
 
-func (r Representation) Default_KID() (Default_KID, bool) {
-   for _, c := range r.Protection() {
-      if c.SchemeIdUri == "urn:mpeg:dash:mp4protection:2011" {
-         return c.Default_KID, true
-      }
-   }
-   return "", false
-}
-
-func (r Representation) PSSH() (PSSH, bool) {
-   for _, c := range r.Protection() {
-      if c.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
-         if c.PSSH != "" {
-            return c.PSSH, true
-         }
-      }
-   }
-   return "", false
-}
-
 type ContentProtection struct {
    SchemeIdUri string `xml:"schemeIdUri,attr"`
    // this might not exist
@@ -46,6 +26,22 @@ type PSSH string
 
 func (p PSSH) Decode() ([]byte, error) {
    return base64.StdEncoding.DecodeString(string(p))
+}
+
+type Range struct {
+   Start uint64
+   End uint64
+}
+
+type RawRange string
+
+func (r RawRange) Scan() (*Range, error) {
+   var v Range
+   _, err := fmt.Sscanf(string(r), "%v-%v", &v.Start, &v.End)
+   if err != nil {
+      return nil, err
+   }
+   return &v, nil
 }
 
 type Representation struct {
@@ -75,18 +71,22 @@ type Representation struct {
    Width int64 `xml:"width,attr"`
 }
 
-type RawRange string
-
-type Range struct {
-   Start uint64
-   End uint64
+func (r Representation) Default_KID() (Default_KID, bool) {
+   for _, c := range r.content_protection() {
+      if c.SchemeIdUri == "urn:mpeg:dash:mp4protection:2011" {
+         return c.Default_KID, true
+      }
+   }
+   return "", false
 }
 
-func (r RawRange) Scan() (*Range, error) {
-   var v Range
-   _, err := fmt.Sscanf(string(r), "%v-%v", &v.Start, &v.End)
-   if err != nil {
-      return nil, err
+func (r Representation) PSSH() (PSSH, bool) {
+   for _, c := range r.content_protection() {
+      if c.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
+         if c.PSSH != "" {
+            return c.PSSH, true
+         }
+      }
    }
-   return &v, nil
+   return "", false
 }

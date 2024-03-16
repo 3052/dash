@@ -2,10 +2,29 @@ package dash
 
 import (
    "fmt"
+   "slices"
    "testing"
 )
 
-func TestProtection(t *testing.T) {
+func TestContentProtection(t *testing.T) {
+   for i, test := range tests {
+      if i >= 1 {
+         fmt.Println()
+      }
+      reps, err := reader(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for i, rep := range slices.DeleteFunc(reps, Representation.Clear) {
+         if i >= 1 {
+            fmt.Println()
+         }
+         fmt.Println(rep)
+      }
+   }
+}
+
+func TestPsshKid(t *testing.T) {
    for _, test := range tests {
       reps, err := reader(test)
       if err != nil {
@@ -15,9 +34,8 @@ func TestProtection(t *testing.T) {
          if i >= 1 {
             fmt.Println()
          }
-         protect := rep.Protection()
+         protect := rep.content_protection()
          fmt.Println("mpd =", test)
-         fmt.Println("period =", rep.adaptation_set.period.ID)
          fmt.Println("protect == nil", protect == nil)
          fmt.Println("type =", rep.mime_type())
          if protect != nil {
