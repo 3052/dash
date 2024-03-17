@@ -3,8 +3,36 @@ package dash
 import (
    "fmt"
    "os"
+   "slices"
    "testing"
 )
+
+func TestDelete(t *testing.T) {
+   for i, name := range tests {
+      if i >= 1 {
+         fmt.Println()
+      }
+      reps, err := reader(name)
+      if err != nil {
+         t.Fatal(err)
+      }
+      reps = slices.DeleteFunc(reps, func(r Representation) bool {
+         if _, ok := r.Ext(); !ok {
+            return true
+         }
+         if r.Protection() == nil {
+            return true
+         }
+         return false
+      })
+      for i, rep := range reps {
+         if i >= 1 {
+            fmt.Println()
+         }
+         fmt.Println(rep)
+      }
+   }
+}
 
 var tests = []string{
    "mpd/amc.mpd",
@@ -13,25 +41,6 @@ var tests = []string{
    "mpd/nbc.mpd",
    "mpd/paramount.mpd",
    "mpd/roku.mpd",
-}
-
-func TestString(t *testing.T) {
-   for i, name := range tests {
-      if i >= 1 {
-         fmt.Println()
-      }
-      fmt.Println(name)
-      reps, err := reader(name)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for i, rep := range reps {
-         if i >= 1 {
-            fmt.Println()
-         }
-         fmt.Println(rep)
-      }
-   }
 }
 
 var media_tests = [][]string{

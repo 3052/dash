@@ -6,34 +6,6 @@ import (
    "strings"
 )
 
-type adaptation_set struct {
-   // this might not exist, or might be under Representation
-   Codecs string `xml:"codecs,attr"`
-   // this might be under Representation
-   ContentProtection []ContentProtection
-   // this might not exist
-   Lang string `xml:"lang,attr"`
-   // this might be under Representation
-   MimeType string `xml:"mimeType,attr"`
-   Representation []Representation
-   // this might not exist
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   // this might not exist, or might be under Representation
-   SegmentTemplate *SegmentTemplate
-}
-
-func (r Representation) Ext() (string, bool) {
-   switch r.mime_type() {
-   case "audio/mp4":
-      return ".m4a", true
-   case "video/mp4":
-      return ".m4v", true
-   }
-   return "", false
-}
-
 func Unmarshal(b []byte) ([]Representation, error) {
    var s struct {
       Period []struct {
@@ -54,6 +26,16 @@ func Unmarshal(b []byte) ([]Representation, error) {
       }
    }
    return rs, nil
+}
+
+func (r Representation) Ext() (string, bool) {
+   switch r.mime_type() {
+   case "audio/mp4":
+      return ".m4a", true
+   case "video/mp4":
+      return ".m4v", true
+   }
+   return "", false
 }
 
 func (r Representation) Initialization() (string, bool) {
@@ -90,6 +72,13 @@ func (r Representation) Media() []string {
       }
    }
    return media
+}
+
+func (r Representation) Protection() []ContentProtection {
+   if v := r.ContentProtection; v != nil {
+      return v
+   }
+   return r.adaptation_set.ContentProtection
 }
 
 func (r Representation) String() string {
@@ -139,13 +128,6 @@ func (r Representation) codecs() (string, bool) {
    return "", false
 }
 
-func (r Representation) content_protection() []ContentProtection {
-   if v := r.ContentProtection; v != nil {
-      return v
-   }
-   return r.adaptation_set.ContentProtection
-}
-
 func (r Representation) mime_type() string {
    if v := r.MimeType; v != "" {
       return v
@@ -176,4 +158,22 @@ type SegmentTemplate struct {
    StartNumber int `xml:"startNumber,attr"`
    // this may not exist
    Initialization string `xml:"initialization,attr"`
+}
+
+type adaptation_set struct {
+   // this might not exist, or might be under Representation
+   Codecs string `xml:"codecs,attr"`
+   // this might be under Representation
+   ContentProtection []ContentProtection
+   // this might not exist
+   Lang string `xml:"lang,attr"`
+   // this might be under Representation
+   MimeType string `xml:"mimeType,attr"`
+   Representation []Representation
+   // this might not exist
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   // this might not exist, or might be under Representation
+   SegmentTemplate *SegmentTemplate
 }

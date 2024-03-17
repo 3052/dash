@@ -7,33 +7,6 @@ import (
    "strings"
 )
 
-type Representation struct {
-   adaptation_set *adaptation_set
-   Bandwidth int64 `xml:"bandwidth,attr"`
-   ID string `xml:"id,attr"`
-   // this might not exist
-   BaseURL string
-   // this might not exist, or might be under AdaptationSet
-   Codecs string `xml:"codecs,attr"`
-   // this might be under AdaptationSet
-   ContentProtection []ContentProtection
-   // this might not exist
-   Height int64 `xml:"height,attr"`
-   // this might be under AdaptationSet
-   MimeType string `xml:"mimeType,attr"`
-   // this might not exist
-   SegmentBase *struct {
-      Initialization struct {
-         Range RawRange `xml:"range,attr"`
-      }
-      IndexRange RawRange `xml:"indexRange,attr"`
-   }
-   // this might not exist, or might be under AdaptationSet
-   SegmentTemplate *SegmentTemplate
-   // this might not exist
-   Width int64 `xml:"width,attr"`
-}
-
 type ContentProtection struct {
    SchemeIdUri string `xml:"schemeIdUri,attr"`
    // this might not exist
@@ -71,20 +44,47 @@ func (r RawRange) Scan() (*Range, error) {
    return &v, nil
 }
 
+type Representation struct {
+   adaptation_set *adaptation_set
+   Bandwidth int64 `xml:"bandwidth,attr"`
+   ID string `xml:"id,attr"`
+   // this might not exist
+   BaseURL string
+   // this might not exist, or might be under AdaptationSet
+   Codecs string `xml:"codecs,attr"`
+   // this might be under AdaptationSet
+   ContentProtection []ContentProtection
+   // this might not exist
+   Height int64 `xml:"height,attr"`
+   // this might be under AdaptationSet
+   MimeType string `xml:"mimeType,attr"`
+   // this might not exist
+   SegmentBase *struct {
+      Initialization struct {
+         Range RawRange `xml:"range,attr"`
+      }
+      IndexRange RawRange `xml:"indexRange,attr"`
+   }
+   // this might not exist, or might be under AdaptationSet
+   SegmentTemplate *SegmentTemplate
+   // this might not exist
+   Width int64 `xml:"width,attr"`
+}
+
 func (r Representation) Default_KID() (Default_KID, bool) {
-   for _, c := range r.content_protection() {
-      if c.SchemeIdUri == "urn:mpeg:dash:mp4protection:2011" {
-         return c.Default_KID, true
+   for _, p := range r.Protection() {
+      if p.SchemeIdUri == "urn:mpeg:dash:mp4protection:2011" {
+         return p.Default_KID, true
       }
    }
    return "", false
 }
 
 func (r Representation) PSSH() (PSSH, bool) {
-   for _, c := range r.content_protection() {
-      if c.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
-         if c.PSSH != "" {
-            return c.PSSH, true
+   for _, p := range r.Protection() {
+      if p.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
+         if p.PSSH != "" {
+            return p.PSSH, true
          }
       }
    }

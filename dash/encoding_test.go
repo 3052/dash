@@ -15,7 +15,7 @@ func TestPsshKid(t *testing.T) {
          if i >= 1 {
             fmt.Println()
          }
-         protect := rep.content_protection()
+         protect := rep.Protection()
          fmt.Println("mpd =", test)
          fmt.Println("protect == nil", protect == nil)
          fmt.Println("type =", rep.mime_type())
