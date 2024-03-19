@@ -43,7 +43,7 @@ func main() {
          fmt.Println(time.Since(begin))
       } else {
          sort.Slice(reps, func(i, j int) bool {
-            return reps[j].Bandwidth < reps[i].Bandwidth
+            return reps[i].Bandwidth < reps[j].Bandwidth
          })
          for i, rep := range reps {
             if i >= 1 {
