@@ -6,6 +6,34 @@ import (
    "strings"
 )
 
+// we need the length for progress meter, so cannot use a channel
+func (r Representation) Media() []string {
+   st, ok := r.segment_template()
+   if !ok {
+      return nil
+   }
+   replace := func(s, old string) string {
+      s = strings.Replace(s, "$RepresentationID$", r.ID, 1)
+      return strings.Replace(s, old, strconv.Itoa(st.StartNumber), 1)
+   }
+   var media []string
+   for _, segment := range st.SegmentTimeline.S {
+      for segment.R >= 0 {
+         var medium string
+         if strings.Contains(st.Media, "$Time$") {
+            medium = replace(st.Media, "$Time$")
+            st.StartNumber += segment.D
+         } else {
+            medium = replace(st.Media, "$Number$")
+            st.StartNumber++
+         }
+         media = append(media, medium)
+         segment.R--
+      }
+   }
+   return media
+}
+
 func Unmarshal(b []byte) ([]Representation, error) {
    var s struct {
       Period []struct {
@@ -45,33 +73,6 @@ func (r Representation) Initialization() (string, bool) {
       }
    }
    return "", false
-}
-
-func (r Representation) Media() []string {
-   st, ok := r.segment_template()
-   if !ok {
-      return nil
-   }
-   replace := func(s, old string) string {
-      s = strings.Replace(s, "$RepresentationID$", r.ID, 1)
-      return strings.Replace(s, old, strconv.Itoa(st.StartNumber), 1)
-   }
-   var media []string
-   for _, segment := range st.SegmentTimeline.S {
-      for segment.R >= 0 {
-         var medium string
-         if strings.Contains(st.Media, "$Time$") {
-            medium = replace(st.Media, "$Time$")
-            st.StartNumber += segment.D
-         } else {
-            medium = replace(st.Media, "$Number$")
-            st.StartNumber++
-         }
-         media = append(media, medium)
-         segment.R--
-      }
-   }
-   return media
 }
 
 func (r Representation) Protection() []ContentProtection {
