@@ -14,7 +14,7 @@
   <body>
     <nav>
         <a href="..">154.pages.dev/encoding</a>/dash<span class="navbar-right">
-          v1.19.8 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
+          v1.19.9 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
       </nav>
     <main><h2 id="pkg-overview">package dash</h2>
 <pre class="chroma"><span class="kn">import</span> <span class="s">&#34;154.pages.dev/encoding/dash&#34;</span></pre>
@@ -22,18 +22,6 @@
 <ul>
   <li>
       <a href="#ContentProtection">type ContentProtection</a>
-      </li>
-  <li>
-      <a href="#Default_KID">type Default_KID</a>
-      <ul>
-          <li><a href="#Default_KID.Decode">func (d Default_KID) Decode() ([]byte, error)</a></li>
-          </ul>
-      </li>
-  <li>
-      <a href="#PSSH">type PSSH</a>
-      <ul>
-          <li><a href="#PSSH.Decode">func (p PSSH) Decode() ([]byte, error)</a></li>
-          </ul>
       </li>
   <li>
       <a href="#Range">type Range</a>
@@ -48,11 +36,9 @@
       <a href="#Representation">type Representation</a>
       <ul>
           <li><a href="#Unmarshal">func Unmarshal(b []byte) ([]Representation, error)</a></li>
-          <li><a href="#Representation.Default_KID">func (r Representation) Default_KID() (Default_KID, bool)</a></li>
           <li><a href="#Representation.Ext">func (r Representation) Ext() (string, bool)</a></li>
           <li><a href="#Representation.Initialization">func (r Representation) Initialization() (string, bool)</a></li>
           <li><a href="#Representation.Media">func (r Representation) Media() []string</a></li>
-          <li><a href="#Representation.PSSH">func (r Representation) PSSH() (PSSH, bool)</a></li>
           <li><a href="#Representation.Protection">func (r Representation) Protection() []ContentProtection</a></li>
           <li><a href="#Representation.String">func (r Representation) String() string</a></li>
           </ul>
@@ -65,19 +51,11 @@
     <pre class="chroma"><span class="kd">type</span> <span class="nx">ContentProtection</span> <span class="kd">struct</span> <span class="p">{</span>
 	<span id="ContentProtection.SchemeIdUri"><span class="nx">SchemeIdUri</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;schemeIdUri,attr&#34;`</span>
 	<span class="c1">// this might not exist
-</span><span class="c1"></span>	<span id="ContentProtection.Default_KID"><span class="nx">Default_KID</span></span> <a href="#Default_KID"><span class="nx">Default_KID</span></a> <span class="s">`xml:&#34;default_KID,attr&#34;`</span>
+</span><span class="c1"></span>	<span id="ContentProtection.Default_KID"><span class="nx">Default_KID</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;default_KID,attr&#34;`</span>
 	<span class="c1">// this might not exist
-</span><span class="c1"></span>	<span id="ContentProtection.PSSH"><span class="nx">PSSH</span></span> <a href="#PSSH"><span class="nx">PSSH</span></a> <span class="s">`xml:&#34;pssh&#34;`</span>
+</span><span class="c1"></span>	<span id="ContentProtection.PSSH"><span class="nx">PSSH</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;pssh&#34;`</span>
 <span class="p">}</span></pre>
-    <h3 id="Default_KID">type Default_KID</h3>
-    <pre class="chroma"><span class="kd">type</span> <span class="nx">Default_KID</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
-    <h4 id="Default_KID.Decode">func (Default_KID) Decode</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">d</span> <a href="#Default_KID"><span class="nx">Default_KID</span></a><span class="p">)</span> <span class="nf">Decode</span><span class="p">()</span> <span class="p">([]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
-  <h3 id="PSSH">type PSSH</h3>
-    <pre class="chroma"><span class="kd">type</span> <span class="nx">PSSH</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
-    <h4 id="PSSH.Decode">func (PSSH) Decode</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">p</span> <a href="#PSSH"><span class="nx">PSSH</span></a><span class="p">)</span> <span class="nf">Decode</span><span class="p">()</span> <span class="p">([]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
-  <h3 id="Range">type Range</h3>
+    <h3 id="Range">type Range</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">Range</span> <span class="kd">struct</span> <span class="p">{</span>
 	<span id="Range.Start"><span class="nx">Start</span></span> <a href="https://pkg.go.dev/builtin#uint64"><span class="kt">uint64</span></a>
 	<span id="Range.End"><span class="nx">End</span></span>   <a href="https://pkg.go.dev/builtin#uint64"><span class="kt">uint64</span></a>
@@ -115,8 +93,6 @@
 </span><span class="c1"></span><span class="p">}</span></pre>
     <h4 id="Unmarshal">func Unmarshal</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="nf">Unmarshal</span><span class="p">(</span><span class="nx">b</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span> <span class="p">([]</span><a href="#Representation"><span class="nx">Representation</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
-  <h4 id="Representation.Default_KID">func (Representation) Default_KID</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Default_KID</span><span class="p">()</span> <span class="p">(</span><a href="#Default_KID"><span class="nx">Default_KID</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
   <h4 id="Representation.Ext">func (Representation) Ext</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Ext</span><span class="p">()</span> <span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
   <h4 id="Representation.Initialization">func (Representation) Initialization</h4>
@@ -124,9 +100,7 @@
   <h4 id="Representation.Media">func (Representation) Media</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Media</span><span class="p">()</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
   <p>we need the length for progress meter, so cannot use a channel
-<h4 id="Representation.PSSH">func (Representation) PSSH</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">PSSH</span><span class="p">()</span> <span class="p">(</span><a href="#PSSH"><span class="nx">PSSH</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
-  <h4 id="Representation.Protection">func (Representation) Protection</h4>
+<h4 id="Representation.Protection">func (Representation) Protection</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Protection</span><span class="p">()</span> <span class="p">[]</span><a href="#ContentProtection"><span class="nx">ContentProtection</span></a></pre>
   <h4 id="Representation.String">func (Representation) String</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">String</span><span class="p">()</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>

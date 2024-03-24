@@ -1,31 +1,13 @@
 package dash
 
-import (
-   "encoding/base64"
-   "encoding/hex"
-   "fmt"
-   "strings"
-)
+import "fmt"
 
 type ContentProtection struct {
    SchemeIdUri string `xml:"schemeIdUri,attr"`
    // this might not exist
-   Default_KID Default_KID `xml:"default_KID,attr"`
+   Default_KID string `xml:"default_KID,attr"`
    // this might not exist
-   PSSH PSSH `xml:"pssh"`
-}
-
-type Default_KID string
-
-func (d Default_KID) Decode() ([]byte, error) {
-   s := strings.ReplaceAll(string(d), "-", "")
-   return hex.DecodeString(s)
-}
-
-type PSSH string
-
-func (p PSSH) Decode() ([]byte, error) {
-   return base64.StdEncoding.DecodeString(string(p))
+   PSSH string `xml:"pssh"`
 }
 
 type Range struct {
@@ -69,24 +51,4 @@ type Representation struct {
    SegmentTemplate *SegmentTemplate
    // this might not exist
    Width int64 `xml:"width,attr"`
-}
-
-func (r Representation) Default_KID() (Default_KID, bool) {
-   for _, p := range r.Protection() {
-      if p.SchemeIdUri == "urn:mpeg:dash:mp4protection:2011" {
-         return p.Default_KID, true
-      }
-   }
-   return "", false
-}
-
-func (r Representation) PSSH() (PSSH, bool) {
-   for _, p := range r.Protection() {
-      if p.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
-         if p.PSSH != "" {
-            return p.PSSH, true
-         }
-      }
-   }
-   return "", false
 }
