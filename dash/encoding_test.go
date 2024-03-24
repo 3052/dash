@@ -17,14 +17,8 @@ func TestPsshKid(t *testing.T) {
          }
          protect := rep.Protection()
          fmt.Println("mpd =", test)
-         fmt.Println("protect == nil", protect == nil)
          fmt.Println("type =", rep.mime_type())
-         if protect != nil {
-            _, pssh := rep.PSSH()
-            _, kid := rep.Default_KID()
-            fmt.Println("kid =", kid)
-            fmt.Println("pssh =", pssh)
-         }
+         fmt.Printf("protect = %+v\n", protect)
       }
    }
 }
