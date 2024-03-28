@@ -12,12 +12,10 @@ type flags struct {
    address string
    id string
    url *url.URL
-   channels int
 }
 
 func main() {
    var f flags
-   flag.IntVar(&f.channels, "c", 3, "channels")
    flag.StringVar(&f.address, "a", "", "address")
    flag.StringVar(&f.id, "i", "", "ID")
    flag.Parse()
