@@ -4,7 +4,34 @@ import (
    "fmt"
    "os"
    "testing"
+   "time"
 )
+
+func TestDuration(t *testing.T) {
+   for _, name := range tests {
+      reps, err := reader(name)
+      if err != nil {
+         t.Fatal(err)
+      }
+      raw := reps[0].adaptation_set.period.mpd.MediaPresentationDuration
+      fmt.Printf("%v %q\n", name, raw)
+      duration, err := time.ParseDuration(raw)
+      if err != nil {
+         t.Fatal(err)
+      }
+      fmt.Println(duration)
+   }
+}
+
+var tests = []string{
+   "mpd/amc.mpd",
+   "mpd/hulu.mpd",
+   "mpd/mubi.mpd",
+   "mpd/nbc.mpd",
+   "mpd/paramount.mpd",
+   "mpd/roku.mpd",
+   "mpd/stan.mpd",
+}
 
 func reader(name string) ([]Representation, error) {
    text, err := os.ReadFile(name)
@@ -12,17 +39,4 @@ func reader(name string) ([]Representation, error) {
       return nil, err
    }
    return Unmarshal(text)
-}
-
-func TestMedia(t *testing.T) {
-   for _, test := range media_tests {
-      fmt.Println(test[0] + ":")
-      reps, err := reader(test[0])
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, media := range reps[0].Media() {
-         fmt.Println(test[1] + media)
-      }
-   }
 }

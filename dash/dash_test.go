@@ -6,6 +6,19 @@ import (
    "testing"
 )
 
+func TestMedia(t *testing.T) {
+   for _, test := range media_tests {
+      fmt.Println(test[0] + ":")
+      reps, err := reader(test[0])
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, media := range reps[0].Media() {
+         fmt.Println(test[1] + media)
+      }
+   }
+}
+
 func TestPsshKid(t *testing.T) {
    for _, test := range tests {
       reps, err := reader(test)
@@ -62,15 +75,6 @@ func TestDelete(t *testing.T) {
          fmt.Println(rep)
       }
    }
-}
-
-var tests = []string{
-   "mpd/amc.mpd",
-   "mpd/hulu.mpd",
-   "mpd/mubi.mpd",
-   "mpd/nbc.mpd",
-   "mpd/paramount.mpd",
-   "mpd/roku.mpd",
 }
 
 var media_tests = [][]string{
