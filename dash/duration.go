@@ -1,6 +1,25 @@
 package dash
 
-import "encoding/xml"
+import (
+   "encoding/xml"
+   "strings"
+   "time"
+)
+
+func (m mpd) seconds() (float64, error) {
+   s := strings.TrimPrefix(m.MediaPresentationDuration, "PT")
+   duration, err := time.ParseDuration(strings.ToLower(s))
+   if err != nil {
+      return 0, err
+   }
+   return duration.Seconds(), nil
+}
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
+type mpd struct {
+   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
+   Period []period
+}
 
 type Representation struct {
    adaptation_set *adaptation_set
@@ -10,8 +29,6 @@ type Representation struct {
    BaseURL string
    // this might not exist, or might be under AdaptationSet
    Codecs string `xml:"codecs,attr"`
-   // this might be under AdaptationSet
-   ContentProtection []ContentProtection
    // this might not exist
    Height int64 `xml:"height,attr"`
    // this might be under AdaptationSet
@@ -33,8 +50,6 @@ type adaptation_set struct {
    period *period
    // this might not exist, or might be under Representation
    Codecs string `xml:"codecs,attr"`
-   // this might be under Representation
-   ContentProtection []ContentProtection
    // this might not exist
    Lang string `xml:"lang,attr"`
    // this might be under Representation
@@ -53,12 +68,6 @@ type period struct {
    AdaptationSet []adaptation_set
 }
 
-type mpd struct {
-   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
-   Period []period
-}
-
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
 func Unmarshal(b []byte) ([]Representation, error) {
    var media mpd
    err := xml.Unmarshal(b, &media)

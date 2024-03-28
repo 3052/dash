@@ -2,52 +2,27 @@ package dash
 
 import (
    "fmt"
+   "os"
    "slices"
    "testing"
 )
 
-func TestMedia(t *testing.T) {
-   for _, test := range media_tests {
-      fmt.Println(test[0] + ":")
-      reps, err := reader(test[0])
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, media := range reps[0].Media() {
-         fmt.Println(test[1] + media)
-      }
-   }
+var tests = []string{
+   "mpd/amc.mpd",
+   "mpd/hulu.mpd",
+   "mpd/mubi.mpd",
+   "mpd/nbc.mpd",
+   "mpd/paramount.mpd",
+   "mpd/roku.mpd",
+   "mpd/stan.mpd",
 }
 
-func TestPsshKid(t *testing.T) {
-   for _, test := range tests {
-      reps, err := reader(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for i, rep := range reps {
-         if i >= 1 {
-            fmt.Println()
-         }
-         protect := rep.Protection()
-         fmt.Println("mpd =", test)
-         fmt.Println("type =", rep.mime_type())
-         fmt.Printf("protect = %+v\n", protect)
-      }
-   }
-}
-
-func TestRange(t *testing.T) {
-   reps, err := reader("mpd/hulu.mpd")
+func reader(name string) ([]Representation, error) {
+   text, err := os.ReadFile(name)
    if err != nil {
-      t.Fatal(err)
+      return nil, err
    }
-   for _, rep := range reps {
-      r, err := rep.SegmentBase.Initialization.Range.Scan()
-      fmt.Print(r.Start, " ", r.End, " ", err, " ")
-      r, err = rep.SegmentBase.IndexRange.Scan()
-      fmt.Print(r.Start, " ", r.End, " ", err, "\n")
-   }
+   return Unmarshal(text)
 }
 
 func TestDelete(t *testing.T) {
@@ -63,9 +38,6 @@ func TestDelete(t *testing.T) {
          if _, ok := r.Ext(); !ok {
             return true
          }
-         if r.Protection() == nil {
-            return true
-         }
          return false
       })
       for i, rep := range reps {
@@ -74,6 +46,32 @@ func TestDelete(t *testing.T) {
          }
          fmt.Println(rep)
       }
+   }
+}
+
+func TestMedia(t *testing.T) {
+   for _, test := range media_tests {
+      fmt.Println(test[0] + ":")
+      reps, err := reader(test[0])
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, media := range reps[0].Media() {
+         fmt.Println(test[1] + media)
+      }
+   }
+}
+
+func TestRange(t *testing.T) {
+   reps, err := reader("mpd/hulu.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   for _, rep := range reps {
+      r, err := rep.SegmentBase.Initialization.Range.Scan()
+      fmt.Print(r.Start, " ", r.End, " ", err, " ")
+      r, err = rep.SegmentBase.IndexRange.Scan()
+      fmt.Print(r.Start, " ", r.End, " ", err, "\n")
    }
 }
 

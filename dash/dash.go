@@ -22,14 +22,6 @@ func (r RawRange) Scan() (*Range, error) {
    return &v, nil
 }
 
-type ContentProtection struct {
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-   // this might not exist
-   DefaultKid string `xml:"default_KID,attr"`
-   // this might not exist
-   PSSH string `xml:"pssh"`
-}
-
 // we need the length for progress meter, so cannot use a channel
 func (r Representation) Media() []string {
    st, ok := r.segment_template()
@@ -75,13 +67,6 @@ func (r Representation) Initialization() (string, bool) {
       }
    }
    return "", false
-}
-
-func (r Representation) Protection() []ContentProtection {
-   if v := r.ContentProtection; v != nil {
-      return v
-   }
-   return r.adaptation_set.ContentProtection
 }
 
 func (r Representation) String() string {
