@@ -8,12 +8,59 @@ import (
    "time"
 )
 
-////////////////////////
-
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
 type mpd struct {
    MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
    Period []period
+}
+
+type period struct {
+   mpd *mpd
+   AdaptationSet []adaptation_set
+}
+
+func (r Representation) GetCodecs() (string, bool) {
+   if v := r.Codecs; v != "" {
+      return v, true
+   }
+   if v := r.adaptation_set.Codecs; v != "" {
+      return v, true
+   }
+   return "", false
+}
+
+////////////////////////
+
+type adaptation_set struct {
+   period *period
+   Codecs string `xml:"codecs,attr"`
+   Lang string `xml:"lang,attr"`
+   MimeType string `xml:"mimeType,attr"`
+   Representation []Representation
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+}
+
+func Unmarshal(b []byte) ([]Representation, error) {
+   var media mpd
+   err := xml.Unmarshal(b, &media)
+   if err != nil {
+      return nil, err
+   }
+   var rs []Representation
+   for _, p := range media.Period {
+      p.mpd = &media
+      for _, a := range p.AdaptationSet {
+         a.period = &p
+         for _, r := range a.Representation {
+            r.adaptation_set = &a
+            rs = append(rs, r)
+         }
+      }
+   }
+   return rs, nil
 }
 
 type Representation struct {
@@ -44,23 +91,6 @@ func (r Representation) Ext() (string, bool) {
    return "", false
 }
 
-type adaptation_set struct {
-   period *period
-   Codecs string `xml:"codecs,attr"`
-   Lang string `xml:"lang,attr"`
-   MimeType string `xml:"mimeType,attr"`
-   Representation []Representation
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-}
-
-type period struct {
-   mpd *mpd
-   AdaptationSet []adaptation_set
-}
-
 type Range string
 
 // range-start and range-end can both exceed 32 bits, so we must use 64 bit
@@ -71,36 +101,6 @@ func (r Range) Scan() (uint64, uint64, error) {
       return 0, 0, err
    }
    return start, end, nil
-}
-
-func Unmarshal(b []byte) ([]Representation, error) {
-   var media mpd
-   err := xml.Unmarshal(b, &media)
-   if err != nil {
-      return nil, err
-   }
-   var rs []Representation
-   for _, p := range media.Period {
-      p.mpd = &media
-      for _, a := range p.AdaptationSet {
-         a.period = &p
-         for _, r := range a.Representation {
-            r.adaptation_set = &a
-            rs = append(rs, r)
-         }
-      }
-   }
-   return rs, nil
-}
-
-func (r Representation) GetCodecs() (string, bool) {
-   if v := r.Codecs; v != "" {
-      return v, true
-   }
-   if v := r.adaptation_set.Codecs; v != "" {
-      return v, true
-   }
-   return "", false
 }
 
 func (r Representation) GetMimeType() string {

@@ -1,6 +1,7 @@
 package dash
 
 import (
+   "encoding/xml"
    "fmt"
    "os"
    "slices"
@@ -19,8 +20,6 @@ var tests = []string{
    "mpd/stan.mpd",
 }
 
-//////////////////////////////////////////////////////
-
 func TestMpd(t *testing.T) {
    for _, test := range tests {
       text, err := os.ReadFile(test)
@@ -31,6 +30,63 @@ func TestMpd(t *testing.T) {
       xml.Unmarshal(text, &media)
       if media.MediaPresentationDuration == "" {
          t.Fatal("MediaPresentationDuration", test)
+      }
+      if len(media.Period) == 0 {
+         t.Fatal("Period", test)
+      }
+   }
+}
+
+func TestPeriod(t *testing.T) {
+   for _, test := range tests {
+      text, err := os.ReadFile(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      reps, err := Unmarshal(text)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, rep := range reps {
+         if rep.adaptation_set.period.mpd == nil {
+            t.Fatal("mpd", test)
+         }
+      }
+      var media mpd
+      xml.Unmarshal(text, &media)
+      for _, p := range media.Period {
+         if len(p.AdaptationSet) == 0 {
+            t.Fatal("AdaptationSet", test)
+         }
+      }
+   }
+}
+
+//////////////////////////////////////////////////////
+
+func TestAdaptation(t *testing.T) {
+   for _, test := range tests {
+      text, err := os.ReadFile(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      reps, err := Unmarshal(text)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, rep := range reps {
+         if _, ok := rep.GetCodecs(); !ok {
+            fmt.Println("GetCodecs needed")
+         }
+      }
+      var media mpd
+      xml.Unmarshal(text, &media)
+      for _, per := range media.Period {
+         for _, ada := range per.AdaptationSet {
+            if ada.Lang == "" {
+               t.Fatal("Lang")
+            }
+         }
       }
    }
 }
