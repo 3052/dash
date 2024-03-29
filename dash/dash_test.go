@@ -2,31 +2,19 @@ package dash
 
 import (
    "fmt"
-   "slices"
    "testing"
 )
 
-func TestDelete(t *testing.T) {
-   for i, name := range tests {
-      if i >= 1 {
-         fmt.Println()
-      }
-      reps, err := reader(name)
-      if err != nil {
-         t.Fatal(err)
-      }
-      reps = slices.DeleteFunc(reps, func(r Representation) bool {
-         if _, ok := r.Ext(); !ok {
-            return true
-         }
-         return false
-      })
-      for i, rep := range reps {
-         if i >= 1 {
-            fmt.Println()
-         }
-         fmt.Println(rep)
-      }
+func TestRange(t *testing.T) {
+   reps, err := reader("mpd/hulu.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   for _, rep := range reps {
+      start, end, err := rep.SegmentBase.Initialization.Range.Scan()
+      fmt.Print(start, " ", end, " ", err, " ")
+      start, end, err = rep.SegmentBase.IndexRange.Scan()
+      fmt.Print(start, " ", end, " ", err, "\n")
    }
 }
 
@@ -53,16 +41,6 @@ func TestDuration(t *testing.T) {
       }
       fmt.Println(name, duration)
    }
-}
-
-var tests = []string{
-   "mpd/amc.mpd",
-   "mpd/hulu.mpd",
-   "mpd/mubi.mpd",
-   "mpd/nbc.mpd",
-   "mpd/paramount.mpd",
-   "mpd/roku.mpd",
-   "mpd/stan.mpd",
 }
 
 var media_tests = []struct{

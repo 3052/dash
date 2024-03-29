@@ -2,10 +2,23 @@ package dash
 
 import (
    "encoding/xml"
+   "fmt"
    "strconv"
    "strings"
    "time"
 )
+
+type Range string
+
+// range-start and range-end can both exceed 32 bits, so we must use 64 bit
+func (r Range) Scan() (uint64, uint64, error) {
+   var start, end uint64
+   _, err := fmt.Sscanf(string(r), "%v-%v", &start, &end)
+   if err != nil {
+      return 0, 0, err
+   }
+   return start, end, nil
+}
 
 func Unmarshal(b []byte) ([]Representation, error) {
    var media mpd
@@ -25,16 +38,6 @@ func Unmarshal(b []byte) ([]Representation, error) {
       }
    }
    return rs, nil
-}
-
-func (r Representation) Ext() (string, bool) {
-   switch r.GetMimeType() {
-   case "audio/mp4":
-      return ".m4a", true
-   case "video/mp4":
-      return ".m4v", true
-   }
-   return "", false
 }
 
 func (r Representation) GetCodecs() (string, bool) {
@@ -155,18 +158,6 @@ func (s SegmentTemplate) replace(old string, number int) string {
    return strings.Replace(s.Media, old, strconv.Itoa(number), 1)
 }
 
-type adaptation_set struct {
-   period *period
-   Codecs string `xml:"codecs,attr"`
-   Lang string `xml:"lang,attr"`
-   MimeType string `xml:"mimeType,attr"`
-   Representation []Representation
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-}
-
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
 type mpd struct {
    MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
@@ -180,9 +171,4 @@ func (m mpd) seconds() (float64, error) {
       return 0, err
    }
    return duration.Seconds(), nil
-}
-
-type period struct {
-   mpd *mpd
-   AdaptationSet []adaptation_set
 }
