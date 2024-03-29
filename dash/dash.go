@@ -8,6 +8,59 @@ import (
    "time"
 )
 
+////////////////////////
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
+type mpd struct {
+   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
+   Period []period
+}
+
+type Representation struct {
+   adaptation_set *adaptation_set
+   Bandwidth int64 `xml:"bandwidth,attr"`
+   BaseURL string
+   Codecs string `xml:"codecs,attr"`
+   Height int64 `xml:"height,attr"`
+   ID string `xml:"id,attr"`
+   MimeType string `xml:"mimeType,attr"`
+   SegmentBase *struct {
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+      IndexRange Range `xml:"indexRange,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width int64 `xml:"width,attr"`
+}
+
+func (r Representation) Ext() (string, bool) {
+   switch r.GetMimeType() {
+   case "audio/mp4":
+      return ".m4a", true
+   case "video/mp4":
+      return ".m4v", true
+   }
+   return "", false
+}
+
+type adaptation_set struct {
+   period *period
+   Codecs string `xml:"codecs,attr"`
+   Lang string `xml:"lang,attr"`
+   MimeType string `xml:"mimeType,attr"`
+   Representation []Representation
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+}
+
+type period struct {
+   mpd *mpd
+   AdaptationSet []adaptation_set
+}
+
 type Range string
 
 // range-start and range-end can both exceed 32 bits, so we must use 64 bit
@@ -156,12 +209,6 @@ type SegmentTemplate struct {
 
 func (s SegmentTemplate) replace(old string, number int) string {
    return strings.Replace(s.Media, old, strconv.Itoa(number), 1)
-}
-
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
-type mpd struct {
-   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
-   Period []period
 }
 
 func (m mpd) seconds() (float64, error) {
