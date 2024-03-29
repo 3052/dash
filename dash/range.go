@@ -22,8 +22,9 @@ type Representation struct {
 
 type Range string
 
-func (r Range) Scan() (int, int, error) {
-   var start, end int
+// range-start and range-end can both exceed 32 bits, so we must use 64 bit
+func (r Range) Scan() (uint64, uint64, error) {
+   var start, end uint64
    _, err := fmt.Sscanf(string(r), "%v-%v", &start, &end)
    if err != nil {
       return 0, 0, err
