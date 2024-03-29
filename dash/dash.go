@@ -1,30 +1,35 @@
 package dash
 
 import (
+   "encoding/xml"
    "fmt"
    "strconv"
    "strings"
+   "time"
 )
 
-type Range struct {
-   Start uint64
-   End uint64
+func (r Representation) Initialization() (string, bool) {
+   if v, ok := r.GetSegmentTemplate(); ok {
+      if v := v.Initialization; v != "" {
+         return strings.Replace(v, "$RepresentationID$", r.ID, 1), true
+      }
+   }
+   return "", false
 }
 
-type RawRange string
-
-func (r RawRange) Scan() (*Range, error) {
-   var v Range
-   _, err := fmt.Sscanf(string(r), "%v-%v", &v.Start, &v.End)
-   if err != nil {
-      return nil, err
+func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
+   if v := r.SegmentTemplate; v != nil {
+      return v, true
    }
-   return &v, nil
+   if v := r.adaptation_set.SegmentTemplate; v != nil {
+      return v, true
+   }
+   return nil, false
 }
 
 // we need the length for progress meter, so cannot use a channel
 func (r Representation) Media() []string {
-   st, ok := r.segment_template()
+   st, ok := r.GetSegmentTemplate()
    if !ok {
       return nil
    }
@@ -49,24 +54,72 @@ func (r Representation) Media() []string {
    }
    return media
 }
-
-func (r Representation) Ext() (string, bool) {
-   switch r.mime_type() {
-   case "audio/mp4":
-      return ".m4a", true
-   case "video/mp4":
-      return ".m4v", true
-   }
-   return "", false
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
+type mpd struct {
+   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
+   Period []period
 }
 
-func (r Representation) Initialization() (string, bool) {
-   if st, ok := r.segment_template(); ok {
-      if i := st.Initialization; i != "" {
-         return strings.Replace(i, "$RepresentationID$", r.ID, 1), true
+func (m mpd) seconds() (float64, error) {
+   s := strings.TrimPrefix(m.MediaPresentationDuration, "PT")
+   duration, err := time.ParseDuration(strings.ToLower(s))
+   if err != nil {
+      return 0, err
+   }
+   return duration.Seconds(), nil
+}
+
+type period struct {
+   mpd *mpd
+   AdaptationSet []adaptation_set
+}
+
+type Range struct {
+   Start uint64
+   End uint64
+}
+
+type RawRange string
+
+func (r RawRange) Scan() (*Range, error) {
+   var v Range
+   _, err := fmt.Sscanf(string(r), "%v-%v", &v.Start, &v.End)
+   if err != nil {
+      return nil, err
+   }
+   return &v, nil
+}
+
+func Unmarshal(b []byte) ([]Representation, error) {
+   var media mpd
+   err := xml.Unmarshal(b, &media)
+   if err != nil {
+      return nil, err
+   }
+   var rs []Representation
+   for _, p := range media.Period {
+      p.mpd = &media
+      for _, a := range p.AdaptationSet {
+         a.period = &p
+         for _, r := range a.Representation {
+            r.adaptation_set = &a
+            rs = append(rs, r)
+         }
       }
    }
-   return "", false
+   return rs, nil
+}
+
+type adaptation_set struct {
+   period *period
+   Codecs string `xml:"codecs,attr"`
+   Lang string `xml:"lang,attr"`
+   MimeType string `xml:"mimeType,attr"`
+   Representation []Representation
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
 }
 
 func (r Representation) String() string {
@@ -87,12 +140,12 @@ func (r Representation) String() string {
    }
    b = append(b, "bandwidth = "...)
    b = strconv.AppendInt(b, r.Bandwidth, 10)
-   if v, ok := r.codecs(); ok {
+   if v, ok := r.GetCodecs(); ok {
       b = append(b, "\ncodecs = "...)
       b = append(b, v...)
    }
    b = append(b, "\ntype = "...)
-   b = append(b, r.mime_type()...)
+   b = append(b, r.GetMimeType()...)
    if v := r.adaptation_set.Role; v != nil {
       b = append(b, "\nrole = "...)
       b = append(b, v.Value...)
@@ -106,7 +159,7 @@ func (r Representation) String() string {
    return string(b)
 }
 
-func (r Representation) codecs() (string, bool) {
+func (r Representation) GetCodecs() (string, bool) {
    if v := r.Codecs; v != "" {
       return v, true
    }
@@ -116,34 +169,50 @@ func (r Representation) codecs() (string, bool) {
    return "", false
 }
 
-func (r Representation) mime_type() string {
+type Representation struct {
+   adaptation_set *adaptation_set
+   Bandwidth int64 `xml:"bandwidth,attr"`
+   BaseURL string
+   Codecs string `xml:"codecs,attr"`
+   Height int64 `xml:"height,attr"`
+   ID string `xml:"id,attr"`
+   MimeType string `xml:"mimeType,attr"`
+   SegmentBase *struct {
+      Initialization struct {
+         Range RawRange `xml:"range,attr"`
+      }
+      IndexRange RawRange `xml:"indexRange,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width int64 `xml:"width,attr"`
+}
+
+func (r Representation) GetMimeType() string {
    if v := r.MimeType; v != "" {
       return v
    }
    return r.adaptation_set.MimeType
 }
 
-func (r Representation) segment_template() (*SegmentTemplate, bool) {
-   if v := r.SegmentTemplate; v != nil {
-      return v, true
+func (r Representation) Ext() (string, bool) {
+   switch r.GetMimeType() {
+   case "audio/mp4":
+      return ".m4a", true
+   case "video/mp4":
+      return ".m4v", true
    }
-   if v := r.adaptation_set.SegmentTemplate; v != nil {
-      return v, true
-   }
-   return nil, false
+   return "", false
 }
 
 type SegmentTemplate struct {
+   Initialization string `xml:"initialization,attr"`
    Media string `xml:"media,attr"`
-   SegmentTimeline struct {
+   SegmentTimeline *struct {
       S []struct {
-         // duration
-         D int `xml:"d,attr"`
-         // repeat. this may not exist
-         R int `xml:"r,attr"`
+         D int `xml:"d,attr"` // duration
+         R int `xml:"r,attr"` // repeat
       }
    }
    StartNumber int `xml:"startNumber,attr"`
-   // this may not exist
-   Initialization string `xml:"initialization,attr"`
 }
+
