@@ -2,8 +2,33 @@ package dash
 
 import (
    "fmt"
+   "slices"
    "testing"
 )
+
+func TestDelete(t *testing.T) {
+   for i, name := range tests {
+      if i >= 1 {
+         fmt.Println()
+      }
+      reps, err := reader(name)
+      if err != nil {
+         t.Fatal(err)
+      }
+      reps = slices.DeleteFunc(reps, func(r Representation) bool {
+         if _, ok := r.Ext(); !ok {
+            return true
+         }
+         return false
+      })
+      for i, rep := range reps {
+         if i >= 1 {
+            fmt.Println()
+         }
+         fmt.Println(rep)
+      }
+   }
+}
 
 func TestMedia(t *testing.T) {
    for _, test := range media_tests {

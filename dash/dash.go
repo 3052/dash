@@ -7,11 +7,6 @@ import (
    "time"
 )
 
-type Range struct {
-   Start uint64
-   End uint64
-}
-
 type RawRange string
 
 func (r RawRange) Scan() (*Range, error) {
@@ -21,6 +16,39 @@ func (r RawRange) Scan() (*Range, error) {
       return nil, err
    }
    return &v, nil
+}
+
+type Range struct {
+   Start uint64
+   End uint64
+}
+
+type SegmentTemplate struct {
+   Initialization string `xml:"initialization,attr"`
+   Media string `xml:"media,attr"`
+   SegmentTimeline *struct {
+      S []struct {
+         D int `xml:"d,attr"` // duration
+         R int `xml:"r,attr"` // repeat
+      }
+   }
+   StartNumber *int `xml:"startNumber,attr"`
+}
+
+func (s SegmentTemplate) replace(old string, number int) string {
+   return strings.Replace(s.Media, old, strconv.Itoa(number), 1)
+}
+
+type adaptation_set struct {
+   period *period
+   Codecs string `xml:"codecs,attr"`
+   Lang string `xml:"lang,attr"`
+   MimeType string `xml:"mimeType,attr"`
+   Representation []Representation
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
 }
 
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
@@ -41,32 +69,4 @@ func (m mpd) seconds() (float64, error) {
 type period struct {
    mpd *mpd
    AdaptationSet []adaptation_set
-}
-
-type adaptation_set struct {
-   period *period
-   Codecs string `xml:"codecs,attr"`
-   Lang string `xml:"lang,attr"`
-   MimeType string `xml:"mimeType,attr"`
-   Representation []Representation
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-}
-
-type SegmentTemplate struct {
-   Initialization string `xml:"initialization,attr"`
-   Media string `xml:"media,attr"`
-   SegmentTimeline *struct {
-      S []struct {
-         D int `xml:"d,attr"` // duration
-         R int `xml:"r,attr"` // repeat
-      }
-   }
-   StartNumber *int `xml:"startNumber,attr"`
-}
-
-func (s SegmentTemplate) replace(old string, number int) string {
-   return strings.Replace(s.Media, old, strconv.Itoa(number), 1)
 }

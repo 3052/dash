@@ -6,6 +6,24 @@ import (
    "strings"
 )
 
+type Representation struct {
+   adaptation_set *adaptation_set
+   Bandwidth int64 `xml:"bandwidth,attr"`
+   BaseURL string
+   Codecs string `xml:"codecs,attr"`
+   Height int64 `xml:"height,attr"`
+   ID string `xml:"id,attr"`
+   MimeType string `xml:"mimeType,attr"`
+   SegmentBase *struct {
+      Initialization struct {
+         Range RawRange `xml:"range,attr"`
+      }
+      IndexRange RawRange `xml:"indexRange,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width int64 `xml:"width,attr"`
+}
+
 func Unmarshal(b []byte) ([]Representation, error) {
    var media mpd
    err := xml.Unmarshal(b, &media)
@@ -26,6 +44,33 @@ func Unmarshal(b []byte) ([]Representation, error) {
    return rs, nil
 }
 
+func (r Representation) Ext() (string, bool) {
+   switch r.GetMimeType() {
+   case "audio/mp4":
+      return ".m4a", true
+   case "video/mp4":
+      return ".m4v", true
+   }
+   return "", false
+}
+
+func (r Representation) GetCodecs() (string, bool) {
+   if v := r.Codecs; v != "" {
+      return v, true
+   }
+   if v := r.adaptation_set.Codecs; v != "" {
+      return v, true
+   }
+   return "", false
+}
+
+func (r Representation) GetMimeType() string {
+   if v := r.MimeType; v != "" {
+      return v
+   }
+   return r.adaptation_set.MimeType
+}
+
 func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
    if v := r.SegmentTemplate; v != nil {
       return v, true
@@ -43,6 +88,35 @@ func (r Representation) Initialization() (string, bool) {
       }
    }
    return "", false
+}
+
+// we need the length for progress meter, so cannot use a channel
+func (r Representation) Media() []string {
+   st, ok := r.GetSegmentTemplate()
+   if !ok {
+      return nil
+   }
+   st.Media = strings.Replace(st.Media, "$RepresentationID$", r.ID, 1)
+   var number int
+   if st.StartNumber != nil {
+      number = *st.StartNumber
+   }
+   var media []string
+   for _, segment := range st.SegmentTimeline.S {
+      for segment.R >= 0 {
+         var medium string
+         if st.StartNumber != nil {
+            medium = st.replace("$Number$", number)
+            number++
+         } else {
+            medium = st.replace("$Time$", number)
+            number += segment.D
+         }
+         media = append(media, medium)
+         segment.R--
+      }
+   }
+   return media
 }
 
 func (r Representation) String() string {
@@ -80,78 +154,4 @@ func (r Representation) String() string {
    b = append(b, "\nid = "...)
    b = append(b, r.ID...)
    return string(b)
-}
-
-func (r Representation) GetCodecs() (string, bool) {
-   if v := r.Codecs; v != "" {
-      return v, true
-   }
-   if v := r.adaptation_set.Codecs; v != "" {
-      return v, true
-   }
-   return "", false
-}
-
-type Representation struct {
-   adaptation_set *adaptation_set
-   Bandwidth int64 `xml:"bandwidth,attr"`
-   BaseURL string
-   Codecs string `xml:"codecs,attr"`
-   Height int64 `xml:"height,attr"`
-   ID string `xml:"id,attr"`
-   MimeType string `xml:"mimeType,attr"`
-   SegmentBase *struct {
-      Initialization struct {
-         Range RawRange `xml:"range,attr"`
-      }
-      IndexRange RawRange `xml:"indexRange,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-   Width int64 `xml:"width,attr"`
-}
-
-func (r Representation) GetMimeType() string {
-   if v := r.MimeType; v != "" {
-      return v
-   }
-   return r.adaptation_set.MimeType
-}
-
-func (r Representation) Ext() (string, bool) {
-   switch r.GetMimeType() {
-   case "audio/mp4":
-      return ".m4a", true
-   case "video/mp4":
-      return ".m4v", true
-   }
-   return "", false
-}
-
-// we need the length for progress meter, so cannot use a channel
-func (r Representation) Media() []string {
-   st, ok := r.GetSegmentTemplate()
-   if !ok {
-      return nil
-   }
-   st.Media = strings.Replace(st.Media, "$RepresentationID$", r.ID, 1)
-   var number int
-   if st.StartNumber != nil {
-      number = *st.StartNumber
-   }
-   var media []string
-   for _, segment := range st.SegmentTimeline.S {
-      for segment.R >= 0 {
-         var medium string
-         if st.StartNumber != nil {
-            medium = st.replace("$Number$", number)
-            number++
-         } else {
-            medium = st.replace("$Time$", number)
-            number += segment.D
-         }
-         media = append(media, medium)
-         segment.R--
-      }
-   }
-   return media
 }
