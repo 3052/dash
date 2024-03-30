@@ -19,53 +19,6 @@ type period struct {
    AdaptationSet []adaptation_set
 }
 
-func (r Representation) GetCodecs() (string, bool) {
-   if v := r.Codecs; v != "" {
-      return v, true
-   }
-   if v := r.adaptation_set.Codecs; v != "" {
-      return v, true
-   }
-   return "", false
-}
-
-func (r Representation) GetMimeType() string {
-   if v := r.MimeType; v != "" {
-      return v
-   }
-   return r.adaptation_set.MimeType
-}
-
-type adaptation_set struct {
-   period *period
-   Codecs string `xml:"codecs,attr"`
-   Lang *string `xml:"lang,attr"`
-   MimeType string `xml:"mimeType,attr"`
-   Representation []Representation
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-}
-
-type Representation struct {
-   adaptation_set *adaptation_set
-   Bandwidth int64 `xml:"bandwidth,attr"`
-   BaseURL *string
-   Codecs string `xml:"codecs,attr"`
-   Height *int64 `xml:"height,attr"`
-   ID string `xml:"id,attr"`
-   MimeType string `xml:"mimeType,attr"`
-   SegmentBase *struct {
-      Initialization struct {
-         Range Range `xml:"range,attr"`
-      }
-      IndexRange Range `xml:"indexRange,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-   Width *int64 `xml:"width,attr"`
-}
-
 type Range string
 
 func Unmarshal(b []byte) ([]Representation, error) {
@@ -158,6 +111,55 @@ func (m mpd) seconds() (float64, error) {
    return duration.Seconds(), nil
 }
 
+////////////////////////
+
+type adaptation_set struct {
+   period *period
+   Codecs string `xml:"codecs,attr"`
+   Lang *string `xml:"lang,attr"`
+   MimeType string `xml:"mimeType,attr"`
+   Representation []Representation
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+}
+
+type Representation struct {
+   adaptation_set *adaptation_set
+   Bandwidth int64 `xml:"bandwidth,attr"`
+   BaseURL *string
+   Codecs string `xml:"codecs,attr"`
+   Height *int64 `xml:"height,attr"`
+   ID string `xml:"id,attr"`
+   MimeType string `xml:"mimeType,attr"`
+   SegmentBase *struct {
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+      IndexRange Range `xml:"indexRange,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width *int64 `xml:"width,attr"`
+}
+
+func (r Representation) GetCodecs() (string, bool) {
+   if v := r.Codecs; v != "" {
+      return v, true
+   }
+   if v := r.adaptation_set.Codecs; v != "" {
+      return v, true
+   }
+   return "", false
+}
+
+func (r Representation) GetMimeType() string {
+   if v := r.MimeType; v != "" {
+      return v
+   }
+   return r.adaptation_set.MimeType
+}
+
 func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
    if v := r.SegmentTemplate; v != nil {
       return v, true
@@ -167,8 +169,6 @@ func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
    }
    return nil, false
 }
-
-////////////////////////
 
 type SegmentTemplate struct {
    
