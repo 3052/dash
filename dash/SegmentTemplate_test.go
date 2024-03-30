@@ -6,6 +6,32 @@ import (
    "testing"
 )
 
+func TestMedia(t *testing.T) {
+   for i, test := range tests {
+      if i >= 1 {
+         fmt.Println()
+      }
+      fmt.Println(test)
+      text, err := os.ReadFile(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      reps, err := Unmarshal(text)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, rep := range reps {
+         if v, ok := rep.GetSegmentTemplate(); ok {
+            media := v.GetMedia(rep.ID)
+            length := len(media)
+            if length >= 1 {
+               fmt.Println(media[length-1])
+            }
+         }
+      }
+   }
+}
+
 func TestSegmentTemplate(t *testing.T) {
    sets := struct{
       d set
@@ -14,7 +40,9 @@ func TestSegmentTemplate(t *testing.T) {
       initialization set
       media set
       segmentTimeline set
+      timescale set
    }{
+      make(set),
       make(set),
       make(set),
       make(set),
@@ -33,6 +61,11 @@ func TestSegmentTemplate(t *testing.T) {
       }
       for _, rep := range reps {
          if v, ok := rep.GetSegmentTemplate(); ok {
+            if v.Duration != nil {
+               sets.duration[1] = struct{}{}
+            } else {
+               sets.duration[0] = struct{}{}
+            }
             if v.Initialization != nil {
                sets.initialization[1] = struct{}{}
             } else {
@@ -42,6 +75,11 @@ func TestSegmentTemplate(t *testing.T) {
                sets.media[1] = struct{}{}
             } else {
                sets.media[0] = struct{}{}
+            }
+            if v.Timescale != nil {
+               sets.timescale[1] = struct{}{}
+            } else {
+               sets.timescale[0] = struct{}{}
             }
             if v := v.SegmentTimeline; v != nil {
                sets.segmentTimeline[1] = struct{}{}
@@ -78,30 +116,4 @@ var tests = []string{
    "mpd/roku-clear.mpd",
    "mpd/roku-protected.mpd",
    "mpd/stan.mpd",
-}
-
-func TestMedia(t *testing.T) {
-   for i, test := range tests {
-      if i >= 1 {
-         fmt.Println()
-      }
-      fmt.Println(test)
-      text, err := os.ReadFile(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      reps, err := Unmarshal(text)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, rep := range reps {
-         if v, ok := rep.GetSegmentTemplate(); ok {
-            media := v.GetMedia(rep.ID)
-            length := len(media)
-            if length >= 1 {
-               fmt.Println(media[length-1])
-            }
-         }
-      }
-   }
 }

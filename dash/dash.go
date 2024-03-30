@@ -8,6 +8,24 @@ import (
    "time"
 )
 
+type Representation struct {
+   Bandwidth int64 `xml:"bandwidth,attr"`
+   BaseURL *string
+   Codecs *string `xml:"codecs,attr"`
+   Height *int64 `xml:"height,attr"`
+   ID string `xml:"id,attr"`
+   MimeType *string `xml:"mimeType,attr"`
+   SegmentBase *struct {
+      IndexRange Range `xml:"indexRange,attr"`
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+   }
+   SegmentTemplate *SegmentTemplate
+   Width *int64 `xml:"width,attr"`
+   adaptation_set *AdaptationSet
+}
+
 func Unmarshal(b []byte) ([]Representation, error) {
    var media mpd
    err := xml.Unmarshal(b, &media)
@@ -112,24 +130,6 @@ func (r Range) Scan() (uint64, uint64, error) {
       return 0, 0, err
    }
    return start, end, nil
-}
-
-type Representation struct {
-   Bandwidth int64 `xml:"bandwidth,attr"`
-   BaseURL *string
-   Codecs *string `xml:"codecs,attr"`
-   Height *int64 `xml:"height,attr"`
-   ID string `xml:"id,attr"`
-   MimeType *string `xml:"mimeType,attr"`
-   SegmentBase *struct {
-      IndexRange Range `xml:"indexRange,attr"`
-      Initialization struct {
-         Range Range `xml:"range,attr"`
-      }
-   }
-   SegmentTemplate *SegmentTemplate
-   Width *int64 `xml:"width,attr"`
-   adaptation_set *AdaptationSet
 }
 
 func (r Representation) GetAdaptationSet() *AdaptationSet {
