@@ -27,7 +27,7 @@ func TestDelete(t *testing.T) {
          if _, ok := r.Ext(); !ok {
             return true
          }
-         if v, _ := r.Seconds(); v < 9 {
+         if v, _ := r.GetAdaptationSet().GetPeriod().Seconds(); v < 9 {
             return true
          }
          return false

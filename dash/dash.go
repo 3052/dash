@@ -8,33 +8,6 @@ import (
    "time"
 )
 
-func (r Representation) Seconds() (float64, error) {
-   s := strings.TrimPrefix(r.adaptation_set.period.get_duration(), "PT")
-   d, err := time.ParseDuration(strings.ToLower(s))
-   if err != nil {
-      return 0, err
-   }
-   return d.Seconds(), nil
-}
-
-type Representation struct {
-   Bandwidth int64 `xml:"bandwidth,attr"`
-   BaseURL *string
-   Codecs *string `xml:"codecs,attr"`
-   Height *int64 `xml:"height,attr"`
-   ID string `xml:"id,attr"`
-   MimeType *string `xml:"mimeType,attr"`
-   SegmentBase *struct {
-      IndexRange Range `xml:"indexRange,attr"`
-      Initialization struct {
-         Range Range `xml:"range,attr"`
-      }
-   }
-   SegmentTemplate *SegmentTemplate
-   Width *int64 `xml:"width,attr"`
-   adaptation_set *adaptation_set
-}
-
 func Unmarshal(b []byte) ([]Representation, error) {
    var media mpd
    err := xml.Unmarshal(b, &media)
@@ -141,7 +114,29 @@ func (r Range) Scan() (uint64, uint64, error) {
    return start, end, nil
 }
 
-type adaptation_set struct {
+type Representation struct {
+   Bandwidth int64 `xml:"bandwidth,attr"`
+   BaseURL *string
+   Codecs *string `xml:"codecs,attr"`
+   Height *int64 `xml:"height,attr"`
+   ID string `xml:"id,attr"`
+   MimeType *string `xml:"mimeType,attr"`
+   SegmentBase *struct {
+      IndexRange Range `xml:"indexRange,attr"`
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+   }
+   SegmentTemplate *SegmentTemplate
+   Width *int64 `xml:"width,attr"`
+   adaptation_set *AdaptationSet
+}
+
+func (r Representation) GetAdaptationSet() *AdaptationSet {
+   return r.adaptation_set
+}
+
+type AdaptationSet struct {
    Codecs *string `xml:"codecs,attr"`
    Lang *string `xml:"lang,attr"`
    MimeType *string `xml:"mimeType,attr"`
@@ -150,24 +145,36 @@ type adaptation_set struct {
       Value string `xml:"value,attr"`
    }
    SegmentTemplate *SegmentTemplate
-   period *period
+   period *Period
+}
+
+func (a AdaptationSet) GetPeriod() *Period {
+   return a.period
 }
 
 type mpd struct {
    MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
-   Period []period
+   Period []Period
 }
 
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
-type period struct {
-   AdaptationSet []adaptation_set
+type Period struct {
+   AdaptationSet []AdaptationSet
    Duration *string `xml:"duration,attr"`
    mpd *mpd
 }
 
-func (p period) get_duration() string {
+func (p Period) GetDuration() string {
    if v := p.Duration; v != nil {
       return *v
    }
    return p.mpd.MediaPresentationDuration
+}
+
+func (p Period) Seconds() (float64, error) {
+   s := strings.TrimPrefix(p.GetDuration(), "PT")
+   d, err := time.ParseDuration(strings.ToLower(s))
+   if err != nil {
+      return 0, err
+   }
+   return d.Seconds(), nil
 }

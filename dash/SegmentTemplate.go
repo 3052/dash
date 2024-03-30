@@ -5,6 +5,21 @@ import (
    "strings"
 )
 
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
+type SegmentTemplate struct {
+   Duration string `xml:"duration,attr"`
+   Initialization *string `xml:"initialization,attr"`
+   Media string `xml:"media,attr"`
+   SegmentTimeline *struct {
+      S []struct {
+         D int `xml:"d,attr"` // duration
+         R *int `xml:"r,attr"` // repeat
+      }
+   }
+   StartNumber *int `xml:"startNumber,attr"`
+   Timescale string `xml:"timescale,attr"`
+}
+
 func (s SegmentTemplate) GetMedia(id string) []string {
    timeline := s.SegmentTimeline
    if timeline == nil {
@@ -36,18 +51,6 @@ func (s SegmentTemplate) GetMedia(id string) []string {
       }
    }
    return media
-}
-
-type SegmentTemplate struct {
-   Initialization *string `xml:"initialization,attr"`
-   Media string `xml:"media,attr"`
-   SegmentTimeline *struct {
-      S []struct {
-         D int `xml:"d,attr"` // duration
-         R *int `xml:"r,attr"` // repeat
-      }
-   }
-   StartNumber *int `xml:"startNumber,attr"`
 }
 
 func (s SegmentTemplate) GetInitialization(id string) (string, bool) {
