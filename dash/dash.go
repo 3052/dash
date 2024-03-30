@@ -14,11 +14,6 @@ type mpd struct {
    Period []period
 }
 
-type period struct {
-   mpd *mpd
-   AdaptationSet []adaptation_set
-}
-
 type Range string
 
 func Unmarshal(b []byte) ([]Representation, error) {
@@ -102,7 +97,7 @@ func (s SegmentTemplate) replace(old string, number int) string {
    return strings.Replace(s.Media, old, strconv.Itoa(number), 1)
 }
 
-func (m mpd) seconds() (float64, error) {
+func (m mpd) Seconds() (float64, error) {
    s := strings.TrimPrefix(m.MediaPresentationDuration, "PT")
    duration, err := time.ParseDuration(strings.ToLower(s))
    if err != nil {
@@ -111,53 +106,38 @@ func (m mpd) seconds() (float64, error) {
    return duration.Seconds(), nil
 }
 
-////////////////////////
-
-type adaptation_set struct {
-   period *period
-   Codecs string `xml:"codecs,attr"`
-   Lang *string `xml:"lang,attr"`
-   MimeType string `xml:"mimeType,attr"`
-   Representation []Representation
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-}
-
-type Representation struct {
-   adaptation_set *adaptation_set
-   Bandwidth int64 `xml:"bandwidth,attr"`
-   BaseURL *string
-   Codecs string `xml:"codecs,attr"`
-   Height *int64 `xml:"height,attr"`
-   ID string `xml:"id,attr"`
-   MimeType string `xml:"mimeType,attr"`
-   SegmentBase *struct {
-      Initialization struct {
-         Range Range `xml:"range,attr"`
-      }
-      IndexRange Range `xml:"indexRange,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-   Width *int64 `xml:"width,attr"`
-}
-
 func (r Representation) GetCodecs() (string, bool) {
-   if v := r.Codecs; v != "" {
-      return v, true
+   if v := r.Codecs; v != nil {
+      return *v, true
    }
-   if v := r.adaptation_set.Codecs; v != "" {
-      return v, true
+   if v := r.adaptation_set.Codecs; v != nil {
+      return *v, true
    }
    return "", false
 }
 
 func (r Representation) GetMimeType() string {
-   if v := r.MimeType; v != "" {
-      return v
+   if v := r.MimeType; v != nil {
+      return *v
    }
-   return r.adaptation_set.MimeType
+   return *r.adaptation_set.MimeType
+}
+
+type period struct {
+   AdaptationSet []adaptation_set
+   mpd *mpd
+}
+
+type adaptation_set struct {
+   Codecs *string `xml:"codecs,attr"`
+   Lang *string `xml:"lang,attr"`
+   MimeType *string `xml:"mimeType,attr"`
+   Representation []Representation
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   period *period
 }
 
 func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
@@ -169,6 +149,26 @@ func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
    }
    return nil, false
 }
+
+type Representation struct {
+   Bandwidth int64 `xml:"bandwidth,attr"`
+   BaseURL *string
+   Codecs *string `xml:"codecs,attr"`
+   Height *int64 `xml:"height,attr"`
+   ID string `xml:"id,attr"`
+   MimeType *string `xml:"mimeType,attr"`
+   SegmentBase *struct {
+      IndexRange Range `xml:"indexRange,attr"`
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+   }
+   SegmentTemplate *SegmentTemplate
+   Width *int64 `xml:"width,attr"`
+   adaptation_set *adaptation_set
+}
+
+//////////
 
 type SegmentTemplate struct {
    

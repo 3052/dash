@@ -8,6 +8,90 @@ import (
    "testing"
 )
 
+func TestSegmentTemplate(t *testing.T) {
+   sets := struct{
+      initialization set
+   }{
+      make(set),
+   }
+   for _, test := range tests {
+      text, err := os.ReadFile(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      reps, err := Unmarshal(text)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, rep := range reps {
+         if v, ok := rep.GetSegmentTemplate(); ok {
+            if v.Initialization != "" {
+               sets.initialization[1] = struct{}{}
+            } else {
+               sets.initialization[0] = struct{}{}
+            }
+         }
+      }
+   }
+   fmt.Printf("%+v\n", sets)
+}
+
+var tests = []string{
+   "mpd/amc.mpd",
+   "mpd/hulu.mpd",
+   "mpd/mubi.mpd",
+   "mpd/nbc.mpd",
+   "mpd/paramount.mpd",
+   "mpd/peacock.mpd",
+   "mpd/roku-clear.mpd",
+   "mpd/roku-protected.mpd",
+   "mpd/stan.mpd",
+}
+
+func TestMpd(t *testing.T) {
+   for _, test := range tests {
+      text, err := os.ReadFile(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      var media mpd
+      xml.Unmarshal(text, &media)
+      if media.MediaPresentationDuration == "" {
+         t.Fatal("MediaPresentationDuration", test)
+      }
+      if len(media.Period) == 0 {
+         t.Fatal("Period", test)
+      }
+   }
+}
+
+func TestPeriod(t *testing.T) {
+   for _, test := range tests {
+      text, err := os.ReadFile(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      reps, err := Unmarshal(text)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, rep := range reps {
+         if rep.adaptation_set.period.mpd == nil {
+            t.Fatal("mpd", test)
+         }
+      }
+      var media mpd
+      xml.Unmarshal(text, &media)
+      for _, p := range media.Period {
+         if len(p.AdaptationSet) == 0 {
+            t.Fatal("AdaptationSet", test)
+         }
+      }
+   }
+}
+
+type set map[byte]struct{}
+
 func TestAdaptation(t *testing.T) {
    sets := struct{
       codecs set
@@ -30,7 +114,9 @@ func TestAdaptation(t *testing.T) {
          t.Fatal(err)
       }
       var media mpd
-      xml.Unmarshal(text, &media)
+      if err := xml.Unmarshal(text, &media); err != nil {
+         t.Fatal(err)
+      }
       for _, per := range media.Period {
          for _, ada := range per.AdaptationSet {
             if len(ada.Representation) == 0 {
@@ -53,18 +139,18 @@ func TestAdaptation(t *testing.T) {
             }
             for _, rep := range ada.Representation {
                var value byte
-               if ada.Codecs != "" {
+               if ada.Codecs != nil {
                   value += 10
                }
-               if rep.Codecs != "" {
+               if rep.Codecs != nil {
                   value++
                }
                sets.codecs[value] = struct{}{}
                value = 0
-               if ada.MimeType != "" {
+               if ada.MimeType != nil {
                   value += 10
                }
-               if rep.MimeType != "" {
+               if rep.MimeType != nil {
                   value++
                }
                sets.mimeType[value] = struct{}{}
@@ -109,7 +195,9 @@ func TestRepresentation(t *testing.T) {
          t.Fatal(err)
       }
       var media mpd
-      xml.Unmarshal(text, &media)
+      if err := xml.Unmarshal(text, &media); err != nil {
+         t.Fatal(err)
+      }
       for _, per := range media.Period {
          for _, ada := range per.AdaptationSet {
             for _, rep := range ada.Representation {
@@ -190,9 +278,14 @@ func TestMedia(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-   for i, name := range tests {
-      if i >= 1 {
-         fmt.Println()
+   for _, test := range tests {
+      text, err := os.ReadFile(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      reps, err := Unmarshal(text)
+      if err != nil {
+         t.Fatal(err)
       }
       reps = slices.DeleteFunc(reps, func(r Representation) bool {
          if _, ok := r.Ext(); !ok {
@@ -200,96 +293,9 @@ func TestDelete(t *testing.T) {
          }
          return false
       })
-      for i, rep := range reps {
-         if i >= 1 {
-            fmt.Println()
-         }
+      for _, rep := range reps {
          fmt.Println(rep)
       }
    }
 }
-
-func TestSegmentTemplate(t *testing.T) {
-   sets := struct{
-      initialization set
-   }{
-      make(set),
-   }
-   for _, test := range tests {
-      text, err := os.ReadFile(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      reps, err := Unmarshal(text)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, rep := range ada.Representation {
-         if v, ok := rep.GetSegmentTemplate(); ok {
-            if v.Initialization != "" {
-               sets.initialization[1] = struct{}{}
-            } else {
-               sets.initialization[0] = struct{}{}
-            }
-         }
-      }
-   }
-   fmt.Printf("%+v\n", sets)
-}
-
-var tests = []string{
-   "mpd/amc.mpd",
-   "mpd/hulu.mpd",
-   "mpd/mubi.mpd",
-   "mpd/nbc.mpd",
-   "mpd/paramount.mpd",
-   "mpd/peacock.mpd",
-   "mpd/roku-clear.mpd",
-   "mpd/roku-protected.mpd",
-   "mpd/stan.mpd",
-}
-
-func TestMpd(t *testing.T) {
-   for _, test := range tests {
-      text, err := os.ReadFile(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      var media mpd
-      xml.Unmarshal(text, &media)
-      if media.MediaPresentationDuration == "" {
-         t.Fatal("MediaPresentationDuration", test)
-      }
-      if len(media.Period) == 0 {
-         t.Fatal("Period", test)
-      }
-   }
-}
-
-func TestPeriod(t *testing.T) {
-   for _, test := range tests {
-      text, err := os.ReadFile(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      reps, err := Unmarshal(text)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, rep := range reps {
-         if rep.adaptation_set.period.mpd == nil {
-            t.Fatal("mpd", test)
-         }
-      }
-      var media mpd
-      xml.Unmarshal(text, &media)
-      for _, p := range media.Period {
-         if len(p.AdaptationSet) == 0 {
-            t.Fatal("AdaptationSet", test)
-         }
-      }
-   }
-}
-
-type set map[byte]struct{}
 
