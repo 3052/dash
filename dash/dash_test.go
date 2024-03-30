@@ -8,10 +8,40 @@ import (
    "testing"
 )
 
+func TestMedia(t *testing.T) {
+   for _, test := range tests {
+      text, err := os.ReadFile(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      reps, err := Unmarshal(text)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, rep := range reps {
+         if v, ok := rep.GetSegmentTemplate(); ok {
+            media := v.GetMedia(rep.ID)
+            length := len(media)
+            if length >= 1 {
+               fmt.Println(media[length-1])
+            }
+         }
+      }
+   }
+}
+
 func TestSegmentTemplate(t *testing.T) {
    sets := struct{
+      d set
+      r set
       initialization set
+      media set
+      segmentTimeline set
    }{
+      make(set),
+      make(set),
+      make(set),
+      make(set),
       make(set),
    }
    for _, test := range tests {
@@ -25,27 +55,37 @@ func TestSegmentTemplate(t *testing.T) {
       }
       for _, rep := range reps {
          if v, ok := rep.GetSegmentTemplate(); ok {
-            if v.Initialization != "" {
+            if v.Initialization != nil {
                sets.initialization[1] = struct{}{}
             } else {
                sets.initialization[0] = struct{}{}
+            }
+            if v.Media != "" {
+               sets.media[1] = struct{}{}
+            } else {
+               sets.media[0] = struct{}{}
+            }
+            if v := v.SegmentTimeline; v != nil {
+               sets.segmentTimeline[1] = struct{}{}
+               for _, v := range v.S {
+                  if v.D >= 1 {
+                     sets.d[1] = struct{}{}
+                  } else {
+                     sets.d[0] = struct{}{}
+                  }
+                  if v.R != nil {
+                     sets.r[1] = struct{}{}
+                  } else {
+                     sets.r[0] = struct{}{}
+                  }
+               }
+            } else {
+               sets.segmentTimeline[0] = struct{}{}
             }
          }
       }
    }
    fmt.Printf("%+v\n", sets)
-}
-
-var tests = []string{
-   "mpd/amc.mpd",
-   "mpd/hulu.mpd",
-   "mpd/mubi.mpd",
-   "mpd/nbc.mpd",
-   "mpd/paramount.mpd",
-   "mpd/peacock.mpd",
-   "mpd/roku-clear.mpd",
-   "mpd/roku-protected.mpd",
-   "mpd/stan.mpd",
 }
 
 func TestMpd(t *testing.T) {
@@ -248,35 +288,6 @@ func TestRepresentation(t *testing.T) {
    fmt.Printf("%+v\n", sets)
 }
 
-var media_tests = []struct{
-   name string
-   base string
-}{
-   // startNumber == nil
-   {"mpd/mubi.mpd", "new-york-edge2.mubicdn.net/stream/43cac9f0138aaa566a429be4542ff21c/65df1dc5/728eb9fc/mubi-films/325455/passages_eng_zxx_1800x1080_50000_mezz40828/ae8c88ed4e/drm_playlist.0ff148ef80.ism/default/"},
-   // startNumber == 0
-   {"mpd/amc.mpd", ""},
-   // startNumber == 1
-   {"mpd/paramount.mpd", "vod-gcs-cedexis.cbsaavideo.com/intl_vms/2022/02/24/2006197315671/77016_cenc_dash/"},
-}
-
-func TestMedia(t *testing.T) {
-   for _, test := range media_tests {
-      fmt.Println(test.name + ":")
-      text, err := os.ReadFile(test.name)
-      if err != nil {
-         t.Fatal(err)
-      }
-      reps, err := Unmarshal(text)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, media := range reps[0].Media() {
-         fmt.Println(test.base + media)
-      }
-   }
-}
-
 func TestDelete(t *testing.T) {
    for _, test := range tests {
       text, err := os.ReadFile(test)
@@ -299,3 +310,14 @@ func TestDelete(t *testing.T) {
    }
 }
 
+var tests = []string{
+   "mpd/amc.mpd",
+   "mpd/hulu.mpd",
+   "mpd/mubi.mpd",
+   "mpd/nbc.mpd",
+   "mpd/paramount.mpd",
+   "mpd/peacock.mpd",
+   "mpd/roku-clear.mpd",
+   "mpd/roku-protected.mpd",
+   "mpd/stan.mpd",
+}
