@@ -5,6 +5,24 @@ import (
    "strconv"
 )
 
+type Representation struct {
+   Bandwidth int64 `xml:"bandwidth,attr"`
+   BaseURL *string
+   Codecs *string `xml:"codecs,attr"`
+   Height *int64 `xml:"height,attr"`
+   ID string `xml:"id,attr"`
+   MimeType *string `xml:"mimeType,attr"`
+   SegmentBase *struct {
+      IndexRange Range `xml:"indexRange,attr"`
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+   }
+   SegmentTemplate *SegmentTemplate
+   Width *int64 `xml:"width,attr"`
+   adaptation_set *adaptation_set
+}
+
 func Unmarshal(b []byte) ([]Representation, error) {
    var media mpd
    err := xml.Unmarshal(b, &media)
@@ -33,6 +51,33 @@ func (r Representation) Ext() (string, bool) {
       return ".m4v", true
    }
    return "", false
+}
+
+func (r Representation) GetCodecs() (string, bool) {
+   if v := r.Codecs; v != nil {
+      return *v, true
+   }
+   if v := r.adaptation_set.Codecs; v != nil {
+      return *v, true
+   }
+   return "", false
+}
+
+func (r Representation) GetMimeType() string {
+   if v := r.MimeType; v != nil {
+      return *v
+   }
+   return *r.adaptation_set.MimeType
+}
+
+func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
+   if v := r.SegmentTemplate; v != nil {
+      return v, true
+   }
+   if v := r.adaptation_set.SegmentTemplate; v != nil {
+      return v, true
+   }
+   return nil, false
 }
 
 func (r Representation) String() string {
@@ -70,49 +115,4 @@ func (r Representation) String() string {
    b = append(b, "\nid = "...)
    b = append(b, r.ID...)
    return string(b)
-}
-
-func (r Representation) GetCodecs() (string, bool) {
-   if v := r.Codecs; v != nil {
-      return *v, true
-   }
-   if v := r.adaptation_set.Codecs; v != nil {
-      return *v, true
-   }
-   return "", false
-}
-
-func (r Representation) GetMimeType() string {
-   if v := r.MimeType; v != nil {
-      return *v
-   }
-   return *r.adaptation_set.MimeType
-}
-
-func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
-   if v := r.SegmentTemplate; v != nil {
-      return v, true
-   }
-   if v := r.adaptation_set.SegmentTemplate; v != nil {
-      return v, true
-   }
-   return nil, false
-}
-
-type Representation struct {
-   Bandwidth int64 `xml:"bandwidth,attr"`
-   BaseURL *string
-   Codecs *string `xml:"codecs,attr"`
-   Height *int64 `xml:"height,attr"`
-   ID string `xml:"id,attr"`
-   MimeType *string `xml:"mimeType,attr"`
-   SegmentBase *struct {
-      IndexRange Range `xml:"indexRange,attr"`
-      Initialization struct {
-         Range Range `xml:"range,attr"`
-      }
-   }
-   SegmentTemplate *SegmentTemplate
-   Width *int64 `xml:"width,attr"`
-   adaptation_set *adaptation_set
 }

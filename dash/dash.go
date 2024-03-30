@@ -19,45 +19,6 @@ func (r Range) Scan() (uint64, uint64, error) {
    return start, end, nil
 }
 
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
-type mpd struct {
-   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
-   Period []period
-}
-
-func (m mpd) Seconds() (float64, error) {
-   s := strings.TrimPrefix(m.MediaPresentationDuration, "PT")
-   duration, err := time.ParseDuration(strings.ToLower(s))
-   if err != nil {
-      return 0, err
-   }
-   return duration.Seconds(), nil
-}
-
-type period struct {
-   AdaptationSet []adaptation_set
-   mpd *mpd
-}
-
-type adaptation_set struct {
-   Codecs *string `xml:"codecs,attr"`
-   Lang *string `xml:"lang,attr"`
-   MimeType *string `xml:"mimeType,attr"`
-   Representation []Representation
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-   period *period
-}
-
-func (s SegmentTemplate) GetInitialization(id string) (string, bool) {
-   if v := s.Initialization; v != nil {
-      return strings.Replace(*v, "$RepresentationID$", id, 1), true
-   }
-   return "", false
-}
-
 type SegmentTemplate struct {
    Initialization *string `xml:"initialization,attr"`
    Media string `xml:"media,attr"`
@@ -68,6 +29,13 @@ type SegmentTemplate struct {
       }
    }
    StartNumber *int `xml:"startNumber,attr"`
+}
+
+func (s SegmentTemplate) GetInitialization(id string) (string, bool) {
+   if v := s.Initialization; v != nil {
+      return strings.Replace(*v, "$RepresentationID$", id, 1), true
+   }
+   return "", false
 }
 
 func (s SegmentTemplate) GetMedia(id string) []string {
@@ -101,4 +69,43 @@ func (s SegmentTemplate) GetMedia(id string) []string {
       }
    }
    return media
+}
+
+type adaptation_set struct {
+   Codecs *string `xml:"codecs,attr"`
+   Lang *string `xml:"lang,attr"`
+   MimeType *string `xml:"mimeType,attr"`
+   Representation []Representation
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   period *period
+}
+
+type mpd struct {
+   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
+   Period []period
+}
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
+type period struct {
+   AdaptationSet []adaptation_set
+   Duration *string `xml:"duration,attr"`
+   mpd *mpd
+}
+
+func (p period) get_duration() (float64, error) {
+   var s string
+   if p.Duration != nil {
+      s = *p.Duration
+   } else {
+      s = p.mpd.MediaPresentationDuration
+   }
+   s = strings.ToLower(strings.TrimPrefix(s, "PT"))
+   d, err := time.ParseDuration(s)
+   if err != nil {
+      return 0, err
+   }
+   return d.Seconds(), nil
 }

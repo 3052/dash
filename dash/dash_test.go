@@ -7,6 +7,57 @@ import (
    "testing"
 )
 
+func TestPeriod(t *testing.T) {
+   durations := make(set)
+   for i, test := range tests {
+      if i >= 1 {
+         fmt.Println()
+      }
+      text, err := os.ReadFile(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      var media mpd
+      if err := xml.Unmarshal(text, &media); err != nil {
+         t.Fatal(err)
+      }
+      for _, per := range media.Period {
+         if len(per.AdaptationSet) == 0 {
+            t.Fatal("AdaptationSet", test)
+         }
+         if per.Duration != nil {
+            durations[1] = struct{}{}
+         } else {
+            durations[0] = struct{}{}
+         }
+         per.mpd = &media
+         duration, err := per.get_duration()
+         if err != nil {
+            t.Fatal(err)
+         }
+         fmt.Println(duration)
+      }
+   }
+   fmt.Println(durations)
+}
+
+func TestMpd(t *testing.T) {
+   for _, test := range tests {
+      text, err := os.ReadFile(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      var media mpd
+      xml.Unmarshal(text, &media)
+      if media.MediaPresentationDuration == "" {
+         t.Fatal("MediaPresentationDuration", test)
+      }
+      if len(media.Period) == 0 {
+         t.Fatal("Period", test)
+      }
+   }
+}
+
 func TestMedia(t *testing.T) {
    for _, test := range tests {
       text, err := os.ReadFile(test)
@@ -85,48 +136,6 @@ func TestSegmentTemplate(t *testing.T) {
       }
    }
    fmt.Printf("%+v\n", sets)
-}
-
-func TestMpd(t *testing.T) {
-   for _, test := range tests {
-      text, err := os.ReadFile(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      var media mpd
-      xml.Unmarshal(text, &media)
-      if media.MediaPresentationDuration == "" {
-         t.Fatal("MediaPresentationDuration", test)
-      }
-      if len(media.Period) == 0 {
-         t.Fatal("Period", test)
-      }
-   }
-}
-
-func TestPeriod(t *testing.T) {
-   for _, test := range tests {
-      text, err := os.ReadFile(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      reps, err := Unmarshal(text)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, rep := range reps {
-         if rep.adaptation_set.period.mpd == nil {
-            t.Fatal("mpd", test)
-         }
-      }
-      var media mpd
-      xml.Unmarshal(text, &media)
-      for _, p := range media.Period {
-         if len(p.AdaptationSet) == 0 {
-            t.Fatal("AdaptationSet", test)
-         }
-      }
-   }
 }
 
 func TestAdaptation(t *testing.T) {
