@@ -19,6 +19,13 @@ type period struct {
    AdaptationSet []adaptation_set
 }
 
+func (a adaptation_set) get_lang() (string, bool) {
+   if v := a.Lang; v != "" {
+      return v, true
+   }
+   return "", false
+}
+
 func (r Representation) GetCodecs() (string, bool) {
    if v := r.Codecs; v != "" {
       return v, true
@@ -29,7 +36,22 @@ func (r Representation) GetCodecs() (string, bool) {
    return "", false
 }
 
-////////////////////////
+func (r Representation) GetMimeType() string {
+   if v := r.MimeType; v != "" {
+      return v
+   }
+   return r.adaptation_set.MimeType
+}
+
+func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
+   if v := r.SegmentTemplate; v != nil {
+      return v, true
+   }
+   if v := r.adaptation_set.SegmentTemplate; v != nil {
+      return v, true
+   }
+   return nil, false
+}
 
 type adaptation_set struct {
    period *period
@@ -41,6 +63,26 @@ type adaptation_set struct {
       Value string `xml:"value,attr"`
    }
    SegmentTemplate *SegmentTemplate
+}
+
+////////////////////////
+
+type Representation struct {
+   adaptation_set *adaptation_set
+   Bandwidth int64 `xml:"bandwidth,attr"`
+   BaseURL string
+   Codecs string `xml:"codecs,attr"`
+   Height int64 `xml:"height,attr"`
+   ID string `xml:"id,attr"`
+   MimeType string `xml:"mimeType,attr"`
+   SegmentBase *struct {
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+      IndexRange Range `xml:"indexRange,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width int64 `xml:"width,attr"`
 }
 
 func Unmarshal(b []byte) ([]Representation, error) {
@@ -63,24 +105,6 @@ func Unmarshal(b []byte) ([]Representation, error) {
    return rs, nil
 }
 
-type Representation struct {
-   adaptation_set *adaptation_set
-   Bandwidth int64 `xml:"bandwidth,attr"`
-   BaseURL string
-   Codecs string `xml:"codecs,attr"`
-   Height int64 `xml:"height,attr"`
-   ID string `xml:"id,attr"`
-   MimeType string `xml:"mimeType,attr"`
-   SegmentBase *struct {
-      Initialization struct {
-         Range Range `xml:"range,attr"`
-      }
-      IndexRange Range `xml:"indexRange,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-   Width int64 `xml:"width,attr"`
-}
-
 func (r Representation) Ext() (string, bool) {
    switch r.GetMimeType() {
    case "audio/mp4":
@@ -101,23 +125,6 @@ func (r Range) Scan() (uint64, uint64, error) {
       return 0, 0, err
    }
    return start, end, nil
-}
-
-func (r Representation) GetMimeType() string {
-   if v := r.MimeType; v != "" {
-      return v
-   }
-   return r.adaptation_set.MimeType
-}
-
-func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
-   if v := r.SegmentTemplate; v != nil {
-      return v, true
-   }
-   if v := r.adaptation_set.SegmentTemplate; v != nil {
-      return v, true
-   }
-   return nil, false
 }
 
 func (r Representation) Initialization() (string, bool) {
@@ -182,10 +189,10 @@ func (r Representation) String() string {
    }
    b = append(b, "\ntype = "...)
    b = append(b, r.GetMimeType()...)
-   if v := r.adaptation_set.Role; v != nil {
-      b = append(b, "\nrole = "...)
-      b = append(b, v.Value...)
-   }
+   //if v := r.adaptation_set.Role; v != nil {
+   //   b = append(b, "\nrole = "...)
+   //   b = append(b, v.Value...)
+   //}
    if v := r.adaptation_set.Lang; v != "" {
       b = append(b, "\nlang = "...)
       b = append(b, v...)

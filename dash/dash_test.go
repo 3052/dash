@@ -65,30 +65,76 @@ func TestPeriod(t *testing.T) {
 //////////////////////////////////////////////////////
 
 func TestAdaptation(t *testing.T) {
+   type set map[byte]struct{}
+   sets := struct{
+      codecs set
+      lang set
+      mimeType set
+      role set
+      segmentTemplate set
+   }{
+      make(set),
+      make(set),
+      make(set),
+      make(set),
+      make(set),
+   }
    for _, test := range tests {
       text, err := os.ReadFile(test)
       if err != nil {
          t.Fatal(err)
       }
-      reps, err := Unmarshal(text)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, rep := range reps {
-         if _, ok := rep.GetCodecs(); !ok {
-            fmt.Println("GetCodecs needed")
-         }
-      }
       var media mpd
       xml.Unmarshal(text, &media)
       for _, per := range media.Period {
          for _, ada := range per.AdaptationSet {
-            if ada.Lang == "" {
-               t.Fatal("Lang")
+            if len(ada.Representation) == 0 {
+               t.Fatal("Representation")
+            }
+            if ada.Lang != "" {
+               sets.lang[1] = struct{}{}
+            } else {
+               sets.lang[0] = struct{}{}
+            }
+            if ada.Role != nil {
+               sets.role[1] = struct{}{}
+            } else {
+               sets.role[0] = struct{}{}
+            }
+            for _, rep := range ada.Representation {
+               var codecs byte
+               if ada.Codecs != "" {
+                  codecs += 10
+               }
+               if rep.Codecs != "" {
+                  codecs++
+               }
+               sets.codecs[codecs] = struct{}{}
+               var mimeType byte
+               if ada.MimeType != "" {
+                  mimeType += 10
+               }
+               if rep.MimeType != "" {
+                  mimeType++
+               }
+               sets.mimeType[mimeType] = struct{}{}
+               var segmentTemplate byte
+               if ada.SegmentTemplate != nil {
+                  segmentTemplate += 10
+               }
+               if rep.SegmentTemplate != nil {
+                  segmentTemplate++
+               }
+               sets.segmentTemplate[segmentTemplate] = struct{}{}
             }
          }
       }
    }
+   fmt.Println("codecs", sets.codecs)
+   fmt.Println("lang", sets.lang)
+   fmt.Println("mimeType", sets.mimeType)
+   fmt.Println("role", sets.role)
+   fmt.Println("segmentTemplate", sets.segmentTemplate)
 }
 
 func TestDelete(t *testing.T) {
@@ -101,9 +147,9 @@ func TestDelete(t *testing.T) {
          t.Fatal(err)
       }
       reps = slices.DeleteFunc(reps, func(r Representation) bool {
-         if _, ok := r.Ext(); !ok {
-            return true
-         }
+         //if _, ok := r.Ext(); !ok {
+         //   return true
+         //}
          return false
       })
       for i, rep := range reps {
@@ -122,6 +168,7 @@ func reader(name string) ([]Representation, error) {
    }
    return Unmarshal(text)
 }
+
 func TestRange(t *testing.T) {
    reps, err := reader("mpd/hulu.mpd")
    if err != nil {
