@@ -164,6 +164,13 @@ type Representation struct {
    adaptation_set *adaptation_set
 }
 
+func (s SegmentTemplate) GetInitialization(id string) (string, bool) {
+   if v := s.Initialization; v != nil {
+      return strings.Replace(*v, "$RepresentationID$", id, 1), true
+   }
+   return "", false
+}
+
 type SegmentTemplate struct {
    Initialization *string `xml:"initialization,attr"`
    Media string `xml:"media,attr"`
@@ -174,13 +181,6 @@ type SegmentTemplate struct {
       }
    }
    StartNumber *int `xml:"startNumber,attr"`
-}
-
-func (s SegmentTemplate) GetInitialization(id string) (string, bool) {
-   if v := s.Initialization; v != nil {
-      return strings.Replace(*v, "$RepresentationID$", id, 1), true
-   }
-   return "", false
 }
 
 func (s SegmentTemplate) GetMedia(id string) []string {
@@ -195,10 +195,11 @@ func (s SegmentTemplate) GetMedia(id string) []string {
    }
    var media []string
    for _, segment := range timeline.S {
-      if segment.R == nil {
-         continue
+      var repeat int
+      if segment.R != nil {
+         repeat = *segment.R
       }
-      for *segment.R >= 0 {
+      for repeat >= 0 {
          var medium string
          replace := strconv.Itoa(number)
          if s.StartNumber != nil {
@@ -209,7 +210,7 @@ func (s SegmentTemplate) GetMedia(id string) []string {
             number += segment.D
          }
          media = append(media, medium)
-         *segment.R--
+         repeat--
       }
    }
    return media
