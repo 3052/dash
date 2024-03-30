@@ -8,6 +8,39 @@ import (
    "testing"
 )
 
+func TestDelete(t *testing.T) {
+   for i, test := range tests {
+      if i >= 1 {
+         fmt.Println()
+      }
+      fmt.Println(test)
+      fmt.Println("------------------------------------------------------------")
+      text, err := os.ReadFile(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      reps, err := Unmarshal(text)
+      if err != nil {
+         t.Fatal(err)
+      }
+      reps = slices.DeleteFunc(reps, func(r Representation) bool {
+         if _, ok := r.Ext(); !ok {
+            return true
+         }
+         if v, _ := r.Seconds(); v < 9 {
+            return true
+         }
+         return false
+      })
+      for i, rep := range reps {
+         if i >= 1 {
+            fmt.Println()
+         }
+         fmt.Println(rep)
+      }
+   }
+}
+
 type set map[byte]struct{}
 
 func TestRepresentation(t *testing.T) {
@@ -87,28 +120,6 @@ func TestRepresentation(t *testing.T) {
       }
    }
    fmt.Printf("%+v\n", sets)
-}
-
-func TestDelete(t *testing.T) {
-   for _, test := range tests {
-      text, err := os.ReadFile(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      reps, err := Unmarshal(text)
-      if err != nil {
-         t.Fatal(err)
-      }
-      reps = slices.DeleteFunc(reps, func(r Representation) bool {
-         if _, ok := r.Ext(); !ok {
-            return true
-         }
-         return false
-      })
-      for _, rep := range reps {
-         fmt.Println(rep)
-      }
-   }
 }
 
 var tests = []string{

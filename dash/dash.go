@@ -4,39 +4,7 @@ import (
    "fmt"
    "strconv"
    "strings"
-   "time"
 )
-
-type Range string
-
-// range-start and range-end can both exceed 32 bits, so we must use 64 bit
-func (r Range) Scan() (uint64, uint64, error) {
-   var start, end uint64
-   _, err := fmt.Sscanf(string(r), "%v-%v", &start, &end)
-   if err != nil {
-      return 0, 0, err
-   }
-   return start, end, nil
-}
-
-type SegmentTemplate struct {
-   Initialization *string `xml:"initialization,attr"`
-   Media string `xml:"media,attr"`
-   SegmentTimeline *struct {
-      S []struct {
-         D int `xml:"d,attr"` // duration
-         R *int `xml:"r,attr"` // repeat
-      }
-   }
-   StartNumber *int `xml:"startNumber,attr"`
-}
-
-func (s SegmentTemplate) GetInitialization(id string) (string, bool) {
-   if v := s.Initialization; v != nil {
-      return strings.Replace(*v, "$RepresentationID$", id, 1), true
-   }
-   return "", false
-}
 
 func (s SegmentTemplate) GetMedia(id string) []string {
    timeline := s.SegmentTimeline
@@ -71,6 +39,37 @@ func (s SegmentTemplate) GetMedia(id string) []string {
    return media
 }
 
+type Range string
+
+// range-start and range-end can both exceed 32 bits, so we must use 64 bit
+func (r Range) Scan() (uint64, uint64, error) {
+   var start, end uint64
+   _, err := fmt.Sscanf(string(r), "%v-%v", &start, &end)
+   if err != nil {
+      return 0, 0, err
+   }
+   return start, end, nil
+}
+
+type SegmentTemplate struct {
+   Initialization *string `xml:"initialization,attr"`
+   Media string `xml:"media,attr"`
+   SegmentTimeline *struct {
+      S []struct {
+         D int `xml:"d,attr"` // duration
+         R *int `xml:"r,attr"` // repeat
+      }
+   }
+   StartNumber *int `xml:"startNumber,attr"`
+}
+
+func (s SegmentTemplate) GetInitialization(id string) (string, bool) {
+   if v := s.Initialization; v != nil {
+      return strings.Replace(*v, "$RepresentationID$", id, 1), true
+   }
+   return "", false
+}
+
 type adaptation_set struct {
    Codecs *string `xml:"codecs,attr"`
    Lang *string `xml:"lang,attr"`
@@ -95,17 +94,9 @@ type period struct {
    mpd *mpd
 }
 
-func (p period) get_duration() (float64, error) {
-   var s string
-   if p.Duration != nil {
-      s = *p.Duration
-   } else {
-      s = p.mpd.MediaPresentationDuration
+func (p period) get_duration() string {
+   if v := p.Duration; v != nil {
+      return *v
    }
-   s = strings.ToLower(strings.TrimPrefix(s, "PT"))
-   d, err := time.ParseDuration(s)
-   if err != nil {
-      return 0, err
-   }
-   return d.Seconds(), nil
+   return p.mpd.MediaPresentationDuration
 }

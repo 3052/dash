@@ -3,7 +3,18 @@ package dash
 import (
    "encoding/xml"
    "strconv"
+   "strings"
+   "time"
 )
+
+func (r Representation) Seconds() (float64, error) {
+   s := strings.TrimPrefix(r.adaptation_set.period.get_duration(), "PT")
+   d, err := time.ParseDuration(strings.ToLower(s))
+   if err != nil {
+      return 0, err
+   }
+   return d.Seconds(), nil
+}
 
 type Representation struct {
    Bandwidth int64 `xml:"bandwidth,attr"`

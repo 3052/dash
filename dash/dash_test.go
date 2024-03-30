@@ -7,8 +7,34 @@ import (
    "testing"
 )
 
+func TestMedia(t *testing.T) {
+   for i, test := range tests {
+      if i >= 1 {
+         fmt.Println()
+      }
+      fmt.Println(test)
+      text, err := os.ReadFile(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      reps, err := Unmarshal(text)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, rep := range reps {
+         if v, ok := rep.GetSegmentTemplate(); ok {
+            media := v.GetMedia(rep.ID)
+            length := len(media)
+            if length >= 1 {
+               fmt.Println(media[length-1])
+            }
+         }
+      }
+   }
+}
+
 func TestPeriod(t *testing.T) {
-   durations := make(set)
+   duration := make(set)
    for i, test := range tests {
       if i >= 1 {
          fmt.Println()
@@ -26,19 +52,13 @@ func TestPeriod(t *testing.T) {
             t.Fatal("AdaptationSet", test)
          }
          if per.Duration != nil {
-            durations[1] = struct{}{}
+            duration[1] = struct{}{}
          } else {
-            durations[0] = struct{}{}
+            duration[0] = struct{}{}
          }
-         per.mpd = &media
-         duration, err := per.get_duration()
-         if err != nil {
-            t.Fatal(err)
-         }
-         fmt.Println(duration)
       }
    }
-   fmt.Println(durations)
+   fmt.Println(duration)
 }
 
 func TestMpd(t *testing.T) {
@@ -54,28 +74,6 @@ func TestMpd(t *testing.T) {
       }
       if len(media.Period) == 0 {
          t.Fatal("Period", test)
-      }
-   }
-}
-
-func TestMedia(t *testing.T) {
-   for _, test := range tests {
-      text, err := os.ReadFile(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      reps, err := Unmarshal(text)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, rep := range reps {
-         if v, ok := rep.GetSegmentTemplate(); ok {
-            media := v.GetMedia(rep.ID)
-            length := len(media)
-            if length >= 1 {
-               fmt.Println(media[length-1])
-            }
-         }
       }
    }
 }
