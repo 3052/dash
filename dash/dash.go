@@ -19,16 +19,6 @@ type period struct {
    AdaptationSet []adaptation_set
 }
 
-func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
-   if v := r.SegmentTemplate; v != nil {
-      return v, true
-   }
-   if v := r.adaptation_set.SegmentTemplate; v != nil {
-      return v, true
-   }
-   return nil, false
-}
-
 func (r Representation) GetCodecs() (string, bool) {
    if v := r.Codecs; v != "" {
       return v, true
@@ -76,7 +66,7 @@ type Representation struct {
    Width *int64 `xml:"width,attr"`
 }
 
-////////////////////////
+type Range string
 
 func Unmarshal(b []byte) ([]Representation, error) {
    var media mpd
@@ -108,8 +98,6 @@ func (r Representation) Ext() (string, bool) {
    return "", false
 }
 
-type Range string
-
 // range-start and range-end can both exceed 32 bits, so we must use 64 bit
 func (r Range) Scan() (uint64, uint64, error) {
    var start, end uint64
@@ -118,44 +106,6 @@ func (r Range) Scan() (uint64, uint64, error) {
       return 0, 0, err
    }
    return start, end, nil
-}
-
-func (r Representation) Initialization() (string, bool) {
-   if v, ok := r.GetSegmentTemplate(); ok {
-      if v := v.Initialization; v != "" {
-         return strings.Replace(v, "$RepresentationID$", r.ID, 1), true
-      }
-   }
-   return "", false
-}
-
-// we need the length for progress meter, so cannot use a channel
-func (r Representation) Media() []string {
-   st, ok := r.GetSegmentTemplate()
-   if !ok {
-      return nil
-   }
-   st.Media = strings.Replace(st.Media, "$RepresentationID$", r.ID, 1)
-   var number int
-   if st.StartNumber != nil {
-      number = *st.StartNumber
-   }
-   var media []string
-   for _, segment := range st.SegmentTimeline.S {
-      for segment.R >= 0 {
-         var medium string
-         if st.StartNumber != nil {
-            medium = st.replace("$Number$", number)
-            number++
-         } else {
-            medium = st.replace("$Time$", number)
-            number += segment.D
-         }
-         media = append(media, medium)
-         segment.R--
-      }
-   }
-   return media
 }
 
 func (r Representation) String() string {
@@ -195,6 +145,31 @@ func (r Representation) String() string {
    return string(b)
 }
 
+func (s SegmentTemplate) replace(old string, number int) string {
+   return strings.Replace(s.Media, old, strconv.Itoa(number), 1)
+}
+
+func (m mpd) seconds() (float64, error) {
+   s := strings.TrimPrefix(m.MediaPresentationDuration, "PT")
+   duration, err := time.ParseDuration(strings.ToLower(s))
+   if err != nil {
+      return 0, err
+   }
+   return duration.Seconds(), nil
+}
+
+func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
+   if v := r.SegmentTemplate; v != nil {
+      return v, true
+   }
+   if v := r.adaptation_set.SegmentTemplate; v != nil {
+      return v, true
+   }
+   return nil, false
+}
+
+////////////////////////
+
 type SegmentTemplate struct {
    Initialization string `xml:"initialization,attr"`
    Media string `xml:"media,attr"`
@@ -207,15 +182,40 @@ type SegmentTemplate struct {
    StartNumber *int `xml:"startNumber,attr"`
 }
 
-func (s SegmentTemplate) replace(old string, number int) string {
-   return strings.Replace(s.Media, old, strconv.Itoa(number), 1)
+func (r Representation) Initialization() (string, bool) {
+   if v, ok := r.GetSegmentTemplate(); ok {
+      if v := v.Initialization; v != "" {
+         return strings.Replace(v, "$RepresentationID$", r.ID, 1), true
+      }
+   }
+   return "", false
 }
 
-func (m mpd) seconds() (float64, error) {
-   s := strings.TrimPrefix(m.MediaPresentationDuration, "PT")
-   duration, err := time.ParseDuration(strings.ToLower(s))
-   if err != nil {
-      return 0, err
+// we need the length for progress meter, so cannot use a channel
+func (r Representation) Media() []string {
+   st, ok := r.GetSegmentTemplate()
+   if !ok {
+      return nil
    }
-   return duration.Seconds(), nil
+   st.Media = strings.Replace(st.Media, "$RepresentationID$", r.ID, 1)
+   var number int
+   if st.StartNumber != nil {
+      number = *st.StartNumber
+   }
+   var media []string
+   for _, segment := range st.SegmentTimeline.S {
+      for segment.R >= 0 {
+         var medium string
+         if st.StartNumber != nil {
+            medium = st.replace("$Number$", number)
+            number++
+         } else {
+            medium = st.replace("$Time$", number)
+            number += segment.D
+         }
+         media = append(media, medium)
+         segment.R--
+      }
+   }
+   return media
 }
