@@ -171,6 +171,7 @@ func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
 ////////////////////////
 
 type SegmentTemplate struct {
+   
    Initialization string `xml:"initialization,attr"`
    Media string `xml:"media,attr"`
    SegmentTimeline *struct {
