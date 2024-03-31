@@ -11,6 +11,40 @@ import (
    "path"
 )
 
+func (f flags) download(rep dash.Representation) error {
+   template, ok := rep.GetSegmentTemplate()
+   if !ok {
+      return errors.New("GetSegmentTemplate")
+   }
+   initial, ok := template.GetInitialization(rep)
+   if !ok {
+      return errors.New("GetInitialization")
+   }
+   address, err := f.url.Parse(initial)
+   if err != nil {
+      return err
+   }
+   if err := create(address); err != nil {
+      return err
+   }
+   media, err := template.GetMedia(rep)
+   if err != nil {
+      return err
+   }
+   for i, medium := range media {
+      fmt.Println(len(media)-i)
+      // with DASH, initialization and media URLs are relative to the MPD URL
+      url, err := f.url.Parse(medium)
+      if err != nil {
+         return err
+      }
+      if err := create(url); err != nil {
+         return err
+      }
+   }
+   return nil
+}
+
 func (f *flags) manifest() ([]dash.Representation, error) {
    res, err := http.Get(f.address)
    if err != nil {
@@ -41,33 +75,6 @@ func create(url *url.URL) error {
    defer file.Close()
    if _, err := file.ReadFrom(res.Body); err != nil {
       return err
-   }
-   return nil
-}
-
-func (f flags) download(rep dash.Representation) error {
-   initialization, ok := rep.Initialization()
-   if !ok {
-      return errors.New("dash.Representation.Initialization")
-   }
-   address, err := f.url.Parse(initialization)
-   if err != nil {
-      return err
-   }
-   if err := create(address); err != nil {
-      return err
-   }
-   media := rep.Media()
-   for i, medium := range media {
-      fmt.Println(len(media)-i)
-      // with DASH, initialization and media URLs are relative to the MPD URL
-      url, err := f.url.Parse(medium)
-      if err != nil {
-         return err
-      }
-      if err := create(url); err != nil {
-         return err
-      }
    }
    return nil
 }

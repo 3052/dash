@@ -30,7 +30,7 @@ type Period struct {
    mpd *mpd
 }
 
-func (p Period) GetDuration() string {
+func (p Period) get_duration() string {
    if v := p.Duration; v != nil {
       return *v
    }
@@ -38,7 +38,7 @@ func (p Period) GetDuration() string {
 }
 
 func (p Period) Seconds() (float64, error) {
-   s := strings.TrimPrefix(p.GetDuration(), "PT")
+   s := strings.TrimPrefix(p.get_duration(), "PT")
    d, err := time.ParseDuration(strings.ToLower(s))
    if err != nil {
       return 0, err
@@ -97,7 +97,7 @@ func Unmarshal(b []byte) ([]Representation, error) {
 }
 
 func (r Representation) Ext() (string, bool) {
-   switch r.GetMimeType() {
+   switch r.get_mime_type() {
    case "audio/mp4":
       return ".m4a", true
    case "video/mp4":
@@ -108,23 +108,6 @@ func (r Representation) Ext() (string, bool) {
 
 func (r Representation) GetAdaptationSet() *AdaptationSet {
    return r.adaptation_set
-}
-
-func (r Representation) GetCodecs() (string, bool) {
-   if v := r.Codecs; v != nil {
-      return *v, true
-   }
-   if v := r.adaptation_set.Codecs; v != nil {
-      return *v, true
-   }
-   return "", false
-}
-
-func (r Representation) GetMimeType() string {
-   if v := r.MimeType; v != nil {
-      return *v
-   }
-   return *r.adaptation_set.MimeType
 }
 
 func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
@@ -155,12 +138,12 @@ func (r Representation) String() string {
    }
    b = append(b, "bandwidth = "...)
    b = strconv.AppendInt(b, r.Bandwidth, 10)
-   if v, ok := r.GetCodecs(); ok {
+   if v, ok := r.get_codecs(); ok {
       b = append(b, "\ncodecs = "...)
       b = append(b, v...)
    }
    b = append(b, "\ntype = "...)
-   b = append(b, r.GetMimeType()...)
+   b = append(b, r.get_mime_type()...)
    if v := r.adaptation_set.Role; v != nil {
       b = append(b, "\nrole = "...)
       b = append(b, v.Value...)
@@ -172,6 +155,23 @@ func (r Representation) String() string {
    b = append(b, "\nid = "...)
    b = append(b, r.ID...)
    return string(b)
+}
+
+func (r Representation) get_codecs() (string, bool) {
+   if v := r.Codecs; v != nil {
+      return *v, true
+   }
+   if v := r.adaptation_set.Codecs; v != nil {
+      return *v, true
+   }
+   return "", false
+}
+
+func (r Representation) get_mime_type() string {
+   if v := r.MimeType; v != nil {
+      return *v
+   }
+   return *r.adaptation_set.MimeType
 }
 
 type mpd struct {
