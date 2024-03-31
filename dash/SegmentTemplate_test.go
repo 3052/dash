@@ -22,7 +22,10 @@ func TestMedia(t *testing.T) {
       }
       for _, rep := range reps {
          if v, ok := rep.GetSegmentTemplate(); ok {
-            media := v.GetMedia(rep.ID)
+            media, err := v.GetMedia(rep)
+            if err != nil {
+               t.Fatal(err)
+            }
             length := len(media)
             if length >= 1 {
                fmt.Println(media[length-1])
