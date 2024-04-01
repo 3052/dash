@@ -42,7 +42,7 @@ func (s SegmentTemplate) GetMedia(r Representation) ([]string, error) {
          if segment.R != nil {
             repeat = *segment.R
          }
-         for repeat >= 0 {
+         for range 1 + repeat {
             var medium string
             replace := strconv.Itoa(number)
             if s.StartNumber != nil {
@@ -53,7 +53,6 @@ func (s SegmentTemplate) GetMedia(r Representation) ([]string, error) {
                number += segment.D
             }
             media = append(media, medium)
-            repeat--
          }
       }
    } else {
