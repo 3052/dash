@@ -1,50 +1,6 @@
 package encoding
 
-import (
-   "bytes"
-   "strconv"
-   "text/template"
-)
-
-const Format = 
-   "{{if .Show}}" +
-      "{{.Show}} - {{.Season}} {{.Episode}} - {{.Title}}" +
-   "{{else}}" +
-      "{{.Title}} - {{.Year}}" +
-   "{{end}}"
-
-func Name(format string, v Namer) (string, error) {
-   t, err := new(template.Template).Parse(format)
-   if err != nil {
-      return "", err
-   }
-   var buf bytes.Buffer
-   if err := t.Execute(&buf, v); err != nil {
-      return "", err
-   }
-   bytes := buf.Bytes()
-   clean(bytes)
-   return string(bytes), nil
-}
-
-func clean(path []byte) {
-   m := map[byte]bool{
-      '"': true,
-      '*': true,
-      '/': true,
-      ':': true,
-      '<': true,
-      '>': true,
-      '?': true,
-      '\\': true,
-      '|': true,
-   }
-   for k, v := range path {
-      if m[v] {
-         path[k] = '-'
-      }
-   }
-}
+import "strconv"
 
 func label(value float64, unit unit_measure) string {
    var prec int
@@ -76,14 +32,6 @@ func (c Cardinal) String() string {
       {1e-12, " trillion"},
    }
    return scale(float64(c), units)
-}
-
-type Namer interface {
-   Show() string
-   Season() int
-   Episode() int
-   Title() string
-   Year() int
 }
 
 type Percent float64
