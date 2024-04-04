@@ -2,34 +2,39 @@ package dash
 
 import (
    "fmt"
+   "io"
+   "log/slog"
+   "net/http"
    "os"
    "testing"
 )
 
 func TestMedia(t *testing.T) {
-   for i, test := range tests {
-      if i >= 1 {
-         fmt.Println()
-      }
-      fmt.Println(test)
-      text, err := os.ReadFile(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      reps, err := Unmarshal(text)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, rep := range reps {
-         if v, ok := rep.GetSegmentTemplate(); ok {
-            media, err := v.GetMedia(rep)
-            if err != nil {
-               t.Fatal(err)
-            }
-            length := len(media)
-            if length >= 1 {
-               fmt.Println(media[length-1])
-            }
+   base := "https://gec.stan.video/09/dash/live/1540676B-1/hd/sdr/"
+   res, err := http.Get(base + "high_h264-59fcad98.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   defer res.Body.Close()
+   fmt.Println(res.Request.URL)
+   text, err := io.ReadAll(res.Body)
+   if err != nil {
+      t.Fatal(err)
+   }
+   reps, err := Unmarshal(text)
+   if err != nil {
+      t.Fatal(err)
+   }
+   slog.SetLogLoggerLevel(slog.LevelDebug)
+   for _, rep := range reps {
+      if v, ok := rep.GetSegmentTemplate(); ok {
+         media, err := v.GetMedia(rep)
+         if err != nil {
+            t.Fatal(err)
+         }
+         length := len(media)
+         if length >= 1 {
+            fmt.Println(base + media[length-1])
          }
       }
    }

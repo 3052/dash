@@ -1,31 +1,11 @@
 package dash
 
 import (
+   "log/slog"
    "math"
    "strconv"
    "strings"
 )
-
-type SegmentTemplate struct {
-   Duration *int `xml:"duration,attr"`
-   Initialization *string `xml:"initialization,attr"`
-   Media string `xml:"media,attr"`
-   SegmentTimeline *struct {
-      S []struct {
-         D int `xml:"d,attr"` // duration
-         R *int `xml:"r,attr"` // repeat
-      }
-   }
-   StartNumber *int `xml:"startNumber,attr"`
-   Timescale *int `xml:"timescale,attr"`
-}
-
-func (s SegmentTemplate) GetInitialization(r Representation) (string, bool) {
-   if v := s.Initialization; v != nil {
-      return strings.Replace(*v, "$RepresentationID$", r.ID, 1), true
-   }
-   return "", false
-}
 
 func (s SegmentTemplate) GetMedia(r Representation) ([]string, error) {
    s.Media = strings.Replace(s.Media, "$RepresentationID$", r.ID, 1)
@@ -60,7 +40,10 @@ func (s SegmentTemplate) GetMedia(r Representation) ([]string, error) {
       if err != nil {
          return nil, err
       }
-      for range int(s.segment_count(seconds)) {
+      slog.Debug("period", "seconds", seconds)
+      count := s.segment_count(seconds)
+      slog.Debug("segment", "count", count)
+      for range int(count) {
          replace := strconv.Itoa(number)
          medium := strings.Replace(s.Media, "$Number$", replace, 1)
          media = append(media, medium)
@@ -70,8 +53,29 @@ func (s SegmentTemplate) GetMedia(r Representation) ([]string, error) {
    return media, nil
 }
 
+func (s SegmentTemplate) GetInitialization(r Representation) (string, bool) {
+   if v := s.Initialization; v != nil {
+      return strings.Replace(*v, "$RepresentationID$", r.ID, 1), true
+   }
+   return "", false
+}
+
+type SegmentTemplate struct {
+   Duration *float64 `xml:"duration,attr"`
+   Initialization *string `xml:"initialization,attr"`
+   Media string `xml:"media,attr"`
+   SegmentTimeline *struct {
+      S []struct {
+         D int `xml:"d,attr"` // duration
+         R *int `xml:"r,attr"` // repeat
+      }
+   }
+   StartNumber *int `xml:"startNumber,attr"`
+   Timescale *float64 `xml:"timescale,attr"`
+}
+
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
-func (s SegmentTemplate) get_timescale() int {
+func (s SegmentTemplate) get_timescale() float64 {
    if v := s.Timescale; v != nil {
       return *v
    }
@@ -79,7 +83,11 @@ func (s SegmentTemplate) get_timescale() int {
 }
 
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
+//  Ceil(
+//     (Period@duration - SegmentTempalte@eptDelta) /
+//     (SegmentTemplate@duration / SegmentTemplate@timescale)
+//  )
 func (s SegmentTemplate) segment_count(seconds float64) float64 {
-   seconds /= float64(*s.Duration / s.get_timescale())
+   seconds /= *s.Duration / s.get_timescale()
    return math.Ceil(seconds)
 }
