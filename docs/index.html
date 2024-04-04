@@ -14,13 +14,14 @@
   <body>
     <nav>
         154.pages.dev/encoding<span class="navbar-right">
-          v1.20.4 | <a href="">Root</a> | <a href="#pkg-index">Index</a></span>
+          v1.20.6 | <a href="">Root</a> | <a href="#pkg-index">Index</a></span>
       </nav>
     <main><h2 id="pkg-overview">package encoding</h2>
 <pre class="chroma"><span class="kn">import</span> <span class="s">&#34;154.pages.dev/encoding&#34;</span></pre>
 <h3 id="pkg-index">Index</h3>
 <ul>
-  <li><a href="#pkg-constants">Constants</a></li><li><a href="#Name">func Name(format string, v Namer) (string, error)</a></li>
+  <li><a href="#pkg-variables">Variables</a></li><li><a href="#Clean">func Clean(name string) string</a></li>
+  <li><a href="#Name">func Name(n Namer) (string, error)</a></li>
   <li>
       <a href="#Cardinal">type Cardinal</a>
       <ul>
@@ -48,15 +49,17 @@
           <li><a href="#Size.String">func (s Size) String() string</a></li>
           </ul>
       </li>
-  </ul><h3 id="pkg-constants">Constants</h3>
-  <pre class="chroma"><span class="kd">const</span> <span id="Format"><span class="nx">Format</span></span> <span class="p">=</span> <span class="s">&#34;{{if .Show}}&#34;</span> <span class="o">+</span>
+  </ul><h3 id="pkg-variables">Variables</h3>
+  <pre class="chroma"><span class="kd">var</span> <span id="Format"><span class="nx">Format</span></span> <span class="p">=</span> <span class="s">&#34;{{if .Show}}&#34;</span> <span class="o">+</span>
 	<span class="s">&#34;{{.Show}} - {{.Season}} {{.Episode}} - {{.Title}}&#34;</span> <span class="o">+</span>
 	<span class="s">&#34;{{else}}&#34;</span> <span class="o">+</span>
 	<span class="s">&#34;{{.Title}} - {{.Year}}&#34;</span> <span class="o">+</span>
 	<span class="s">&#34;{{end}}&#34;</span></pre>
   <h3 id="pkg-functions">Functions</h3>
-  <h3 id="Name">func Name</h3>
-    <pre class="chroma"><span class="kd">func</span> <span class="nf">Name</span><span class="p">(</span><span class="nx">format</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span> <span class="nx">v</span> <a href="#Namer"><span class="nx">Namer</span></a><span class="p">)</span> <span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <h3 id="Clean">func Clean</h3>
+    <pre class="chroma"><span class="kd">func</span> <span class="nf">Clean</span><span class="p">(</span><span class="nx">name</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+    <h3 id="Name">func Name</h3>
+    <pre class="chroma"><span class="kd">func</span> <span class="nf">Name</span><span class="p">(</span><span class="nx">n</span> <a href="#Namer"><span class="nx">Namer</span></a><span class="p">)</span> <span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
     <h3 id="pkg-types">Types</h3>
   <h3 id="Cardinal">type Cardinal</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">Cardinal</span> <a href="https://pkg.go.dev/builtin#float64"><span class="kt">float64</span></a></pre>
