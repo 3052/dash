@@ -8,37 +8,30 @@ import (
    "testing"
 )
 
-func TestDelete(t *testing.T) {
-   for i, test := range tests {
-      if i >= 1 {
-         fmt.Println()
-      }
-      fmt.Println(test)
-      fmt.Println("------------------------------------------------------------")
+func TestMpd(t *testing.T) {
+   base_url := make(set)
+   for _, test := range tests {
       text, err := os.ReadFile(test)
       if err != nil {
          t.Fatal(err)
       }
-      reps, err := Unmarshal(text)
-      if err != nil {
+      var m mpd
+      if err := xml.Unmarshal(text, &m); err != nil {
          t.Fatal(err)
       }
-      reps = slices.DeleteFunc(reps, func(r Representation) bool {
-         if _, ok := r.Ext(); !ok {
-            return true
-         }
-         if v, _ := r.GetAdaptationSet().GetPeriod().Seconds(); v < 9 {
-            return true
-         }
-         return false
-      })
-      for i, rep := range reps {
-         if i >= 1 {
-            fmt.Println()
-         }
-         fmt.Println(rep)
+      if m.BaseURL != nil {
+         base_url[1] = struct{}{}
+      } else {
+         base_url[0] = struct{}{}
+      }
+      if m.MediaPresentationDuration == "" {
+         t.Fatal("MediaPresentationDuration", test)
+      }
+      if len(m.Period) == 0 {
+         t.Fatal("Period", test)
       }
    }
+   fmt.Println(base_url)
 }
 
 func TestRepresentation(t *testing.T) {
@@ -148,23 +141,6 @@ func TestPeriod(t *testing.T) {
    fmt.Println(duration)
 }
 
-func TestMpd(t *testing.T) {
-   for _, test := range tests {
-      text, err := os.ReadFile(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      var media mpd
-      xml.Unmarshal(text, &media)
-      if media.MediaPresentationDuration == "" {
-         t.Fatal("MediaPresentationDuration", test)
-      }
-      if len(media.Period) == 0 {
-         t.Fatal("Period", test)
-      }
-   }
-}
-
 func TestAdaptation(t *testing.T) {
    sets := struct{
       codecs set
@@ -240,4 +216,37 @@ func TestAdaptation(t *testing.T) {
       }
    }
    fmt.Printf("%+v\n", sets)
+}
+
+func TestDelete(t *testing.T) {
+   for i, test := range tests {
+      if i >= 1 {
+         fmt.Println()
+      }
+      fmt.Println(test)
+      fmt.Println("------------------------------------------------------------")
+      text, err := os.ReadFile(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      reps, err := Unmarshal(text)
+      if err != nil {
+         t.Fatal(err)
+      }
+      reps = slices.DeleteFunc(reps, func(r Representation) bool {
+         if _, ok := r.Ext(); !ok {
+            return true
+         }
+         if v, _ := r.GetAdaptationSet().GetPeriod().Seconds(); v < 9 {
+            return true
+         }
+         return false
+      })
+      for i, rep := range reps {
+         if i >= 1 {
+            fmt.Println()
+         }
+         fmt.Println(rep)
+      }
+   }
 }

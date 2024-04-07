@@ -9,6 +9,18 @@ import (
    "testing"
 )
 
+var tests = []string{
+   "mpd/amc.mpd",
+   "mpd/hulu.mpd",
+   "mpd/mubi.mpd",
+   "mpd/nbc.mpd",
+   "mpd/paramount.mpd",
+   "mpd/peacock.mpd",
+   "mpd/plex.mpd",
+   "mpd/roku.mpd",
+   "mpd/stan.mpd",
+}
+
 func TestMedia(t *testing.T) {
    base := "https://gec.stan.video/09/dash/live/1540676B-1/hd/sdr/"
    res, err := http.Get(base + "high_h264-59fcad98.mpd")
@@ -113,15 +125,3 @@ func TestSegmentTemplate(t *testing.T) {
 }
 
 type set map[byte]struct{}
-
-var tests = []string{
-   "mpd/amc.mpd",
-   "mpd/hulu.mpd",
-   "mpd/mubi.mpd",
-   "mpd/nbc.mpd",
-   "mpd/paramount.mpd",
-   "mpd/peacock.mpd",
-   "mpd/roku-clear.mpd",
-   "mpd/roku-protected.mpd",
-   "mpd/stan.mpd",
-}

@@ -8,6 +8,32 @@ import (
    "time"
 )
 
+func Unmarshal(b []byte) ([]Representation, error) {
+   var media mpd
+   err := xml.Unmarshal(b, &media)
+   if err != nil {
+      return nil, err
+   }
+   var rs []Representation
+   for _, p := range media.Period {
+      p.mpd = &media
+      for _, a := range p.AdaptationSet {
+         a.period = &p
+         for _, r := range a.Representation {
+            r.adaptation_set = &a
+            rs = append(rs, r)
+         }
+      }
+   }
+   return rs, nil
+}
+
+type mpd struct {
+   BaseURL *string `xml:"BaseURL"`
+   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
+   Period []Period
+}
+ 
 type AdaptationSet struct {
    Codecs *string `xml:"codecs,attr"`
    Lang *string `xml:"lang,attr"`
@@ -74,26 +100,6 @@ type Representation struct {
    SegmentTemplate *SegmentTemplate
    Width *int64 `xml:"width,attr"`
    adaptation_set *AdaptationSet
-}
-
-func Unmarshal(b []byte) ([]Representation, error) {
-   var media mpd
-   err := xml.Unmarshal(b, &media)
-   if err != nil {
-      return nil, err
-   }
-   var rs []Representation
-   for _, p := range media.Period {
-      p.mpd = &media
-      for _, a := range p.AdaptationSet {
-         a.period = &p
-         for _, r := range a.Representation {
-            r.adaptation_set = &a
-            rs = append(rs, r)
-         }
-      }
-   }
-   return rs, nil
 }
 
 func (r Representation) Ext() (string, bool) {
@@ -174,7 +180,3 @@ func (r Representation) get_mime_type() string {
    return *r.adaptation_set.MimeType
 }
 
-type mpd struct {
-   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
-   Period []Period
-}
