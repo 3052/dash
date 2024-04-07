@@ -5,6 +5,23 @@ import (
    "strconv"
 )
 
+func (m *MPD) Unmarshal(data []byte) error {
+   err := xml.Unmarshal(data, m)
+   if err != nil {
+      return err
+   }
+   for _, period := range m.Period {
+      period.mpd = m
+      for _, adapt := range period.AdaptationSet {
+         adapt.period = &period
+         for _, represent := range adapt.Representation {
+            represent.adaptation_set = &adapt
+         }
+      }
+   }
+   return nil
+}
+
 type Representation struct {
    Bandwidth int64 `xml:"bandwidth,attr"`
    BaseURL *string
@@ -31,20 +48,6 @@ func (r Representation) Ext() (string, bool) {
       return ".m4v", true
    }
    return "", false
-}
-
-func (r Representation) GetAdaptationSet() *AdaptationSet {
-   return r.adaptation_set
-}
-
-func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
-   if v := r.SegmentTemplate; v != nil {
-      return v, true
-   }
-   if v := r.adaptation_set.SegmentTemplate; v != nil {
-      return v, true
-   }
-   return nil, false
 }
 
 func (r Representation) String() string {
@@ -101,26 +104,12 @@ func (r Representation) get_mime_type() string {
    return *r.adaptation_set.MimeType
 }
 
-// we need to return slice so we can Delete and Sort
-func Unmarshal(base_url string, data []byte) ([]Representation, error) {
-   var media mpd
-   err := xml.Unmarshal(data, &media)
-   if err != nil {
-      return nil, err
+func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
+   if v := r.SegmentTemplate; v != nil {
+      return v, true
    }
-   if media.BaseURL == "" {
-      media.BaseURL = base_url
+   if v := r.adaptation_set.SegmentTemplate; v != nil {
+      return v, true
    }
-   var rs []Representation
-   for _, p := range media.Period {
-      p.mpd = &media
-      for _, a := range p.AdaptationSet {
-         a.period = &p
-         for _, r := range a.Representation {
-            r.adaptation_set = &a
-            rs = append(rs, r)
-         }
-      }
-   }
-   return rs, nil
+   return nil, false
 }

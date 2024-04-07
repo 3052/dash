@@ -109,10 +109,6 @@ type AdaptationSet struct {
    period *Period
 }
 
-func (a AdaptationSet) GetPeriod() *Period {
-   return a.period
-}
-
 func (p Period) Seconds() (float64, error) {
    s := strings.TrimPrefix(p.get_duration(), "PT")
    d, err := time.ParseDuration(strings.ToLower(s))
@@ -131,7 +127,7 @@ func (p Period) get_duration() string {
 
 type Range string
 
-type mpd struct {
+type MPD struct {
    BaseURL string `xml:"BaseURL"`
    MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
    Period []Period
@@ -140,5 +136,5 @@ type mpd struct {
 type Period struct {
    AdaptationSet []AdaptationSet
    Duration *string `xml:"duration,attr"`
-   mpd *mpd
+   mpd *MPD
 }
