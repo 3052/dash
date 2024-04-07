@@ -4,9 +4,47 @@ import (
    "encoding/xml"
    "fmt"
    "os"
-   "slices"
    "testing"
 )
+
+func TestDelete(t *testing.T) {
+   for i, test := range tests {
+      if i >= 1 {
+         fmt.Println()
+      }
+      fmt.Println(test)
+      fmt.Println("------------------------------------------------------------")
+      text, err := os.ReadFile(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      var media MPD
+      if err := media.Unmarshal(text); err != nil {
+         t.Fatal(err)
+      }
+      var line bool
+      for _, v := range media.Period {
+         seconds, err := v.Seconds()
+         if err != nil {
+            t.Fatal(err)
+         }
+         for _, v := range v.AdaptationSet {
+            for _, v := range v.Representation {
+               if seconds > 9 {
+                  if _, ok := v.Ext(); ok {
+                     if line {
+                        fmt.Println()
+                     } else {
+                        line = true
+                     }
+                     fmt.Println(v)
+                  }
+               }
+            }
+         }
+      }
+   }
+}
 
 type set map[byte]struct{}
 
@@ -47,7 +85,7 @@ func TestRepresentation(t *testing.T) {
       if err != nil {
          t.Fatal(err)
       }
-      var media mpd
+      var media MPD
       if err := xml.Unmarshal(text, &media); err != nil {
          t.Fatal(err)
       }
@@ -99,37 +137,4 @@ func TestRepresentation(t *testing.T) {
       }
    }
    fmt.Printf("%+v\n", sets)
-}
-
-func TestDelete(t *testing.T) {
-   for i, test := range tests {
-      if i >= 1 {
-         fmt.Println()
-      }
-      fmt.Println(test)
-      fmt.Println("------------------------------------------------------------")
-      text, err := os.ReadFile(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      reps, err := Unmarshal(text)
-      if err != nil {
-         t.Fatal(err)
-      }
-      reps = slices.DeleteFunc(reps, func(r Representation) bool {
-         if _, ok := r.Ext(); !ok {
-            return true
-         }
-         if v, _ := r.GetAdaptationSet().GetPeriod().Seconds(); v < 9 {
-            return true
-         }
-         return false
-      })
-      for i, rep := range reps {
-         if i >= 1 {
-            fmt.Println()
-         }
-         fmt.Println(rep)
-      }
-   }
 }
