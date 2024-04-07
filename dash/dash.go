@@ -30,13 +30,6 @@ type Period struct {
    mpd *mpd
 }
 
-func (p Period) get_duration() string {
-   if v := p.Duration; v != nil {
-      return *v
-   }
-   return p.mpd.MediaPresentationDuration
-}
-
 func (p Period) Seconds() (float64, error) {
    s := strings.TrimPrefix(p.get_duration(), "PT")
    d, err := time.ParseDuration(strings.ToLower(s))
@@ -44,6 +37,13 @@ func (p Period) Seconds() (float64, error) {
       return 0, err
    }
    return d.Seconds(), nil
+}
+
+func (p Period) get_duration() string {
+   if v := p.Duration; v != nil {
+      return *v
+   }
+   return p.mpd.MediaPresentationDuration
 }
 
 type Range string
