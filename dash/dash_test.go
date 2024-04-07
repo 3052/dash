@@ -9,7 +9,6 @@ import (
 )
 
 func TestMpd(t *testing.T) {
-   base_url := make(set)
    for _, test := range tests {
       text, err := os.ReadFile(test)
       if err != nil {
@@ -19,11 +18,6 @@ func TestMpd(t *testing.T) {
       if err := xml.Unmarshal(text, &m); err != nil {
          t.Fatal(err)
       }
-      if m.BaseURL != nil {
-         base_url[1] = struct{}{}
-      } else {
-         base_url[0] = struct{}{}
-      }
       if m.MediaPresentationDuration == "" {
          t.Fatal("MediaPresentationDuration", test)
       }
@@ -31,7 +25,6 @@ func TestMpd(t *testing.T) {
          t.Fatal("Period", test)
       }
    }
-   fmt.Println(base_url)
 }
 
 func TestRepresentation(t *testing.T) {

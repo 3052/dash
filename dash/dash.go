@@ -2,38 +2,23 @@ package dash
 
 import (
    "encoding/xml"
-   "fmt"
    "strconv"
    "strings"
    "time"
 )
 
-func Unmarshal(b []byte) ([]Representation, error) {
-   var media mpd
-   err := xml.Unmarshal(b, &media)
-   if err != nil {
-      return nil, err
-   }
-   var rs []Representation
-   for _, p := range media.Period {
-      p.mpd = &media
-      for _, a := range p.AdaptationSet {
-         a.period = &p
-         for _, r := range a.Representation {
-            r.adaptation_set = &a
-            rs = append(rs, r)
-         }
-      }
-   }
-   return rs, nil
+// range-start can exceed 32 bits, so we must use 64 bit
+func (r Range) Start() (uint64, error) {
+   start, _, _ := strings.Cut(string(r), "-")
+   return strconv.ParseUint(start, 10, 64)
 }
 
-type mpd struct {
-   BaseURL *string `xml:"BaseURL"`
-   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
-   Period []Period
+// range-end can exceed 32 bits, so we must use 64 bit
+func (r Range) End() (uint64, error) {
+   _, end, _ := strings.Cut(string(r), "-")
+   return strconv.ParseUint(end, 10, 64)
 }
- 
+
 type AdaptationSet struct {
    Codecs *string `xml:"codecs,attr"`
    Lang *string `xml:"lang,attr"`
@@ -48,12 +33,6 @@ type AdaptationSet struct {
 
 func (a AdaptationSet) GetPeriod() *Period {
    return a.period
-}
-
-type Period struct {
-   AdaptationSet []AdaptationSet
-   Duration *string `xml:"duration,attr"`
-   mpd *mpd
 }
 
 func (p Period) Seconds() (float64, error) {
@@ -73,16 +52,6 @@ func (p Period) get_duration() string {
 }
 
 type Range string
-
-// range-start and range-end can both exceed 32 bits, so we must use 64 bit
-func (r Range) Scan() (uint64, uint64, error) {
-   var start, end uint64
-   _, err := fmt.Sscanf(string(r), "%v-%v", &start, &end)
-   if err != nil {
-      return 0, 0, err
-   }
-   return start, end, nil
-}
 
 type Representation struct {
    Bandwidth int64 `xml:"bandwidth,attr"`
@@ -180,3 +149,31 @@ func (r Representation) get_mime_type() string {
    return *r.adaptation_set.MimeType
 }
 
+type Period struct {
+   AdaptationSet []AdaptationSet
+   Duration *string `xml:"duration,attr"`
+   mpd *MPD
+}
+
+type MPD struct {
+   BaseURL string `xml:"BaseURL"`
+   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
+   Period []Period
+}
+ 
+func (m *MPD) Unmarshal(data []byte) error {
+   err := xml.Unmarshal(data, m)
+   if err != nil {
+      return nil, err
+   }
+   for _, period := range m.Period {
+      period.mpd = &m
+      for _, adapt := range period.AdaptationSet {
+         adapt.period = &period
+         for _, represent := range adapt.Representation {
+            represent.adaptation_set = &adapt
+         }
+      }
+   }
+   return nil
+}

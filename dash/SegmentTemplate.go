@@ -83,10 +83,6 @@ func (s SegmentTemplate) get_timescale() float64 {
 }
 
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
-//  Ceil(
-//     (Period@duration - SegmentTempalte@eptDelta) /
-//     (SegmentTemplate@duration / SegmentTemplate@timescale)
-//  )
 func (s SegmentTemplate) segment_count(seconds float64) float64 {
    seconds /= *s.Duration / s.get_timescale()
    return math.Ceil(seconds)
