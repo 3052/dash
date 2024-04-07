@@ -164,10 +164,10 @@ type MPD struct {
 func (m *MPD) Unmarshal(data []byte) error {
    err := xml.Unmarshal(data, m)
    if err != nil {
-      return nil, err
+      return err
    }
    for _, period := range m.Period {
-      period.mpd = &m
+      period.mpd = m
       for _, adapt := range period.AdaptationSet {
          adapt.period = &period
          for _, represent := range adapt.Representation {

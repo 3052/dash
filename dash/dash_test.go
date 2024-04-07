@@ -8,25 +8,6 @@ import (
    "testing"
 )
 
-func TestMpd(t *testing.T) {
-   for _, test := range tests {
-      text, err := os.ReadFile(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      var m mpd
-      if err := xml.Unmarshal(text, &m); err != nil {
-         t.Fatal(err)
-      }
-      if m.MediaPresentationDuration == "" {
-         t.Fatal("MediaPresentationDuration", test)
-      }
-      if len(m.Period) == 0 {
-         t.Fatal("Period", test)
-      }
-   }
-}
-
 func TestRepresentation(t *testing.T) {
    sets := struct{
       bandwidth set
@@ -243,3 +224,22 @@ func TestDelete(t *testing.T) {
       }
    }
 }
+func TestMpd(t *testing.T) {
+   for _, test := range tests {
+      text, err := os.ReadFile(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      var m MPD
+      if err := m.Unmarshal(text); err != nil {
+         t.Fatal(err)
+      }
+      if m.MediaPresentationDuration == "" {
+         t.Fatal("MediaPresentationDuration", test)
+      }
+      if len(m.Period) == 0 {
+         t.Fatal("Period", test)
+      }
+   }
+}
+
