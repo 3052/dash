@@ -7,6 +7,78 @@ import (
    "time"
 )
 
+type AdaptationSet struct {
+   Codecs *string `xml:"codecs,attr"`
+   Lang *string `xml:"lang,attr"`
+   MimeType *string `xml:"mimeType,attr"`
+   Representation []*Representation
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   period *Period
+}
+
+func (a AdaptationSet) GetPeriod() *Period {
+   return a.period
+}
+
+type MPD struct {
+   BaseURL string `xml:"BaseURL"`
+   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
+   Period []*Period
+}
+
+func (m *MPD) Unmarshal(data []byte) error {
+   err := xml.Unmarshal(data, m)
+   if err != nil {
+      return err
+   }
+   for _, period := range m.Period {
+      period.mpd = m
+      for _, adapt := range period.AdaptationSet {
+         adapt.period = period
+         for _, represent := range adapt.Representation {
+            represent.adaptation_set = adapt
+         }
+      }
+   }
+   return nil
+}
+
+type Period struct {
+   AdaptationSet []*AdaptationSet
+   Duration *string `xml:"duration,attr"`
+   mpd *MPD
+}
+
+func (p Period) GetMpd() *MPD {
+   return p.mpd
+}
+
+func (p Period) Seconds() (float64, error) {
+   s := strings.TrimPrefix(p.get_duration(), "PT")
+   d, err := time.ParseDuration(strings.ToLower(s))
+   if err != nil {
+      return 0, err
+   }
+   return d.Seconds(), nil
+}
+
+func (p Period) get_duration() string {
+   if v := p.Duration; v != nil {
+      return *v
+   }
+   return p.mpd.MediaPresentationDuration
+}
+
+// range values can exceed 32 bits, so make sure to unmarshal to 64 bit
+type Range string
+
+func (r Range) Cut() (string, string, bool) {
+   return strings.Cut(string(r), "-")
+}
+
 type Representation struct {
    Bandwidth int64 `xml:"bandwidth,attr"`
    BaseURL *string
@@ -33,6 +105,10 @@ func (r Representation) Ext() (string, bool) {
       return ".m4v", true
    }
    return "", false
+}
+
+func (r Representation) GetAdaptationSet() *AdaptationSet {
+   return r.adaptation_set
 }
 
 func (r Representation) String() string {
@@ -87,68 +163,4 @@ func (r Representation) get_mime_type() string {
       return *v
    }
    return *r.adaptation_set.MimeType
-}
-
-type MPD struct {
-   BaseURL string `xml:"BaseURL"`
-   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
-   Period []*Period
-}
-
-type AdaptationSet struct {
-   Codecs *string `xml:"codecs,attr"`
-   Lang *string `xml:"lang,attr"`
-   MimeType *string `xml:"mimeType,attr"`
-   Representation []*Representation
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-   period *Period
-}
-
-func (m *MPD) Unmarshal(data []byte) error {
-   err := xml.Unmarshal(data, m)
-   if err != nil {
-      return err
-   }
-   for _, period := range m.Period {
-      period.mpd = m
-      for _, adapt := range period.AdaptationSet {
-         adapt.period = period
-         for _, represent := range adapt.Representation {
-            represent.adaptation_set = adapt
-         }
-      }
-   }
-   return nil
-}
-
-type Period struct {
-   AdaptationSet []*AdaptationSet
-   Duration *string `xml:"duration,attr"`
-   mpd *MPD
-}
-
-func (p Period) Seconds() (float64, error) {
-   s := strings.TrimPrefix(p.get_duration(), "PT")
-   d, err := time.ParseDuration(strings.ToLower(s))
-   if err != nil {
-      return 0, err
-   }
-   return d.Seconds(), nil
-}
-
-func (p Period) get_duration() string {
-   if v := p.Duration; v != nil {
-      return *v
-   }
-   return p.mpd.MediaPresentationDuration
-}
-
-// range values can exceed 32 bits, so make sure to unmarshal to 64 bit
-type Range string
-
-func (r Range) Cut() (string, string, bool) {
-   return strings.Cut(string(r), "-")
 }
