@@ -8,6 +8,56 @@ import (
    "time"
 )
 
+func (s SegmentTemplate) GetInitialization(r Representation) (string, bool) {
+   if v := s.Initialization; v != nil {
+      return strings.Replace(*v, "$RepresentationID$", r.ID, 1), true
+   }
+   return "", false
+}
+
+func (s SegmentTemplate) GetMedia(r *Representation) ([]string, error) {
+   s.Media = strings.Replace(s.Media, "$RepresentationID$", r.ID, 1)
+   var (
+      media []string
+      number int
+   )
+   if s.StartNumber != nil {
+      number = *s.StartNumber
+   }
+   if s.SegmentTimeline != nil {
+      for _, segment := range s.SegmentTimeline.S {
+         var repeat int
+         if segment.R != nil {
+            repeat = *segment.R
+         }
+         for range 1 + repeat {
+            var medium string
+            replace := strconv.Itoa(number)
+            if s.StartNumber != nil {
+               medium = strings.Replace(s.Media, "$Number$", replace, 1)
+               number++
+            } else {
+               medium = strings.Replace(s.Media, "$Time$", replace, 1)
+               number += segment.D
+            }
+            media = append(media, medium)
+         }
+      }
+   } else {
+      seconds, err := r.adaptation_set.period.Seconds()
+      if err != nil {
+         return nil, err
+      }
+      for range int(s.segment_count(seconds)) {
+         replace := strconv.Itoa(number)
+         medium := strings.Replace(s.Media, "$Number$", replace, 1)
+         media = append(media, medium)
+         number++
+      }
+   }
+   return media, nil
+}
+
 type AdaptationSet struct {
    Codecs *string `xml:"codecs,attr"`
    Lang *string `xml:"lang,attr"`

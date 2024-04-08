@@ -1,68 +1,8 @@
 package dash
 
-import (
-   "errors"
-   "strconv"
-   "strings"
-)
+import "strconv"
 
-func (r Representation) GetInitialization() (string, bool) {
-   if v, ok := r.get_segment_template(); ok {
-      if v := v.Initialization; v != nil {
-         return strings.Replace(*v, "$RepresentationID$", r.ID, 1), true
-      }
-   }
-   return "", false
-}
-
-func (r Representation) GetMedia() ([]string, error) {
-   st, ok := r.get_segment_template()
-   if !ok {
-      return nil, errors.New("get_segment_template")
-   }
-   st.Media = strings.Replace(st.Media, "$RepresentationID$", r.ID, 1)
-   var (
-      media []string
-      number int
-   )
-   if st.StartNumber != nil {
-      number = *st.StartNumber
-   }
-   if st.SegmentTimeline != nil {
-      for _, segment := range st.SegmentTimeline.S {
-         var repeat int
-         if segment.R != nil {
-            repeat = *segment.R
-         }
-         for range 1 + repeat {
-            var medium string
-            replace := strconv.Itoa(number)
-            if st.StartNumber != nil {
-               medium = strings.Replace(st.Media, "$Number$", replace, 1)
-               number++
-            } else {
-               medium = strings.Replace(st.Media, "$Time$", replace, 1)
-               number += segment.D
-            }
-            media = append(media, medium)
-         }
-      }
-   } else {
-      seconds, err := r.adaptation_set.period.Seconds()
-      if err != nil {
-         return nil, err
-      }
-      for range int(st.segment_count(seconds)) {
-         replace := strconv.Itoa(number)
-         medium := strings.Replace(st.Media, "$Number$", replace, 1)
-         media = append(media, medium)
-         number++
-      }
-   }
-   return media, nil
-}
-
-func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
+func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
    if v := r.SegmentTemplate; v != nil {
       return v, true
    }

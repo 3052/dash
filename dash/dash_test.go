@@ -9,116 +9,6 @@ import (
    "testing"
 )
 
-func TestMpd(t *testing.T) {
-   for _, test := range tests {
-      text, err := os.ReadFile(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      var media MPD
-      if err := media.Unmarshal(text); err != nil {
-         t.Fatal(err)
-      }
-      if media.MediaPresentationDuration == "" {
-         t.Fatal("MediaPresentationDuration", test)
-      }
-      if len(media.Period) == 0 {
-         t.Fatal("Period", test)
-      }
-      for _, v := range media.Period {
-         if v.mpd == nil {
-            t.Fatal("mpd")
-         }
-         for _, v := range v.AdaptationSet {
-            if v.period == nil {
-               t.Fatal("period")
-            }
-            for _, v := range v.Representation {
-               if v.adaptation_set == nil {
-                  t.Fatal("adaptation_set")
-               }
-            }
-         }
-      }
-   }
-}
-
-func TestSegmentTemplate(t *testing.T) {
-   sets := struct{
-      d set
-      duration set
-      r set
-      initialization set
-      media set
-      segmentTimeline set
-      timescale set
-   }{
-      make(set),
-      make(set),
-      make(set),
-      make(set),
-      make(set),
-      make(set),
-      make(set),
-   }
-   for _, test := range tests {
-      text, err := os.ReadFile(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      var media MPD
-      if err := media.Unmarshal(text); err != nil {
-         t.Fatal(err)
-      }
-      for _, v := range media.Period {
-         for _, v := range v.AdaptationSet {
-            for _, v := range v.Representation {
-               if v, ok := v.GetSegmentTemplate(); ok {
-                  if v.Duration != nil {
-                     sets.duration[1] = struct{}{}
-                  } else {
-                     sets.duration[0] = struct{}{}
-                  }
-                  if v.Initialization != nil {
-                     sets.initialization[1] = struct{}{}
-                  } else {
-                     sets.initialization[0] = struct{}{}
-                  }
-                  if v.Media != "" {
-                     sets.media[1] = struct{}{}
-                  } else {
-                     sets.media[0] = struct{}{}
-                  }
-                  if v.Timescale != nil {
-                     sets.timescale[1] = struct{}{}
-                  } else {
-                     sets.timescale[0] = struct{}{}
-                  }
-                  if v := v.SegmentTimeline; v != nil {
-                     sets.segmentTimeline[1] = struct{}{}
-                     for _, v := range v.S {
-                        if v.D >= 1 {
-                           sets.d[1] = struct{}{}
-                        } else {
-                           sets.d[0] = struct{}{}
-                        }
-                        if v.R != nil {
-                           sets.r[1] = struct{}{}
-                        } else {
-                           sets.r[0] = struct{}{}
-                        }
-                     }
-                  } else {
-                     sets.segmentTimeline[0] = struct{}{}
-                  }
-               }
-            }
-         }
-      }
-   }
-   fmt.Printf("%+v\n", sets)
-}
-
 func TestMedia(t *testing.T) {
    base := "https://gec.stan.video/09/dash/live/1540676B-1/hd/sdr/"
    res, err := http.Get(base + "high_h264-59fcad98.mpd")
@@ -254,3 +144,113 @@ func TestAdaptation(t *testing.T) {
    }
    fmt.Printf("%+v\n", sets)
 }
+func TestMpd(t *testing.T) {
+   for _, test := range tests {
+      text, err := os.ReadFile(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      var media MPD
+      if err := media.Unmarshal(text); err != nil {
+         t.Fatal(err)
+      }
+      if media.MediaPresentationDuration == "" {
+         t.Fatal("MediaPresentationDuration", test)
+      }
+      if len(media.Period) == 0 {
+         t.Fatal("Period", test)
+      }
+      for _, v := range media.Period {
+         if v.mpd == nil {
+            t.Fatal("mpd")
+         }
+         for _, v := range v.AdaptationSet {
+            if v.period == nil {
+               t.Fatal("period")
+            }
+            for _, v := range v.Representation {
+               if v.adaptation_set == nil {
+                  t.Fatal("adaptation_set")
+               }
+            }
+         }
+      }
+   }
+}
+
+func TestSegmentTemplate(t *testing.T) {
+   sets := struct{
+      d set
+      duration set
+      r set
+      initialization set
+      media set
+      segmentTimeline set
+      timescale set
+   }{
+      make(set),
+      make(set),
+      make(set),
+      make(set),
+      make(set),
+      make(set),
+      make(set),
+   }
+   for _, test := range tests {
+      text, err := os.ReadFile(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      var media MPD
+      if err := media.Unmarshal(text); err != nil {
+         t.Fatal(err)
+      }
+      for _, v := range media.Period {
+         for _, v := range v.AdaptationSet {
+            for _, v := range v.Representation {
+               if v, ok := v.GetSegmentTemplate(); ok {
+                  if v.Duration != nil {
+                     sets.duration[1] = struct{}{}
+                  } else {
+                     sets.duration[0] = struct{}{}
+                  }
+                  if v.Initialization != nil {
+                     sets.initialization[1] = struct{}{}
+                  } else {
+                     sets.initialization[0] = struct{}{}
+                  }
+                  if v.Media != "" {
+                     sets.media[1] = struct{}{}
+                  } else {
+                     sets.media[0] = struct{}{}
+                  }
+                  if v.Timescale != nil {
+                     sets.timescale[1] = struct{}{}
+                  } else {
+                     sets.timescale[0] = struct{}{}
+                  }
+                  if v := v.SegmentTimeline; v != nil {
+                     sets.segmentTimeline[1] = struct{}{}
+                     for _, v := range v.S {
+                        if v.D >= 1 {
+                           sets.d[1] = struct{}{}
+                        } else {
+                           sets.d[0] = struct{}{}
+                        }
+                        if v.R != nil {
+                           sets.r[1] = struct{}{}
+                        } else {
+                           sets.r[0] = struct{}{}
+                        }
+                     }
+                  } else {
+                     sets.segmentTimeline[0] = struct{}{}
+                  }
+               }
+            }
+         }
+      }
+   }
+   fmt.Printf("%+v\n", sets)
+}
+
