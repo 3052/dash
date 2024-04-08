@@ -146,16 +146,9 @@ func (p Period) get_duration() string {
    return p.mpd.MediaPresentationDuration
 }
 
+// range values can exceed 32 bits, so make sure to unmarshal to 64 bit
 type Range string
 
-// range-end can exceed 32 bits, so we must use 64 bit
-func (r Range) End() (uint64, error) {
-   _, end, _ := strings.Cut(string(r), "-")
-   return strconv.ParseUint(end, 10, 64)
-}
-
-// range-start can exceed 32 bits, so we must use 64 bit
-func (r Range) Start() (uint64, error) {
-   start, _, _ := strings.Cut(string(r), "-")
-   return strconv.ParseUint(start, 10, 64)
+func (r Range) Cut() (string, string, bool) {
+   return strings.Cut(string(r), "-")
 }
