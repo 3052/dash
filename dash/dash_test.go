@@ -25,6 +25,21 @@ func TestMpd(t *testing.T) {
       if len(media.Period) == 0 {
          t.Fatal("Period", test)
       }
+      for _, v := range media.Period {
+         if v.mpd == nil {
+            t.Fatal("mpd")
+         }
+         for _, v := range v.AdaptationSet {
+            if v.period == nil {
+               t.Fatal("period")
+            }
+            for _, v := range v.Representation {
+               if v.adaptation_set == nil {
+                  t.Fatal("adaptation_set")
+               }
+            }
+         }
+      }
    }
 }
 
@@ -140,10 +155,7 @@ func TestMedia(t *testing.T) {
 
 func TestPeriod(t *testing.T) {
    duration := make(set)
-   for i, test := range tests {
-      if i >= 1 {
-         fmt.Println()
-      }
+   for _, test := range tests {
       text, err := os.ReadFile(test)
       if err != nil {
          t.Fatal(err)
@@ -152,11 +164,11 @@ func TestPeriod(t *testing.T) {
       if err := xml.Unmarshal(text, &media); err != nil {
          t.Fatal(err)
       }
-      for _, per := range media.Period {
-         if len(per.AdaptationSet) == 0 {
+      for _, p := range media.Period {
+         if len(p.AdaptationSet) == 0 {
             t.Fatal("AdaptationSet", test)
          }
-         if per.Duration != nil {
+         if p.Duration != nil {
             duration[1] = struct{}{}
          } else {
             duration[0] = struct{}{}

@@ -13,31 +13,13 @@ func (m *MPD) Unmarshal(data []byte) error {
    for _, period := range m.Period {
       period.mpd = m
       for _, adapt := range period.AdaptationSet {
-         adapt.period = &period
+         adapt.period = period
          for _, represent := range adapt.Representation {
-            represent.adaptation_set = &adapt
+            represent.adaptation_set = adapt
          }
       }
    }
    return nil
-}
-
-type Representation struct {
-   Bandwidth int64 `xml:"bandwidth,attr"`
-   BaseURL *string
-   Codecs *string `xml:"codecs,attr"`
-   Height *int64 `xml:"height,attr"`
-   ID string `xml:"id,attr"`
-   MimeType *string `xml:"mimeType,attr"`
-   SegmentBase *struct {
-      IndexRange Range `xml:"indexRange,attr"`
-      Initialization struct {
-         Range Range `xml:"range,attr"`
-      }
-   }
-   SegmentTemplate *SegmentTemplate
-   Width *int64 `xml:"width,attr"`
-   adaptation_set *AdaptationSet
 }
 
 func (r Representation) Ext() (string, bool) {
@@ -112,4 +94,22 @@ func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
       return v, true
    }
    return nil, false
+}
+
+type Representation struct {
+   Bandwidth int64 `xml:"bandwidth,attr"`
+   BaseURL *string
+   Codecs *string `xml:"codecs,attr"`
+   Height *int64 `xml:"height,attr"`
+   ID string `xml:"id,attr"`
+   MimeType *string `xml:"mimeType,attr"`
+   SegmentBase *struct {
+      IndexRange Range `xml:"indexRange,attr"`
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+   }
+   SegmentTemplate *SegmentTemplate
+   Width *int64 `xml:"width,attr"`
+   adaptation_set *AdaptationSet
 }
