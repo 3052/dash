@@ -111,6 +111,16 @@ func (r Representation) GetAdaptationSet() *AdaptationSet {
    return r.adaptation_set
 }
 
+func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
+   if v := r.SegmentTemplate; v != nil {
+      return v, true
+   }
+   if v := r.adaptation_set.SegmentTemplate; v != nil {
+      return v, true
+   }
+   return nil, false
+}
+
 func (r Representation) String() string {
    var b []byte
    if v := r.Width; v != nil {

@@ -7,6 +7,83 @@ import (
    "testing"
 )
 
+func TestAdaptation(t *testing.T) {
+   sets := struct{
+      codecs set
+      lang set
+      mimeType set
+      role set
+      segmentTemplate set
+      value set
+   }{
+      make(set),
+      make(set),
+      make(set),
+      make(set),
+      make(set),
+      make(set),
+   }
+   for _, test := range tests {
+      text, err := os.ReadFile(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      var media MPD
+      if err := xml.Unmarshal(text, &media); err != nil {
+         t.Fatal(err)
+      }
+      for _, per := range media.Period {
+         for _, ada := range per.AdaptationSet {
+            if len(ada.Representation) == 0 {
+               t.Fatal("Representation")
+            }
+            if ada.Lang != nil {
+               sets.lang[1] = struct{}{}
+            } else {
+               sets.lang[0] = struct{}{}
+            }
+            if ada.Role != nil {
+               sets.role[1] = struct{}{}
+               if ada.Role.Value != "" {
+                  sets.value[1] = struct{}{}
+               } else {
+                  sets.value[0] = struct{}{}
+               }
+            } else {
+               sets.role[0] = struct{}{}
+            }
+            for _, rep := range ada.Representation {
+               var value byte
+               if ada.Codecs != nil {
+                  value += 10
+               }
+               if rep.Codecs != nil {
+                  value++
+               }
+               sets.codecs[value] = struct{}{}
+               value = 0
+               if ada.MimeType != nil {
+                  value += 10
+               }
+               if rep.MimeType != nil {
+                  value++
+               }
+               sets.mimeType[value] = struct{}{}
+               value = 0
+               if ada.SegmentTemplate != nil {
+                  value += 10
+               }
+               if rep.SegmentTemplate != nil {
+                  value++
+               }
+               sets.segmentTemplate[value] = struct{}{}
+            }
+         }
+      }
+   }
+   fmt.Printf("%+v\n", sets)
+}
+
 func TestDelete(t *testing.T) {
    for i, test := range tests {
       if i >= 1 {
@@ -44,6 +121,65 @@ func TestDelete(t *testing.T) {
          }
       }
    }
+}
+
+func TestMpd(t *testing.T) {
+   for _, test := range tests {
+      text, err := os.ReadFile(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      var media MPD
+      if err := media.Unmarshal(text); err != nil {
+         t.Fatal(err)
+      }
+      if media.MediaPresentationDuration == "" {
+         t.Fatal("MediaPresentationDuration", test)
+      }
+      if len(media.Period) == 0 {
+         t.Fatal("Period", test)
+      }
+      for _, v := range media.Period {
+         if v.mpd == nil {
+            t.Fatal("mpd")
+         }
+         for _, v := range v.AdaptationSet {
+            if v.period == nil {
+               t.Fatal("period")
+            }
+            for _, v := range v.Representation {
+               if v.adaptation_set == nil {
+                  t.Fatal("adaptation_set")
+               }
+            }
+         }
+      }
+   }
+}
+
+func TestPeriod(t *testing.T) {
+   duration := make(set)
+   for _, test := range tests {
+      text, err := os.ReadFile(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      var media MPD
+      if err := xml.Unmarshal(text, &media); err != nil {
+         t.Fatal(err)
+      }
+      for _, p := range media.Period {
+         if len(p.AdaptationSet) == 0 {
+            t.Fatal("AdaptationSet", test)
+         }
+         if p.Duration != nil {
+            duration[1] = struct{}{}
+         } else {
+            duration[0] = struct{}{}
+         }
+      }
+   }
+   fmt.Println(duration)
 }
 
 func TestRepresentation(t *testing.T) {
@@ -123,140 +259,4 @@ func TestRepresentation(t *testing.T) {
       }
    }
    fmt.Printf("%+v\n", sets)
-}
-
-func TestPeriod(t *testing.T) {
-   duration := make(set)
-   for _, test := range tests {
-      text, err := os.ReadFile(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      var media MPD
-      if err := xml.Unmarshal(text, &media); err != nil {
-         t.Fatal(err)
-      }
-      for _, p := range media.Period {
-         if len(p.AdaptationSet) == 0 {
-            t.Fatal("AdaptationSet", test)
-         }
-         if p.Duration != nil {
-            duration[1] = struct{}{}
-         } else {
-            duration[0] = struct{}{}
-         }
-      }
-   }
-   fmt.Println(duration)
-}
-
-func TestAdaptation(t *testing.T) {
-   sets := struct{
-      codecs set
-      lang set
-      mimeType set
-      role set
-      segmentTemplate set
-      value set
-   }{
-      make(set),
-      make(set),
-      make(set),
-      make(set),
-      make(set),
-      make(set),
-   }
-   for _, test := range tests {
-      text, err := os.ReadFile(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      var media MPD
-      if err := xml.Unmarshal(text, &media); err != nil {
-         t.Fatal(err)
-      }
-      for _, per := range media.Period {
-         for _, ada := range per.AdaptationSet {
-            if len(ada.Representation) == 0 {
-               t.Fatal("Representation")
-            }
-            if ada.Lang != nil {
-               sets.lang[1] = struct{}{}
-            } else {
-               sets.lang[0] = struct{}{}
-            }
-            if ada.Role != nil {
-               sets.role[1] = struct{}{}
-               if ada.Role.Value != "" {
-                  sets.value[1] = struct{}{}
-               } else {
-                  sets.value[0] = struct{}{}
-               }
-            } else {
-               sets.role[0] = struct{}{}
-            }
-            for _, rep := range ada.Representation {
-               var value byte
-               if ada.Codecs != nil {
-                  value += 10
-               }
-               if rep.Codecs != nil {
-                  value++
-               }
-               sets.codecs[value] = struct{}{}
-               value = 0
-               if ada.MimeType != nil {
-                  value += 10
-               }
-               if rep.MimeType != nil {
-                  value++
-               }
-               sets.mimeType[value] = struct{}{}
-               value = 0
-               if ada.SegmentTemplate != nil {
-                  value += 10
-               }
-               if rep.SegmentTemplate != nil {
-                  value++
-               }
-               sets.segmentTemplate[value] = struct{}{}
-            }
-         }
-      }
-   }
-   fmt.Printf("%+v\n", sets)
-}
-
-func TestMpd(t *testing.T) {
-   for _, test := range tests {
-      text, err := os.ReadFile(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      var media MPD
-      if err := media.Unmarshal(text); err != nil {
-         t.Fatal(err)
-      }
-      if media.MediaPresentationDuration == "" {
-         t.Fatal("MediaPresentationDuration", test)
-      }
-      if len(media.Period) == 0 {
-         t.Fatal("Period", test)
-      }
-      for _, v := range media.Period {
-         if v.mpd == nil {
-            t.Fatal("mpd")
-         }
-         for _, v := range v.AdaptationSet {
-            if v.period == nil {
-               t.Fatal("period")
-            }
-            for _, v := range v.Representation {
-               if v.adaptation_set == nil {
-                  t.Fatal("adaptation_set")
-               }
-            }
-         }
-      }
-   }
 }

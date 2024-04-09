@@ -6,16 +6,6 @@ import (
    "strings"
 )
 
-func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
-   if v := r.SegmentTemplate; v != nil {
-      return v, true
-   }
-   if v := r.adaptation_set.SegmentTemplate; v != nil {
-      return v, true
-   }
-   return nil, false
-}
-
 type SegmentTemplate struct {
    Duration *float64 `xml:"duration,attr"`
    Initialization *string `xml:"initialization,attr"`
@@ -28,20 +18,6 @@ type SegmentTemplate struct {
    }
    StartNumber *int `xml:"startNumber,attr"`
    Timescale *float64 `xml:"timescale,attr"`
-}
-
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
-func (s SegmentTemplate) get_timescale() float64 {
-   if v := s.Timescale; v != nil {
-      return *v
-   }
-   return 1
-}
-
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
-func (s SegmentTemplate) segment_count(seconds float64) float64 {
-   seconds /= *s.Duration / s.get_timescale()
-   return math.Ceil(seconds)
 }
 
 func (s SegmentTemplate) GetInitialization(r *Representation) (string, bool) {
@@ -92,4 +68,18 @@ func (s SegmentTemplate) GetMedia(r *Representation) ([]string, error) {
       }
    }
    return media, nil
+}
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
+func (s SegmentTemplate) get_timescale() float64 {
+   if v := s.Timescale; v != nil {
+      return *v
+   }
+   return 1
+}
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
+func (s SegmentTemplate) segment_count(seconds float64) float64 {
+   seconds /= *s.Duration / s.get_timescale()
+   return math.Ceil(seconds)
 }
