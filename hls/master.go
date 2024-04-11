@@ -5,6 +5,9 @@ import (
    "strings"
 )
 
+// datatracker.ietf.org/doc/html/rfc8216#section-4.3.4
+type MasterPlaylist []VariantStream
+
 func (m MasterPlaylist) Index(i int) (*VariantStream, bool) {
    if i >= 0 {
       if i < len(m) {
@@ -13,9 +16,6 @@ func (m MasterPlaylist) Index(i int) (*VariantStream, bool) {
    }
    return nil, false
 }
-
-// datatracker.ietf.org/doc/html/rfc8216#section-4.3.4
-type MasterPlaylist []VariantStream
 
 func (m *MasterPlaylist) New(s string) {
    for s != "" {
