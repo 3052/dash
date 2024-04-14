@@ -5,6 +5,21 @@ import (
    "strings"
 )
 
+const ModeLine = `
+{{- range $index, $_ := . -}}
+   {{ with $index }}
+index = {{ . }}
+   {{- else -}}
+index = 0
+   {{- end }}
+bandwidth = {{ .Bandwidth }}
+codecs = {{ .Codecs }}
+   {{- with .Resolution }}
+resolution = {{ . }}
+   {{- end }}
+{{ end -}}
+`
+
 // datatracker.ietf.org/doc/html/rfc8216#section-4.3.4
 type MasterPlaylist []VariantStream
 
@@ -69,18 +84,3 @@ type VariantStream struct {
    Resolution string
    URI string
 }
-
-const ModeLine = `
-{{- range $index, $_ := . -}}
-   {{ with $index }}
-index = {{ . }}
-   {{- else -}}
-index = 0
-   {{- end }}
-bandwidth = {{ .Bandwidth }}
-codecs = {{ .Codecs }}
-   {{- with .Resolution }}
-resolution = {{ . }}
-   {{- end }}
-{{ end -}}
-`
