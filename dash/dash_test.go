@@ -29,7 +29,8 @@ func TestAdaptation(t *testing.T) {
          t.Fatal(err)
       }
       var media MPD
-      if err := xml.Unmarshal(text, &media); err != nil {
+      err = xml.Unmarshal(text, &media)
+      if err != nil {
          t.Fatal(err)
       }
       for _, per := range media.Period {
@@ -96,7 +97,8 @@ func TestDelete(t *testing.T) {
          t.Fatal(err)
       }
       var media MPD
-      if err := media.Unmarshal(text); err != nil {
+      err = media.Unmarshal(text)
+      if err != nil {
          t.Fatal(err)
       }
       var line bool
@@ -130,7 +132,8 @@ func TestMpd(t *testing.T) {
          t.Fatal(err)
       }
       var media MPD
-      if err := media.Unmarshal(text); err != nil {
+      err = media.Unmarshal(text)
+      if err != nil {
          t.Fatal(err)
       }
       if media.MediaPresentationDuration == "" {
@@ -165,7 +168,8 @@ func TestPeriod(t *testing.T) {
          t.Fatal(err)
       }
       var media MPD
-      if err := xml.Unmarshal(text, &media); err != nil {
+      err = xml.Unmarshal(text, &media)
+      if err != nil {
          t.Fatal(err)
       }
       for _, p := range media.Period {
@@ -208,7 +212,8 @@ func TestRepresentation(t *testing.T) {
          t.Fatal(err)
       }
       var media MPD
-      if err := xml.Unmarshal(text, &media); err != nil {
+      err = xml.Unmarshal(text, &media)
+      if err != nil {
          t.Fatal(err)
       }
       for _, per := range media.Period {

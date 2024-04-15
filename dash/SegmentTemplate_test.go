@@ -8,8 +8,6 @@ import (
    "testing"
 )
 
-type set map[byte]struct{}
-
 var tests = []string{
    "mpd/amc.mpd",
    "mpd/hulu.mpd",
@@ -20,36 +18,34 @@ var tests = []string{
    "mpd/plex.mpd",
    "mpd/roku.mpd",
    "mpd/stan.mpd",
+   "mpd/tubi.mpd",
 }
 
 func TestMedia(t *testing.T) {
-   base := "https://gec.stan.video/09/dash/live/1540676B-1/hd/sdr/"
-   res, err := http.Get(base + "high_h264-59fcad98.mpd")
-   if err != nil {
-      t.Fatal(err)
-   }
-   defer res.Body.Close()
-   fmt.Println(res.Request.URL)
-   text, err := io.ReadAll(res.Body)
-   if err != nil {
-      t.Fatal(err)
-   }
-   var media MPD
-   if err := media.Unmarshal(text); err != nil {
-      t.Fatal(err)
-   }
-   for _, v := range media.Period {
-      for _, v := range v.AdaptationSet {
-         for _, represent := range v.Representation {
-            if v, ok := represent.GetSegmentTemplate(); ok {
-               fmt.Println(v.GetInitialization(represent))
-               media, err := v.GetMedia(represent)
-               if err != nil {
-                  t.Fatal(err)
-               }
-               length := len(media)
-               if length >= 1 {
-                  fmt.Println(base + media[length-1])
+   for _, test := range tests {
+      fmt.Println(test)
+      text, err := os.ReadFile(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      var media MPD
+      err = media.Unmarshal(text)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, v := range media.Period {
+         for _, v := range v.AdaptationSet {
+            for _, represent := range v.Representation {
+               if v, ok := represent.GetSegmentTemplate(); ok {
+                  fmt.Println(v.GetInitialization(represent))
+                  media, err := v.GetMedia(represent)
+                  if err != nil {
+                     t.Fatal(err)
+                  }
+                  length := len(media)
+                  if length >= 1 {
+                     fmt.Println(base + media[length-1])
+                  }
                }
             }
          }
@@ -81,7 +77,8 @@ func TestSegmentTemplate(t *testing.T) {
          t.Fatal(err)
       }
       var media MPD
-      if err := media.Unmarshal(text); err != nil {
+      err = media.Unmarshal(text)
+      if err != nil {
          t.Fatal(err)
       }
       for _, v := range media.Period {
@@ -132,3 +129,5 @@ func TestSegmentTemplate(t *testing.T) {
    }
    fmt.Printf("%+v\n", sets)
 }
+
+type set map[byte]struct{}
