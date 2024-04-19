@@ -2,8 +2,6 @@ package dash
 
 import (
    "fmt"
-   "io"
-   "net/http"
    "os"
    "testing"
 )
@@ -16,6 +14,7 @@ var tests = []string{
    "mpd/paramount.mpd",
    "mpd/peacock.mpd",
    "mpd/plex.mpd",
+   "mpd/pluto.mpd",
    "mpd/roku.mpd",
    "mpd/stan.mpd",
    "mpd/tubi.mpd",
@@ -44,7 +43,7 @@ func TestMedia(t *testing.T) {
                   }
                   length := len(media)
                   if length >= 1 {
-                     fmt.Println(base + media[length-1])
+                     fmt.Println(media[length-1])
                   }
                }
             }
