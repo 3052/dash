@@ -1,8 +1,8 @@
 package dash
 
 import (
+   "fmt"
    "math"
-   "strconv"
    "strings"
 )
 
@@ -27,6 +27,20 @@ func (s SegmentTemplate) GetInitialization(r *Representation) (string, bool) {
    return "", false
 }
 
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
+func (s SegmentTemplate) get_timescale() float64 {
+   if v := s.Timescale; v != nil {
+      return *v
+   }
+   return 1
+}
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
+func (s SegmentTemplate) segment_count(seconds float64) float64 {
+   seconds /= *s.Duration / s.get_timescale()
+   return math.Ceil(seconds)
+}
+
 func (s SegmentTemplate) GetMedia(r *Representation) ([]string, error) {
    s.Media = strings.Replace(s.Media, "$RepresentationID$", r.ID, 1)
    var (
@@ -44,12 +58,11 @@ func (s SegmentTemplate) GetMedia(r *Representation) ([]string, error) {
          }
          for range 1 + repeat {
             var medium string
-            replace := strconv.Itoa(number)
             if s.StartNumber != nil {
-               medium = strings.Replace(s.Media, "$Number$", replace, 1)
+               medium = sprintf(s.Media, number)
                number++
             } else {
-               medium = strings.Replace(s.Media, "$Time$", replace, 1)
+               medium = strings.Replace(s.Media, "$Time$", fmt.Sprint(number), 1)
                number += segment.D
             }
             media = append(media, medium)
@@ -61,8 +74,7 @@ func (s SegmentTemplate) GetMedia(r *Representation) ([]string, error) {
          return nil, err
       }
       for range int(s.segment_count(seconds)) {
-         replace := strconv.Itoa(number)
-         medium := strings.Replace(s.Media, "$Number$", replace, 1)
+         medium := strings.Replace(s.Media, "$Number$", fmt.Sprint(number), 1)
          media = append(media, medium)
          number++
       }
@@ -70,16 +82,13 @@ func (s SegmentTemplate) GetMedia(r *Representation) ([]string, error) {
    return media, nil
 }
 
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
-func (s SegmentTemplate) get_timescale() float64 {
-   if v := s.Timescale; v != nil {
-      return *v
+// github.com/Dash-Industry-Forum/DASH-IF-Conformance/blob/development/Utils/impl/MPDHandler/computeUrls.php
+func sprintf(format string, number int) string {
+   format = strings.Replace(format, "$Number$", fmt.Sprint(number), 1)
+   if strings.Contains(format, "$Number") {
+      format = fmt.Sprintf(format, number)
+      format = strings.Replace(format, "$Number", "", 1)
+      format = strings.Replace(format, "$", "", 1)
    }
-   return 1
-}
-
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
-func (s SegmentTemplate) segment_count(seconds float64) float64 {
-   seconds /= *s.Duration / s.get_timescale()
-   return math.Ceil(seconds)
+   return format
 }
