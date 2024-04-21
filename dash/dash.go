@@ -9,6 +9,7 @@ import (
 
 type AdaptationSet struct {
    Codecs *string `xml:"codecs,attr"`
+   Height *int64 `xml:"height,attr"`
    Lang *string `xml:"lang,attr"`
    MimeType *string `xml:"mimeType,attr"`
    Representation []*Representation
@@ -16,6 +17,7 @@ type AdaptationSet struct {
       Value string `xml:"value,attr"`
    }
    SegmentTemplate *SegmentTemplate
+   Width *int64 `xml:"width,attr"`
    period *Period
 }
 
@@ -79,24 +81,6 @@ func (r Range) Cut() (string, string, bool) {
    return strings.Cut(string(r), "-")
 }
 
-type Representation struct {
-   Bandwidth int64 `xml:"bandwidth,attr"`
-   BaseURL *string
-   Codecs *string `xml:"codecs,attr"`
-   Height *int64 `xml:"height,attr"`
-   ID string `xml:"id,attr"`
-   MimeType *string `xml:"mimeType,attr"`
-   SegmentBase *struct {
-      IndexRange Range `xml:"indexRange,attr"`
-      Initialization struct {
-         Range Range `xml:"range,attr"`
-      }
-   }
-   SegmentTemplate *SegmentTemplate
-   Width *int64 `xml:"width,attr"`
-   adaptation_set *AdaptationSet
-}
-
 func (r Representation) Ext() (string, bool) {
    switch r.get_mime_type() {
    case "audio/mp4":
@@ -121,18 +105,73 @@ func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
    return nil, false
 }
 
+func (r Representation) get_mime_type() string {
+   if v := r.MimeType; v != nil {
+      return *v
+   }
+   return *r.adaptation_set.MimeType
+}
+
+func (r Representation) get_codecs() (string, bool) {
+   if v := r.Codecs; v != nil {
+      return *v, true
+   }
+   if v := r.adaptation_set.Codecs; v != nil {
+      return *v, true
+   }
+   return "", false
+}
+
+type Representation struct {
+   Bandwidth int64 `xml:"bandwidth,attr"`
+   BaseURL *string
+   Codecs *string `xml:"codecs,attr"`
+   Height *int64 `xml:"height,attr"`
+   ID string `xml:"id,attr"`
+   MimeType *string `xml:"mimeType,attr"`
+   SegmentBase *struct {
+      IndexRange Range `xml:"indexRange,attr"`
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+   }
+   SegmentTemplate *SegmentTemplate
+   Width *int64 `xml:"width,attr"`
+   adaptation_set *AdaptationSet
+}
+
+func (r Representation) get_height() (int64, bool) {
+   if v := r.Height; v != nil {
+      return *v, true
+   }
+   if v := r.adaptation_set.Height; v != nil {
+      return *v, true
+   }
+   return 0, false
+}
+
+func (r Representation) get_width() (int64, bool) {
+   if v := r.Width; v != nil {
+      return *v, true
+   }
+   if v := r.adaptation_set.Width; v != nil {
+      return *v, true
+   }
+   return 0, false
+}
+
 func (r Representation) String() string {
    var b []byte
-   if v := r.Width; v != nil {
+   if v, ok := r.get_width(); ok {
       b = append(b, "width = "...)
-      b = strconv.AppendInt(b, *v, 10)
+      b = strconv.AppendInt(b, v, 10)
    }
-   if v := r.Height; v != nil {
+   if v, ok := r.get_height(); ok {
       if b != nil {
          b = append(b, '\n')
       }
       b = append(b, "height = "...)
-      b = strconv.AppendInt(b, *v, 10)
+      b = strconv.AppendInt(b, v, 10)
    }
    if b != nil {
       b = append(b, '\n')
@@ -156,21 +195,4 @@ func (r Representation) String() string {
    b = append(b, "\nid = "...)
    b = append(b, r.ID...)
    return string(b)
-}
-
-func (r Representation) get_codecs() (string, bool) {
-   if v := r.Codecs; v != nil {
-      return *v, true
-   }
-   if v := r.adaptation_set.Codecs; v != nil {
-      return *v, true
-   }
-   return "", false
-}
-
-func (r Representation) get_mime_type() string {
-   if v := r.MimeType; v != nil {
-      return *v
-   }
-   return *r.adaptation_set.MimeType
 }

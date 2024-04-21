@@ -14,7 +14,7 @@
   <body>
     <nav>
         <a href="..">154.pages.dev/encoding</a>/dash<span class="navbar-right">
-          v1.21.1 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
+          v1.21.2 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
       </nav>
     <main><h2 id="pkg-overview">package dash</h2>
 <pre class="chroma"><span class="kn">import</span> <span class="s">&#34;154.pages.dev/encoding/dash&#34;</span></pre>
@@ -65,6 +65,7 @@
   <h3 id="AdaptationSet">type AdaptationSet</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">AdaptationSet</span> <span class="kd">struct</span> <span class="p">{</span>
 	<span id="AdaptationSet.Codecs"><span class="nx">Codecs</span></span>         <span class="o">*</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;codecs,attr&#34;`</span>
+	<span id="AdaptationSet.Height"><span class="nx">Height</span></span>         <span class="o">*</span><a href="https://pkg.go.dev/builtin#int64"><span class="kt">int64</span></a>  <span class="s">`xml:&#34;height,attr&#34;`</span>
 	<span id="AdaptationSet.Lang"><span class="nx">Lang</span></span>           <span class="o">*</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;lang,attr&#34;`</span>
 	<span id="AdaptationSet.MimeType"><span class="nx">MimeType</span></span>       <span class="o">*</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;mimeType,attr&#34;`</span>
 	<span id="AdaptationSet.Representation"><span class="nx">Representation</span></span> <span class="p">[]</span><span class="o">*</span><a href="#Representation"><span class="nx">Representation</span></a>
@@ -72,6 +73,7 @@
 		<span id="AdaptationSet.Value"><span class="nx">Value</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;value,attr&#34;`</span>
 	<span class="p">}</span>
 	<span id="AdaptationSet.SegmentTemplate"><span class="nx">SegmentTemplate</span></span> <span class="o">*</span><a href="#SegmentTemplate"><span class="nx">SegmentTemplate</span></a>
+	<span id="AdaptationSet.Width"><span class="nx">Width</span></span>           <span class="o">*</span><a href="https://pkg.go.dev/builtin#int64"><span class="kt">int64</span></a> <span class="s">`xml:&#34;width,attr&#34;`</span>
 	<span class="c1">// contains filtered or unexported fields
 </span><span class="c1"></span><span class="p">}</span></pre>
     <h4 id="AdaptationSet.GetPeriod">func (AdaptationSet) GetPeriod</h4>
