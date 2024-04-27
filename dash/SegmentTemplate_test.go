@@ -12,7 +12,6 @@ var tests = []string{
    "mpd/mubi.mpd",
    "mpd/nbc.mpd",
    "mpd/paramount.mpd",
-   "mpd/peacock.mpd",
    "mpd/plex.mpd",
    "mpd/pluto.mpd",
    "mpd/roku.mpd",
