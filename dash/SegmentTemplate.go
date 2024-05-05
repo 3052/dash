@@ -6,6 +6,17 @@ import (
    "strings"
 )
 
+// github.com/Dash-Industry-Forum/DASH-IF-Conformance/blob/development/Utils/impl/MPDHandler/computeUrls.php
+func replace(s, old string, number int) string {
+   s = strings.Replace(s, old, fmt.Sprint(number), 1)
+   if old = strings.TrimSuffix(old, "$"); strings.Contains(s, old) {
+      s = fmt.Sprintf(s, number)
+      s = strings.Replace(s, old, "", 1)
+      s = strings.Replace(s, "$", "", 1)
+   }
+   return s
+}
+
 type SegmentTemplate struct {
    Duration *float64 `xml:"duration,attr"`
    Initialization *string `xml:"initialization,attr"`
@@ -25,20 +36,6 @@ func (s SegmentTemplate) GetInitialization(r *Representation) (string, bool) {
       return strings.Replace(*v, "$RepresentationID$", r.ID, 1), true
    }
    return "", false
-}
-
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
-func (s SegmentTemplate) get_timescale() float64 {
-   if v := s.Timescale; v != nil {
-      return *v
-   }
-   return 1
-}
-
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
-func (s SegmentTemplate) segment_count(seconds float64) float64 {
-   seconds /= *s.Duration / s.get_timescale()
-   return math.Ceil(seconds)
 }
 
 func (s SegmentTemplate) GetMedia(r *Representation) ([]string, error) {
@@ -82,13 +79,16 @@ func (s SegmentTemplate) GetMedia(r *Representation) ([]string, error) {
    return media, nil
 }
 
-// github.com/Dash-Industry-Forum/DASH-IF-Conformance/blob/development/Utils/impl/MPDHandler/computeUrls.php
-func replace(s, old string, number int) string {
-   s = strings.Replace(s, old, fmt.Sprint(number), 1)
-   if old = strings.TrimSuffix(old, "$"); strings.Contains(s, old) {
-      s = fmt.Sprintf(s, number)
-      s = strings.Replace(s, old, "", 1)
-      s = strings.Replace(s, "$", "", 1)
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
+func (s SegmentTemplate) get_timescale() float64 {
+   if v := s.Timescale; v != nil {
+      return *v
    }
-   return s
+   return 1
+}
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
+func (s SegmentTemplate) segment_count(seconds float64) float64 {
+   seconds /= *s.Duration / s.get_timescale()
+   return math.Ceil(seconds)
 }
