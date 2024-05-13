@@ -5,6 +5,13 @@ import (
    "text/template"
 )
 
+var Format = 
+   "{{if .Show}}" +
+      "{{.Show}} - {{.Season}} {{.Episode}} - {{.Title}}" +
+   "{{else}}" +
+      "{{.Title}} - {{.Year}}" +
+   "{{end}}"
+
 func Name(n Namer) (string, error) {
    text, err := new(template.Template).Parse(Format)
    if err != nil {
@@ -25,13 +32,6 @@ type Namer interface {
    Title() string
    Year() int
 }
-
-var Format = 
-   "{{if .Show}}" +
-      "{{.Show}} - {{.Season}} {{.Episode}} - {{.Title}}" +
-   "{{else}}" +
-      "{{.Title}} - {{.Year}}" +
-   "{{end}}"
 
 func Clean(s string) string {
    mapping := func(r rune) rune {
