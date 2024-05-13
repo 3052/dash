@@ -6,19 +6,6 @@ import (
    "testing"
 )
 
-var tests = []string{
-   "mpd/amc.mpd",
-   "mpd/hulu.mpd",
-   "mpd/mubi.mpd",
-   "mpd/nbc.mpd",
-   "mpd/paramount.mpd",
-   "mpd/plex.mpd",
-   "mpd/pluto.mpd",
-   "mpd/roku.mpd",
-   "mpd/stan.mpd",
-   "mpd/tubi.mpd",
-}
-
 func TestMedia(t *testing.T) {
    for _, test := range tests {
       fmt.Println(test)
@@ -35,20 +22,34 @@ func TestMedia(t *testing.T) {
          for _, v := range v.AdaptationSet {
             for _, represent := range v.Representation {
                if v, ok := represent.GetSegmentTemplate(); ok {
-                  fmt.Println(v.GetInitialization(represent))
+                  initial, ok := v.GetInitialization(represent)
+                  fmt.Printf("%q %v\n", initial, ok)
                   media, err := v.GetMedia(represent)
                   if err != nil {
                      t.Fatal(err)
                   }
-                  length := len(media)
-                  if length >= 1 {
-                     fmt.Println(media[length-1])
+                  for i := range min(len(media), 9) {
+                     fmt.Println(media[i])
                   }
                }
             }
          }
       }
    }
+}
+
+var tests = []string{
+   "mpd/amc.mpd",
+   "mpd/cine-member.mpd",
+   "mpd/hulu.mpd",
+   "mpd/mubi.mpd",
+   "mpd/nbc.mpd",
+   "mpd/paramount.mpd",
+   "mpd/plex.mpd",
+   "mpd/pluto.mpd",
+   "mpd/roku.mpd",
+   "mpd/stan.mpd",
+   "mpd/tubi.mpd",
 }
 
 func TestSegmentTemplate(t *testing.T) {
