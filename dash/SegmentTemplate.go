@@ -17,27 +17,6 @@ func replace(s, old string, number int) string {
    return s
 }
 
-func (s SegmentTemplate) GetInitialization(r *Representation) (string, bool) {
-   if v := s.Initialization; v != nil {
-      return strings.Replace(*v, "$RepresentationID$", r.ID, 1), true
-   }
-   return "", false
-}
-
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
-func (s SegmentTemplate) get_timescale() float64 {
-   if v := s.Timescale; v != nil {
-      return *v
-   }
-   return 1
-}
-
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
-func (s SegmentTemplate) segment_count(seconds float64) float64 {
-   seconds /= *s.Duration / s.get_timescale()
-   return math.Ceil(seconds)
-}
-
 type SegmentTemplate struct {
    Duration *float64 `xml:"duration,attr"`
    Initialization *string `xml:"initialization,attr"`
@@ -53,14 +32,11 @@ type SegmentTemplate struct {
    PresentationTimeOffset int `xml:"presentationTimeOffset,attr"`
 }
 
-func (s SegmentTemplate) start() int {
-   if v := s.PresentationTimeOffset; v >= 1 {
-      return v
+func (s SegmentTemplate) GetInitialization(r *Representation) (string, bool) {
+   if v := s.Initialization; v != nil {
+      return strings.Replace(*v, "$RepresentationID$", r.ID, 1), true
    }
-   if v := s.StartNumber; v != nil {
-      return *v
-   }
-   return 0
+   return "", false
 }
 
 func (s SegmentTemplate) GetMedia(r *Representation) ([]string, error) {
@@ -97,4 +73,28 @@ func (s SegmentTemplate) GetMedia(r *Representation) ([]string, error) {
       }
    }
    return media, nil
+}
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
+func (s SegmentTemplate) get_timescale() float64 {
+   if v := s.Timescale; v != nil {
+      return *v
+   }
+   return 1
+}
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
+func (s SegmentTemplate) segment_count(seconds float64) float64 {
+   seconds /= *s.Duration / s.get_timescale()
+   return math.Ceil(seconds)
+}
+
+func (s SegmentTemplate) start() int {
+   if v := s.PresentationTimeOffset; v >= 1 {
+      return v
+   }
+   if v := s.StartNumber; v != nil {
+      return *v
+   }
+   return 0
 }
