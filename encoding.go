@@ -1,73 +1,54 @@
 package encoding
 
-import "strconv"
+import (
+   "bytes"
+   "strings"
+   "text/template"
+)
 
-func label(value float64, unit unit_measure) string {
-   var prec int
-   if unit.factor != 1 {
-      prec = 2
-      value *= unit.factor
-   }
-   return strconv.FormatFloat(value, 'f', prec, 64) + unit.name
-}
+var Format = 
+   "{{if .Show}}" +
+      "{{.Show}} - {{.Season}} {{.Episode}} - {{.Title}}" +
+   "{{else}}" +
+      "{{.Title}} - {{.Year}}" +
+   "{{end}}"
 
-func scale(value float64, units []unit_measure) string {
-   var unit unit_measure
-   for _, unit = range units {
-      if unit.factor * value < 1000 {
-         break
+func Clean(s string) string {
+   mapping := func(r rune) rune {
+      if strings.ContainsRune(`"*/:<>?\|`, r) {
+         return '-'
       }
+      return r
    }
-   return label(value, unit)
+   return strings.Map(mapping, s)
 }
 
-type Cardinal float64
-
-func (c Cardinal) String() string {
-   units := []unit_measure{
-      {1, ""},
-      {1e-3, " thousand"},
-      {1e-6, " million"},
-      {1e-9, " billion"},
-      {1e-12, " trillion"},
+func Cut(s, before, after []byte) ([]byte, []byte) {
+   i := bytes.Index(s, append(before, after...))
+   if i == -1 {
+      return s, nil
    }
-   return scale(float64(c), units)
+   i += len(before)
+   return s[:i], s[i:]
 }
 
-type Percent float64
-
-func (p Percent) String() string {
-   unit := unit_measure{100, " %"}
-   return label(float64(p), unit)
-}
-
-type Rate float64
-
-func (r Rate) String() string {
-   units := []unit_measure{
-      {1, " byte/s"},
-      {1e-3, " kilobyte/s"},
-      {1e-6, " megabyte/s"},
-      {1e-9, " gigabyte/s"},
-      {1e-12, " terabyte/s"},
+func Name(n Namer) (string, error) {
+   text, err := new(template.Template).Parse(Format)
+   if err != nil {
+      return "", err
    }
-   return scale(float64(r), units)
-}
-
-type Size float64
-
-func (s Size) String() string {
-   units := []unit_measure{
-      {1, " byte"},
-      {1e-3, " kilobyte"},
-      {1e-6, " megabyte"},
-      {1e-9, " gigabyte"},
-      {1e-12, " terabyte"},
+   var b strings.Builder
+   err = text.Execute(&b, n)
+   if err != nil {
+      return "", err
    }
-   return scale(float64(s), units)
+   return b.String(), nil
 }
 
-type unit_measure struct {
-   factor float64
-   name string
+type Namer interface {
+   Show() string
+   Season() int
+   Episode() int
+   Title() string
+   Year() int
 }
