@@ -6,19 +6,19 @@ import (
    "text/template"
 )
 
-func CutBefore(s, sep []byte) ([]byte, []byte, bool) {
-   if i := bytes.Index(s, sep); i >= 0 {
-      return s[:i], s[i:], true
-   }
-   return s, nil, false
-}
-
 var Format = 
    "{{if .Show}}" +
       "{{.Show}} - {{.Season}} {{.Episode}} - {{.Title}}" +
    "{{else}}" +
       "{{.Title}} - {{.Year}}" +
    "{{end}}"
+
+func CutBefore(s, sep []byte) ([]byte, []byte, bool) {
+   if i := bytes.Index(s, sep); i >= 0 {
+      return s[:i], s[i:], true
+   }
+   return s, nil, false
+}
 
 func Clean(s string) string {
    mapping := func(r rune) rune {
