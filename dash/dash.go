@@ -2,33 +2,14 @@ package dash
 
 import (
    "encoding/xml"
+   "net/url"
    "strconv"
    "strings"
    "time"
 )
 
-type AdaptationSet struct {
-   Codecs *string `xml:"codecs,attr"`
-   Height *int64 `xml:"height,attr"`
-   Lang *string `xml:"lang,attr"`
-   MimeType *string `xml:"mimeType,attr"`
-   Representation []*Representation
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-   Width *int64 `xml:"width,attr"`
-   period *Period
-}
-
-func (a AdaptationSet) GetPeriod() *Period {
-   return a.period
-}
-
-type MPD struct {
-   BaseURL string `xml:"BaseURL"`
-   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
-   Period []*Period
+func (u *URL) UnmarshalText(text []byte) error {
+   return u.URL.UnmarshalBinary(text)
 }
 
 func (m *MPD) Unmarshal(data []byte) error {
@@ -48,25 +29,6 @@ func (m *MPD) Unmarshal(data []byte) error {
    return nil
 }
 
-type Period struct {
-   AdaptationSet []*AdaptationSet
-   Duration *string `xml:"duration,attr"`
-   mpd *MPD
-}
-
-func (p Period) GetMpd() *MPD {
-   return p.mpd
-}
-
-func (p Period) Seconds() (float64, error) {
-   s := strings.TrimPrefix(p.get_duration(), "PT")
-   d, err := time.ParseDuration(strings.ToLower(s))
-   if err != nil {
-      return 0, err
-   }
-   return d.Seconds(), nil
-}
-
 func (p Period) get_duration() string {
    if v := p.Duration; v != nil {
       return *v
@@ -81,24 +43,6 @@ func (r Range) Cut() (string, string, bool) {
    return strings.Cut(string(r), "-")
 }
 
-type Representation struct {
-   Bandwidth int64 `xml:"bandwidth,attr"`
-   BaseURL *string
-   Codecs *string `xml:"codecs,attr"`
-   Height *int64 `xml:"height,attr"`
-   ID string `xml:"id,attr"`
-   MimeType *string `xml:"mimeType,attr"`
-   SegmentBase *struct {
-      IndexRange Range `xml:"indexRange,attr"`
-      Initialization struct {
-         Range Range `xml:"range,attr"`
-      }
-   }
-   SegmentTemplate *SegmentTemplate
-   Width *int64 `xml:"width,attr"`
-   adaptation_set *AdaptationSet
-}
-
 func (r Representation) Ext() (string, bool) {
    switch r.get_mime_type() {
    case "audio/mp4":
@@ -107,10 +51,6 @@ func (r Representation) Ext() (string, bool) {
       return ".m4v", true
    }
    return "", false
-}
-
-func (r Representation) GetAdaptationSet() *AdaptationSet {
-   return r.adaptation_set
 }
 
 func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
@@ -195,4 +135,73 @@ func (r Representation) get_width() (int64, bool) {
       return *v, true
    }
    return 0, false
+}
+
+type URL struct {
+   URL url.URL
+}
+
+func (p Period) Seconds() (float64, error) {
+   s := strings.TrimPrefix(p.get_duration(), "PT")
+   d, err := time.ParseDuration(strings.ToLower(s))
+   if err != nil {
+      return 0, err
+   }
+   return d.Seconds(), nil
+}
+
+type Representation struct {
+   Bandwidth int64 `xml:"bandwidth,attr"`
+   BaseUrl *string
+   Codecs *string `xml:"codecs,attr"`
+   Height *int64 `xml:"height,attr"`
+   ID string `xml:"id,attr"`
+   MimeType *string `xml:"mimeType,attr"`
+   SegmentBase *struct {
+      IndexRange Range `xml:"indexRange,attr"`
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+   }
+   SegmentTemplate *SegmentTemplate
+   Width *int64 `xml:"width,attr"`
+   adaptation_set *AdaptationSet
+}
+
+func (r Representation) GetAdaptationSet() *AdaptationSet {
+   return r.adaptation_set
+}
+
+type AdaptationSet struct {
+   Codecs *string `xml:"codecs,attr"`
+   Height *int64 `xml:"height,attr"`
+   Lang *string `xml:"lang,attr"`
+   MimeType *string `xml:"mimeType,attr"`
+   Representation []*Representation
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width *int64 `xml:"width,attr"`
+   period *Period
+}
+
+func (a AdaptationSet) GetPeriod() *Period {
+   return a.period
+}
+
+type Period struct {
+   AdaptationSet []*AdaptationSet
+   Duration *string `xml:"duration,attr"`
+   mpd *MPD
+}
+
+func (p Period) GetMpd() *MPD {
+   return p.mpd
+}
+
+type MPD struct {
+   BaseUrl *URL `xml:"BaseURL"`
+   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
+   Period []*Period
 }
