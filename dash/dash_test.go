@@ -224,7 +224,7 @@ func TestRepresentation(t *testing.T) {
                } else {
                   sets.bandwidth[0] = struct{}{}
                }
-               if rep.BaseURL != nil {
+               if rep.BaseUrl != nil {
                   sets.base_url[1] = struct{}{}
                } else {
                   sets.base_url[0] = struct{}{}

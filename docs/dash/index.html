@@ -14,7 +14,7 @@
   <body>
     <nav>
         <a href="..">154.pages.dev/encoding</a>/dash<span class="navbar-right">
-          v1.21.7 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
+          v1.22.0 | <a href="..">Root</a> | <a href="#pkg-index">Index</a></span>
       </nav>
     <main><h2 id="pkg-overview">package dash</h2>
 <pre class="chroma"><span class="kn">import</span> <span class="s">&#34;154.pages.dev/encoding/dash&#34;</span></pre>
@@ -22,9 +22,6 @@
 <ul>
   <li>
       <a href="#AdaptationSet">type AdaptationSet</a>
-      <ul>
-          <li><a href="#AdaptationSet.GetPeriod">func (a AdaptationSet) GetPeriod() *Period</a></li>
-          </ul>
       </li>
   <li>
       <a href="#MPD">type MPD</a>
@@ -35,7 +32,6 @@
   <li>
       <a href="#Period">type Period</a>
       <ul>
-          <li><a href="#Period.GetMpd">func (p Period) GetMpd() *MPD</a></li>
           <li><a href="#Period.Seconds">func (p Period) Seconds() (float64, error)</a></li>
           </ul>
       </li>
@@ -49,7 +45,6 @@
       <a href="#Representation">type Representation</a>
       <ul>
           <li><a href="#Representation.Ext">func (r Representation) Ext() (string, bool)</a></li>
-          <li><a href="#Representation.GetAdaptationSet">func (r Representation) GetAdaptationSet() *AdaptationSet</a></li>
           <li><a href="#Representation.GetSegmentTemplate">func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool)</a></li>
           <li><a href="#Representation.String">func (r Representation) String() string</a></li>
           </ul>
@@ -59,6 +54,12 @@
       <ul>
           <li><a href="#SegmentTemplate.GetInitialization">func (s SegmentTemplate) GetInitialization(r *Representation) (string, bool)</a></li>
           <li><a href="#SegmentTemplate.GetMedia">func (s SegmentTemplate) GetMedia(r *Representation) ([]string, error)</a></li>
+          </ul>
+      </li>
+  <li>
+      <a href="#URL">type URL</a>
+      <ul>
+          <li><a href="#URL.UnmarshalText">func (u *URL) UnmarshalText(text []byte) error</a></li>
           </ul>
       </li>
   </ul><h3 id="pkg-types">Types</h3>
@@ -76,11 +77,9 @@
 	<span id="AdaptationSet.Width"><span class="nx">Width</span></span>           <span class="o">*</span><a href="https://pkg.go.dev/builtin#int64"><span class="kt">int64</span></a> <span class="s">`xml:&#34;width,attr&#34;`</span>
 	<span class="c1">// contains filtered or unexported fields
 </span><span class="c1"></span><span class="p">}</span></pre>
-    <h4 id="AdaptationSet.GetPeriod">func (AdaptationSet) GetPeriod</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">a</span> <a href="#AdaptationSet"><span class="nx">AdaptationSet</span></a><span class="p">)</span> <span class="nf">GetPeriod</span><span class="p">()</span> <span class="o">*</span><a href="#Period"><span class="nx">Period</span></a></pre>
-  <h3 id="MPD">type MPD</h3>
+    <h3 id="MPD">type MPD</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">MPD</span> <span class="kd">struct</span> <span class="p">{</span>
-	<span id="MPD.BaseURL"><span class="nx">BaseURL</span></span>                   <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;BaseURL&#34;`</span>
+	<span id="MPD.BaseUrl"><span class="nx">BaseUrl</span></span>                   <span class="o">*</span><a href="#URL"><span class="nx">URL</span></a>   <span class="s">`xml:&#34;BaseURL&#34;`</span>
 	<span id="MPD.MediaPresentationDuration"><span class="nx">MediaPresentationDuration</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;mediaPresentationDuration,attr&#34;`</span>
 	<span id="MPD.Period"><span class="nx">Period</span></span>                    <span class="p">[]</span><span class="o">*</span><a href="#Period"><span class="nx">Period</span></a>
 <span class="p">}</span></pre>
@@ -92,9 +91,7 @@
 	<span id="Period.Duration"><span class="nx">Duration</span></span>      <span class="o">*</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;duration,attr&#34;`</span>
 	<span class="c1">// contains filtered or unexported fields
 </span><span class="c1"></span><span class="p">}</span></pre>
-    <h4 id="Period.GetMpd">func (Period) GetMpd</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">p</span> <a href="#Period"><span class="nx">Period</span></a><span class="p">)</span> <span class="nf">GetMpd</span><span class="p">()</span> <span class="o">*</span><a href="#MPD"><span class="nx">MPD</span></a></pre>
-  <h4 id="Period.Seconds">func (Period) Seconds</h4>
+    <h4 id="Period.Seconds">func (Period) Seconds</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">p</span> <a href="#Period"><span class="nx">Period</span></a><span class="p">)</span> <span class="nf">Seconds</span><span class="p">()</span> <span class="p">(</span><a href="https://pkg.go.dev/builtin#float64"><span class="kt">float64</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
   <h3 id="Range">type Range</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">Range</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
@@ -104,7 +101,7 @@
   <h3 id="Representation">type Representation</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">Representation</span> <span class="kd">struct</span> <span class="p">{</span>
 	<span id="Representation.Bandwidth"><span class="nx">Bandwidth</span></span>   <a href="https://pkg.go.dev/builtin#int64"><span class="kt">int64</span></a> <span class="s">`xml:&#34;bandwidth,attr&#34;`</span>
-	<span id="Representation.BaseURL"><span class="nx">BaseURL</span></span>     <span class="o">*</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
+	<span id="Representation.BaseUrl"><span class="nx">BaseUrl</span></span>     <span class="o">*</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>
 	<span id="Representation.Codecs"><span class="nx">Codecs</span></span>      <span class="o">*</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;codecs,attr&#34;`</span>
 	<span id="Representation.Height"><span class="nx">Height</span></span>      <span class="o">*</span><a href="https://pkg.go.dev/builtin#int64"><span class="kt">int64</span></a>  <span class="s">`xml:&#34;height,attr&#34;`</span>
 	<span id="Representation.ID"><span class="nx">ID</span></span>          <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>  <span class="s">`xml:&#34;id,attr&#34;`</span>
@@ -121,8 +118,6 @@
 </span><span class="c1"></span><span class="p">}</span></pre>
     <h4 id="Representation.Ext">func (Representation) Ext</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Ext</span><span class="p">()</span> <span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
-  <h4 id="Representation.GetAdaptationSet">func (Representation) GetAdaptationSet</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">GetAdaptationSet</span><span class="p">()</span> <span class="o">*</span><a href="#AdaptationSet"><span class="nx">AdaptationSet</span></a></pre>
   <h4 id="Representation.GetSegmentTemplate">func (Representation) GetSegmentTemplate</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">GetSegmentTemplate</span><span class="p">()</span> <span class="p">(</span><span class="o">*</span><a href="#SegmentTemplate"><span class="nx">SegmentTemplate</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
   <h4 id="Representation.String">func (Representation) String</h4>
@@ -146,6 +141,12 @@
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <a href="#SegmentTemplate"><span class="nx">SegmentTemplate</span></a><span class="p">)</span> <span class="nf">GetInitialization</span><span class="p">(</span><span class="nx">r</span> <span class="o">*</span><a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
   <h4 id="SegmentTemplate.GetMedia">func (SegmentTemplate) GetMedia</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <a href="#SegmentTemplate"><span class="nx">SegmentTemplate</span></a><span class="p">)</span> <span class="nf">GetMedia</span><span class="p">(</span><span class="nx">r</span> <span class="o">*</span><a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="p">([]</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <h3 id="URL">type URL</h3>
+    <pre class="chroma"><span class="kd">type</span> <span class="nx">URL</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span id="URL.URL"><span class="nx">URL</span></span> <a href="https://pkg.go.dev/net/url"><span class="nx">url</span></a><span class="p">.</span><a href="https://pkg.go.dev/net/url#URL"><span class="nx">URL</span></a>
+<span class="p">}</span></pre>
+    <h4 id="URL.UnmarshalText">func (*URL) UnmarshalText</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">u</span> <span class="o">*</span><a href="#URL"><span class="nx">URL</span></a><span class="p">)</span> <span class="nf">UnmarshalText</span><span class="p">(</span><span class="nx">text</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
   </main>
     <hr>
     <footer>
