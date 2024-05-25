@@ -8,10 +8,6 @@ import (
    "time"
 )
 
-type URL struct {
-   URL *url.URL
-}
-
 type SegmentBase struct {
    IndexRange Range `xml:"indexRange,attr"`
    Initialization struct {
@@ -30,10 +26,6 @@ type Representation struct {
    SegmentTemplate *SegmentTemplate
    Width *int64 `xml:"width,attr"`
    adaptation_set *AdaptationSet
-}
-
-func (u *URL) UnmarshalText(text []byte) error {
-   return u.URL.UnmarshalBinary(text)
 }
 
 func (m *MPD) Unmarshal(data []byte) error {
@@ -206,4 +198,13 @@ type MPD struct {
    BaseUrl *URL `xml:"BaseURL"`
    MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
    Period []*Period
+}
+
+type URL struct {
+   URL *url.URL
+}
+
+func (u *URL) UnmarshalText(text []byte) error {
+   u.URL = new(url.URL)
+   return u.URL.UnmarshalBinary(text)
 }
