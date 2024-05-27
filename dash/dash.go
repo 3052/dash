@@ -2,11 +2,46 @@ package dash
 
 import (
    "encoding/xml"
+   "errors"
    "net/url"
    "strconv"
    "strings"
    "time"
 )
+
+func (r *Range) UnmarshalText(text []byte) error {
+   start, end, found := strings.Cut(string(text), "-")
+   if !found {
+      return errors.New("- not found")
+   }
+   var err error
+   r.Start, err = strconv.ParseUint(start, 10, 64)
+   if err != nil {
+      return err
+   }
+   r.End, err = strconv.ParseUint(end, 10, 64)
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
+func (r Range) MarshalText() ([]byte, error) {
+   b := strconv.AppendUint(nil, r.Start, 10)
+   b = append(b, '-')
+   return strconv.AppendUint(b, r.End, 10), nil
+}
+
+// SegmentIndexBox uses:
+// unsigned int(32) subsegment_duration;
+// but range values can exceed 32 bits
+type Range struct {
+   Start uint64
+   End uint64
+}
+
+// content protection
+// github.com/3052/encoding/tree/da18a91/dash
 
 type Representation struct {
    Bandwidth int64 `xml:"bandwidth,attr"`
@@ -19,13 +54,6 @@ type Representation struct {
    SegmentTemplate *SegmentTemplate
    Width *int64 `xml:"width,attr"`
    adaptation_set *AdaptationSet
-}
-
-type SegmentBase struct {
-   IndexRange Range `xml:"indexRange,attr"`
-   Initialization struct {
-      Range Range `xml:"range,attr"`
-   }
 }
 
 func (m *MPD) Unmarshal(data []byte) error {
@@ -50,13 +78,6 @@ func (p Period) get_duration() string {
       return *v
    }
    return p.mpd.MediaPresentationDuration
-}
-
-// range values can exceed 32 bits, so make sure to unmarshal to 64 bit
-type Range string
-
-func (r Range) Cut() (string, string, bool) {
-   return strings.Cut(string(r), "-")
 }
 
 func (r Representation) Ext() (string, bool) {
@@ -207,4 +228,11 @@ type URL struct {
 func (u *URL) UnmarshalText(text []byte) error {
    u.URL = new(url.URL)
    return u.URL.UnmarshalBinary(text)
+}
+
+type SegmentBase struct {
+   IndexRange Range `xml:"indexRange,attr"`
+   Initialization struct {
+      Range Range `xml:"range,attr"`
+   }
 }
