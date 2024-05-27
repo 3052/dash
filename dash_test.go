@@ -67,12 +67,12 @@ func TestRepresentation(t *testing.T) {
                }
                if v := rep.SegmentBase; v != nil {
                   sets.segmentBase[1] = struct{}{}
-                  if v.Initialization.Range != "" {
+                  if v.Initialization.Range.End >= 1 {
                      sets.initialization[1] = struct{}{}
                   } else {
                      sets.initialization[0] = struct{}{}
                   }
-                  if v.IndexRange != "" {
+                  if v.IndexRange.End >= 1 {
                      sets.indexRange[1] = struct{}{}
                   } else {
                      sets.indexRange[0] = struct{}{}

@@ -9,26 +9,6 @@ import (
    "time"
 )
 
-// filter out ads, for example:
-// hulu.com/watch/5add1b6c-04f2-4038-a925-35db3007d662
-func (p Period) Seconds() (float64, error) {
-   s := strings.TrimPrefix(p.get_duration(), "PT")
-   d, err := time.ParseDuration(strings.ToLower(s))
-   if err != nil {
-      return 0, err
-   }
-   return d.Seconds(), nil
-}
-
-type MPD struct {
-   BaseUrl *URL `xml:"BaseURL"`
-   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
-   Period []*Period
-}
-
-// content protection
-// github.com/3052/encoding/tree/da18a91/dash
-
 func (r *Range) UnmarshalText(text []byte) error {
    start, end, found := strings.Cut(string(text), "-")
    if !found {
@@ -59,6 +39,26 @@ type Range struct {
    Start uint64
    End uint64
 }
+
+// filter out ads, for example:
+// hulu.com/watch/5add1b6c-04f2-4038-a925-35db3007d662
+func (p Period) Seconds() (float64, error) {
+   s := strings.TrimPrefix(p.get_duration(), "PT")
+   duration, err := time.ParseDuration(strings.ToLower(s))
+   if err != nil {
+      return 0, err
+   }
+   return duration.Seconds(), nil
+}
+
+type MPD struct {
+   BaseUrl *URL `xml:"BaseURL"`
+   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
+   Period []*Period
+}
+
+// content protection
+// github.com/3052/encoding/tree/da18a91/dash
 
 type Representation struct {
    Bandwidth int64 `xml:"bandwidth,attr"`
