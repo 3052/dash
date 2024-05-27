@@ -9,15 +9,36 @@ import (
    "time"
 )
 
+// SegmentIndexBox uses:
+// unsigned int(32) subsegment_duration;
+// but range values can exceed 32 bits
+func (r Range) Parse() (uint64, uint64, error) {
+   raw_start, raw_end, found := strings.Cut(string(r), "-")
+   if !found {
+      return 0, 0, errors.New("- not found")
+   }
+   start, err := strconv.ParseUint(raw_start, 10, 64)
+   if err != nil {
+      return 0, 0, err
+   }
+   end, err := strconv.ParseUint(raw_end, 10, 64)
+   if err != nil {
+      return 0, 0, err
+   }
+   return start, end, nil
+}
+
+type Range string
+
 // filter out ads, for example:
 // hulu.com/watch/5add1b6c-04f2-4038-a925-35db3007d662
 func (p Period) Seconds() (float64, error) {
    s := strings.TrimPrefix(p.get_duration(), "PT")
-   d, err := time.ParseDuration(strings.ToLower(s))
+   duration, err := time.ParseDuration(strings.ToLower(s))
    if err != nil {
       return 0, err
    }
-   return d.Seconds(), nil
+   return duration.Seconds(), nil
 }
 
 type MPD struct {
@@ -28,37 +49,6 @@ type MPD struct {
 
 // content protection
 // github.com/3052/encoding/tree/da18a91/dash
-
-func (r *Range) UnmarshalText(text []byte) error {
-   start, end, found := strings.Cut(string(text), "-")
-   if !found {
-      return errors.New("- not found")
-   }
-   var err error
-   r.Start, err = strconv.ParseUint(start, 10, 64)
-   if err != nil {
-      return err
-   }
-   r.End, err = strconv.ParseUint(end, 10, 64)
-   if err != nil {
-      return err
-   }
-   return nil
-}
-
-func (r Range) MarshalText() ([]byte, error) {
-   b := strconv.AppendUint(nil, r.Start, 10)
-   b = append(b, '-')
-   return strconv.AppendUint(b, r.End, 10), nil
-}
-
-// SegmentIndexBox uses:
-// unsigned int(32) subsegment_duration;
-// but range values can exceed 32 bits
-type Range struct {
-   Start uint64
-   End uint64
-}
 
 type Representation struct {
    Bandwidth int64 `xml:"bandwidth,attr"`

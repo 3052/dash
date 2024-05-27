@@ -14,7 +14,7 @@
   <body>
     <nav>
         154.pages.dev/dash<span class="navbar-right">
-          v1.22.6 | <a href="">Root</a> | <a href="#pkg-index">Index</a></span>
+          v1.22.7 | <a href="">Root</a> | <a href="#pkg-index">Index</a></span>
       </nav>
     <main><h2 id="pkg-overview">package dash</h2>
 <pre class="chroma"><span class="kn">import</span> <span class="s">&#34;154.pages.dev/dash&#34;</span></pre>
@@ -42,8 +42,7 @@
   <li>
       <a href="#Range">type Range</a>
       <ul>
-          <li><a href="#Range.MarshalText">func (r Range) MarshalText() ([]byte, error)</a></li>
-          <li><a href="#Range.UnmarshalText">func (r *Range) UnmarshalText(text []byte) error</a></li>
+          <li><a href="#Range.Parse">func (r Range) Parse() (uint64, uint64, error)</a></li>
           </ul>
       </li>
   <li>
@@ -109,18 +108,13 @@
   <p>filter out ads, for example:
 hulu.com/watch/5add1b6c-04f2-4038-a925-35db3007d662
 <h3 id="Range">type Range</h3>
-    <pre class="chroma"><span class="kd">type</span> <span class="nx">Range</span> <span class="kd">struct</span> <span class="p">{</span>
-	<span id="Range.Start"><span class="nx">Start</span></span> <a href="https://pkg.go.dev/builtin#uint64"><span class="kt">uint64</span></a>
-	<span id="Range.End"><span class="nx">End</span></span>   <a href="https://pkg.go.dev/builtin#uint64"><span class="kt">uint64</span></a>
-<span class="p">}</span></pre>
-    <p>SegmentIndexBox uses:
+    <pre class="chroma"><span class="kd">type</span> <span class="nx">Range</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+    <h4 id="Range.Parse">func (Range) Parse</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Range"><span class="nx">Range</span></a><span class="p">)</span> <span class="nf">Parse</span><span class="p">()</span> <span class="p">(</span><a href="https://pkg.go.dev/builtin#uint64"><span class="kt">uint64</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#uint64"><span class="kt">uint64</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <p>SegmentIndexBox uses:
 unsigned int(32) subsegment_duration;
 but range values can exceed 32 bits
-<h4 id="Range.MarshalText">func (Range) MarshalText</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Range"><span class="nx">Range</span></a><span class="p">)</span> <span class="nf">MarshalText</span><span class="p">()</span> <span class="p">([]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
-  <h4 id="Range.UnmarshalText">func (*Range) UnmarshalText</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><a href="#Range"><span class="nx">Range</span></a><span class="p">)</span> <span class="nf">UnmarshalText</span><span class="p">(</span><span class="nx">text</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
-  <h3 id="Representation">type Representation</h3>
+<h3 id="Representation">type Representation</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">Representation</span> <span class="kd">struct</span> <span class="p">{</span>
 	<span id="Representation.Bandwidth"><span class="nx">Bandwidth</span></span>       <a href="https://pkg.go.dev/builtin#int64"><span class="kt">int64</span></a>   <span class="s">`xml:&#34;bandwidth,attr&#34;`</span>
 	<span id="Representation.BaseUrl"><span class="nx">BaseUrl</span></span>         <span class="o">*</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;BaseURL&#34;`</span>
