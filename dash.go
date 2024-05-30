@@ -9,6 +9,78 @@ import (
    "time"
 )
 
+type AdaptationSet struct {
+   Codecs *string `xml:"codecs,attr"`
+   Height *int64 `xml:"height,attr"`
+   Lang *string `xml:"lang,attr"`
+   MimeType *string `xml:"mimeType,attr"`
+   Representation []*Representation
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width *int64 `xml:"width,attr"`
+   period *Period
+}
+
+func (a AdaptationSet) GetPeriod() *Period {
+   return a.period
+}
+
+// content protection
+// github.com/3052/encoding/tree/da18a91/dash
+
+type MPD struct {
+   BaseUrl *URL `xml:"BaseURL"`
+   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
+   Period []*Period
+}
+
+func (m *MPD) Unmarshal(data []byte) error {
+   err := xml.Unmarshal(data, m)
+   if err != nil {
+      return err
+   }
+   for _, period := range m.Period {
+      period.mpd = m
+      for _, adapt := range period.AdaptationSet {
+         adapt.period = period
+         for _, represent := range adapt.Representation {
+            represent.adaptation_set = adapt
+         }
+      }
+   }
+   return nil
+}
+
+// filter out ads, for example:
+// hulu.com/watch/5add1b6c-04f2-4038-a925-35db3007d662
+func (p Period) Seconds() (float64, error) {
+   s := strings.TrimPrefix(p.get_duration(), "PT")
+   duration, err := time.ParseDuration(strings.ToLower(s))
+   if err != nil {
+      return 0, err
+   }
+   return duration.Seconds(), nil
+}
+
+func (p Period) get_duration() string {
+   if v := p.Duration; v != nil {
+      return *v
+   }
+   return p.mpd.MediaPresentationDuration
+}
+
+type Period struct {
+   AdaptationSet []*AdaptationSet
+   Duration *string `xml:"duration,attr"`
+   mpd *MPD
+}
+
+func (p Period) GetMpd() *MPD {
+   return p.mpd
+}
+
 func (r *Range) UnmarshalText(text []byte) error {
    start, end, found := strings.Cut(string(text), "-")
    if !found {
@@ -40,26 +112,6 @@ type Range struct {
    End uint64
 }
 
-// filter out ads, for example:
-// hulu.com/watch/5add1b6c-04f2-4038-a925-35db3007d662
-func (p Period) Seconds() (float64, error) {
-   s := strings.TrimPrefix(p.get_duration(), "PT")
-   duration, err := time.ParseDuration(strings.ToLower(s))
-   if err != nil {
-      return 0, err
-   }
-   return duration.Seconds(), nil
-}
-
-type MPD struct {
-   BaseUrl *URL `xml:"BaseURL"`
-   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
-   Period []*Period
-}
-
-// content protection
-// github.com/3052/encoding/tree/da18a91/dash
-
 type Representation struct {
    Bandwidth int64 `xml:"bandwidth,attr"`
    BaseUrl *string `xml:"BaseURL"`
@@ -71,30 +123,6 @@ type Representation struct {
    SegmentTemplate *SegmentTemplate
    Width *int64 `xml:"width,attr"`
    adaptation_set *AdaptationSet
-}
-
-func (m *MPD) Unmarshal(data []byte) error {
-   err := xml.Unmarshal(data, m)
-   if err != nil {
-      return err
-   }
-   for _, period := range m.Period {
-      period.mpd = m
-      for _, adapt := range period.AdaptationSet {
-         adapt.period = period
-         for _, represent := range adapt.Representation {
-            represent.adaptation_set = adapt
-         }
-      }
-   }
-   return nil
-}
-
-func (p Period) get_duration() string {
-   if v := p.Duration; v != nil {
-      return *v
-   }
-   return p.mpd.MediaPresentationDuration
 }
 
 func (r Representation) Ext() (string, bool) {
@@ -195,32 +223,11 @@ func (r Representation) GetAdaptationSet() *AdaptationSet {
    return r.adaptation_set
 }
 
-type AdaptationSet struct {
-   Codecs *string `xml:"codecs,attr"`
-   Height *int64 `xml:"height,attr"`
-   Lang *string `xml:"lang,attr"`
-   MimeType *string `xml:"mimeType,attr"`
-   Representation []*Representation
-   Role *struct {
-      Value string `xml:"value,attr"`
+type SegmentBase struct {
+   IndexRange Range `xml:"indexRange,attr"`
+   Initialization struct {
+      Range Range `xml:"range,attr"`
    }
-   SegmentTemplate *SegmentTemplate
-   Width *int64 `xml:"width,attr"`
-   period *Period
-}
-
-func (a AdaptationSet) GetPeriod() *Period {
-   return a.period
-}
-
-type Period struct {
-   AdaptationSet []*AdaptationSet
-   Duration *string `xml:"duration,attr"`
-   mpd *MPD
-}
-
-func (p Period) GetMpd() *MPD {
-   return p.mpd
 }
 
 type URL struct {
@@ -230,11 +237,4 @@ type URL struct {
 func (u *URL) UnmarshalText(text []byte) error {
    u.URL = new(url.URL)
    return u.URL.UnmarshalBinary(text)
-}
-
-type SegmentBase struct {
-   IndexRange Range `xml:"indexRange,attr"`
-   Initialization struct {
-      Range Range `xml:"range,attr"`
-   }
 }
