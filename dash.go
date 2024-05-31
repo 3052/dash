@@ -2,15 +2,52 @@ package dash
 
 import (
    "encoding/xml"
-   "errors"
    "net/url"
    "strconv"
    "strings"
    "time"
 )
 
+func (r Representation) Widevine() (string, bool) {
+   for _, p := range r.protection() {
+      if p.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
+         if p.PSSH != nil {
+            return *p.PSSH, true
+         }
+      }
+   }
+   return "", false
+}
+
+type ContentProtection struct {
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
+   PSSH *string `xml:"pssh"`
+}
+
+func (r Representation) protection() []ContentProtection {
+   if v := r.ContentProtection; v != nil {
+      return v
+   }
+   return r.adaptation_set.ContentProtection
+}
+
+type Representation struct {
+   Bandwidth int64 `xml:"bandwidth,attr"`
+   BaseUrl *string `xml:"BaseURL"`
+   Codecs *string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height *int64 `xml:"height,attr"`
+   ID string `xml:"id,attr"`
+   MimeType *string `xml:"mimeType,attr"`
+   SegmentBase *SegmentBase
+   SegmentTemplate *SegmentTemplate
+   Width *int64 `xml:"width,attr"`
+   adaptation_set *AdaptationSet
+}
+
 type AdaptationSet struct {
    Codecs *string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
    Height *int64 `xml:"height,attr"`
    Lang *string `xml:"lang,attr"`
    MimeType *string `xml:"mimeType,attr"`
@@ -23,12 +60,24 @@ type AdaptationSet struct {
    period *Period
 }
 
+func (r *Range) UnmarshalText(text []byte) error {
+   // the current testdata always has `-`, so lets assume for now
+   start, end, _ := strings.Cut(string(text), "-")
+   var err error
+   r.Start, err = strconv.ParseUint(start, 10, 64)
+   if err != nil {
+      return err
+   }
+   r.End, err = strconv.ParseUint(end, 10, 64)
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
 func (a AdaptationSet) GetPeriod() *Period {
    return a.period
 }
-
-// content protection
-// github.com/3052/encoding/tree/da18a91/dash
 
 type MPD struct {
    BaseUrl *URL `xml:"BaseURL"`
@@ -81,23 +130,6 @@ func (p Period) GetMpd() *MPD {
    return p.mpd
 }
 
-func (r *Range) UnmarshalText(text []byte) error {
-   start, end, found := strings.Cut(string(text), "-")
-   if !found {
-      return errors.New("- not found")
-   }
-   var err error
-   r.Start, err = strconv.ParseUint(start, 10, 64)
-   if err != nil {
-      return err
-   }
-   r.End, err = strconv.ParseUint(end, 10, 64)
-   if err != nil {
-      return err
-   }
-   return nil
-}
-
 func (r Range) MarshalText() ([]byte, error) {
    b := strconv.AppendUint(nil, r.Start, 10)
    b = append(b, '-')
@@ -110,19 +142,6 @@ func (r Range) MarshalText() ([]byte, error) {
 type Range struct {
    Start uint64
    End uint64
-}
-
-type Representation struct {
-   Bandwidth int64 `xml:"bandwidth,attr"`
-   BaseUrl *string `xml:"BaseURL"`
-   Codecs *string `xml:"codecs,attr"`
-   Height *int64 `xml:"height,attr"`
-   ID string `xml:"id,attr"`
-   MimeType *string `xml:"mimeType,attr"`
-   SegmentBase *SegmentBase
-   SegmentTemplate *SegmentTemplate
-   Width *int64 `xml:"width,attr"`
-   adaptation_set *AdaptationSet
 }
 
 func (r Representation) Ext() (string, bool) {
