@@ -8,6 +8,23 @@ import (
    "time"
 )
 
+func (m *MPD) Unmarshal(data []byte) error {
+   err := xml.Unmarshal(data, m)
+   if err != nil {
+      return err
+   }
+   for _, period := range m.Period {
+      period.mpd = m
+      for _, adapt := range period.AdaptationSet {
+         adapt.period = period
+         for _, represent := range adapt.Representation {
+            represent.adaptation_set = adapt
+         }
+      }
+   }
+   return nil
+}
+
 func (a AdaptationSet) GetPeriod() *Period {
    return a.period
 }
@@ -36,23 +53,6 @@ type MPD struct {
    BaseUrl *URL `xml:"BaseURL"`
    MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
    Period []*Period
-}
-
-func (m *MPD) Unmarshal(data []byte) error {
-   err := xml.Unmarshal(data, m)
-   if err != nil {
-      return err
-   }
-   for _, period := range m.Period {
-      period.mpd = m
-      for _, adapt := range period.AdaptationSet {
-         adapt.period = period
-         for _, represent := range adapt.Representation {
-            represent.adaptation_set = adapt
-         }
-      }
-   }
-   return nil
 }
 
 // filter out ads, for example:
