@@ -25,6 +25,20 @@ func (m *MPD) Unmarshal(data []byte) error {
    return nil
 }
 
+type Representation struct {
+   Bandwidth int64 `xml:"bandwidth,attr"`
+   BaseUrl *string `xml:"BaseURL"`
+   Codecs *string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height *int64 `xml:"height,attr"`
+   ID string `xml:"id,attr"`
+   MimeType *string `xml:"mimeType,attr"`
+   SegmentBase *SegmentBase
+   SegmentTemplate *SegmentTemplate
+   Width *int64 `xml:"width,attr"`
+   adaptation_set *AdaptationSet
+}
+
 func (a AdaptationSet) GetPeriod() *Period {
    return a.period
 }
@@ -128,20 +142,6 @@ func (r Representation) protection() []ContentProtection {
       return v
    }
    return r.adaptation_set.ContentProtection
-}
-
-type Representation struct {
-   Bandwidth int64 `xml:"bandwidth,attr"`
-   BaseUrl *string `xml:"BaseURL"`
-   Codecs *string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height *int64 `xml:"height,attr"`
-   ID string `xml:"id,attr"`
-   MimeType *string `xml:"mimeType,attr"`
-   SegmentBase *SegmentBase
-   SegmentTemplate *SegmentTemplate
-   Width *int64 `xml:"width,attr"`
-   adaptation_set *AdaptationSet
 }
 
 func (r Representation) Ext() (string, bool) {
