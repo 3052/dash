@@ -6,6 +6,25 @@ import (
    "testing"
 )
 
+var tests = []string{
+   "testdata/amc.mpd",
+   "testdata/cine-member.mpd",
+   "testdata/criterion.mpd",
+   "testdata/ctv.mpd",
+   "testdata/draken.mpd",
+   "testdata/hulu.mpd",
+   "testdata/max.mpd",
+   "testdata/mubi.mpd",
+   "testdata/nbc.mpd",
+   "testdata/paramount.mpd",
+   "testdata/plex.mpd",
+   "testdata/pluto.mpd",
+   "testdata/rakuten.mpd",
+   "testdata/roku.mpd",
+   "testdata/stan.mpd",
+   "testdata/tubi.mpd",
+}
+
 func TestMedia(t *testing.T) {
    for _, test := range tests {
       fmt.Println(test)
@@ -36,18 +55,4 @@ func TestMedia(t *testing.T) {
          }
       }
    }
-}
-
-var tests = []string{
-   "mpd/amc.mpd",
-   "mpd/cine-member.mpd",
-   "mpd/hulu.mpd",
-   "mpd/mubi.mpd",
-   "mpd/nbc.mpd",
-   "mpd/paramount.mpd",
-   "mpd/plex.mpd",
-   "mpd/pluto.mpd",
-   "mpd/roku.mpd",
-   "mpd/stan.mpd",
-   "mpd/tubi.mpd",
 }

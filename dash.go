@@ -8,110 +8,6 @@ import (
    "time"
 )
 
-func (r Representation) String() string {
-   var b []byte
-   if v, ok := r.get_width(); ok {
-      b = append(b, "width = "...)
-      b = strconv.AppendInt(b, v, 10)
-   }
-   if v, ok := r.get_height(); ok {
-      if b != nil {
-         b = append(b, '\n')
-      }
-      b = append(b, "height = "...)
-      b = strconv.AppendInt(b, v, 10)
-   }
-   if b != nil {
-      b = append(b, '\n')
-   }
-   b = append(b, "bandwidth = "...)
-   b = strconv.AppendInt(b, r.Bandwidth, 10)
-   if v, ok := r.get_codecs(); ok {
-      b = append(b, "\ncodecs = "...)
-      b = append(b, v...)
-   }
-   b = append(b, "\ntype = "...)
-   b = append(b, r.get_mime_type()...)
-   if v := r.adaptation_set.Role; v != nil {
-      b = append(b, "\nrole = "...)
-      b = append(b, v.Value...)
-   }
-   if v := r.adaptation_set.Lang; v != "" {
-      b = append(b, "\nlang = "...)
-      b = append(b, v...)
-   }
-   b = append(b, "\nid = "...)
-   b = append(b, r.Id...)
-   return string(b)
-}
-
-type SegmentBase struct {
-   IndexRange Range `xml:"indexRange,attr"`
-   Initialization struct {
-      Range Range `xml:"range,attr"`
-   }
-}
-
-type Url struct {
-   Url *url.URL
-}
-
-type AdaptationSet struct {
-   Codecs string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height int64 `xml:"height,attr"`
-   Lang string `xml:"lang,attr"`
-   MimeType string `xml:"mimeType,attr"`
-   Representation []*Representation
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-   Width int64 `xml:"width,attr"`
-   period *Period
-}
-
-type ContentProtection struct {
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-   Pssh string `xml:"pssh"`
-}
-
-type Mpd struct {
-   BaseUrl *Url `xml:"BaseURL"`
-   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
-   Period []*Period
-}
-
-type Period struct {
-   AdaptationSet []*AdaptationSet
-   Duration string `xml:"duration,attr"`
-   mpd *Mpd
-}
-
-// SegmentIndexBox uses:
-// unsigned int(32) subsegment_duration;
-// but range values can exceed 32 bits
-type Range struct {
-   Start uint64
-   End uint64
-}
-
-type Representation struct {
-   Bandwidth int64 `xml:"bandwidth,attr"`
-   BaseUrl string `xml:"BaseURL"`
-   Codecs string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height int64 `xml:"height,attr"`
-   Id string `xml:"id,attr"`
-   MimeType string `xml:"mimeType,attr"`
-   SegmentBase *SegmentBase
-   SegmentTemplate *SegmentTemplate
-   Width int64 `xml:"width,attr"`
-   adaptation_set *AdaptationSet
-}
-
-////////
-
 func (r Representation) get_codecs() (string, bool) {
    if v := r.Codecs; v != "" {
       return v, true
@@ -258,4 +154,107 @@ func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
       return v, true
    }
    return nil, false
+}
+func (r Representation) String() string {
+   var b []byte
+   if v, ok := r.get_width(); ok {
+      b = append(b, "width = "...)
+      b = strconv.AppendInt(b, v, 10)
+   }
+   if v, ok := r.get_height(); ok {
+      if b != nil {
+         b = append(b, '\n')
+      }
+      b = append(b, "height = "...)
+      b = strconv.AppendInt(b, v, 10)
+   }
+   if b != nil {
+      b = append(b, '\n')
+   }
+   b = append(b, "bandwidth = "...)
+   b = strconv.AppendInt(b, r.Bandwidth, 10)
+   if v, ok := r.get_codecs(); ok {
+      b = append(b, "\ncodecs = "...)
+      b = append(b, v...)
+   }
+   b = append(b, "\ntype = "...)
+   b = append(b, r.get_mime_type()...)
+   if v := r.adaptation_set.Role; v != nil {
+      b = append(b, "\nrole = "...)
+      b = append(b, v.Value...)
+   }
+   if v := r.adaptation_set.Lang; v != "" {
+      b = append(b, "\nlang = "...)
+      b = append(b, v...)
+   }
+   b = append(b, "\nid = "...)
+   b = append(b, r.Id...)
+   return string(b)
+}
+
+type Mpd struct {
+   Period []*Period
+   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
+   BaseUrl *Url `xml:"BaseURL"`
+}
+
+////////////
+
+type SegmentBase struct {
+   IndexRange Range `xml:"indexRange,attr"`
+   Initialization struct {
+      Range Range `xml:"range,attr"`
+   }
+}
+
+type Url struct {
+   Url *url.URL
+}
+
+type AdaptationSet struct {
+   Codecs string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height int64 `xml:"height,attr"`
+   Lang string `xml:"lang,attr"`
+   MimeType string `xml:"mimeType,attr"`
+   Representation []*Representation
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width int64 `xml:"width,attr"`
+   period *Period
+}
+
+type ContentProtection struct {
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
+   Pssh string `xml:"pssh"`
+}
+
+type Period struct {
+   AdaptationSet []*AdaptationSet
+   Duration string `xml:"duration,attr"`
+   mpd *Mpd
+}
+
+// SegmentIndexBox uses:
+// unsigned int(32) subsegment_duration;
+// but range values can exceed 32 bits
+type Range struct {
+   Start uint64
+   End uint64
+}
+
+type Representation struct {
+   Bandwidth int64 `xml:"bandwidth,attr"`
+   BaseUrl string `xml:"BaseURL"`
+   ContentProtection []ContentProtection
+   Height int64 `xml:"height,attr"`
+   Id string `xml:"id,attr"`
+   MimeType string `xml:"mimeType,attr"`
+   SegmentBase *SegmentBase
+   SegmentTemplate *SegmentTemplate
+   Width int64 `xml:"width,attr"`
+   adaptation_set *AdaptationSet
+   Codecs string `xml:"codecs,attr"`
 }
