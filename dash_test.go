@@ -7,6 +7,31 @@ import (
    "testing"
 )
 
+func TestChapters(t *testing.T) {
+   text, err := os.ReadFile("testdata/max.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   var media MPD
+   err = media.Unmarshal(text)
+   if err != nil {
+      t.Fatal(err)
+   }
+   var line bool
+   for _, v := range media.Period {
+      for _, v := range v.AdaptationSet {
+         for _, v := range v.Representation {
+            if line {
+               fmt.Println()
+            } else {
+               line = true
+            }
+            fmt.Println(v)
+         }
+      }
+   }
+}
+
 func TestRepresentation(t *testing.T) {
    sets := struct{
       bandwidth set
@@ -163,46 +188,6 @@ func TestAdaptation(t *testing.T) {
       }
    }
    fmt.Printf("%+v\n", sets)
-}
-
-func TestDelete(t *testing.T) {
-   for i, test := range tests {
-      if i >= 1 {
-         fmt.Println()
-      }
-      fmt.Println(test)
-      fmt.Println("------------------------------------------------------------")
-      text, err := os.ReadFile(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      var media MPD
-      err = media.Unmarshal(text)
-      if err != nil {
-         t.Fatal(err)
-      }
-      var line bool
-      for _, v := range media.Period {
-         seconds, err := v.Seconds()
-         if err != nil {
-            t.Fatal(err)
-         }
-         for _, v := range v.AdaptationSet {
-            for _, v := range v.Representation {
-               if seconds > 9 {
-                  if _, ok := v.Ext(); ok {
-                     if line {
-                        fmt.Println()
-                     } else {
-                        line = true
-                     }
-                     fmt.Println(v)
-                  }
-               }
-            }
-         }
-      }
-   }
 }
 
 func TestMpd(t *testing.T) {

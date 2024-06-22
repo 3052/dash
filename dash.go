@@ -8,6 +8,99 @@ import (
    "time"
 )
 
+func (r Representation) String() string {
+   var b []byte
+   if v, ok := r.get_width(); ok {
+      b = append(b, "width = "...)
+      b = strconv.AppendInt(b, v, 10)
+   }
+   if v, ok := r.get_height(); ok {
+      if b != nil {
+         b = append(b, '\n')
+      }
+      b = append(b, "height = "...)
+      b = strconv.AppendInt(b, v, 10)
+   }
+   if b != nil {
+      b = append(b, '\n')
+   }
+   b = append(b, "bandwidth = "...)
+   b = strconv.AppendInt(b, r.Bandwidth, 10)
+   if v, ok := r.get_codecs(); ok {
+      b = append(b, "\ncodecs = "...)
+      b = append(b, v...)
+   }
+   b = append(b, "\ntype = "...)
+   b = append(b, r.get_mime_type()...)
+   if v := r.adaptation_set.Role; v != nil {
+      b = append(b, "\nrole = "...)
+      b = append(b, v.Value...)
+   }
+   if v := r.adaptation_set.Lang; v != nil {
+      b = append(b, "\nlang = "...)
+      b = append(b, *v...)
+   }
+   b = append(b, "\nid = "...)
+   b = append(b, r.ID...)
+   return string(b)
+}
+
+func (r Representation) get_codecs() (string, bool) {
+   if v := r.Codecs; v != nil {
+      return *v, true
+   }
+   if v := r.adaptation_set.Codecs; v != nil {
+      return *v, true
+   }
+   return "", false
+}
+
+func (r Representation) get_height() (int64, bool) {
+   if v := r.Height; v != nil {
+      return *v, true
+   }
+   if v := r.adaptation_set.Height; v != nil {
+      return *v, true
+   }
+   return 0, false
+}
+
+func (r Representation) get_mime_type() string {
+   if v := r.MimeType; v != nil {
+      return *v
+   }
+   return *r.adaptation_set.MimeType
+}
+
+func (r Representation) get_width() (int64, bool) {
+   if v := r.Width; v != nil {
+      return *v, true
+   }
+   if v := r.adaptation_set.Width; v != nil {
+      return *v, true
+   }
+   return 0, false
+}
+
+func (r Representation) GetAdaptationSet() *AdaptationSet {
+   return r.adaptation_set
+}
+
+type SegmentBase struct {
+   IndexRange Range `xml:"indexRange,attr"`
+   Initialization struct {
+      Range Range `xml:"range,attr"`
+   }
+}
+
+type URL struct {
+   URL *url.URL
+}
+
+func (u *URL) UnmarshalText(text []byte) error {
+   u.URL = new(url.URL)
+   return u.URL.UnmarshalBinary(text)
+}
 func (m *MPD) Unmarshal(data []byte) error {
    err := xml.Unmarshal(data, m)
    if err != nil {
@@ -162,98 +255,4 @@ func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
       return v, true
    }
    return nil, false
-}
-
-func (r Representation) String() string {
-   var b []byte
-   if v, ok := r.get_width(); ok {
-      b = append(b, "width = "...)
-      b = strconv.AppendInt(b, v, 10)
-   }
-   if v, ok := r.get_height(); ok {
-      if b != nil {
-         b = append(b, '\n')
-      }
-      b = append(b, "height = "...)
-      b = strconv.AppendInt(b, v, 10)
-   }
-   if b != nil {
-      b = append(b, '\n')
-   }
-   b = append(b, "bandwidth = "...)
-   b = strconv.AppendInt(b, r.Bandwidth, 10)
-   if v, ok := r.get_codecs(); ok {
-      b = append(b, "\ncodecs = "...)
-      b = append(b, v...)
-   }
-   b = append(b, "\ntype = "...)
-   b = append(b, r.get_mime_type()...)
-   if v := r.adaptation_set.Role; v != nil {
-      b = append(b, "\nrole = "...)
-      b = append(b, v.Value...)
-   }
-   if v := r.adaptation_set.Lang; v != nil {
-      b = append(b, "\nlang = "...)
-      b = append(b, *v...)
-   }
-   b = append(b, "\nid = "...)
-   b = append(b, r.ID...)
-   return string(b)
-}
-
-func (r Representation) get_codecs() (string, bool) {
-   if v := r.Codecs; v != nil {
-      return *v, true
-   }
-   if v := r.adaptation_set.Codecs; v != nil {
-      return *v, true
-   }
-   return "", false
-}
-
-func (r Representation) get_height() (int64, bool) {
-   if v := r.Height; v != nil {
-      return *v, true
-   }
-   if v := r.adaptation_set.Height; v != nil {
-      return *v, true
-   }
-   return 0, false
-}
-
-func (r Representation) get_mime_type() string {
-   if v := r.MimeType; v != nil {
-      return *v
-   }
-   return *r.adaptation_set.MimeType
-}
-
-func (r Representation) get_width() (int64, bool) {
-   if v := r.Width; v != nil {
-      return *v, true
-   }
-   if v := r.adaptation_set.Width; v != nil {
-      return *v, true
-   }
-   return 0, false
-}
-
-func (r Representation) GetAdaptationSet() *AdaptationSet {
-   return r.adaptation_set
-}
-
-type SegmentBase struct {
-   IndexRange Range `xml:"indexRange,attr"`
-   Initialization struct {
-      Range Range `xml:"range,attr"`
-   }
-}
-
-type URL struct {
-   URL *url.URL
-}
-
-func (u *URL) UnmarshalText(text []byte) error {
-   u.URL = new(url.URL)
-   return u.URL.UnmarshalBinary(text)
 }
