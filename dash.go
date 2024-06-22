@@ -36,9 +36,9 @@ func (r Representation) String() string {
       b = append(b, "\nrole = "...)
       b = append(b, v.Value...)
    }
-   if v := r.adaptation_set.Lang; v != nil {
+   if v := r.adaptation_set.Lang; v != "" {
       b = append(b, "\nlang = "...)
-      b = append(b, *v...)
+      b = append(b, v...)
    }
    b = append(b, "\nid = "...)
    b = append(b, r.Id...)
@@ -46,38 +46,38 @@ func (r Representation) String() string {
 }
 
 func (r Representation) get_codecs() (string, bool) {
-   if v := r.Codecs; v != nil {
-      return *v, true
+   if v := r.Codecs; v != "" {
+      return v, true
    }
-   if v := r.adaptation_set.Codecs; v != nil {
-      return *v, true
+   if v := r.adaptation_set.Codecs; v != "" {
+      return v, true
    }
    return "", false
 }
 
 func (r Representation) get_height() (int64, bool) {
-   if v := r.Height; v != nil {
-      return *v, true
+   if v := r.Height; v >= 1 {
+      return v, true
    }
-   if v := r.adaptation_set.Height; v != nil {
-      return *v, true
+   if v := r.adaptation_set.Height; v >= 1 {
+      return v, true
    }
    return 0, false
 }
 
 func (r Representation) get_mime_type() string {
-   if v := r.MimeType; v != nil {
-      return *v
+   if v := r.MimeType; v != "" {
+      return v
    }
-   return *r.adaptation_set.MimeType
+   return r.adaptation_set.MimeType
 }
 
 func (r Representation) get_width() (int64, bool) {
-   if v := r.Width; v != nil {
-      return *v, true
+   if v := r.Width; v >= 1 {
+      return v, true
    }
-   if v := r.adaptation_set.Width; v != nil {
-      return *v, true
+   if v := r.adaptation_set.Width; v >= 1 {
+      return v, true
    }
    return 0, false
 }
@@ -120,15 +120,15 @@ func (m *Mpd) Unmarshal(data []byte) error {
 
 type Representation struct {
    Bandwidth int64 `xml:"bandwidth,attr"`
-   BaseUrl *string `xml:"BaseURL"`
-   Codecs *string `xml:"codecs,attr"`
+   BaseUrl string `xml:"BaseURL"`
+   Codecs string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
-   Height *int64 `xml:"height,attr"`
+   Height int64 `xml:"height,attr"`
    Id string `xml:"id,attr"`
-   MimeType *string `xml:"mimeType,attr"`
+   MimeType string `xml:"mimeType,attr"`
    SegmentBase *SegmentBase
    SegmentTemplate *SegmentTemplate
-   Width *int64 `xml:"width,attr"`
+   Width int64 `xml:"width,attr"`
    adaptation_set *AdaptationSet
 }
 
@@ -137,23 +137,23 @@ func (a AdaptationSet) GetPeriod() *Period {
 }
 
 type AdaptationSet struct {
-   Codecs *string `xml:"codecs,attr"`
+   Codecs string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
-   Height *int64 `xml:"height,attr"`
-   Lang *string `xml:"lang,attr"`
-   MimeType *string `xml:"mimeType,attr"`
+   Height int64 `xml:"height,attr"`
+   Lang string `xml:"lang,attr"`
+   MimeType string `xml:"mimeType,attr"`
    Representation []*Representation
    Role *struct {
       Value string `xml:"value,attr"`
    }
    SegmentTemplate *SegmentTemplate
-   Width *int64 `xml:"width,attr"`
+   Width int64 `xml:"width,attr"`
    period *Period
 }
 
 type ContentProtection struct {
    SchemeIdUri string `xml:"schemeIdUri,attr"`
-   Pssh *string `xml:"pssh"`
+   Pssh string `xml:"pssh"`
 }
 
 type Mpd struct {
@@ -174,15 +174,15 @@ func (p Period) Seconds() (float64, error) {
 }
 
 func (p Period) get_duration() string {
-   if v := p.Duration; v != nil {
-      return *v
+   if v := p.Duration; v != "" {
+      return v
    }
    return p.mpd.MediaPresentationDuration
 }
 
 type Period struct {
    AdaptationSet []*AdaptationSet
-   Duration *string `xml:"duration,attr"`
+   Duration string `xml:"duration,attr"`
    mpd *Mpd
 }
 
@@ -222,8 +222,8 @@ func (r *Range) UnmarshalText(text []byte) error {
 func (r Representation) Widevine() (string, bool) {
    for _, p := range r.protection() {
       if p.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
-         if p.Pssh != nil {
-            return *p.Pssh, true
+         if p.Pssh != "" {
+            return p.Pssh, true
          }
       }
    }
