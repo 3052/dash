@@ -51,5 +51,3 @@ var tests = []string{
    "mpd/stan.mpd",
    "mpd/tubi.mpd",
 }
-
-type set map[byte]struct{}

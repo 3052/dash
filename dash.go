@@ -45,6 +45,73 @@ func (r Representation) String() string {
    return string(b)
 }
 
+type SegmentBase struct {
+   IndexRange Range `xml:"indexRange,attr"`
+   Initialization struct {
+      Range Range `xml:"range,attr"`
+   }
+}
+
+type Url struct {
+   Url *url.URL
+}
+
+type AdaptationSet struct {
+   Codecs string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height int64 `xml:"height,attr"`
+   Lang string `xml:"lang,attr"`
+   MimeType string `xml:"mimeType,attr"`
+   Representation []*Representation
+   Role *struct {
+      Value string `xml:"value,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width int64 `xml:"width,attr"`
+   period *Period
+}
+
+type ContentProtection struct {
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
+   Pssh string `xml:"pssh"`
+}
+
+type Mpd struct {
+   BaseUrl *Url `xml:"BaseURL"`
+   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
+   Period []*Period
+}
+
+type Period struct {
+   AdaptationSet []*AdaptationSet
+   Duration string `xml:"duration,attr"`
+   mpd *Mpd
+}
+
+// SegmentIndexBox uses:
+// unsigned int(32) subsegment_duration;
+// but range values can exceed 32 bits
+type Range struct {
+   Start uint64
+   End uint64
+}
+
+type Representation struct {
+   Bandwidth int64 `xml:"bandwidth,attr"`
+   BaseUrl string `xml:"BaseURL"`
+   Codecs string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height int64 `xml:"height,attr"`
+   Id string `xml:"id,attr"`
+   MimeType string `xml:"mimeType,attr"`
+   SegmentBase *SegmentBase
+   SegmentTemplate *SegmentTemplate
+   Width int64 `xml:"width,attr"`
+   adaptation_set *AdaptationSet
+}
+
+////////
+
 func (r Representation) get_codecs() (string, bool) {
    if v := r.Codecs; v != "" {
       return v, true
@@ -86,21 +153,11 @@ func (r Representation) GetAdaptationSet() *AdaptationSet {
    return r.adaptation_set
 }
 
-type SegmentBase struct {
-   IndexRange Range `xml:"indexRange,attr"`
-   Initialization struct {
-      Range Range `xml:"range,attr"`
-   }
-}
-
-type Url struct {
-   Url *url.URL
-}
-
 func (u *Url) UnmarshalText(text []byte) error {
    u.Url = new(url.URL)
    return u.Url.UnmarshalBinary(text)
 }
+
 func (m *Mpd) Unmarshal(data []byte) error {
    err := xml.Unmarshal(data, m)
    if err != nil {
@@ -118,48 +175,8 @@ func (m *Mpd) Unmarshal(data []byte) error {
    return nil
 }
 
-type Representation struct {
-   Bandwidth int64 `xml:"bandwidth,attr"`
-   BaseUrl string `xml:"BaseURL"`
-   Codecs string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height int64 `xml:"height,attr"`
-   Id string `xml:"id,attr"`
-   MimeType string `xml:"mimeType,attr"`
-   SegmentBase *SegmentBase
-   SegmentTemplate *SegmentTemplate
-   Width int64 `xml:"width,attr"`
-   adaptation_set *AdaptationSet
-}
-
 func (a AdaptationSet) GetPeriod() *Period {
    return a.period
-}
-
-type AdaptationSet struct {
-   Codecs string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height int64 `xml:"height,attr"`
-   Lang string `xml:"lang,attr"`
-   MimeType string `xml:"mimeType,attr"`
-   Representation []*Representation
-   Role *struct {
-      Value string `xml:"value,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-   Width int64 `xml:"width,attr"`
-   period *Period
-}
-
-type ContentProtection struct {
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-   Pssh string `xml:"pssh"`
-}
-
-type Mpd struct {
-   BaseUrl *Url `xml:"BaseURL"`
-   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
-   Period []*Period
 }
 
 // filter out ads, for example:
@@ -180,12 +197,6 @@ func (p Period) get_duration() string {
    return p.mpd.MediaPresentationDuration
 }
 
-type Period struct {
-   AdaptationSet []*AdaptationSet
-   Duration string `xml:"duration,attr"`
-   mpd *Mpd
-}
-
 func (p Period) GetMpd() *Mpd {
    return p.mpd
 }
@@ -194,14 +205,6 @@ func (r Range) MarshalText() ([]byte, error) {
    b := strconv.AppendUint(nil, r.Start, 10)
    b = append(b, '-')
    return strconv.AppendUint(b, r.End, 10), nil
-}
-
-// SegmentIndexBox uses:
-// unsigned int(32) subsegment_duration;
-// but range values can exceed 32 bits
-type Range struct {
-   Start uint64
-   End uint64
 }
 
 func (r *Range) UnmarshalText(text []byte) error {
