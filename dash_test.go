@@ -17,6 +17,39 @@ func TestBaseUrl(t *testing.T) {
    }
 }
 
+func TestSegmentBase(t *testing.T) {
+   for _, test := range tests {
+      media, err := new_mpd(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, v := range media.Period {
+         for _, v := range v.AdaptationSet {
+            for _, v := range v.Representation {
+               fmt.Printf("%+v\n", v.SegmentBase)
+            }
+         }
+      }
+   }
+}
+
+func TestSegmentTemplate(t *testing.T) {
+   for _, test := range tests {
+      media, err := new_mpd(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, v := range media.Period {
+         for _, v := range v.AdaptationSet {
+            fmt.Println("AdaptationSet", v.SegmentTemplate)
+            for _, v := range v.Representation {
+               fmt.Println("Representation", v.SegmentTemplate)
+            }
+         }
+      }
+   }
+}
+
 func TestCodecs(t *testing.T) {
    for _, test := range tests {
       media, err := new_mpd(test)
@@ -31,6 +64,20 @@ func TestCodecs(t *testing.T) {
             }
          }
          fmt.Println()
+      }
+   }
+}
+
+func TestRole(t *testing.T) {
+   for _, test := range tests {
+      media, err := new_mpd(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, v := range media.Period {
+         for _, v := range v.AdaptationSet {
+            fmt.Println(v.Role)
+         }
       }
    }
 }

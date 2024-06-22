@@ -52,21 +52,6 @@ func replace(s, id string, number int) string {
    return fmt.Sprintf(s, number)
 }
 
-type SegmentTemplate struct {
-   Duration float64 `xml:"duration,attr"`
-   Initialization string `xml:"initialization,attr"`
-   Media string `xml:"media,attr"`
-   SegmentTimeline *struct {
-      S []struct {
-         D int `xml:"d,attr"` // duration
-         R int `xml:"r,attr"` // repeat
-      }
-   }
-   StartNumber int `xml:"startNumber,attr"`
-   PresentationTimeOffset int `xml:"presentationTimeOffset,attr"`
-   Timescale float64 `xml:"timescale,attr"`
-}
-
 func (s SegmentTemplate) start() int {
    if v := s.PresentationTimeOffset; v >= 1 {
       return v
@@ -93,4 +78,22 @@ func (s SegmentTemplate) get_timescale() float64 {
 func (s SegmentTemplate) segment_count(seconds float64) float64 {
    seconds /= s.Duration / s.get_timescale()
    return math.Ceil(seconds)
+}
+
+/////////
+
+type SegmentTemplate struct {
+   Duration float64 `xml:"duration,attr"`
+   Initialization string `xml:"initialization,attr"`
+   Media string `xml:"media,attr"`
+   StartNumber int `xml:"startNumber,attr"`
+   PresentationTimeOffset int `xml:"presentationTimeOffset,attr"`
+   Timescale float64 `xml:"timescale,attr"`
+   
+   SegmentTimeline *struct {
+      S []struct {
+         D int `xml:"d,attr"` // duration
+         R int `xml:"r,attr"` // repeat
+      }
+   }
 }

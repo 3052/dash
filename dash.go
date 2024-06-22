@@ -192,49 +192,30 @@ func (r Representation) String() string {
    return string(b)
 }
 
-type Mpd struct {
-   Period []*Period
-   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
-   BaseUrl *Url `xml:"BaseURL"`
-}
-
-////////////
-
-type SegmentBase struct {
-   IndexRange Range `xml:"indexRange,attr"`
-   Initialization struct {
-      Range Range `xml:"range,attr"`
-   }
-}
-
-type Url struct {
-   Url *url.URL
-}
-
 type AdaptationSet struct {
-   Codecs string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
+   Representation []*Representation
+   period *Period
+   Codecs string `xml:"codecs,attr"`
    Height int64 `xml:"height,attr"`
    Lang string `xml:"lang,attr"`
    MimeType string `xml:"mimeType,attr"`
-   Representation []*Representation
+   Width int64 `xml:"width,attr"`
    Role *struct {
       Value string `xml:"value,attr"`
    }
    SegmentTemplate *SegmentTemplate
-   Width int64 `xml:"width,attr"`
-   period *Period
-}
-
-type ContentProtection struct {
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-   Pssh string `xml:"pssh"`
 }
 
 type Period struct {
    AdaptationSet []*AdaptationSet
    Duration string `xml:"duration,attr"`
    mpd *Mpd
+}
+
+type ContentProtection struct {
+   Pssh string `xml:"pssh"`
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
 }
 
 // SegmentIndexBox uses:
@@ -245,6 +226,23 @@ type Range struct {
    End uint64
 }
 
+type Mpd struct {
+   Period []*Period
+   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
+   BaseUrl *Url `xml:"BaseURL"`
+}
+
+type Url struct {
+   Url *url.URL
+}
+
+type SegmentBase struct {
+   Initialization struct {
+      Range Range `xml:"range,attr"`
+   }
+   IndexRange Range `xml:"indexRange,attr"`
+}
+
 type Representation struct {
    Bandwidth int64 `xml:"bandwidth,attr"`
    BaseUrl string `xml:"BaseURL"`
@@ -252,9 +250,9 @@ type Representation struct {
    Height int64 `xml:"height,attr"`
    Id string `xml:"id,attr"`
    MimeType string `xml:"mimeType,attr"`
-   SegmentBase *SegmentBase
-   SegmentTemplate *SegmentTemplate
    Width int64 `xml:"width,attr"`
    adaptation_set *AdaptationSet
    Codecs string `xml:"codecs,attr"`
+   SegmentBase *SegmentBase
+   SegmentTemplate *SegmentTemplate
 }
