@@ -13,7 +13,7 @@ func TestMedia(t *testing.T) {
       if err != nil {
          t.Fatal(err)
       }
-      var media MPD
+      var media Mpd
       err = media.Unmarshal(text)
       if err != nil {
          t.Fatal(err)
@@ -75,7 +75,7 @@ func TestSegmentTemplate(t *testing.T) {
       if err != nil {
          t.Fatal(err)
       }
-      var media MPD
+      var media Mpd
       err = media.Unmarshal(text)
       if err != nil {
          t.Fatal(err)

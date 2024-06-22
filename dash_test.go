@@ -12,7 +12,7 @@ func TestChapters(t *testing.T) {
    if err != nil {
       t.Fatal(err)
    }
-   var media MPD
+   var media Mpd
    err = media.Unmarshal(text)
    if err != nil {
       t.Fatal(err)
@@ -57,7 +57,7 @@ func TestRepresentation(t *testing.T) {
       if err != nil {
          t.Fatal(err)
       }
-      var media MPD
+      var media Mpd
       err = xml.Unmarshal(text, &media)
       if err != nil {
          t.Fatal(err)
@@ -85,7 +85,7 @@ func TestRepresentation(t *testing.T) {
                } else {
                   sets.width[0] = struct{}{}
                }
-               if rep.ID != "" {
+               if rep.Id != "" {
                   sets.id[1] = struct{}{}
                } else {
                   sets.id[0] = struct{}{}
@@ -133,7 +133,7 @@ func TestAdaptation(t *testing.T) {
       if err != nil {
          t.Fatal(err)
       }
-      var media MPD
+      var media Mpd
       err = xml.Unmarshal(text, &media)
       if err != nil {
          t.Fatal(err)
@@ -196,7 +196,7 @@ func TestMpd(t *testing.T) {
       if err != nil {
          t.Fatal(err)
       }
-      var media MPD
+      var media Mpd
       err = media.Unmarshal(text)
       if err != nil {
          t.Fatal(err)
@@ -232,7 +232,7 @@ func TestPeriod(t *testing.T) {
       if err != nil {
          t.Fatal(err)
       }
-      var media MPD
+      var media Mpd
       err = xml.Unmarshal(text, &media)
       if err != nil {
          t.Fatal(err)

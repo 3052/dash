@@ -41,7 +41,7 @@ func (r Representation) String() string {
       b = append(b, *v...)
    }
    b = append(b, "\nid = "...)
-   b = append(b, r.ID...)
+   b = append(b, r.Id...)
    return string(b)
 }
 
@@ -93,15 +93,15 @@ type SegmentBase struct {
    }
 }
 
-type URL struct {
-   URL *url.URL
+type Url struct {
+   Url *url.URL
 }
 
-func (u *URL) UnmarshalText(text []byte) error {
-   u.URL = new(url.URL)
-   return u.URL.UnmarshalBinary(text)
+func (u *Url) UnmarshalText(text []byte) error {
+   u.Url = new(url.URL)
+   return u.Url.UnmarshalBinary(text)
 }
-func (m *MPD) Unmarshal(data []byte) error {
+func (m *Mpd) Unmarshal(data []byte) error {
    err := xml.Unmarshal(data, m)
    if err != nil {
       return err
@@ -124,7 +124,7 @@ type Representation struct {
    Codecs *string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
    Height *int64 `xml:"height,attr"`
-   ID string `xml:"id,attr"`
+   Id string `xml:"id,attr"`
    MimeType *string `xml:"mimeType,attr"`
    SegmentBase *SegmentBase
    SegmentTemplate *SegmentTemplate
@@ -153,11 +153,11 @@ type AdaptationSet struct {
 
 type ContentProtection struct {
    SchemeIdUri string `xml:"schemeIdUri,attr"`
-   PSSH *string `xml:"pssh"`
+   Pssh *string `xml:"pssh"`
 }
 
-type MPD struct {
-   BaseUrl *URL `xml:"BaseURL"`
+type Mpd struct {
+   BaseUrl *Url `xml:"BaseURL"`
    MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
    Period []*Period
 }
@@ -183,10 +183,10 @@ func (p Period) get_duration() string {
 type Period struct {
    AdaptationSet []*AdaptationSet
    Duration *string `xml:"duration,attr"`
-   mpd *MPD
+   mpd *Mpd
 }
 
-func (p Period) GetMpd() *MPD {
+func (p Period) GetMpd() *Mpd {
    return p.mpd
 }
 
@@ -222,8 +222,8 @@ func (r *Range) UnmarshalText(text []byte) error {
 func (r Representation) Widevine() (string, bool) {
    for _, p := range r.protection() {
       if p.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
-         if p.PSSH != nil {
-            return *p.PSSH, true
+         if p.Pssh != nil {
+            return *p.Pssh, true
          }
       }
    }
