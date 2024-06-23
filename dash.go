@@ -65,8 +65,24 @@ type Representation struct {
    SegmentTemplate   *SegmentTemplate
 }
 
-func (r Representation) id(value string) string {
-   return strings.Replace(value, "$RepresentationID$", r.Id, 1)
+type ContentProtection struct {
+   Pssh        string `xml:"pssh"`
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
+}
+
+type SegmentTemplate struct {
+   Duration uint64 `xml:"duration,attr"`
+   Initialization string `xml:"initialization,attr"`
+   Media string `xml:"media,attr"`
+   StartNumber uint `xml:"startNumber,attr"`
+   PresentationTimeOffset uint `xml:"presentationTimeOffset,attr"`
+   Timescale uint64 `xml:"timescale,attr"`
+   SegmentTimeline *struct {
+      S []struct {
+         D uint `xml:"d,attr"` // duration
+         R uint `xml:"r,attr"` // repeat
+      }
+   }
 }
 
 func (r Range) MarshalText() ([]byte, error) {
@@ -88,6 +104,48 @@ func (r *Range) UnmarshalText(text []byte) error {
       return err
    }
    return nil
+}
+
+func (r Representation) id(value string) string {
+   return strings.Replace(value, "$RepresentationID$", r.Id, 1)
+}
+
+func (s SegmentTemplate) number(value uint) string {
+   f := strings.Replace(s.Media, "$Number$", "%d", 1)
+   f = strings.Replace(f, "$Number%02d$", "%02d", 1)
+   f = strings.Replace(f, "$Number%03d$", "%03d", 1)
+   f = strings.Replace(f, "$Number%04d$", "%04d", 1)
+   f = strings.Replace(f, "$Number%05d$", "%05d", 1)
+   f = strings.Replace(f, "$Number%06d$", "%06d", 1)
+   f = strings.Replace(f, "$Number%07d$", "%07d", 1)
+   f = strings.Replace(f, "$Number%08d$", "%08d", 1)
+   f = strings.Replace(f, "$Number%09d$", "%09d", 1)
+   return fmt.Sprintf(f, value)
+}
+
+func (s SegmentTemplate) time(value uint) string {
+   f := strings.Replace(s.Media, "$Time$", "%d", 1)
+   return fmt.Sprintf(f, value)
+}
+
+func or[T comparable](vals ...T) T {
+   var zero T
+   for _, val := range vals {
+      if val != zero {
+         return val
+      }
+   }
+   return zero
+}
+
+func option[T comparable](vals ...T) (T, bool) {
+   var zero T
+   for _, val := range vals {
+      if val != zero {
+         return val, true
+      }
+   }
+   return zero, false
 }
 
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
@@ -117,28 +175,6 @@ func (p Period) Seconds() (float64, error) {
    return duration.Seconds(), nil
 }
 
-func (m *Mpd) Unmarshal(data []byte) error {
-   err := xml.Unmarshal(data, m)
-   if err != nil {
-      return err
-   }
-   for _, period := range m.Period {
-      period.mpd = m
-      for _, adapt := range period.AdaptationSet {
-         adapt.period = period
-         for _, represent := range adapt.Representation {
-            represent.adaptation_set = adapt
-         }
-      }
-   }
-   return nil
-}
-
-type ContentProtection struct {
-   Pssh        string `xml:"pssh"`
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-}
-
 func (c ContentProtection) get_pssh() (string, bool) {
    return option(c.Pssh)
 }
@@ -163,55 +199,6 @@ func (r Representation) Initialization() (string, bool) {
 
 func (s SegmentTemplate) get_initialization() (string, bool) {
    return option(s.Initialization)
-}
-
-func (r Representation) get_width() (uint64, bool) {
-   return option(r.Width, r.adaptation_set.Width)
-}
-
-func (r Representation) get_height() (uint64, bool) {
-   return option(r.Height, r.adaptation_set.Height)
-}
-
-func (r Representation) get_codecs() (string, bool) {
-   return option(r.Codecs, r.adaptation_set.Codecs)
-}
-
-func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
-   return option(r.SegmentTemplate, r.adaptation_set.SegmentTemplate)
-}
-
-func (s SegmentTemplate) number(value uint) string {
-   f := strings.Replace(s.Media, "$Number$", "%d", 1)
-   f = strings.Replace(f, "$Number%02d$", "%02d", 1)
-   f = strings.Replace(f, "$Number%03d$", "%03d", 1)
-   f = strings.Replace(f, "$Number%04d$", "%04d", 1)
-   f = strings.Replace(f, "$Number%05d$", "%05d", 1)
-   f = strings.Replace(f, "$Number%06d$", "%06d", 1)
-   f = strings.Replace(f, "$Number%07d$", "%07d", 1)
-   f = strings.Replace(f, "$Number%08d$", "%08d", 1)
-   f = strings.Replace(f, "$Number%09d$", "%09d", 1)
-   return fmt.Sprintf(f, value)
-}
-
-func (s SegmentTemplate) time(value uint) string {
-   f := strings.Replace(s.Media, "$Time$", "%d", 1)
-   return fmt.Sprintf(f, value)
-}
-
-type SegmentTemplate struct {
-   Duration uint64 `xml:"duration,attr"`
-   Initialization string `xml:"initialization,attr"`
-   Media string `xml:"media,attr"`
-   StartNumber uint `xml:"startNumber,attr"`
-   PresentationTimeOffset uint `xml:"presentationTimeOffset,attr"`
-   Timescale uint64 `xml:"timescale,attr"`
-   SegmentTimeline *struct {
-      S []struct {
-         D uint `xml:"d,attr"` // duration
-         R uint `xml:"r,attr"` // repeat
-      }
-   }
 }
 
 func (s SegmentTemplate) GetMedia(r *Representation) ([]string, error) {
@@ -286,43 +273,12 @@ func (r Representation) String() string {
    return string(b)
 }
 
-func or[T comparable](vals ...T) T {
-   var zero T
-   for _, val := range vals {
-      if val != zero {
-         return val
-      }
-   }
-   return zero
-}
-
-func option[T comparable](vals ...T) (T, bool) {
-   var zero T
-   for _, val := range vals {
-      if val != zero {
-         return val, true
-      }
-   }
-   return zero, false
-}
-
-func (s SegmentTemplate) start() uint {
-   return or(s.PresentationTimeOffset, s.StartNumber)
-}
-
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
 func (s SegmentTemplate) get_timescale() float64 {
    if v := s.Timescale; v >= 1 {
       return float64(v)
    }
    return 1
-}
-
-func (r Representation) get_mime_type() string {
-   if v := r.MimeType; v != "" {
-      return v
-   }
-   return r.adaptation_set.MimeType
 }
 
 func (p Period) get_duration() string {
@@ -332,8 +288,51 @@ func (p Period) get_duration() string {
    return p.mpd.MediaPresentationDuration
 }
 
+func (s SegmentTemplate) start() uint {
+   return or(s.PresentationTimeOffset, s.StartNumber)
+}
+
+func (m *Mpd) Unmarshal(data []byte) error {
+   err := xml.Unmarshal(data, m)
+   if err != nil {
+      return err
+   }
+   for _, period := range m.Period {
+      period.mpd = m
+      for _, adapt := range period.AdaptationSet {
+         adapt.period = period
+         for _, represent := range adapt.Representation {
+            represent.adaptation_set = adapt
+         }
+      }
+   }
+   return nil
+}
+
+///////////
+
+func (r Representation) get_width() (uint64, bool) {
+   return option(r.Width, r.adaptation_set.Width)
+}
+
+func (r Representation) get_height() (uint64, bool) {
+   return option(r.Height, r.adaptation_set.Height)
+}
+
+func (r Representation) get_codecs() (string, bool) {
+   return option(r.Codecs, r.adaptation_set.Codecs)
+}
+
+func (r Representation) get_mime_type() string {
+   return or(r.MimeType, r.adaptation_set.MimeType)
+}
+
+func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
+   return option(r.SegmentTemplate, r.adaptation_set.SegmentTemplate)
+}
+
 func (r Representation) content_protection() []ContentProtection {
-   if v := r.ContentProtection; v != nil {
+   if v := r.ContentProtection; len(v) >= 1 {
       return v
    }
    return r.adaptation_set.ContentProtection
