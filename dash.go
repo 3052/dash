@@ -92,8 +92,6 @@ func (s SegmentTemplate) get_initialization() (string, bool) {
    return "", false
 }
 
-/////////
-
 func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
    if v := r.SegmentTemplate; v != nil {
       return v, true
@@ -103,6 +101,97 @@ func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
    }
    return nil, false
 }
+
+func (s SegmentTemplate) number(value int) string {
+   f := strings.Replace(s.Media, "$Number$", "%d", 1)
+   f = strings.Replace(f, "$Number%02d$", "%02d", 1)
+   f = strings.Replace(f, "$Number%03d$", "%03d", 1)
+   f = strings.Replace(f, "$Number%04d$", "%04d", 1)
+   f = strings.Replace(f, "$Number%05d$", "%05d", 1)
+   f = strings.Replace(f, "$Number%06d$", "%06d", 1)
+   f = strings.Replace(f, "$Number%07d$", "%07d", 1)
+   f = strings.Replace(f, "$Number%08d$", "%08d", 1)
+   f = strings.Replace(f, "$Number%09d$", "%09d", 1)
+   return fmt.Sprintf(f, value)
+}
+
+func (s SegmentTemplate) time(value int) string {
+   f := strings.Replace(s.Media, "$Time$", "%d", 1)
+   return fmt.Sprintf(f, value)
+}
+
+func (r Representation) id(value string) string {
+   return strings.Replace(value, "$RepresentationID$", r.Id, 1)
+}
+
+func (r Representation) get_codecs() (string, bool) {
+   if v := r.Codecs; v != "" {
+      return v, true
+   }
+   if v := r.adaptation_set.Codecs; v != "" {
+      return v, true
+   }
+   return "", false
+}
+
+func (r Representation) get_mime_type() string {
+   if v := r.MimeType; v != "" {
+      return v
+   }
+   return r.adaptation_set.MimeType
+}
+
+func (r Representation) get_width() (int64, bool) {
+   if v := r.Width; v >= 1 {
+      return v, true
+   }
+   if v := r.adaptation_set.Width; v >= 1 {
+      return v, true
+   }
+   return 0, false
+}
+
+func (r Representation) get_height() (int64, bool) {
+   if v := r.Height; v >= 1 {
+      return v, true
+   }
+   if v := r.adaptation_set.Height; v >= 1 {
+      return v, true
+   }
+   return 0, false
+}
+
+func (r Range) MarshalText() ([]byte, error) {
+   b := strconv.AppendUint(nil, r.Start, 10)
+   b = append(b, '-')
+   return strconv.AppendUint(b, r.End, 10), nil
+}
+
+func (r *Range) UnmarshalText(text []byte) error {
+   // the current testdata always has `-`, so lets assume for now
+   start, end, _ := strings.Cut(string(text), "-")
+   var err error
+   r.Start, err = strconv.ParseUint(start, 10, 64)
+   if err != nil {
+      return err
+   }
+   r.End, err = strconv.ParseUint(end, 10, 64)
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
+func (r Representation) Initialization() (string, bool) {
+   if v, ok := r.get_segment_template(); ok {
+      if v, ok := v.get_initialization(); ok {
+         return r.id(v), true
+      }
+   }
+   return "", false
+}
+
+/////////
 
 func (s SegmentTemplate) start() int {
    if v := s.PresentationTimeOffset; v >= 1 {
@@ -123,24 +212,6 @@ func (s SegmentTemplate) get_timescale() float64 {
 func (s SegmentTemplate) segment_count(seconds float64) float64 {
    seconds /= s.Duration / s.get_timescale()
    return math.Ceil(seconds)
-}
-
-func (s SegmentTemplate) number(value int) string {
-   f := strings.Replace(s.Media, "$Number$", "%d", 1)
-   f = strings.Replace(f, "$Number%02d$", "%02d", 1)
-   f = strings.Replace(f, "$Number%03d$", "%03d", 1)
-   f = strings.Replace(f, "$Number%04d$", "%04d", 1)
-   f = strings.Replace(f, "$Number%05d$", "%05d", 1)
-   f = strings.Replace(f, "$Number%06d$", "%06d", 1)
-   f = strings.Replace(f, "$Number%07d$", "%07d", 1)
-   f = strings.Replace(f, "$Number%08d$", "%08d", 1)
-   f = strings.Replace(f, "$Number%09d$", "%09d", 1)
-   return fmt.Sprintf(f, value)
-}
-
-func (s SegmentTemplate) time(value int) string {
-   f := strings.Replace(s.Media, "$Time$", "%d", 1)
-   return fmt.Sprintf(f, value)
 }
 
 func (s SegmentTemplate) GetMedia(r *Representation) ([]string, error) {
@@ -178,47 +249,6 @@ func (s SegmentTemplate) GetMedia(r *Representation) ([]string, error) {
    return media, nil
 }
 
-func (r Representation) id(value string) string {
-   return strings.Replace(value, "$RepresentationID$", r.Id, 1)
-}
-
-func (r Representation) get_codecs() (string, bool) {
-   if v := r.Codecs; v != "" {
-      return v, true
-   }
-   if v := r.adaptation_set.Codecs; v != "" {
-      return v, true
-   }
-   return "", false
-}
-
-func (r Representation) get_height() (int64, bool) {
-   if v := r.Height; v >= 1 {
-      return v, true
-   }
-   if v := r.adaptation_set.Height; v >= 1 {
-      return v, true
-   }
-   return 0, false
-}
-
-func (r Representation) get_width() (int64, bool) {
-   if v := r.Width; v >= 1 {
-      return v, true
-   }
-   if v := r.adaptation_set.Width; v >= 1 {
-      return v, true
-   }
-   return 0, false
-}
-
-func (r Representation) get_mime_type() string {
-   if v := r.MimeType; v != "" {
-      return v
-   }
-   return r.adaptation_set.MimeType
-}
-
 func (p Period) get_duration() string {
    if v := p.Duration; v != "" {
       return v
@@ -236,36 +266,11 @@ func (r Representation) Ext() (string, bool) {
    return "", false
 }
 
-func (r Range) MarshalText() ([]byte, error) {
-   b := strconv.AppendUint(nil, r.Start, 10)
-   b = append(b, '-')
-   return strconv.AppendUint(b, r.End, 10), nil
-}
-
-func (r *Range) UnmarshalText(text []byte) error {
-   // the current testdata always has `-`, so lets assume for now
-   start, end, _ := strings.Cut(string(text), "-")
-   var err error
-   r.Start, err = strconv.ParseUint(start, 10, 64)
-   if err != nil {
-      return err
-   }
-   r.End, err = strconv.ParseUint(end, 10, 64)
-   if err != nil {
-      return err
-   }
-   return nil
-}
-
 func (r Representation) protection() []ContentProtection {
    if v := r.ContentProtection; v != nil {
       return v
    }
    return r.adaptation_set.ContentProtection
-}
-
-func (r Representation) GetAdaptationSet() *AdaptationSet {
-   return r.adaptation_set
 }
 
 func (m *Mpd) Unmarshal(data []byte) error {
@@ -285,10 +290,6 @@ func (m *Mpd) Unmarshal(data []byte) error {
    return nil
 }
 
-func (a AdaptationSet) GetPeriod() *Period {
-   return a.period
-}
-
 // filter out ads, for example:
 // hulu.com/watch/5add1b6c-04f2-4038-a925-35db3007d662
 func (p Period) Seconds() (float64, error) {
@@ -298,10 +299,6 @@ func (p Period) Seconds() (float64, error) {
       return 0, err
    }
    return duration.Seconds(), nil
-}
-
-func (p Period) GetMpd() *Mpd {
-   return p.mpd
 }
 
 func (r Representation) Widevine() (string, bool) {
@@ -350,13 +347,4 @@ func (r Representation) String() string {
    b = append(b, "\nid = "...)
    b = append(b, r.Id...)
    return string(b)
-}
-
-func (r Representation) Initialization() (string, bool) {
-   if v, ok := r.get_segment_template(); ok {
-      if v, ok := v.get_initialization(); ok {
-         return r.id(v), true
-      }
-   }
-   return "", false
 }
