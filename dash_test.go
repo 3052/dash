@@ -97,6 +97,28 @@ func TestMimeType(t *testing.T) {
    }
 }
 
+func TestPssh(t *testing.T) {
+   for _, test := range tests {
+      media, err := new_mpd(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, v := range media.Period {
+         for _, v := range v.AdaptationSet {
+            for _, v := range v.ContentProtection {
+               fmt.Printf("%q\n", v.Pssh)
+            }
+            for _, v := range v.Representation {
+               for _, v := range v.ContentProtection {
+                  fmt.Printf("%q\n", v.Pssh)
+               }
+            }
+            fmt.Println()
+         }
+      }
+   }
+}
+
 func TestRole(t *testing.T) {
    for _, test := range tests {
       media, err := new_mpd(test)

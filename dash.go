@@ -30,11 +30,6 @@ type Period struct {
    mpd           *Mpd
 }
 
-type ContentProtection struct {
-   Pssh        string `xml:"pssh"`
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-}
-
 // SegmentIndexBox uses:
 // unsigned int(32) subsegment_duration;
 // but range values can exceed 32 bits
@@ -85,21 +80,9 @@ type Representation struct {
    SegmentTemplate   *SegmentTemplate
 }
 
-func (s SegmentTemplate) get_initialization() (string, bool) {
-   if v := s.Initialization; v != "" {
-      return v, true
-   }
-   return "", false
-}
-
-func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
-   if v := r.SegmentTemplate; v != nil {
-      return v, true
-   }
-   if v := r.adaptation_set.SegmentTemplate; v != nil {
-      return v, true
-   }
-   return nil, false
+type ContentProtection struct {
+   Pssh        string `xml:"pssh"`
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
 }
 
 func (s SegmentTemplate) number(value int) string {
@@ -124,45 +107,6 @@ func (r Representation) id(value string) string {
    return strings.Replace(value, "$RepresentationID$", r.Id, 1)
 }
 
-func (r Representation) get_codecs() (string, bool) {
-   if v := r.Codecs; v != "" {
-      return v, true
-   }
-   if v := r.adaptation_set.Codecs; v != "" {
-      return v, true
-   }
-   return "", false
-}
-
-////////////
-
-func (r Representation) get_mime_type() string {
-   if v := r.MimeType; v != "" {
-      return v
-   }
-   return r.adaptation_set.MimeType
-}
-
-func (r Representation) get_width() (int64, bool) {
-   if v := r.Width; v >= 1 {
-      return v, true
-   }
-   if v := r.adaptation_set.Width; v >= 1 {
-      return v, true
-   }
-   return 0, false
-}
-
-func (r Representation) get_height() (int64, bool) {
-   if v := r.Height; v >= 1 {
-      return v, true
-   }
-   if v := r.adaptation_set.Height; v >= 1 {
-      return v, true
-   }
-   return 0, false
-}
-
 func (r Range) MarshalText() ([]byte, error) {
    b := strconv.AppendUint(nil, r.Start, 10)
    b = append(b, '-')
@@ -184,13 +128,25 @@ func (r *Range) UnmarshalText(text []byte) error {
    return nil
 }
 
-func (r Representation) Initialization() (string, bool) {
-   if v, ok := r.get_segment_template(); ok {
-      if v, ok := v.get_initialization(); ok {
-         return r.id(v), true
-      }
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
+func (s SegmentTemplate) get_timescale() float64 {
+   if v := s.Timescale; v >= 1 {
+      return float64(v)
    }
-   return "", false
+   return 1
+}
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
+func (s SegmentTemplate) segment_count(seconds float64) float64 {
+   seconds /= float64(s.Duration) / s.get_timescale()
+   return math.Ceil(seconds)
+}
+
+func (r Representation) get_mime_type() string {
+   if v := r.MimeType; v != "" {
+      return v
+   }
+   return r.adaptation_set.MimeType
 }
 
 func (s SegmentTemplate) start() int {
@@ -198,6 +154,41 @@ func (s SegmentTemplate) start() int {
       return v
    }
    return s.StartNumber
+}
+
+func (p Period) get_duration() string {
+   if v := p.Duration; v != "" {
+      return v
+   }
+   return p.mpd.MediaPresentationDuration
+}
+
+func (r Representation) content_protection() []ContentProtection {
+   if v := r.ContentProtection; v != nil {
+      return v
+   }
+   return r.adaptation_set.ContentProtection
+}
+
+func (r Representation) Ext() (string, bool) {
+   switch r.get_mime_type() {
+   case "audio/mp4":
+      return ".m4a", true
+   case "video/mp4":
+      return ".m4v", true
+   }
+   return "", false
+}
+
+// filter out ads, for example:
+// hulu.com/watch/5add1b6c-04f2-4038-a925-35db3007d662
+func (p Period) Seconds() (float64, error) {
+   s := strings.TrimPrefix(p.get_duration(), "PT")
+   duration, err := time.ParseDuration(strings.ToLower(s))
+   if err != nil {
+      return 0, err
+   }
+   return duration.Seconds(), nil
 }
 
 func (s SegmentTemplate) GetMedia(r *Representation) ([]string, error) {
@@ -235,30 +226,6 @@ func (s SegmentTemplate) GetMedia(r *Representation) ([]string, error) {
    return media, nil
 }
 
-func (p Period) get_duration() string {
-   if v := p.Duration; v != "" {
-      return v
-   }
-   return p.mpd.MediaPresentationDuration
-}
-
-func (r Representation) Ext() (string, bool) {
-   switch r.get_mime_type() {
-   case "audio/mp4":
-      return ".m4a", true
-   case "video/mp4":
-      return ".m4v", true
-   }
-   return "", false
-}
-
-func (r Representation) protection() []ContentProtection {
-   if v := r.ContentProtection; v != nil {
-      return v
-   }
-   return r.adaptation_set.ContentProtection
-}
-
 func (m *Mpd) Unmarshal(data []byte) error {
    err := xml.Unmarshal(data, m)
    if err != nil {
@@ -274,17 +241,6 @@ func (m *Mpd) Unmarshal(data []byte) error {
       }
    }
    return nil
-}
-
-func (r Representation) Widevine() (string, bool) {
-   for _, p := range r.protection() {
-      if p.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
-         if p.Pssh != "" {
-            return p.Pssh, true
-         }
-      }
-   }
-   return "", false
 }
 
 func (r Representation) String() string {
@@ -324,27 +280,71 @@ func (r Representation) String() string {
    return string(b)
 }
 
-// filter out ads, for example:
-// hulu.com/watch/5add1b6c-04f2-4038-a925-35db3007d662
-func (p Period) Seconds() (float64, error) {
-   s := strings.TrimPrefix(p.get_duration(), "PT")
-   duration, err := time.ParseDuration(strings.ToLower(s))
-   if err != nil {
-      return 0, err
+func (r Representation) Widevine() (string, bool) {
+   for _, p := range r.content_protection() {
+      if p.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
+         if p.Pssh != "" {
+            return p.Pssh, true
+         }
+      }
    }
-   return duration.Seconds(), nil
+   return "", false
 }
 
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
-func (s SegmentTemplate) get_timescale() float64 {
-   if v := s.Timescale; v >= 1 {
-      return float64(v)
+////////////
+
+func (r Representation) Initialization() (string, bool) {
+   if v, ok := r.get_segment_template(); ok {
+      if v, ok := v.get_initialization(); ok {
+         return r.id(v), true
+      }
    }
-   return 1
+   return "", false
 }
 
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
-func (s SegmentTemplate) segment_count(seconds float64) float64 {
-   seconds /= float64(s.Duration) / s.get_timescale()
-   return math.Ceil(seconds)
+func (s SegmentTemplate) get_initialization() (string, bool) {
+   if v := s.Initialization; v != "" {
+      return v, true
+   }
+   return "", false
+}
+
+func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
+   if v := r.SegmentTemplate; v != nil {
+      return v, true
+   }
+   if v := r.adaptation_set.SegmentTemplate; v != nil {
+      return v, true
+   }
+   return nil, false
+}
+
+func (r Representation) get_codecs() (string, bool) {
+   if v := r.Codecs; v != "" {
+      return v, true
+   }
+   if v := r.adaptation_set.Codecs; v != "" {
+      return v, true
+   }
+   return "", false
+}
+
+func (r Representation) get_width() (int64, bool) {
+   if v := r.Width; v >= 1 {
+      return v, true
+   }
+   if v := r.adaptation_set.Width; v >= 1 {
+      return v, true
+   }
+   return 0, false
+}
+
+func (r Representation) get_height() (int64, bool) {
+   if v := r.Height; v >= 1 {
+      return v, true
+   }
+   if v := r.adaptation_set.Height; v >= 1 {
+      return v, true
+   }
+   return 0, false
 }
