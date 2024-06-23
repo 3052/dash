@@ -1,24 +1,5 @@
 package dash
 
-import (
-   "fmt"
-   "testing"
-)
-
-func TestSegmentTimeline(t *testing.T) {
-   for _, test := range tests {
-      media, err := new_mpd(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, v := range media.Period {
-         for _, v := range v.AdaptationSet {
-            fmt.Println(v.SegmentTemplate)
-         }
-      }
-   }
-}
-
 var tests = []string{
    "testdata/amc.mpd",
    "testdata/cine-member.mpd",

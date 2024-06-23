@@ -7,16 +7,6 @@ import (
    "testing"
 )
 
-func TestBaseUrl(t *testing.T) {
-   for _, test := range tests {
-      media, err := new_mpd(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      fmt.Println(media.BaseUrl)
-   }
-}
-
 func TestSegmentBase(t *testing.T) {
    for _, test := range tests {
       media, err := new_mpd(test)
@@ -41,9 +31,9 @@ func TestSegmentTemplate(t *testing.T) {
       }
       for _, v := range media.Period {
          for _, v := range v.AdaptationSet {
-            fmt.Println("AdaptationSet", v.SegmentTemplate)
+            fmt.Printf("AdaptationSet %+v\n", v.SegmentTemplate)
             for _, v := range v.Representation {
-               fmt.Println("Representation", v.SegmentTemplate)
+               fmt.Printf("Representation %+v\n", v.SegmentTemplate)
             }
          }
       }

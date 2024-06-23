@@ -80,8 +80,6 @@ func (s SegmentTemplate) segment_count(seconds float64) float64 {
    return math.Ceil(seconds)
 }
 
-/////////
-
 type SegmentTemplate struct {
    Duration float64 `xml:"duration,attr"`
    Initialization string `xml:"initialization,attr"`
@@ -89,7 +87,6 @@ type SegmentTemplate struct {
    StartNumber int `xml:"startNumber,attr"`
    PresentationTimeOffset int `xml:"presentationTimeOffset,attr"`
    Timescale float64 `xml:"timescale,attr"`
-   
    SegmentTimeline *struct {
       S []struct {
          D int `xml:"d,attr"` // duration
