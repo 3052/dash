@@ -65,11 +65,6 @@ type Representation struct {
    SegmentTemplate   *SegmentTemplate
 }
 
-type ContentProtection struct {
-   Pssh        string `xml:"pssh"`
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-}
-
 func (r Representation) id(value string) string {
    return strings.Replace(value, "$RepresentationID$", r.Id, 1)
 }
@@ -139,12 +134,19 @@ func (m *Mpd) Unmarshal(data []byte) error {
    return nil
 }
 
+type ContentProtection struct {
+   Pssh        string `xml:"pssh"`
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
+}
+
+func (c ContentProtection) get_pssh() (string, bool) {
+   return option(c.Pssh)
+}
+
 func (r Representation) Widevine() (string, bool) {
    for _, p := range r.content_protection() {
       if p.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
-         if p.Pssh != "" {
-            return p.Pssh, true
-         }
+         return p.get_pssh()
       }
    }
    return "", false
@@ -157,43 +159,6 @@ func (r Representation) Initialization() (string, bool) {
       }
    }
    return "", false
-}
-
-func (r Representation) String() string {
-   var b []byte
-   if v, ok := r.get_width(); ok {
-      b = append(b, "width = "...)
-      b = strconv.AppendUint(b, v, 10)
-   }
-   if v, ok := r.get_height(); ok {
-      if b != nil {
-         b = append(b, '\n')
-      }
-      b = append(b, "height = "...)
-      b = strconv.AppendUint(b, v, 10)
-   }
-   if b != nil {
-      b = append(b, '\n')
-   }
-   b = append(b, "bandwidth = "...)
-   b = strconv.AppendUint(b, r.Bandwidth, 10)
-   if v, ok := r.get_codecs(); ok {
-      b = append(b, "\ncodecs = "...)
-      b = append(b, v...)
-   }
-   b = append(b, "\ntype = "...)
-   b = append(b, r.get_mime_type()...)
-   if v := r.adaptation_set.Role; v != nil {
-      b = append(b, "\nrole = "...)
-      b = append(b, v.Value...)
-   }
-   if v := r.adaptation_set.Lang; v != "" {
-      b = append(b, "\nlang = "...)
-      b = append(b, v...)
-   }
-   b = append(b, "\nid = "...)
-   b = append(b, r.Id...)
-   return string(b)
 }
 
 func (s SegmentTemplate) get_initialization() (string, bool) {
@@ -212,59 +177,8 @@ func (r Representation) get_codecs() (string, bool) {
    return option(r.Codecs, r.adaptation_set.Codecs)
 }
 
-func option[T comparable](vals ...T) (T, bool) {
-   var zero T
-   for _, val := range vals {
-      if val != zero {
-         return val, true
-      }
-   }
-   return zero, false
-}
-
 func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
    return option(r.SegmentTemplate, r.adaptation_set.SegmentTemplate)
-}
-
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
-func (s SegmentTemplate) get_timescale() float64 {
-   if v := s.Timescale; v >= 1 {
-      return float64(v)
-   }
-   return 1
-}
-
-func (r Representation) get_mime_type() string {
-   if v := r.MimeType; v != "" {
-      return v
-   }
-   return r.adaptation_set.MimeType
-}
-
-func (p Period) get_duration() string {
-   if v := p.Duration; v != "" {
-      return v
-   }
-   return p.mpd.MediaPresentationDuration
-}
-
-func (r Representation) content_protection() []ContentProtection {
-   if v := r.ContentProtection; v != nil {
-      return v
-   }
-   return r.adaptation_set.ContentProtection
-}
-
-func (s SegmentTemplate) start() uint {
-   if v := s.PresentationTimeOffset; v >= 1 {
-      return v
-   }
-   return s.StartNumber
-}
-
-func (s SegmentTemplate) time(value uint) string {
-   f := strings.Replace(s.Media, "$Time$", "%d", 1)
-   return fmt.Sprintf(f, value)
 }
 
 func (s SegmentTemplate) number(value uint) string {
@@ -277,6 +191,11 @@ func (s SegmentTemplate) number(value uint) string {
    f = strings.Replace(f, "$Number%07d$", "%07d", 1)
    f = strings.Replace(f, "$Number%08d$", "%08d", 1)
    f = strings.Replace(f, "$Number%09d$", "%09d", 1)
+   return fmt.Sprintf(f, value)
+}
+
+func (s SegmentTemplate) time(value uint) string {
+   f := strings.Replace(s.Media, "$Time$", "%d", 1)
    return fmt.Sprintf(f, value)
 }
 
@@ -328,4 +247,94 @@ func (s SegmentTemplate) GetMedia(r *Representation) ([]string, error) {
       }
    }
    return media, nil
+}
+
+func (r Representation) String() string {
+   var b []byte
+   if v, ok := r.get_width(); ok {
+      b = append(b, "width = "...)
+      b = strconv.AppendUint(b, v, 10)
+   }
+   if v, ok := r.get_height(); ok {
+      if b != nil {
+         b = append(b, '\n')
+      }
+      b = append(b, "height = "...)
+      b = strconv.AppendUint(b, v, 10)
+   }
+   if b != nil {
+      b = append(b, '\n')
+   }
+   b = append(b, "bandwidth = "...)
+   b = strconv.AppendUint(b, r.Bandwidth, 10)
+   if v, ok := r.get_codecs(); ok {
+      b = append(b, "\ncodecs = "...)
+      b = append(b, v...)
+   }
+   b = append(b, "\ntype = "...)
+   b = append(b, r.get_mime_type()...)
+   if v := r.adaptation_set.Role; v != nil {
+      b = append(b, "\nrole = "...)
+      b = append(b, v.Value...)
+   }
+   if v := r.adaptation_set.Lang; v != "" {
+      b = append(b, "\nlang = "...)
+      b = append(b, v...)
+   }
+   b = append(b, "\nid = "...)
+   b = append(b, r.Id...)
+   return string(b)
+}
+
+func or[T comparable](vals ...T) T {
+   var zero T
+   for _, val := range vals {
+      if val != zero {
+         return val
+      }
+   }
+   return zero
+}
+
+func option[T comparable](vals ...T) (T, bool) {
+   var zero T
+   for _, val := range vals {
+      if val != zero {
+         return val, true
+      }
+   }
+   return zero, false
+}
+
+func (s SegmentTemplate) start() uint {
+   return or(s.PresentationTimeOffset, s.StartNumber)
+}
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
+func (s SegmentTemplate) get_timescale() float64 {
+   if v := s.Timescale; v >= 1 {
+      return float64(v)
+   }
+   return 1
+}
+
+func (r Representation) get_mime_type() string {
+   if v := r.MimeType; v != "" {
+      return v
+   }
+   return r.adaptation_set.MimeType
+}
+
+func (p Period) get_duration() string {
+   if v := p.Duration; v != "" {
+      return v
+   }
+   return p.mpd.MediaPresentationDuration
+}
+
+func (r Representation) content_protection() []ContentProtection {
+   if v := r.ContentProtection; v != nil {
+      return v
+   }
+   return r.adaptation_set.ContentProtection
 }
