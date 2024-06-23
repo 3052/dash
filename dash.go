@@ -68,8 +68,6 @@ type Representation struct {
    SegmentTemplate *SegmentTemplate
 }
 
-/////////
-
 func (r Representation) get_codecs() (string, bool) {
    if v := r.Codecs; v != "" {
       return v, true
@@ -90,13 +88,6 @@ func (r Representation) get_height() (int64, bool) {
    return 0, false
 }
 
-func (r Representation) get_mime_type() string {
-   if v := r.MimeType; v != "" {
-      return v
-   }
-   return r.adaptation_set.MimeType
-}
-
 func (r Representation) get_width() (int64, bool) {
    if v := r.Width; v >= 1 {
       return v, true
@@ -105,6 +96,70 @@ func (r Representation) get_width() (int64, bool) {
       return v, true
    }
    return 0, false
+}
+
+func (r Representation) get_mime_type() string {
+   if v := r.MimeType; v != "" {
+      return v
+   }
+   return r.adaptation_set.MimeType
+}
+
+func (p Period) get_duration() string {
+   if v := p.Duration; v != "" {
+      return v
+   }
+   return p.mpd.MediaPresentationDuration
+}
+
+func (r Representation) Ext() (string, bool) {
+   switch r.get_mime_type() {
+   case "audio/mp4":
+      return ".m4a", true
+   case "video/mp4":
+      return ".m4v", true
+   }
+   return "", false
+}
+
+func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
+   if v := r.SegmentTemplate; v != nil {
+      return v, true
+   }
+   if v := r.adaptation_set.SegmentTemplate; v != nil {
+      return v, true
+   }
+   return nil, false
+}
+
+func (r Range) MarshalText() ([]byte, error) {
+   b := strconv.AppendUint(nil, r.Start, 10)
+   b = append(b, '-')
+   return strconv.AppendUint(b, r.End, 10), nil
+}
+
+func (r *Range) UnmarshalText(text []byte) error {
+   // the current testdata always has `-`, so lets assume for now
+   start, end, _ := strings.Cut(string(text), "-")
+   var err error
+   r.Start, err = strconv.ParseUint(start, 10, 64)
+   if err != nil {
+      return err
+   }
+   r.End, err = strconv.ParseUint(end, 10, 64)
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
+/////////
+
+func (r Representation) protection() []ContentProtection {
+   if v := r.ContentProtection; v != nil {
+      return v
+   }
+   return r.adaptation_set.ContentProtection
 }
 
 func (r Representation) GetAdaptationSet() *AdaptationSet {
@@ -143,36 +198,8 @@ func (p Period) Seconds() (float64, error) {
    return duration.Seconds(), nil
 }
 
-func (p Period) get_duration() string {
-   if v := p.Duration; v != "" {
-      return v
-   }
-   return p.mpd.MediaPresentationDuration
-}
-
 func (p Period) GetMpd() *Mpd {
    return p.mpd
-}
-
-func (r Range) MarshalText() ([]byte, error) {
-   b := strconv.AppendUint(nil, r.Start, 10)
-   b = append(b, '-')
-   return strconv.AppendUint(b, r.End, 10), nil
-}
-
-func (r *Range) UnmarshalText(text []byte) error {
-   // the current testdata always has `-`, so lets assume for now
-   start, end, _ := strings.Cut(string(text), "-")
-   var err error
-   r.Start, err = strconv.ParseUint(start, 10, 64)
-   if err != nil {
-      return err
-   }
-   r.End, err = strconv.ParseUint(end, 10, 64)
-   if err != nil {
-      return err
-   }
-   return nil
 }
 
 func (r Representation) Widevine() (string, bool) {
@@ -184,33 +211,6 @@ func (r Representation) Widevine() (string, bool) {
       }
    }
    return "", false
-}
-
-func (r Representation) protection() []ContentProtection {
-   if v := r.ContentProtection; v != nil {
-      return v
-   }
-   return r.adaptation_set.ContentProtection
-}
-
-func (r Representation) Ext() (string, bool) {
-   switch r.get_mime_type() {
-   case "audio/mp4":
-      return ".m4a", true
-   case "video/mp4":
-      return ".m4v", true
-   }
-   return "", false
-}
-
-func (r Representation) GetSegmentTemplate() (*SegmentTemplate, bool) {
-   if v := r.SegmentTemplate; v != nil {
-      return v, true
-   }
-   if v := r.adaptation_set.SegmentTemplate; v != nil {
-      return v, true
-   }
-   return nil, false
 }
 
 func (r Representation) String() string {

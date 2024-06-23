@@ -7,6 +7,56 @@ import (
    "testing"
 )
 
+func TestDuration(t *testing.T) {
+   for _, test := range tests {
+      media, err := new_mpd(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      fmt.Printf("MPD %q\n", media.MediaPresentationDuration)
+      for _, v := range media.Period {
+         fmt.Printf("Period %q\n", v.Duration)
+      }
+      fmt.Println()
+   }
+}
+
+func TestMimeType(t *testing.T) {
+   for _, test := range tests {
+      media, err := new_mpd(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, v := range media.Period {
+         for _, v := range v.AdaptationSet {
+            fmt.Printf("AdaptationSet %q\n", v.MimeType)
+            for _, v := range v.Representation {
+               fmt.Printf("Representation %q\n", v.MimeType)
+            }
+            fmt.Println()
+         }
+      }
+   }
+}
+
+func TestCodecs(t *testing.T) {
+   for _, test := range tests {
+      media, err := new_mpd(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, v := range media.Period {
+         for _, v := range v.AdaptationSet {
+            fmt.Printf("AdaptationSet %q\n", v.Codecs)
+            for _, v := range v.Representation {
+               fmt.Printf("Representation %q\n", v.Codecs)
+            }
+         }
+         fmt.Println()
+      }
+   }
+}
+
 func TestSegmentBase(t *testing.T) {
    for _, test := range tests {
       media, err := new_mpd(test)
@@ -36,24 +86,6 @@ func TestSegmentTemplate(t *testing.T) {
                fmt.Printf("Representation %+v\n", v.SegmentTemplate)
             }
          }
-      }
-   }
-}
-
-func TestCodecs(t *testing.T) {
-   for _, test := range tests {
-      media, err := new_mpd(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, v := range media.Period {
-         for _, v := range v.AdaptationSet {
-            fmt.Printf("AdaptationSet %q\n", v.Codecs)
-            for _, v := range v.Representation {
-               fmt.Printf("Representation %q\n", v.Codecs)
-            }
-         }
-         fmt.Println()
       }
    }
 }
