@@ -9,24 +9,12 @@ import (
    "time"
 )
 
-type Period struct {
-   AdaptationSet []*AdaptationSet
-   Duration      string `xml:"duration,attr"`
-   mpd           *Mpd
-}
-
 // SegmentIndexBox uses:
 // unsigned int(32) subsegment_duration;
 // but range values can exceed 32 bits
 type Range struct {
    Start uint64
    End   uint64
-}
-
-type Mpd struct {
-   Period                    []*Period
-   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
-   BaseUrl                   string `xml:"BaseURL"`
 }
 
 type SegmentBase struct {
@@ -139,17 +127,6 @@ func (r Representation) Ext() (string, bool) {
    return "", false
 }
 
-// filter out ads, for example:
-// hulu.com/watch/5add1b6c-04f2-4038-a925-35db3007d662
-func (p Period) Seconds() (float64, error) {
-   s := strings.TrimPrefix(p.get_duration(), "PT")
-   duration, err := time.ParseDuration(strings.ToLower(s))
-   if err != nil {
-      return 0, err
-   }
-   return duration.Seconds(), nil
-}
-
 func (c ContentProtection) get_pssh() (string, bool) {
    return option(c.Pssh)
 }
@@ -176,21 +153,6 @@ func (s SegmentTemplate) get_initialization() (string, bool) {
    return option(s.Initialization)
 }
 
-func (p Period) get_duration() string {
-   if v := p.Duration; v != "" {
-      return v
-   }
-   return p.mpd.MediaPresentationDuration
-}
-
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
-func (s SegmentTemplate) get_timescale() float64 {
-   if v := s.Timescale; v >= 1 {
-      return float64(v)
-   }
-   return 1
-}
-
 func (r Representation) get_width() (uint64, bool) {
    return option(r.Width, r.adaptation_set.Width)
 }
@@ -205,6 +167,14 @@ func (r Representation) get_codecs() (string, bool) {
 
 func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
    return option(r.SegmentTemplate, r.adaptation_set.SegmentTemplate)
+}
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
+func (s SegmentTemplate) get_timescale() float64 {
+   if v := s.Timescale; v >= 1 {
+      return float64(v)
+   }
+   return 1
 }
 
 func (r Representation) content_protection() []ContentProtection {
@@ -228,7 +198,30 @@ func (r Representation) get_mime_type() string {
    return r.adaptation_set.MimeType
 }
 
-///
+type Role struct {
+   Value string `xml:"value,attr"`
+}
+
+func (a AdaptationSet) get_role() (*Role, bool) {
+   return option(a.Role)
+}
+
+type AdaptationSet struct {
+   ContentProtection []ContentProtection
+   Representation    []*Representation
+   period            *Period
+   Codecs            string `xml:"codecs,attr"`
+   Height            uint64  `xml:"height,attr"`
+   Lang              string `xml:"lang,attr"`
+   MimeType          string `xml:"mimeType,attr"`
+   Width             uint64  `xml:"width,attr"`
+   Role              *Role
+   SegmentTemplate *SegmentTemplate
+}
+
+func (a AdaptationSet) get_lang() (string, bool) {
+   return option(a.Lang)
+}
 
 func (r Representation) String() string {
    var b []byte
@@ -254,11 +247,11 @@ func (r Representation) String() string {
    }
    b = append(b, "\ntype = "...)
    b = append(b, r.get_mime_type()...)
-   if v := r.adaptation_set.Role; v != nil {
+   if v, ok := r.adaptation_set.get_role(); ok {
       b = append(b, "\nrole = "...)
       b = append(b, v.Value...)
    }
-   if v := r.adaptation_set.Lang; v != "" {
+   if v, ok := r.adaptation_set.get_lang(); ok {
       b = append(b, "\nlang = "...)
       b = append(b, v...)
    }
@@ -267,22 +260,60 @@ func (r Representation) String() string {
    return string(b)
 }
 
-type AdaptationSet struct {
-   ContentProtection []ContentProtection
-   Representation    []*Representation
-   period            *Period
-   Codecs            string `xml:"codecs,attr"`
-   Height            uint64  `xml:"height,attr"`
-   Lang              string `xml:"lang,attr"`
-   MimeType          string `xml:"mimeType,attr"`
-   Width             uint64  `xml:"width,attr"`
-   Role              *struct {
-      Value string `xml:"value,attr"`
+func (m *Mpd) Unmarshal(data []byte) error {
+   err := xml.Unmarshal(data, m)
+   if err != nil {
+      return err
    }
-   SegmentTemplate *SegmentTemplate
+   for _, period := range m.Period {
+      period.mpd = m
+      for _, adapt := range period.AdaptationSet {
+         adapt.period = period
+         for _, represent := range adapt.Representation {
+            represent.adaptation_set = adapt
+         }
+      }
+   }
+   return nil
 }
 
-func (s SegmentTemplate) GetMedia(r *Representation) ([]string, error) {
+// filter out ads, for example:
+// hulu.com/watch/5add1b6c-04f2-4038-a925-35db3007d662
+type Duration struct {
+   D time.Duration
+}
+
+func (d *Duration) UnmarshalText(text []byte) error {
+   var err error
+   d.D, err = time.ParseDuration(strings.ToLower(
+      strings.TrimPrefix(string(text), "PT"),
+   ))
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
+type Mpd struct {
+   BaseUrl                   string `xml:"BaseURL"`
+   MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
+   Period                    []*Period
+}
+
+type Period struct {
+   AdaptationSet []*AdaptationSet
+   Duration *Duration `xml:"duration,attr"`
+   mpd           *Mpd
+}
+
+func (p Period) get_duration() *Duration {
+   if v := p.Duration; v != nil {
+      return v
+   }
+   return p.mpd.MediaPresentationDuration
+}
+
+func (s SegmentTemplate) GetMedia(r *Representation) []string {
    s.Media = r.id(s.Media)
    var media []string
    number := s.start()
@@ -305,31 +336,11 @@ func (s SegmentTemplate) GetMedia(r *Representation) ([]string, error) {
          }
       }
    } else {
-      seconds, err := r.adaptation_set.period.Seconds()
-      if err != nil {
-         return nil, err
-      }
+      seconds := r.adaptation_set.period.get_duration().D.Seconds()
       for range int(s.segment_count(seconds)) {
          media = append(media, s.number(number))
          number++
       }
    }
-   return media, nil
-}
-
-func (m *Mpd) Unmarshal(data []byte) error {
-   err := xml.Unmarshal(data, m)
-   if err != nil {
-      return err
-   }
-   for _, period := range m.Period {
-      period.mpd = m
-      for _, adapt := range period.AdaptationSet {
-         adapt.period = period
-         for _, represent := range adapt.Representation {
-            represent.adaptation_set = adapt
-         }
-      }
-   }
-   return nil
+   return media
 }

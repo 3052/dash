@@ -79,6 +79,20 @@ func TestInitialization(t *testing.T) {
    }
 }
 
+func TestLang(t *testing.T) {
+   for _, test := range tests {
+      media, err := new_mpd(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, v := range media.Period {
+         for _, v := range v.AdaptationSet {
+            fmt.Printf("%q\n", v.Lang)
+         }
+      }
+   }
+}
+
 func TestMimeType(t *testing.T) {
    for _, test := range tests {
       media, err := new_mpd(test)
