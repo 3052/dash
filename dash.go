@@ -9,6 +9,21 @@ import (
    "time"
 )
 
+type SegmentTemplate struct {
+   Duration int64 `xml:"duration,attr"`
+   Initialization string `xml:"initialization,attr"`
+   Media string `xml:"media,attr"`
+   StartNumber int `xml:"startNumber,attr"`
+   PresentationTimeOffset int `xml:"presentationTimeOffset,attr"`
+   Timescale int64 `xml:"timescale,attr"`
+   SegmentTimeline *struct {
+      S []struct {
+         D int `xml:"d,attr"` // duration
+         R int `xml:"r,attr"` // repeat
+      }
+   }
+}
+
 type Period struct {
    AdaptationSet []*AdaptationSet
    Duration      string `xml:"duration,attr"`
@@ -70,21 +85,6 @@ type Representation struct {
    SegmentTemplate   *SegmentTemplate
 }
 
-type SegmentTemplate struct {
-   Duration float64 `xml:"duration,attr"`
-   Initialization string `xml:"initialization,attr"`
-   Media string `xml:"media,attr"`
-   StartNumber int `xml:"startNumber,attr"`
-   PresentationTimeOffset int `xml:"presentationTimeOffset,attr"`
-   Timescale float64 `xml:"timescale,attr"`
-   SegmentTimeline *struct {
-      S []struct {
-         D int `xml:"d,attr"` // duration
-         R int `xml:"r,attr"` // repeat
-      }
-   }
-}
-
 func (s SegmentTemplate) get_initialization() (string, bool) {
    if v := s.Initialization; v != "" {
       return v, true
@@ -133,6 +133,8 @@ func (r Representation) get_codecs() (string, bool) {
    }
    return "", false
 }
+
+////////////
 
 func (r Representation) get_mime_type() string {
    if v := r.MimeType; v != "" {
@@ -191,27 +193,11 @@ func (r Representation) Initialization() (string, bool) {
    return "", false
 }
 
-/////////
-
 func (s SegmentTemplate) start() int {
    if v := s.PresentationTimeOffset; v >= 1 {
       return v
    }
    return s.StartNumber
-}
-
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
-func (s SegmentTemplate) get_timescale() float64 {
-   if v := s.Timescale; v >= 1 {
-      return v
-   }
-   return 1
-}
-
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
-func (s SegmentTemplate) segment_count(seconds float64) float64 {
-   seconds /= s.Duration / s.get_timescale()
-   return math.Ceil(seconds)
 }
 
 func (s SegmentTemplate) GetMedia(r *Representation) ([]string, error) {
@@ -290,17 +276,6 @@ func (m *Mpd) Unmarshal(data []byte) error {
    return nil
 }
 
-// filter out ads, for example:
-// hulu.com/watch/5add1b6c-04f2-4038-a925-35db3007d662
-func (p Period) Seconds() (float64, error) {
-   s := strings.TrimPrefix(p.get_duration(), "PT")
-   duration, err := time.ParseDuration(strings.ToLower(s))
-   if err != nil {
-      return 0, err
-   }
-   return duration.Seconds(), nil
-}
-
 func (r Representation) Widevine() (string, bool) {
    for _, p := range r.protection() {
       if p.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
@@ -347,4 +322,29 @@ func (r Representation) String() string {
    b = append(b, "\nid = "...)
    b = append(b, r.Id...)
    return string(b)
+}
+
+// filter out ads, for example:
+// hulu.com/watch/5add1b6c-04f2-4038-a925-35db3007d662
+func (p Period) Seconds() (float64, error) {
+   s := strings.TrimPrefix(p.get_duration(), "PT")
+   duration, err := time.ParseDuration(strings.ToLower(s))
+   if err != nil {
+      return 0, err
+   }
+   return duration.Seconds(), nil
+}
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
+func (s SegmentTemplate) get_timescale() float64 {
+   if v := s.Timescale; v >= 1 {
+      return float64(v)
+   }
+   return 1
+}
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
+func (s SegmentTemplate) segment_count(seconds float64) float64 {
+   seconds /= float64(s.Duration) / s.get_timescale()
+   return math.Ceil(seconds)
 }
