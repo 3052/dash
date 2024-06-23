@@ -7,6 +7,45 @@ import (
    "testing"
 )
 
+func TestInitialization(t *testing.T) {
+   for _, test := range tests {
+      media, err := new_mpd(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, v := range media.Period {
+         for _, v := range v.AdaptationSet {
+            if v := v.SegmentTemplate; v != nil {
+               fmt.Printf("%q\n", v.Initialization)
+            }
+            for _, v := range v.Representation {
+               if v := v.SegmentTemplate; v != nil {
+                  fmt.Printf("%q\n", v.Initialization)
+               }
+            }
+         }
+      }
+   }
+}
+
+func TestMimeType(t *testing.T) {
+   for _, test := range tests {
+      media, err := new_mpd(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, v := range media.Period {
+         for _, v := range v.AdaptationSet {
+            fmt.Printf("AdaptationSet %q\n", v.MimeType)
+            for _, v := range v.Representation {
+               fmt.Printf("Representation %q\n", v.MimeType)
+            }
+            fmt.Println()
+         }
+      }
+   }
+}
+
 var tests = []string{
    "testdata/amc.mpd",
    "testdata/cine-member.mpd",
@@ -37,24 +76,6 @@ func TestDuration(t *testing.T) {
          fmt.Printf("Period %q\n", v.Duration)
       }
       fmt.Println()
-   }
-}
-
-func TestMimeType(t *testing.T) {
-   for _, test := range tests {
-      media, err := new_mpd(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, v := range media.Period {
-         for _, v := range v.AdaptationSet {
-            fmt.Printf("AdaptationSet %q\n", v.MimeType)
-            for _, v := range v.Representation {
-               fmt.Printf("Representation %q\n", v.MimeType)
-            }
-            fmt.Println()
-         }
-      }
    }
 }
 

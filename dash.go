@@ -9,11 +9,65 @@ import (
    "time"
 )
 
-func (s SegmentTemplate) GetInitialization(r *Representation) (string, bool) {
-   if v := s.Initialization; v != "" {
-      return r.id(v), true
+type Period struct {
+   AdaptationSet []*AdaptationSet
+   Duration      string `xml:"duration,attr"`
+   mpd           *Mpd
+}
+
+type ContentProtection struct {
+   Pssh        string `xml:"pssh"`
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
+}
+
+// SegmentIndexBox uses:
+// unsigned int(32) subsegment_duration;
+// but range values can exceed 32 bits
+type Range struct {
+   Start uint64
+   End   uint64
+}
+
+type Mpd struct {
+   Period                    []*Period
+   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
+   BaseUrl                   string `xml:"BaseURL"`
+}
+
+type SegmentBase struct {
+   Initialization struct {
+      Range Range `xml:"range,attr"`
    }
-   return "", false
+   IndexRange Range `xml:"indexRange,attr"`
+}
+
+type AdaptationSet struct {
+   ContentProtection []ContentProtection
+   Representation    []*Representation
+   period            *Period
+   Codecs            string `xml:"codecs,attr"`
+   Height            int64  `xml:"height,attr"`
+   Lang              string `xml:"lang,attr"`
+   MimeType          string `xml:"mimeType,attr"`
+   Width             int64  `xml:"width,attr"`
+   Role              *struct {
+      Value string `xml:"value,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+}
+
+type Representation struct {
+   Bandwidth         int64  `xml:"bandwidth,attr"`
+   BaseUrl           string `xml:"BaseURL"`
+   ContentProtection []ContentProtection
+   Height            int64  `xml:"height,attr"`
+   Id                string `xml:"id,attr"`
+   MimeType          string `xml:"mimeType,attr"`
+   Width             int64  `xml:"width,attr"`
+   adaptation_set    *AdaptationSet
+   Codecs            string `xml:"codecs,attr"`
+   SegmentBase       *SegmentBase
+   SegmentTemplate   *SegmentTemplate
 }
 
 type SegmentTemplate struct {
@@ -29,6 +83,25 @@ type SegmentTemplate struct {
          R int `xml:"r,attr"` // repeat
       }
    }
+}
+
+func (s SegmentTemplate) get_initialization() (string, bool) {
+   if v := s.Initialization; v != "" {
+      return v, true
+   }
+   return "", false
+}
+
+/////////
+
+func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
+   if v := r.SegmentTemplate; v != nil {
+      return v, true
+   }
+   if v := r.adaptation_set.SegmentTemplate; v != nil {
+      return v, true
+   }
+   return nil, false
 }
 
 func (s SegmentTemplate) start() int {
@@ -108,66 +181,6 @@ func (s SegmentTemplate) GetMedia(r *Representation) ([]string, error) {
 func (r Representation) id(value string) string {
    return strings.Replace(value, "$RepresentationID$", r.Id, 1)
 }
-type Period struct {
-   AdaptationSet []*AdaptationSet
-   Duration      string `xml:"duration,attr"`
-   mpd           *Mpd
-}
-
-type ContentProtection struct {
-   Pssh        string `xml:"pssh"`
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-}
-
-// SegmentIndexBox uses:
-// unsigned int(32) subsegment_duration;
-// but range values can exceed 32 bits
-type Range struct {
-   Start uint64
-   End   uint64
-}
-
-type Mpd struct {
-   Period                    []*Period
-   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
-   BaseUrl                   string `xml:"BaseURL"`
-}
-
-type SegmentBase struct {
-   Initialization struct {
-      Range Range `xml:"range,attr"`
-   }
-   IndexRange Range `xml:"indexRange,attr"`
-}
-
-type AdaptationSet struct {
-   ContentProtection []ContentProtection
-   Representation    []*Representation
-   period            *Period
-   Codecs            string `xml:"codecs,attr"`
-   Height            int64  `xml:"height,attr"`
-   Lang              string `xml:"lang,attr"`
-   MimeType          string `xml:"mimeType,attr"`
-   Width             int64  `xml:"width,attr"`
-   Role              *struct {
-      Value string `xml:"value,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-}
-
-type Representation struct {
-   Bandwidth         int64  `xml:"bandwidth,attr"`
-   BaseUrl           string `xml:"BaseURL"`
-   ContentProtection []ContentProtection
-   Height            int64  `xml:"height,attr"`
-   Id                string `xml:"id,attr"`
-   MimeType          string `xml:"mimeType,attr"`
-   Width             int64  `xml:"width,attr"`
-   adaptation_set    *AdaptationSet
-   Codecs            string `xml:"codecs,attr"`
-   SegmentBase       *SegmentBase
-   SegmentTemplate   *SegmentTemplate
-}
 
 func (r Representation) get_codecs() (string, bool) {
    if v := r.Codecs; v != "" {
@@ -242,16 +255,6 @@ func (r *Range) UnmarshalText(text []byte) error {
       return err
    }
    return nil
-}
-
-func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
-   if v := r.SegmentTemplate; v != nil {
-      return v, true
-   }
-   if v := r.adaptation_set.SegmentTemplate; v != nil {
-      return v, true
-   }
-   return nil, false
 }
 
 func (r Representation) protection() []ContentProtection {
@@ -347,4 +350,13 @@ func (r Representation) String() string {
    b = append(b, "\nid = "...)
    b = append(b, r.Id...)
    return string(b)
+}
+
+func (r Representation) Initialization() (string, bool) {
+   if v, ok := r.get_segment_template(); ok {
+      if v, ok := v.get_initialization(); ok {
+         return r.id(v), true
+      }
+   }
+   return "", false
 }
