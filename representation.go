@@ -5,6 +5,22 @@ import (
    "strings"
 )
 
+func (r Representation) Widevine() ([]byte, bool) {
+   for _, p := range r.get_content_protection() {
+      if p.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
+         return p.get_pssh()
+      }
+   }
+   return nil, false
+}
+
+func (r Representation) get_content_protection() []ContentProtection {
+   if v := r.ContentProtection; len(v) >= 1 {
+      return v
+   }
+   return r.adaptation_set.ContentProtection
+}
+
 type Representation struct {
    Bandwidth         uint64  `xml:"bandwidth,attr"`
    BaseUrl           string `xml:"BaseURL"`
@@ -21,10 +37,6 @@ type Representation struct {
 
 func (r Representation) GetAdaptationSet() *AdaptationSet {
    return r.adaptation_set
-}
-
-func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
-   return option(r.SegmentTemplate, r.adaptation_set.SegmentTemplate)
 }
 
 func (r Representation) GetMedia() []string {
@@ -117,27 +129,6 @@ func (r Representation) Ext() (string, bool) {
    return "", false
 }
 
-func (r Representation) Widevine() (string, bool) {
-   for _, p := range r.get_content_protection() {
-      if p.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
-         return p.get_pssh()
-      }
-   }
-   return "", false
-}
-
-func (r Representation) get_width() (uint64, bool) {
-   return option(r.Width, r.adaptation_set.Width)
-}
-
-func (r Representation) get_height() (uint64, bool) {
-   return option(r.Height, r.adaptation_set.Height)
-}
-
-func (r Representation) get_codecs() (string, bool) {
-   return option(r.Codecs, r.adaptation_set.Codecs)
-}
-
 func (r Representation) Initialization() (string, bool) {
    if v, ok := r.get_segment_template(); ok {
       if v, ok := v.get_initialization(); ok {
@@ -147,9 +138,42 @@ func (r Representation) Initialization() (string, bool) {
    return "", false
 }
 
-func (r Representation) get_content_protection() []ContentProtection {
-   if v := r.ContentProtection; len(v) >= 1 {
-      return v
+func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
+   if v := r.SegmentTemplate; v != nil {
+      return v, true
    }
-   return r.adaptation_set.ContentProtection
+   if v := r.adaptation_set.SegmentTemplate; v != nil {
+      return v, true
+   }
+   return nil, false
+}
+
+func (r Representation) get_width() (uint64, bool) {
+   if v := r.Width; v >= 1 {
+      return v, true
+   }
+   if v := r.adaptation_set.Width; v >= 1{
+      return v, true
+   }
+   return 0, false
+}
+
+func (r Representation) get_height() (uint64, bool) {
+   if v := r.Height; v >= 1 {
+      return v, true
+   }
+   if v := r.adaptation_set.Height; v >= 1 {
+      return v, true
+   }
+   return 0, false
+}
+
+func (r Representation) get_codecs() (string, bool) {
+   if v := r.Codecs; v != "" {
+      return v, true
+   }
+   if v := r.adaptation_set.Codecs; v != "" {
+      return v, true
+   }
+   return "", false
 }

@@ -1,6 +1,7 @@
 package dash
 
 import (
+   "encoding/base64"
    "encoding/xml"
    "fmt"
    "math"
@@ -9,18 +10,20 @@ import (
    "time"
 )
 
-func option[T comparable](vals ...T) (T, bool) {
-   var zero T
-   for _, val := range vals {
-      if val != zero {
-         return val, true
-      }
-   }
-   return zero, false
+type ContentProtection struct {
+   Pssh Pssh `xml:"pssh"`
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
 }
 
-func (a AdaptationSet) get_role() (*Role, bool) {
-   return option(a.Role)
+type Pssh []byte
+
+func (p *Pssh) UnmarshalText(src []byte) error {
+   var err error
+   *p, err = base64.StdEncoding.AppendDecode(nil, src)
+   if err != nil {
+      return err
+   }
+   return nil
 }
 
 type AdaptationSet struct {
@@ -38,19 +41,6 @@ type AdaptationSet struct {
 
 func (a AdaptationSet) GetPeriod() *Period {
    return a.period
-}
-
-func (a AdaptationSet) get_lang() (string, bool) {
-   return option(a.Lang)
-}
-
-func (c ContentProtection) get_pssh() (string, bool) {
-   return option(c.Pssh)
-}
-
-type ContentProtection struct {
-   Pssh        string `xml:"pssh"`
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
 }
 
 func (d *Duration) UnmarshalText(text []byte) error {
@@ -89,13 +79,6 @@ func (m *Mpd) Unmarshal(text []byte) error {
       }
    }
    return nil
-}
-
-func (p Period) get_duration() *Duration {
-   if v := p.Duration; v != nil {
-      return v
-   }
-   return p.mpd.MediaPresentationDuration
 }
 
 type Period struct {
@@ -163,18 +146,6 @@ func (s SegmentTemplate) time(value uint) string {
    return fmt.Sprintf(f, value)
 }
 
-func (s SegmentTemplate) get_initialization() (string, bool) {
-   return option(s.Initialization)
-}
-
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
-func (s SegmentTemplate) get_timescale() uint64 {
-   if v := s.Timescale; v >= 1 {
-      return v
-   }
-   return 1
-}
-
 type SegmentTemplate struct {
    Duration uint64 `xml:"duration,attr"`
    Initialization string `xml:"initialization,attr"`
@@ -190,6 +161,23 @@ type SegmentTemplate struct {
    }
 }
 
+///////
+
+func (p Period) get_duration() *Duration {
+   if v := p.Duration; v != nil {
+      return v
+   }
+   return p.mpd.MediaPresentationDuration
+}
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
+func (s SegmentTemplate) get_timescale() uint64 {
+   if v := s.Timescale; v >= 1 {
+      return v
+   }
+   return 1
+}
+
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
 func (s SegmentTemplate) segment_count(seconds float64) uint64 {
    seconds /= float64(s.Duration) / float64(s.get_timescale())
@@ -201,4 +189,32 @@ func (s SegmentTemplate) start() uint {
       return v
    }
    return s.StartNumber
+}
+
+func (c ContentProtection) get_pssh() ([]byte, bool) {
+   if v := c.Pssh; len(v) >= 1 {
+      return v, true
+   }
+   return nil, false
+}
+
+func (a AdaptationSet) get_role() (*Role, bool) {
+   if v := a.Role; v != nil {
+      return v, true
+   }
+   return nil, false
+}
+
+func (a AdaptationSet) get_lang() (string, bool) {
+   if v := a.Lang; v != "" {
+      return v, true
+   }
+   return "", false
+}
+
+func (s SegmentTemplate) get_initialization() (string, bool) {
+   if v := s.Initialization; v != "" {
+      return v, true
+   }
+   return "", false
 }
