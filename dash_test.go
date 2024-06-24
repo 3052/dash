@@ -1,7 +1,6 @@
 package dash
 
 import (
-   "encoding/xml"
    "fmt"
    "os"
    "testing"
@@ -37,6 +36,18 @@ func TestDuration(t *testing.T) {
          fmt.Printf("Period %q\n", v.Duration)
       }
       fmt.Println()
+   }
+}
+
+func TestId(t *testing.T) {
+   for _, test := range tests {
+      media, err := new_mpd(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, v := range media.Period {
+         fmt.Printf("%q\n", v.Id)
+      }
    }
 }
 
@@ -116,10 +127,10 @@ func new_mpd(name string) (*Mpd, error) {
    if err != nil {
       return nil, err
    }
-   media := new(Mpd)
-   err = xml.Unmarshal(text, media)
+   var media Mpd
+   err = media.Unmarshal(text)
    if err != nil {
       return nil, err
    }
-   return media, nil
+   return &media, nil
 }
