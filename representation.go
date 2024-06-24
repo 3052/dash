@@ -90,8 +90,6 @@ func (r Representation) Widevine() ([]byte, bool) {
    return nil, false
 }
 
-/////////
-
 func (r Representation) GetMedia() []string {
    template, ok := r.get_segment_template()
    if !ok {
@@ -124,15 +122,18 @@ func (r Representation) GetMedia() []string {
    return media
 }
 
-func (r Representation) get_width() (uint64, bool) {
-   if v := r.Width; v >= 1 {
-      return v, true
-   }
-   if v := r.adaptation_set.Width; v >= 1 {
-      return v, true
-   }
-   return 0, false
+func (r Representation) id(value string) string {
+   return strings.Replace(value, "$RepresentationID$", r.Id, 1)
 }
+
+func (r Representation) get_mime_type() string {
+   if r.MimeType != "" {
+      return r.MimeType
+   }
+   return r.adaptation_set.MimeType
+}
+
+/////////
 
 func (r Representation) get_content_protection() []ContentProtection {
    if v := r.ContentProtection; len(v) >= 1 {
@@ -141,15 +142,14 @@ func (r Representation) get_content_protection() []ContentProtection {
    return r.adaptation_set.ContentProtection
 }
 
-func (r Representation) get_mime_type() string {
-   if v := r.MimeType; v != "" {
-      return v
+func (r Representation) get_width() (uint64, bool) {
+   if v := r.Width; v >= 1 {
+      return v, true
    }
-   return r.adaptation_set.MimeType
-}
-
-func (r Representation) id(value string) string {
-   return strings.Replace(value, "$RepresentationID$", r.Id, 1)
+   if v := r.adaptation_set.Width; v >= 1 {
+      return v, true
+   }
+   return 0, false
 }
 
 func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
