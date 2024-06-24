@@ -5,9 +5,20 @@ import (
    "strings"
 )
 
+func (r Representation) Widevine() (*ContentProtection, bool) {
+   for _, v := range r.get_content_protection() {
+      if v.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
+         if len(v.Pssh) >= 1 {
+            return &v, true
+         }
+      }
+   }
+   return nil, false
+}
+
 type Representation struct {
    Bandwidth         uint64 `xml:"bandwidth,attr"`
-   BaseUrl           string `xml:"BaseURL"`
+   BaseUrl *Url `xml:"BaseURL"`
    Codecs            string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
    Height            uint64 `xml:"height,attr"`
@@ -19,17 +30,26 @@ type Representation struct {
    adaptation_set    *AdaptationSet
 }
 
+func (r Representation) Initialization() (string, bool) {
+   if v, ok := r.get_segment_template(); ok {
+      if v := v.Initialization; v != "" {
+         return r.id(v), true
+      }
+   }
+   return "", false
+}
+
 func (r Representation) GetAdaptationSet() *AdaptationSet {
    return r.adaptation_set
 }
 
 func (r Representation) String() string {
    var b []byte
-   if v, ok := r.get_width(); ok {
+   if v := r.get_width(); v >= 1 {
       b = append(b, "width = "...)
       b = strconv.AppendUint(b, v, 10)
    }
-   if v, ok := r.get_height(); ok {
+   if v := r.get_height(); v >= 1 {
       if b != nil {
          b = append(b, '\n')
       }
@@ -41,17 +61,17 @@ func (r Representation) String() string {
    }
    b = append(b, "bandwidth = "...)
    b = strconv.AppendUint(b, r.Bandwidth, 10)
-   if v, ok := r.get_codecs(); ok {
+   if v := r.get_codecs(); v != "" {
       b = append(b, "\ncodecs = "...)
       b = append(b, v...)
    }
    b = append(b, "\ntype = "...)
    b = append(b, r.get_mime_type()...)
-   if v, ok := r.adaptation_set.get_role(); ok {
+   if v := r.adaptation_set.Role; v != nil {
       b = append(b, "\nrole = "...)
       b = append(b, v.Value...)
    }
-   if v, ok := r.adaptation_set.get_lang(); ok {
+   if v := r.adaptation_set.Lang; v != "" {
       b = append(b, "\nlang = "...)
       b = append(b, v...)
    }
@@ -68,26 +88,6 @@ func (r Representation) Ext() (string, bool) {
       return ".m4v", true
    }
    return "", false
-}
-
-func (r Representation) Initialization() (string, bool) {
-   if v, ok := r.get_segment_template(); ok {
-      if v, ok := v.get_initialization(); ok {
-         return r.id(v), true
-      }
-   }
-   return "", false
-}
-
-func (r Representation) Widevine() ([]byte, bool) {
-   for _, v := range r.get_content_protection() {
-      if v.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
-         if len(v.Pssh) >= 1 {
-            return v.Pssh, true
-         }
-      }
-   }
-   return nil, false
 }
 
 func (r Representation) GetMedia() []string {
@@ -133,51 +133,40 @@ func (r Representation) get_mime_type() string {
    return r.adaptation_set.MimeType
 }
 
-/////////
-
 func (r Representation) get_content_protection() []ContentProtection {
-   if v := r.ContentProtection; len(v) >= 1 {
-      return v
+   if len(r.ContentProtection) >= 1 {
+      return r.ContentProtection
    }
    return r.adaptation_set.ContentProtection
 }
 
-func (r Representation) get_width() (uint64, bool) {
-   if v := r.Width; v >= 1 {
-      return v, true
+func (r Representation) get_width() uint64 {
+   if r.Width >= 1 {
+      return r.Width
    }
-   if v := r.adaptation_set.Width; v >= 1 {
-      return v, true
+   return r.adaptation_set.Width
+}
+
+func (r Representation) get_height() uint64 {
+   if r.Height >= 1 {
+      return r.Height
    }
-   return 0, false
+   return r.adaptation_set.Height
+}
+
+func (r Representation) get_codecs() string {
+   if r.Codecs != "" {
+      return r.Codecs
+   }
+   return r.adaptation_set.Codecs
 }
 
 func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
-   if v := r.SegmentTemplate; v != nil {
-      return v, true
+   if r.SegmentTemplate != nil {
+      return r.SegmentTemplate, true
    }
-   if v := r.adaptation_set.SegmentTemplate; v != nil {
-      return v, true
+   if r.adaptation_set.SegmentTemplate != nil {
+      return r.adaptation_set.SegmentTemplate, true
    }
    return nil, false
-}
-
-func (r Representation) get_height() (uint64, bool) {
-   if v := r.Height; v >= 1 {
-      return v, true
-   }
-   if v := r.adaptation_set.Height; v >= 1 {
-      return v, true
-   }
-   return 0, false
-}
-
-func (r Representation) get_codecs() (string, bool) {
-   if v := r.Codecs; v != "" {
-      return v, true
-   }
-   if v := r.adaptation_set.Codecs; v != "" {
-      return v, true
-   }
-   return "", false
 }
