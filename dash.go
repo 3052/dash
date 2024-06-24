@@ -11,7 +11,7 @@ import (
 )
 
 type ContentProtection struct {
-   Pssh Pssh `xml:"pssh"`
+   Pssh        Pssh   `xml:"pssh"`
    SchemeIdUri string `xml:"schemeIdUri,attr"`
 }
 
@@ -29,13 +29,13 @@ func (p *Pssh) UnmarshalText(src []byte) error {
 type AdaptationSet struct {
    Codecs            string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
-   Height            uint64  `xml:"height,attr"`
+   Height            uint64 `xml:"height,attr"`
    Lang              string `xml:"lang,attr"`
    MimeType          string `xml:"mimeType,attr"`
    Representation    []*Representation
    Role              *Role
-   SegmentTemplate *SegmentTemplate
-   Width             uint64  `xml:"width,attr"`
+   SegmentTemplate   *SegmentTemplate
+   Width             uint64 `xml:"width,attr"`
    period            *Period
 }
 
@@ -59,7 +59,7 @@ type Duration struct {
 }
 
 type Mpd struct {
-   BaseUrl                   string `xml:"BaseURL"`
+   BaseUrl                   string    `xml:"BaseURL"`
    MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
    Period                    []*Period
 }
@@ -83,8 +83,8 @@ func (m *Mpd) Unmarshal(text []byte) error {
 
 type Period struct {
    AdaptationSet []*AdaptationSet
-   Duration *Duration `xml:"duration,attr"`
-   Id string `xml:"id,attr"`
+   Duration      *Duration `xml:"duration,attr"`
+   Id            string    `xml:"id,attr"`
    mpd           *Mpd
 }
 
@@ -141,41 +141,19 @@ func (s SegmentTemplate) number(value uint) string {
    return fmt.Sprintf(f, value)
 }
 
-func (s SegmentTemplate) time(value uint) string {
-   f := strings.Replace(s.Media, "$Time$", "%d", 1)
-   return fmt.Sprintf(f, value)
-}
-
 type SegmentTemplate struct {
-   Duration uint64 `xml:"duration,attr"`
-   Initialization string `xml:"initialization,attr"`
-   Media string `xml:"media,attr"`
-   StartNumber uint `xml:"startNumber,attr"`
-   PresentationTimeOffset uint `xml:"presentationTimeOffset,attr"`
-   Timescale uint64 `xml:"timescale,attr"`
-   SegmentTimeline *struct {
+   Duration               uint64 `xml:"duration,attr"`
+   Initialization         string `xml:"initialization,attr"`
+   Media                  string `xml:"media,attr"`
+   StartNumber            uint   `xml:"startNumber,attr"`
+   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
+   Timescale              uint64 `xml:"timescale,attr"`
+   SegmentTimeline        *struct {
       S []struct {
          D uint `xml:"d,attr"` // duration
          R uint `xml:"r,attr"` // repeat
       }
    }
-}
-
-///////
-
-func (p Period) get_duration() *Duration {
-   if v := p.Duration; v != nil {
-      return v
-   }
-   return p.mpd.MediaPresentationDuration
-}
-
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
-func (s SegmentTemplate) get_timescale() uint64 {
-   if v := s.Timescale; v >= 1 {
-      return v
-   }
-   return 1
 }
 
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
@@ -184,37 +162,50 @@ func (s SegmentTemplate) segment_count(seconds float64) uint64 {
    return uint64(math.Ceil(seconds))
 }
 
+func (s SegmentTemplate) time(value uint) string {
+   f := strings.Replace(s.Media, "$Time$", "%d", 1)
+   return fmt.Sprintf(f, value)
+}
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
+func (s SegmentTemplate) get_timescale() uint64 {
+   if s.Timescale >= 1 {
+      return s.Timescale
+   }
+   return 1
+}
+
+func (p Period) get_duration() *Duration {
+   if p.Duration != nil {
+      return p.Duration
+   }
+   return p.mpd.MediaPresentationDuration
+}
+
 func (s SegmentTemplate) start() uint {
-   if v := s.PresentationTimeOffset; v >= 1 {
-      return v
+   if s.PresentationTimeOffset >= 1 {
+      return s.PresentationTimeOffset
    }
    return s.StartNumber
 }
 
-func (c ContentProtection) get_pssh() ([]byte, bool) {
-   if v := c.Pssh; len(v) >= 1 {
-      return v, true
-   }
-   return nil, false
-}
-
 func (a AdaptationSet) get_role() (*Role, bool) {
-   if v := a.Role; v != nil {
-      return v, true
+   if a.Role != nil {
+      return a.Role, true
    }
    return nil, false
 }
 
 func (a AdaptationSet) get_lang() (string, bool) {
-   if v := a.Lang; v != "" {
-      return v, true
+   if a.Lang != "" {
+      return a.Lang, true
    }
    return "", false
 }
 
 func (s SegmentTemplate) get_initialization() (string, bool) {
-   if v := s.Initialization; v != "" {
-      return v, true
+   if s.Initialization != "" {
+      return s.Initialization, true
    }
    return "", false
 }

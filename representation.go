@@ -5,77 +5,22 @@ import (
    "strings"
 )
 
-func (r Representation) Widevine() ([]byte, bool) {
-   for _, p := range r.get_content_protection() {
-      if p.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
-         return p.get_pssh()
-      }
-   }
-   return nil, false
-}
-
-func (r Representation) get_content_protection() []ContentProtection {
-   if v := r.ContentProtection; len(v) >= 1 {
-      return v
-   }
-   return r.adaptation_set.ContentProtection
-}
-
 type Representation struct {
-   Bandwidth         uint64  `xml:"bandwidth,attr"`
+   Bandwidth         uint64 `xml:"bandwidth,attr"`
    BaseUrl           string `xml:"BaseURL"`
    Codecs            string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
-   Height            uint64  `xml:"height,attr"`
+   Height            uint64 `xml:"height,attr"`
    Id                string `xml:"id,attr"`
    MimeType          string `xml:"mimeType,attr"`
    SegmentBase       *SegmentBase
    SegmentTemplate   *SegmentTemplate
-   Width             uint64  `xml:"width,attr"`
+   Width             uint64 `xml:"width,attr"`
    adaptation_set    *AdaptationSet
 }
 
 func (r Representation) GetAdaptationSet() *AdaptationSet {
    return r.adaptation_set
-}
-
-func (r Representation) GetMedia() []string {
-   template, ok := r.get_segment_template()
-   if !ok {
-      return nil
-   }
-   number := template.start()
-   template.Media = r.id(template.Media)
-   var media []string
-   if template.SegmentTimeline != nil {
-      for _, segment := range template.SegmentTimeline.S {
-         for range 1 + segment.R {
-            var medium string
-            if strings.Contains(template.Media, "$Time$") {
-               medium = template.time(number)
-               number += segment.D
-            } else {
-               medium = template.number(number)
-               number++
-            }
-            media = append(media, medium)
-         }
-      }
-   } else {
-      seconds := r.adaptation_set.period.get_duration().D.Seconds()
-      for range template.segment_count(seconds) {
-         media = append(media, template.number(number))
-         number++
-      }
-   }
-   return media
-}
-
-func (r Representation) get_mime_type() string {
-   if v := r.MimeType; v != "" {
-      return v
-   }
-   return r.adaptation_set.MimeType
 }
 
 func (r Representation) String() string {
@@ -115,10 +60,6 @@ func (r Representation) String() string {
    return string(b)
 }
 
-func (r Representation) id(value string) string {
-   return strings.Replace(value, "$RepresentationID$", r.Id, 1)
-}
-
 func (r Representation) Ext() (string, bool) {
    switch r.get_mime_type() {
    case "audio/mp4":
@@ -138,6 +79,79 @@ func (r Representation) Initialization() (string, bool) {
    return "", false
 }
 
+func (r Representation) Widevine() ([]byte, bool) {
+   for _, v := range r.get_content_protection() {
+      if v.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
+         if len(v.Pssh) >= 1 {
+            return v.Pssh, true
+         }
+      }
+   }
+   return nil, false
+}
+
+/////////
+
+func (r Representation) GetMedia() []string {
+   template, ok := r.get_segment_template()
+   if !ok {
+      return nil
+   }
+   number := template.start()
+   template.Media = r.id(template.Media)
+   var media []string
+   if template.SegmentTimeline != nil {
+      for _, segment := range template.SegmentTimeline.S {
+         for range 1 + segment.R {
+            var medium string
+            if strings.Contains(template.Media, "$Time$") {
+               medium = template.time(number)
+               number += segment.D
+            } else {
+               medium = template.number(number)
+               number++
+            }
+            media = append(media, medium)
+         }
+      }
+   } else {
+      seconds := r.adaptation_set.period.get_duration().D.Seconds()
+      for range template.segment_count(seconds) {
+         media = append(media, template.number(number))
+         number++
+      }
+   }
+   return media
+}
+
+func (r Representation) get_width() (uint64, bool) {
+   if v := r.Width; v >= 1 {
+      return v, true
+   }
+   if v := r.adaptation_set.Width; v >= 1 {
+      return v, true
+   }
+   return 0, false
+}
+
+func (r Representation) get_content_protection() []ContentProtection {
+   if v := r.ContentProtection; len(v) >= 1 {
+      return v
+   }
+   return r.adaptation_set.ContentProtection
+}
+
+func (r Representation) get_mime_type() string {
+   if v := r.MimeType; v != "" {
+      return v
+   }
+   return r.adaptation_set.MimeType
+}
+
+func (r Representation) id(value string) string {
+   return strings.Replace(value, "$RepresentationID$", r.Id, 1)
+}
+
 func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
    if v := r.SegmentTemplate; v != nil {
       return v, true
@@ -146,16 +160,6 @@ func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
       return v, true
    }
    return nil, false
-}
-
-func (r Representation) get_width() (uint64, bool) {
-   if v := r.Width; v >= 1 {
-      return v, true
-   }
-   if v := r.adaptation_set.Width; v >= 1{
-      return v, true
-   }
-   return 0, false
 }
 
 func (r Representation) get_height() (uint64, bool) {
