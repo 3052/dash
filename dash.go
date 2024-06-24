@@ -5,26 +5,11 @@ import (
    "encoding/xml"
    "fmt"
    "math"
+   "net/url"
    "strconv"
    "strings"
    "time"
 )
-
-type ContentProtection struct {
-   Pssh        Pssh   `xml:"pssh"`
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-}
-
-type Pssh []byte
-
-func (p *Pssh) UnmarshalText(src []byte) error {
-   var err error
-   *p, err = base64.StdEncoding.AppendDecode(nil, src)
-   if err != nil {
-      return err
-   }
-   return nil
-}
 
 type AdaptationSet struct {
    Codecs            string `xml:"codecs,attr"`
@@ -33,7 +18,9 @@ type AdaptationSet struct {
    Lang              string `xml:"lang,attr"`
    MimeType          string `xml:"mimeType,attr"`
    Representation    []*Representation
-   Role              *Role
+   Role              *struct {
+      Value string `xml:"value,attr"`
+   }
    SegmentTemplate   *SegmentTemplate
    Width             uint64 `xml:"width,attr"`
    period            *Period
@@ -41,6 +28,11 @@ type AdaptationSet struct {
 
 func (a AdaptationSet) GetPeriod() *Period {
    return a.period
+}
+
+type ContentProtection struct {
+   Pssh        Pssh   `xml:"pssh"`
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
 }
 
 func (d *Duration) UnmarshalText(text []byte) error {
@@ -59,7 +51,7 @@ type Duration struct {
 }
 
 type Mpd struct {
-   BaseUrl                   string    `xml:"BaseURL"`
+   BaseUrl *Url `xml:"BaseURL"`
    MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
    Period                    []*Period
 }
@@ -86,6 +78,28 @@ type Period struct {
    Duration      *Duration `xml:"duration,attr"`
    Id            string    `xml:"id,attr"`
    mpd           *Mpd
+}
+
+func (p Period) GetMpd() *Mpd {
+   return p.mpd
+}
+
+func (p Period) get_duration() *Duration {
+   if p.Duration != nil {
+      return p.Duration
+   }
+   return p.mpd.MediaPresentationDuration
+}
+
+type Pssh []byte
+
+func (p *Pssh) UnmarshalText(src []byte) error {
+   var err error
+   *p, err = base64.StdEncoding.AppendDecode(nil, src)
+   if err != nil {
+      return err
+   }
+   return nil
 }
 
 // SegmentIndexBox uses:
@@ -115,10 +129,6 @@ func (r *Range) UnmarshalText(text []byte) error {
       return err
    }
    return nil
-}
-
-type Role struct {
-   Value string `xml:"value,attr"`
 }
 
 type SegmentBase struct {
@@ -175,13 +185,6 @@ func (s SegmentTemplate) get_timescale() uint64 {
    return 1
 }
 
-func (p Period) get_duration() *Duration {
-   if p.Duration != nil {
-      return p.Duration
-   }
-   return p.mpd.MediaPresentationDuration
-}
-
 func (s SegmentTemplate) start() uint {
    if s.PresentationTimeOffset >= 1 {
       return s.PresentationTimeOffset
@@ -189,23 +192,11 @@ func (s SegmentTemplate) start() uint {
    return s.StartNumber
 }
 
-func (a AdaptationSet) get_role() (*Role, bool) {
-   if a.Role != nil {
-      return a.Role, true
-   }
-   return nil, false
+func (u *Url) UnmarshalText(text []byte) error {
+   u.U = new(url.URL)
+   return u.U.UnmarshalBinary(text)
 }
 
-func (a AdaptationSet) get_lang() (string, bool) {
-   if a.Lang != "" {
-      return a.Lang, true
-   }
-   return "", false
-}
-
-func (s SegmentTemplate) get_initialization() (string, bool) {
-   if s.Initialization != "" {
-      return s.Initialization, true
-   }
-   return "", false
+type Url struct {
+   U *url.URL
 }
