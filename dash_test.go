@@ -26,24 +26,6 @@ var tests = []string{
    "testdata/tubi.mpd",
 }
 
-func TestCodecs(t *testing.T) {
-   for _, test := range tests {
-      media, err := new_mpd(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, v := range media.Period {
-         for _, v := range v.AdaptationSet {
-            fmt.Printf("AdaptationSet %q\n", v.Codecs)
-            for _, v := range v.Representation {
-               fmt.Printf("Representation %q\n", v.Codecs)
-            }
-         }
-         fmt.Println()
-      }
-   }
-}
-
 func TestDuration(t *testing.T) {
    for _, test := range tests {
       media, err := new_mpd(test)
@@ -93,24 +75,6 @@ func TestLang(t *testing.T) {
    }
 }
 
-func TestMimeType(t *testing.T) {
-   for _, test := range tests {
-      media, err := new_mpd(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, v := range media.Period {
-         for _, v := range v.AdaptationSet {
-            fmt.Printf("AdaptationSet %q\n", v.MimeType)
-            for _, v := range v.Representation {
-               fmt.Printf("Representation %q\n", v.MimeType)
-            }
-            fmt.Println()
-         }
-      }
-   }
-}
-
 func TestPssh(t *testing.T) {
    for _, test := range tests {
       media, err := new_mpd(test)
@@ -142,39 +106,6 @@ func TestRole(t *testing.T) {
       for _, v := range media.Period {
          for _, v := range v.AdaptationSet {
             fmt.Println(v.Role)
-         }
-      }
-   }
-}
-
-func TestSegmentBase(t *testing.T) {
-   for _, test := range tests {
-      media, err := new_mpd(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, v := range media.Period {
-         for _, v := range v.AdaptationSet {
-            for _, v := range v.Representation {
-               fmt.Printf("%+v\n", v.SegmentBase)
-            }
-         }
-      }
-   }
-}
-
-func TestSegmentTemplate(t *testing.T) {
-   for _, test := range tests {
-      media, err := new_mpd(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, v := range media.Period {
-         for _, v := range v.AdaptationSet {
-            fmt.Printf("AdaptationSet %+v\n", v.SegmentTemplate)
-            for _, v := range v.Representation {
-               fmt.Printf("Representation %+v\n", v.SegmentTemplate)
-            }
          }
       }
    }
