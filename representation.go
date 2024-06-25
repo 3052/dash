@@ -5,6 +5,16 @@ import (
    "strings"
 )
 
+func (r Representation) Ext() (string, bool) {
+   switch r.get_mime_type() {
+   case "audio/mp4":
+      return ".m4a", true
+   case "video/mp4":
+      return ".m4v", true
+   }
+   return "", false
+}
+
 func (r Representation) Media() []string {
    template, ok := r.get_segment_template()
    if !ok {
@@ -85,6 +95,7 @@ func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
    }
    return nil, false
 }
+
 func (r Representation) Widevine() (Pssh, bool) {
    for _, v := range r.get_content_protection() {
       if v.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
@@ -139,7 +150,7 @@ func (r Representation) String() string {
 
 type Representation struct {
    Bandwidth         uint64 `xml:"bandwidth,attr"`
-   BaseUrl *Url `xml:"BaseURL"`
+   BaseUrl           *Url   `xml:"BaseURL"`
    Codecs            string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
    Height            uint64 `xml:"height,attr"`
@@ -162,14 +173,4 @@ func (r Representation) Initialization() (string, bool) {
 
 func (r Representation) GetAdaptationSet() *AdaptationSet {
    return r.adaptation_set
-}
-
-func (r Representation) Ext() (string, bool) {
-   switch r.get_mime_type() {
-   case "audio/mp4":
-      return ".m4a", true
-   case "video/mp4":
-      return ".m4v", true
-   }
-   return "", false
 }
