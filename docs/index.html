@@ -14,7 +14,7 @@
   <body>
     <nav>
         154.pages.dev/dash<span class="navbar-right">
-          v1.23.3 | <a href="">Root</a> | <a href="#pkg-index">Index</a></span>
+          v1.23.4 | <a href="">Root</a> | <a href="#pkg-index">Index</a></span>
       </nav>
     <main><h2 id="pkg-overview">package dash</h2>
 <pre class="chroma"><span class="kn">import</span> <span class="s">&#34;154.pages.dev/dash&#34;</span></pre>
@@ -38,6 +38,7 @@
   <li>
       <a href="#Mpd">type Mpd</a>
       <ul>
+          <li><a href="#Mpd.Representation">func (m Mpd) Representation() chan Representation</a></li>
           <li><a href="#Mpd.Unmarshal">func (m *Mpd) Unmarshal(text []byte) error</a></li>
           </ul>
       </li>
@@ -91,7 +92,7 @@
 	<span id="AdaptationSet.Height"><span class="nx">Height</span></span>            <a href="https://pkg.go.dev/builtin#uint64"><span class="kt">uint64</span></a> <span class="s">`xml:&#34;height,attr&#34;`</span>
 	<span id="AdaptationSet.Lang"><span class="nx">Lang</span></span>              <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;lang,attr&#34;`</span>
 	<span id="AdaptationSet.MimeType"><span class="nx">MimeType</span></span>          <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;mimeType,attr&#34;`</span>
-	<span id="AdaptationSet.Representation"><span class="nx">Representation</span></span>    <span class="p">[]</span><span class="o">*</span><a href="#Representation"><span class="nx">Representation</span></a>
+	<span id="AdaptationSet.Representation"><span class="nx">Representation</span></span>    <span class="p">[]</span><a href="#Representation"><span class="nx">Representation</span></a>
 	<span id="AdaptationSet.Role"><span class="nx">Role</span></span>              <span class="o">*</span><span class="kd">struct</span> <span class="p">{</span>
 		<span id="AdaptationSet.Value"><span class="nx">Value</span></span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;value,attr&#34;`</span>
 	<span class="p">}</span>
@@ -116,13 +117,15 @@
     <pre class="chroma"><span class="kd">type</span> <span class="nx">Mpd</span> <span class="kd">struct</span> <span class="p">{</span>
 	<span id="Mpd.BaseUrl"><span class="nx">BaseUrl</span></span>                   <span class="o">*</span><a href="#Url"><span class="nx">Url</span></a>      <span class="s">`xml:&#34;BaseURL&#34;`</span>
 	<span id="Mpd.MediaPresentationDuration"><span class="nx">MediaPresentationDuration</span></span> <span class="o">*</span><a href="#Duration"><span class="nx">Duration</span></a> <span class="s">`xml:&#34;mediaPresentationDuration,attr&#34;`</span>
-	<span id="Mpd.Period"><span class="nx">Period</span></span>                    <span class="p">[]</span><span class="o">*</span><a href="#Period"><span class="nx">Period</span></a>
+	<span id="Mpd.Period"><span class="nx">Period</span></span>                    <span class="p">[]</span><a href="#Period"><span class="nx">Period</span></a>
 <span class="p">}</span></pre>
-    <h4 id="Mpd.Unmarshal">func (*Mpd) Unmarshal</h4>
+    <h4 id="Mpd.Representation">func (Mpd) Representation</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <a href="#Mpd"><span class="nx">Mpd</span></a><span class="p">)</span> <span class="nf">Representation</span><span class="p">()</span> <span class="kd">chan</span> <a href="#Representation"><span class="nx">Representation</span></a></pre>
+  <h4 id="Mpd.Unmarshal">func (*Mpd) Unmarshal</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <span class="o">*</span><a href="#Mpd"><span class="nx">Mpd</span></a><span class="p">)</span> <span class="nf">Unmarshal</span><span class="p">(</span><span class="nx">text</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
   <h3 id="Period">type Period</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">Period</span> <span class="kd">struct</span> <span class="p">{</span>
-	<span id="Period.AdaptationSet"><span class="nx">AdaptationSet</span></span> <span class="p">[]</span><span class="o">*</span><a href="#AdaptationSet"><span class="nx">AdaptationSet</span></a>
+	<span id="Period.AdaptationSet"><span class="nx">AdaptationSet</span></span> <span class="p">[]</span><a href="#AdaptationSet"><span class="nx">AdaptationSet</span></a>
 	<span id="Period.Duration"><span class="nx">Duration</span></span>      <span class="o">*</span><a href="#Duration"><span class="nx">Duration</span></a> <span class="s">`xml:&#34;duration,attr&#34;`</span>
 	<span id="Period.Id"><span class="nx">Id</span></span>            <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>    <span class="s">`xml:&#34;id,attr&#34;`</span>
 	<span class="c1">// contains filtered or unexported fields

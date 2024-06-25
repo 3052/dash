@@ -11,19 +11,41 @@ import (
    "time"
 )
 
+func (m *Mpd) Unmarshal(text []byte) error {
+   return xml.Unmarshal(text, m)
+}
+
+func (m Mpd) Representation() chan Representation {
+   channel := make(chan Representation)
+   go func() {
+      for _, period := range m.Period {
+         period.mpd = &m
+         for _, adapt := range period.AdaptationSet {
+            adapt.period = &period
+            for _, represent := range adapt.Representation {
+               represent.adaptation_set = &adapt
+               channel <- represent
+            }
+         }
+      }
+      close(channel)
+   }()
+   return channel
+}
+
 type AdaptationSet struct {
    Codecs            string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
    Height            uint64 `xml:"height,attr"`
    Lang              string `xml:"lang,attr"`
    MimeType          string `xml:"mimeType,attr"`
-   Representation    []*Representation
+   Representation    []Representation
    Role              *struct {
       Value string `xml:"value,attr"`
    }
-   SegmentTemplate   *SegmentTemplate
-   Width             uint64 `xml:"width,attr"`
-   period            *Period
+   SegmentTemplate *SegmentTemplate
+   Width           uint64 `xml:"width,attr"`
+   period          *Period
 }
 
 func (a AdaptationSet) GetPeriod() *Period {
@@ -51,30 +73,13 @@ type Duration struct {
 }
 
 type Mpd struct {
-   BaseUrl *Url `xml:"BaseURL"`
+   BaseUrl                   *Url      `xml:"BaseURL"`
    MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []*Period
-}
-
-func (m *Mpd) Unmarshal(text []byte) error {
-   err := xml.Unmarshal(text, m)
-   if err != nil {
-      return err
-   }
-   for _, period := range m.Period {
-      period.mpd = m
-      for _, adapt := range period.AdaptationSet {
-         adapt.period = period
-         for _, represent := range adapt.Representation {
-            represent.adaptation_set = adapt
-         }
-      }
-   }
-   return nil
+   Period                    []Period
 }
 
 type Period struct {
-   AdaptationSet []*AdaptationSet
+   AdaptationSet []AdaptationSet
    Duration      *Duration `xml:"duration,attr"`
    Id            string    `xml:"id,attr"`
    mpd           *Mpd
@@ -139,16 +144,18 @@ type SegmentBase struct {
 }
 
 func (s SegmentTemplate) number(value uint) string {
-   f := strings.Replace(s.Media, "$Number$", "%d", 1)
-   f = strings.Replace(f, "$Number%02d$", "%02d", 1)
-   f = strings.Replace(f, "$Number%03d$", "%03d", 1)
-   f = strings.Replace(f, "$Number%04d$", "%04d", 1)
-   f = strings.Replace(f, "$Number%05d$", "%05d", 1)
-   f = strings.Replace(f, "$Number%06d$", "%06d", 1)
-   f = strings.Replace(f, "$Number%07d$", "%07d", 1)
-   f = strings.Replace(f, "$Number%08d$", "%08d", 1)
-   f = strings.Replace(f, "$Number%09d$", "%09d", 1)
-   return fmt.Sprintf(f, value)
+   s.Media = strings.NewReplacer(
+      "$Number$", "%d",
+      "$Number%02d$", "%02d",
+      "$Number%03d$", "%03d",
+      "$Number%04d$", "%04d",
+      "$Number%05d$", "%05d",
+      "$Number%06d$", "%06d",
+      "$Number%07d$", "%07d",
+      "$Number%08d$", "%08d",
+      "$Number%09d$", "%09d",
+   ).Replace(s.Media)
+   return fmt.Sprintf(s.Media, value)
 }
 
 type SegmentTemplate struct {

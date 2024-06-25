@@ -108,6 +108,18 @@ func TestPssh(t *testing.T) {
    }
 }
 
+func TestRepresentation(t *testing.T) {
+   for _, test := range tests {
+      media, err := new_mpd(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for represent := range media.Representation() {
+         fmt.Print(represent, "\n\n")
+      }
+   }
+}
+
 func TestRole(t *testing.T) {
    for _, test := range tests {
       media, err := new_mpd(test)
