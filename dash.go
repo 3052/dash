@@ -11,44 +11,24 @@ import (
    "time"
 )
 
-func (m Mpd) GetPeriod() chan Period {
-   c := make(chan Period)
-   go func() {
-      for _, period := range m.Period {
-         period.mpd = &m
-         c <- period
+func Unmarshal(text []byte) ([]Representation, error) {
+   var media Mpd
+   err := xml.Unmarshal(text, &media)
+   if err != nil {
+      return nil, err
+   }
+   var reps []Representation
+   for _, per := range media.Period {
+      per.mpd = &media
+      for _, ada := range per.AdaptationSet {
+         ada.period = &per
+         for _, rep := range ada.Representation {
+            rep.adaptation_set = &ada
+            reps = append(reps, rep)
+         }
       }
-      close(c)
-   }()
-   return c
-}
-
-func (p Period) GetAdaptationSet() chan AdaptationSet {
-   c := make(chan AdaptationSet)
-   go func() {
-      for _, adapt := range p.AdaptationSet {
-         adapt.period = &p
-         c <- adapt
-      }
-      close(c)
-   }()
-   return c
-}
-
-func (a AdaptationSet) GetRepresentation() chan Representation {
-   c := make(chan Representation)
-   go func() {
-      for _, represent := range a.Representation {
-         represent.adaptation_set = &a
-         c <- represent
-      }
-      close(c)
-   }()
-   return c
-}
-
-func (m *Mpd) Unmarshal(text []byte) error {
-   return xml.Unmarshal(text, m)
+   }
+   return reps, nil
 }
 
 type AdaptationSet struct {
