@@ -14,7 +14,7 @@
   <body>
     <nav>
         154.pages.dev/dash<span class="navbar-right">
-          v1.23.5 | <a href="">Root</a> | <a href="#pkg-index">Index</a></span>
+          v1.23.7 | <a href="">Root</a> | <a href="#pkg-index">Index</a></span>
       </nav>
     <main><h2 id="pkg-overview">package dash</h2>
 <pre class="chroma"><span class="kn">import</span> <span class="s">&#34;154.pages.dev/dash&#34;</span></pre>
@@ -24,7 +24,6 @@
       <a href="#AdaptationSet">type AdaptationSet</a>
       <ul>
           <li><a href="#AdaptationSet.GetPeriod">func (a AdaptationSet) GetPeriod() *Period</a></li>
-          <li><a href="#AdaptationSet.GetRepresentation">func (a AdaptationSet) GetRepresentation() chan Representation</a></li>
           </ul>
       </li>
   <li>
@@ -38,15 +37,10 @@
       </li>
   <li>
       <a href="#Mpd">type Mpd</a>
-      <ul>
-          <li><a href="#Mpd.GetPeriod">func (m Mpd) GetPeriod() chan Period</a></li>
-          <li><a href="#Mpd.Unmarshal">func (m *Mpd) Unmarshal(text []byte) error</a></li>
-          </ul>
       </li>
   <li>
       <a href="#Period">type Period</a>
       <ul>
-          <li><a href="#Period.GetAdaptationSet">func (p Period) GetAdaptationSet() chan AdaptationSet</a></li>
           <li><a href="#Period.GetMpd">func (p Period) GetMpd() *Mpd</a></li>
           </ul>
       </li>
@@ -66,6 +60,7 @@
   <li>
       <a href="#Representation">type Representation</a>
       <ul>
+          <li><a href="#Unmarshal">func Unmarshal(text []byte, base *url.URL) ([]Representation, error)</a></li>
           <li><a href="#Representation.Ext">func (r Representation) Ext() (string, bool)</a></li>
           <li><a href="#Representation.GetAdaptationSet">func (r Representation) GetAdaptationSet() *AdaptationSet</a></li>
           <li><a href="#Representation.Initialization">func (r Representation) Initialization() (string, bool)</a></li>
@@ -104,8 +99,6 @@
 </span><span class="c1"></span><span class="p">}</span></pre>
     <h4 id="AdaptationSet.GetPeriod">func (AdaptationSet) GetPeriod</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">a</span> <a href="#AdaptationSet"><span class="nx">AdaptationSet</span></a><span class="p">)</span> <span class="nf">GetPeriod</span><span class="p">()</span> <span class="o">*</span><a href="#Period"><span class="nx">Period</span></a></pre>
-  <h4 id="AdaptationSet.GetRepresentation">func (AdaptationSet) GetRepresentation</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">a</span> <a href="#AdaptationSet"><span class="nx">AdaptationSet</span></a><span class="p">)</span> <span class="nf">GetRepresentation</span><span class="p">()</span> <span class="kd">chan</span> <a href="#Representation"><span class="nx">Representation</span></a></pre>
   <h3 id="ContentProtection">type ContentProtection</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">ContentProtection</span> <span class="kd">struct</span> <span class="p">{</span>
 	<span id="ContentProtection.Pssh"><span class="nx">Pssh</span></span>        <a href="#Pssh"><span class="nx">Pssh</span></a>   <span class="s">`xml:&#34;pssh&#34;`</span>
@@ -123,20 +116,14 @@
 	<span id="Mpd.MediaPresentationDuration"><span class="nx">MediaPresentationDuration</span></span> <span class="o">*</span><a href="#Duration"><span class="nx">Duration</span></a> <span class="s">`xml:&#34;mediaPresentationDuration,attr&#34;`</span>
 	<span id="Mpd.Period"><span class="nx">Period</span></span>                    <span class="p">[]</span><a href="#Period"><span class="nx">Period</span></a>
 <span class="p">}</span></pre>
-    <h4 id="Mpd.GetPeriod">func (Mpd) GetPeriod</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <a href="#Mpd"><span class="nx">Mpd</span></a><span class="p">)</span> <span class="nf">GetPeriod</span><span class="p">()</span> <span class="kd">chan</span> <a href="#Period"><span class="nx">Period</span></a></pre>
-  <h4 id="Mpd.Unmarshal">func (*Mpd) Unmarshal</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">m</span> <span class="o">*</span><a href="#Mpd"><span class="nx">Mpd</span></a><span class="p">)</span> <span class="nf">Unmarshal</span><span class="p">(</span><span class="nx">text</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
-  <h3 id="Period">type Period</h3>
+    <h3 id="Period">type Period</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">Period</span> <span class="kd">struct</span> <span class="p">{</span>
 	<span id="Period.AdaptationSet"><span class="nx">AdaptationSet</span></span> <span class="p">[]</span><a href="#AdaptationSet"><span class="nx">AdaptationSet</span></a>
 	<span id="Period.Duration"><span class="nx">Duration</span></span>      <span class="o">*</span><a href="#Duration"><span class="nx">Duration</span></a> <span class="s">`xml:&#34;duration,attr&#34;`</span>
 	<span id="Period.Id"><span class="nx">Id</span></span>            <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a>    <span class="s">`xml:&#34;id,attr&#34;`</span>
 	<span class="c1">// contains filtered or unexported fields
 </span><span class="c1"></span><span class="p">}</span></pre>
-    <h4 id="Period.GetAdaptationSet">func (Period) GetAdaptationSet</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">p</span> <a href="#Period"><span class="nx">Period</span></a><span class="p">)</span> <span class="nf">GetAdaptationSet</span><span class="p">()</span> <span class="kd">chan</span> <a href="#AdaptationSet"><span class="nx">AdaptationSet</span></a></pre>
-  <h4 id="Period.GetMpd">func (Period) GetMpd</h4>
+    <h4 id="Period.GetMpd">func (Period) GetMpd</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">p</span> <a href="#Period"><span class="nx">Period</span></a><span class="p">)</span> <span class="nf">GetMpd</span><span class="p">()</span> <span class="o">*</span><a href="#Mpd"><span class="nx">Mpd</span></a></pre>
   <h3 id="Pssh">type Pssh</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">Pssh</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a></pre>
@@ -168,7 +155,9 @@ but range values can exceed 32 bits
 	<span id="Representation.Width"><span class="nx">Width</span></span>             <a href="https://pkg.go.dev/builtin#uint64"><span class="kt">uint64</span></a> <span class="s">`xml:&#34;width,attr&#34;`</span>
 	<span class="c1">// contains filtered or unexported fields
 </span><span class="c1"></span><span class="p">}</span></pre>
-    <h4 id="Representation.Ext">func (Representation) Ext</h4>
+    <h4 id="Unmarshal">func Unmarshal</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="nf">Unmarshal</span><span class="p">(</span><span class="nx">text</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">,</span> <span class="nx">base</span> <span class="o">*</span><a href="https://pkg.go.dev/net/url"><span class="nx">url</span></a><span class="p">.</span><a href="https://pkg.go.dev/net/url#URL"><span class="nx">URL</span></a><span class="p">)</span> <span class="p">([]</span><a href="#Representation"><span class="nx">Representation</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <h4 id="Representation.Ext">func (Representation) Ext</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Ext</span><span class="p">()</span> <span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
   <h4 id="Representation.GetAdaptationSet">func (Representation) GetAdaptationSet</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">GetAdaptationSet</span><span class="p">()</span> <span class="o">*</span><a href="#AdaptationSet"><span class="nx">AdaptationSet</span></a></pre>

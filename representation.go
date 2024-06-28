@@ -1,9 +1,34 @@
 package dash
 
 import (
+   "encoding/xml"
+   "net/url"
    "strconv"
    "strings"
 )
+
+func Unmarshal(text []byte, base *url.URL) ([]Representation, error) {
+   var media Mpd
+   err := xml.Unmarshal(text, &media)
+   if err != nil {
+      return nil, err
+   }
+   if media.BaseUrl == nil {
+      media.BaseUrl = &Url{base}
+   }
+   var reps []Representation
+   for _, per := range media.Period {
+      per.mpd = &media
+      for _, ada := range per.AdaptationSet {
+         ada.period = &per
+         for _, rep := range ada.Representation {
+            rep.adaptation_set = &ada
+            reps = append(reps, rep)
+         }
+      }
+   }
+   return reps, nil
+}
 
 func (r Representation) Ext() (string, bool) {
    switch r.get_mime_type() {

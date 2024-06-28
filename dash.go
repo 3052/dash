@@ -2,7 +2,6 @@ package dash
 
 import (
    "encoding/base64"
-   "encoding/xml"
    "fmt"
    "math"
    "net/url"
@@ -10,46 +9,6 @@ import (
    "strings"
    "time"
 )
-
-func (m Mpd) GetPeriod() chan Period {
-   c := make(chan Period)
-   go func() {
-      for _, period := range m.Period {
-         period.mpd = &m
-         c <- period
-      }
-      close(c)
-   }()
-   return c
-}
-
-func (p Period) GetAdaptationSet() chan AdaptationSet {
-   c := make(chan AdaptationSet)
-   go func() {
-      for _, adapt := range p.AdaptationSet {
-         adapt.period = &p
-         c <- adapt
-      }
-      close(c)
-   }()
-   return c
-}
-
-func (a AdaptationSet) GetRepresentation() chan Representation {
-   c := make(chan Representation)
-   go func() {
-      for _, represent := range a.Representation {
-         represent.adaptation_set = &a
-         c <- represent
-      }
-      close(c)
-   }()
-   return c
-}
-
-func (m *Mpd) Unmarshal(text []byte) error {
-   return xml.Unmarshal(text, m)
-}
 
 type AdaptationSet struct {
    Codecs            string `xml:"codecs,attr"`
