@@ -1,6 +1,7 @@
 package dash
 
 import (
+   "encoding/xml"
    "fmt"
    "os"
    "testing"
@@ -110,16 +111,17 @@ func TestPssh(t *testing.T) {
 
 func TestRepresentation(t *testing.T) {
    for _, test := range tests {
-      media, err := new_mpd(test)
+      fmt.Print(test, ":\n\n")
+      text, err := os.ReadFile(test)
       if err != nil {
          t.Fatal(err)
       }
-      for period := range media.GetPeriod() {
-         for adapt := range period.GetAdaptationSet() {
-            for represent := range adapt.GetRepresentation() {
-               fmt.Print(represent, "\n\n")
-            }
-         }
+      reps, err := Unmarshal(text, nil)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, rep := range reps {
+         fmt.Print(rep, "\n\n")
       }
    }
 }
@@ -143,10 +145,10 @@ func new_mpd(name string) (*Mpd, error) {
    if err != nil {
       return nil, err
    }
-   var media Mpd
-   err = media.Unmarshal(text)
+   media := new(Mpd)
+   err = xml.Unmarshal(text, media)
    if err != nil {
       return nil, err
    }
-   return &media, nil
+   return media, nil
 }

@@ -7,6 +7,7 @@ import (
 
 func TestBandwidth(t *testing.T) {
    for _, test := range tests {
+      fmt.Print("\n", test, "\n")
       media, err := new_mpd(test)
       if err != nil {
          t.Fatal(err)
@@ -18,7 +19,6 @@ func TestBandwidth(t *testing.T) {
             }
          }
       }
-      fmt.Println()
    }
 }
 
