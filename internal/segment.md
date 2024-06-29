@@ -118,3 +118,106 @@ result:
 ~~~
 curl -o 1.mp4 https://fly.prd.media.h264.io/59da086b-1d1e-48fa-b318-782408318b54/a/0_fa3c08/a1.mp4
 ~~~
+
+result:
+
+~~~
+[ftyp] size=36
+ - majorBrand: mp41
+ - minorVersion: 0
+ - compatibleBrand: iso8
+ - compatibleBrand: isom
+ - compatibleBrand: mp41
+ - compatibleBrand: dash
+ - compatibleBrand: cmfc
+[moov] size=651
+  [mvhd] size=108 version=0 flags=000000
+   - timeScale: 24000
+   - duration: 0
+   - creation time: 2023-08-01T16:37:49Z
+   - modification time: 2023-08-01T16:37:49Z
+  [trak] size=495
+    [tkhd] size=92 version=0 flags=000007
+     - trackID: 1
+     - duration: 0
+     - creation time: 2023-08-01T16:37:49Z
+     - modification time: 2023-08-01T16:37:49Z
+    [mdia] size=395
+      [mdhd] size=32 version=0 flags=000000
+       - timeScale: 24000
+       - creation time: 2023-08-01T16:37:49Z
+       - modification time: 2023-08-01T16:37:49Z
+       - language: spa
+      [hdlr] size=45 version=0 flags=000000
+       - handlerType: soun
+       - handlerName: "SoundHandler"
+      [minf] size=310
+        [smhd] size=16 version=0 flags=000000
+        [dinf] size=36
+          [dref] size=28 version=0 flags=000000
+            [url ] size=12
+             - location: ""
+        [stbl] size=250
+          [stsd] size=174 version=0 flags=000000
+            [enca] size=158
+              [esds] size=42 version=0 flags=000000
+                Descriptor "tag=3 ES" size=2+28
+                  Descriptor "tag=4 DecoderConfig" size=2+20
+                   - BufferSizeDB: 0
+                   - MaxBitrate: 72015
+                   - AvgBitrate: 62680
+                    Descriptor "tag=5 DecoderSpecificInfo" size=2+5
+                     - DecConfig (5B): 131056e598
+                  Descriptor "tag=6 SLConfig" size=2+1
+              [sinf] size=80
+                [frma] size=12
+                 - dataFormat: mp4a
+                [schm] size=20 version=0 flags=000000
+                 - schemeType: cenc
+                 - schemeVersion: 65536  (1.0)
+                [schi] size=40
+                  [tenc] size=32 version=0 flags=000000
+                   - defaultIsProtected: 1
+                   - defaultPerSampleIVSize: 8
+                   - defaultKID: 0100225a-a511-cf63-a4b8-f5746b9925dd
+          [stts] size=16 version=0 flags=000000
+          [stsc] size=16 version=0 flags=000000
+          [stsz] size=20 version=0 flags=000000
+          [stco] size=16 version=0 flags=000000
+  [mvex] size=40
+    [trex] size=32 version=0 flags=000000
+     - trackID: 1
+     - defaultSampleDescriptionIndex: 1
+     - defaultSampleDuration: 1024
+     - defaultSampleSize: 0
+     - defaultSampleFlags: 00000000 (isLeading=0 dependsOn=0 isDependedOn=0 hasRedundancy=0 padding=0 isNonSync=false degradationPriority=0)
+[sidx] size=16784 version=0 flags=000000
+ - referenceID: 1
+ - timeScale: 24000
+ - earliestPresentationTime: 0
+ - firstOffset: 0
+[moof] size=1277
+  [mfhd] size=16 version=0 flags=000000
+   - sequenceNumber: 1
+  [traf] size=1253
+    [tfhd] size=28 version=0 flags=02002a
+     - trackID: 1
+     - defaultBaseIsMoof: true
+     - sampleDescriptionIndex: 1
+     - defaultSampleDuration: 1024
+     - defaultSampleFlags: 00000000 (isLeading=0 dependsOn=0 isDependedOn=0 hasRedundancy=0 padding=0 isNonSync=false degradationPriority=0)
+    [tfdt] size=16 version=0 flags=000000
+     - baseMediaDecodeTime: 0
+    [trun] size=396 version=0 flags=000201
+     - sampleCount: 94
+    [saiz] size=17 version=0 flags=000000
+     - defaultSampleInfoSize: 8
+     - sampleCount: 94
+    [saio] size=20 version=0 flags=000000
+     - sampleCount: 1
+     - offset[1]=525
+    [senc] size=768 version=0 flags=000000
+     - sampleCount: 94
+     - perSampleIVSize: 8
+[mdat] size=31587
+~~~
