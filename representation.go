@@ -7,9 +7,58 @@ import (
    "strings"
 )
 
+func (r Representation) GetBaseUrl() (*BaseUrl, bool) {
+   var u *url.URL
+   if v := r.adaptation_set.period.mpd.BaseUrl; v != nil {
+      u = new(url.URL)
+      *u = *v.Url
+   }
+   if v := r.adaptation_set.period.BaseUrl; v != nil {
+      if u == nil {
+         u = new(url.URL)
+      }
+      u = u.ResolveReference(v.Url)
+   }
+   if v := r.BaseUrl; v != nil {
+      if u == nil {
+         u = new(url.URL)
+      }
+      u = u.ResolveReference(v.Url)
+   }
+   if u != nil {
+      return &BaseUrl{u}, true
+   }
+   return nil, false
+}
+
+func Unmarshal(text []byte, base *url.URL) ([]Representation, error) {
+   var media Mpd
+   err := xml.Unmarshal(text, &media)
+   if err != nil {
+      return nil, err
+   }
+   if media.BaseUrl == nil {
+      if base != nil {
+         media.BaseUrl = &BaseUrl{base}
+      }
+   }
+   var reps []Representation
+   for _, per := range media.Period {
+      per.mpd = &media
+      for _, ada := range per.AdaptationSet {
+         ada.period = &per
+         for _, rep := range ada.Representation {
+            rep.adaptation_set = &ada
+            reps = append(reps, rep)
+         }
+      }
+   }
+   return reps, nil
+}
+
 type Representation struct {
    Bandwidth         uint64 `xml:"bandwidth,attr"`
-   BaseUrl           *Url   `xml:"BaseURL"`
+   BaseUrl           *BaseUrl   `xml:"BaseURL"`
    Codecs            string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
    Height            uint64 `xml:"height,attr"`
@@ -83,29 +132,6 @@ func (r Representation) GetAdaptationSet() *AdaptationSet {
    return r.adaptation_set
 }
 
-func Unmarshal(text []byte, base *url.URL) ([]Representation, error) {
-   var media Mpd
-   err := xml.Unmarshal(text, &media)
-   if err != nil {
-      return nil, err
-   }
-   if media.BaseUrl == nil {
-      media.BaseUrl = &Url{base}
-   }
-   var reps []Representation
-   for _, per := range media.Period {
-      per.mpd = &media
-      for _, ada := range per.AdaptationSet {
-         ada.period = &per
-         for _, rep := range ada.Representation {
-            rep.adaptation_set = &ada
-            reps = append(reps, rep)
-         }
-      }
-   }
-   return reps, nil
-}
-
 func (r Representation) Ext() (string, bool) {
    switch r.get_mime_type() {
    case "audio/mp4":
@@ -139,7 +165,7 @@ func (r Representation) Media() []string {
          }
       }
    } else {
-      seconds := r.adaptation_set.period.get_duration().D.Seconds()
+      seconds := r.adaptation_set.period.get_duration().Duration.Seconds()
       for range template.segment_count(seconds) {
          media = append(media, template.number(number))
          number++

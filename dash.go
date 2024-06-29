@@ -10,10 +10,31 @@ import (
    "time"
 )
 
+type Duration struct {
+   Duration time.Duration
+}
+
+type BaseUrl struct {
+   Url *url.URL
+}
+
+func (b *BaseUrl) UnmarshalText(text []byte) error {
+   b.Url = new(url.URL)
+   return b.Url.UnmarshalBinary(text)
+}
+
 type Mpd struct {
-   BaseUrl                   *Url      `xml:"BaseURL"`
+   BaseUrl *BaseUrl `xml:"BaseURL"`
    MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
    Period                    []Period
+}
+
+type Period struct {
+   AdaptationSet []AdaptationSet
+   BaseUrl *BaseUrl `xml:"BaseURL"`
+   Duration      *Duration `xml:"duration,attr"`
+   Id            string    `xml:"id,attr"`
+   mpd           *Mpd
 }
 
 type AdaptationSet struct {
@@ -35,13 +56,6 @@ func (a AdaptationSet) GetPeriod() *Period {
    return a.period
 }
 
-type Period struct {
-   AdaptationSet []AdaptationSet
-   Duration      *Duration `xml:"duration,attr"`
-   Id            string    `xml:"id,attr"`
-   mpd           *Mpd
-}
-
 type ContentProtection struct {
    Pssh        Pssh   `xml:"pssh"`
    SchemeIdUri string `xml:"schemeIdUri,attr"`
@@ -49,17 +63,13 @@ type ContentProtection struct {
 
 func (d *Duration) UnmarshalText(text []byte) error {
    var err error
-   d.D, err = time.ParseDuration(strings.ToLower(
+   d.Duration, err = time.ParseDuration(strings.ToLower(
       strings.TrimPrefix(string(text), "PT"),
    ))
    if err != nil {
       return err
    }
    return nil
-}
-
-type Duration struct {
-   D time.Duration
 }
 
 func (p Period) GetMpd() *Mpd {
@@ -174,13 +184,4 @@ func (s SegmentTemplate) start() uint {
       return s.PresentationTimeOffset
    }
    return s.StartNumber
-}
-
-func (u *Url) UnmarshalText(text []byte) error {
-   u.U = new(url.URL)
-   return u.U.UnmarshalBinary(text)
-}
-
-type Url struct {
-   U *url.URL
 }
