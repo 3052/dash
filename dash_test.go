@@ -28,16 +28,18 @@ var tests = []string{
 
 func TestBaseUrl(t *testing.T) {
    for _, test := range tests {
-      media, err := new_mpd(test)
+      fmt.Println(test)
+      text, err := os.ReadFile(test)
       if err != nil {
          t.Fatal(err)
       }
-      fmt.Println(media.BaseUrl)
-      for _, v := range media.Period {
-         for _, v := range v.AdaptationSet {
-            for _, v := range v.Representation {
-               fmt.Println(v.BaseUrl)
-            }
+      reps, err := Unmarshal(text, nil)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, rep := range reps {
+         if v, ok := rep.GetBaseUrl(); ok {
+            fmt.Println(v)
          }
       }
       fmt.Println()

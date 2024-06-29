@@ -10,10 +10,27 @@ import (
    "time"
 )
 
+func (b *BaseUrl) UnmarshalText(text []byte) error {
+   b.U = new(url.URL)
+   return b.U.UnmarshalBinary(text)
+}
+
+type BaseUrl struct {
+   U *url.URL
+}
+
 type Mpd struct {
-   BaseUrl                   *Url      `xml:"BaseURL"`
+   BaseUrl *BaseUrl `xml:"BaseURL"`
    MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
    Period                    []Period
+}
+
+type Period struct {
+   AdaptationSet []AdaptationSet
+   BaseUrl *BaseUrl `xml:"BaseURL"`
+   Duration      *Duration `xml:"duration,attr"`
+   Id            string    `xml:"id,attr"`
+   mpd           *Mpd
 }
 
 type AdaptationSet struct {
@@ -33,13 +50,6 @@ type AdaptationSet struct {
 
 func (a AdaptationSet) GetPeriod() *Period {
    return a.period
-}
-
-type Period struct {
-   AdaptationSet []AdaptationSet
-   Duration      *Duration `xml:"duration,attr"`
-   Id            string    `xml:"id,attr"`
-   mpd           *Mpd
 }
 
 type ContentProtection struct {
@@ -174,13 +184,4 @@ func (s SegmentTemplate) start() uint {
       return s.PresentationTimeOffset
    }
    return s.StartNumber
-}
-
-func (u *Url) UnmarshalText(text []byte) error {
-   u.U = new(url.URL)
-   return u.U.UnmarshalBinary(text)
-}
-
-type Url struct {
-   U *url.URL
 }
