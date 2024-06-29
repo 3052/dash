@@ -2,6 +2,7 @@ package dash
 
 import (
    "fmt"
+   "os"
    "testing"
 )
 
@@ -90,6 +91,20 @@ func TestMimeType(t *testing.T) {
             }
          }
       }
+   }
+}
+
+func TestRepresentation(t *testing.T) {
+   text, err := os.ReadFile("testdata/max.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   reps, err := Unmarshal(text, nil)
+   if err != nil {
+      t.Fatal(err)
+   }
+   for _, rep := range reps {
+      fmt.Print(rep, "\n\n")
    }
 }
 

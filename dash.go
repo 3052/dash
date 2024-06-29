@@ -10,6 +10,12 @@ import (
    "time"
 )
 
+type Mpd struct {
+   BaseUrl                   *Url      `xml:"BaseURL"`
+   MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
+   Period                    []Period
+}
+
 type AdaptationSet struct {
    Codecs            string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
@@ -27,6 +33,13 @@ type AdaptationSet struct {
 
 func (a AdaptationSet) GetPeriod() *Period {
    return a.period
+}
+
+type Period struct {
+   AdaptationSet []AdaptationSet
+   Duration      *Duration `xml:"duration,attr"`
+   Id            string    `xml:"id,attr"`
+   mpd           *Mpd
 }
 
 type ContentProtection struct {
@@ -47,19 +60,6 @@ func (d *Duration) UnmarshalText(text []byte) error {
 
 type Duration struct {
    D time.Duration
-}
-
-type Mpd struct {
-   BaseUrl                   *Url      `xml:"BaseURL"`
-   MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
-}
-
-type Period struct {
-   AdaptationSet []AdaptationSet
-   Duration      *Duration `xml:"duration,attr"`
-   Id            string    `xml:"id,attr"`
-   mpd           *Mpd
 }
 
 func (p Period) GetMpd() *Mpd {

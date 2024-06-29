@@ -39,13 +39,48 @@ func (r Representation) String() string {
       b = append(b, "\nlang = "...)
       b = append(b, v...)
    }
-   if v := r.adaptation_set.period.Id; v != "" {
+   if v := strings.Join(r.period(), " "); v != "" {
       b = append(b, "\nperiod = "...)
       b = append(b, v...)
    }
    b = append(b, "\nid = "...)
    b = append(b, r.Id...)
    return string(b)
+}
+
+func (r Representation) period() []string {
+   var id []string
+   for _, p := range r.adaptation_set.period.mpd.Period {
+      func() {
+         for _, adapt := range p.AdaptationSet {
+            for _, represent := range adapt.Representation {
+               if represent.Id == r.Id {
+                  id = append(id, p.Id)
+                  return
+               }
+            }
+         }
+      }()
+   }
+   return id
+}
+
+type Representation struct {
+   Bandwidth         uint64 `xml:"bandwidth,attr"`
+   BaseUrl           *Url   `xml:"BaseURL"`
+   Codecs            string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            uint64 `xml:"height,attr"`
+   Id                string `xml:"id,attr"`
+   MimeType          string `xml:"mimeType,attr"`
+   SegmentBase       *SegmentBase
+   SegmentTemplate   *SegmentTemplate
+   Width             uint64 `xml:"width,attr"`
+   adaptation_set    *AdaptationSet
+}
+
+func (r Representation) GetAdaptationSet() *AdaptationSet {
+   return r.adaptation_set
 }
 
 func Unmarshal(text []byte, base *url.URL) ([]Representation, error) {
@@ -173,20 +208,6 @@ func (r Representation) Widevine() (Pssh, bool) {
    return nil, false
 }
 
-type Representation struct {
-   Bandwidth         uint64 `xml:"bandwidth,attr"`
-   BaseUrl           *Url   `xml:"BaseURL"`
-   Codecs            string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            uint64 `xml:"height,attr"`
-   Id                string `xml:"id,attr"`
-   MimeType          string `xml:"mimeType,attr"`
-   SegmentBase       *SegmentBase
-   SegmentTemplate   *SegmentTemplate
-   Width             uint64 `xml:"width,attr"`
-   adaptation_set    *AdaptationSet
-}
-
 func (r Representation) Initialization() (string, bool) {
    if v, ok := r.get_segment_template(); ok {
       if v := v.Initialization; v != "" {
@@ -194,8 +215,4 @@ func (r Representation) Initialization() (string, bool) {
       }
    }
    return "", false
-}
-
-func (r Representation) GetAdaptationSet() *AdaptationSet {
-   return r.adaptation_set
 }
