@@ -23,24 +23,6 @@ func TestBandwidth(t *testing.T) {
    }
 }
 
-func TestBaseUrl(t *testing.T) {
-   for _, test := range tests {
-      media, err := new_mpd(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      fmt.Println(media.BaseUrl)
-      for _, v := range media.Period {
-         for _, v := range v.AdaptationSet {
-            for _, v := range v.Representation {
-               fmt.Println(v.BaseUrl)
-            }
-         }
-      }
-      fmt.Println()
-   }
-}
-
 func TestCodecs(t *testing.T) {
    for _, test := range tests {
       media, err := new_mpd(test)
