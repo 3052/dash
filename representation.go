@@ -7,69 +7,6 @@ import (
    "strings"
 )
 
-func (r Representation) GetBaseUrl() (*BaseUrl, bool) {
-   var u *url.URL
-   if v := r.adaptation_set.period.mpd.BaseUrl; v != nil {
-      u = new(url.URL)
-      *u = *v.Url
-   }
-   if v := r.adaptation_set.period.BaseUrl; v != nil {
-      if u == nil {
-         u = new(url.URL)
-      }
-      u = u.ResolveReference(v.Url)
-   }
-   if v := r.BaseUrl; v != nil {
-      if u == nil {
-         u = new(url.URL)
-      }
-      u = u.ResolveReference(v.Url)
-   }
-   if u != nil {
-      return &BaseUrl{u}, true
-   }
-   return nil, false
-}
-
-func Unmarshal(text []byte, base *url.URL) ([]Representation, error) {
-   var media Mpd
-   err := xml.Unmarshal(text, &media)
-   if err != nil {
-      return nil, err
-   }
-   if media.BaseUrl == nil {
-      if base != nil {
-         media.BaseUrl = &BaseUrl{base}
-      }
-   }
-   var reps []Representation
-   for _, per := range media.Period {
-      per.mpd = &media
-      for _, ada := range per.AdaptationSet {
-         ada.period = &per
-         for _, rep := range ada.Representation {
-            rep.adaptation_set = &ada
-            reps = append(reps, rep)
-         }
-      }
-   }
-   return reps, nil
-}
-
-type Representation struct {
-   Bandwidth         uint64 `xml:"bandwidth,attr"`
-   BaseUrl           *BaseUrl   `xml:"BaseURL"`
-   Codecs            string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            uint64 `xml:"height,attr"`
-   Id                string `xml:"id,attr"`
-   MimeType          string `xml:"mimeType,attr"`
-   SegmentBase       *SegmentBase
-   SegmentTemplate   *SegmentTemplate
-   Width             uint64 `xml:"width,attr"`
-   adaptation_set    *AdaptationSet
-}
-
 func (r Representation) String() string {
    var b []byte
    if v := r.get_width(); v >= 1 {
@@ -102,30 +39,13 @@ func (r Representation) String() string {
       b = append(b, "\nlang = "...)
       b = append(b, v...)
    }
-   if v := strings.Join(r.period(), " "); v != "" {
+   if v := r.adaptation_set.period.Id; v != "" {
       b = append(b, "\nperiod = "...)
       b = append(b, v...)
    }
    b = append(b, "\nid = "...)
    b = append(b, r.Id...)
    return string(b)
-}
-
-func (r Representation) period() []string {
-   var id []string
-   for _, p := range r.adaptation_set.period.mpd.Period {
-      func() {
-         for _, adapt := range p.AdaptationSet {
-            for _, represent := range adapt.Representation {
-               if represent.Id == r.Id {
-                  id = append(id, p.Id)
-                  return
-               }
-            }
-         }
-      }()
-   }
-   return id
 }
 
 func (r Representation) GetAdaptationSet() *AdaptationSet {
@@ -241,4 +161,66 @@ func (r Representation) Initialization() (string, bool) {
       }
    }
    return "", false
+}
+func (r Representation) GetBaseUrl() (*BaseUrl, bool) {
+   var u *url.URL
+   if v := r.adaptation_set.period.mpd.BaseUrl; v != nil {
+      u = new(url.URL)
+      *u = *v.Url
+   }
+   if v := r.adaptation_set.period.BaseUrl; v != nil {
+      if u == nil {
+         u = new(url.URL)
+      }
+      u = u.ResolveReference(v.Url)
+   }
+   if v := r.BaseUrl; v != nil {
+      if u == nil {
+         u = new(url.URL)
+      }
+      u = u.ResolveReference(v.Url)
+   }
+   if u != nil {
+      return &BaseUrl{u}, true
+   }
+   return nil, false
+}
+
+func Unmarshal(text []byte, base *url.URL) ([]Representation, error) {
+   var media Mpd
+   err := xml.Unmarshal(text, &media)
+   if err != nil {
+      return nil, err
+   }
+   if media.BaseUrl == nil {
+      if base != nil {
+         media.BaseUrl = &BaseUrl{base}
+      }
+   }
+   var reps []Representation
+   for _, per := range media.Period {
+      per.mpd = &media
+      for _, ada := range per.AdaptationSet {
+         ada.period = &per
+         for _, rep := range ada.Representation {
+            rep.adaptation_set = &ada
+            reps = append(reps, rep)
+         }
+      }
+   }
+   return reps, nil
+}
+
+type Representation struct {
+   Bandwidth         uint64 `xml:"bandwidth,attr"`
+   BaseUrl           *BaseUrl   `xml:"BaseURL"`
+   Codecs            string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            uint64 `xml:"height,attr"`
+   Id                string `xml:"id,attr"`
+   MimeType          string `xml:"mimeType,attr"`
+   SegmentBase       *SegmentBase
+   SegmentTemplate   *SegmentTemplate
+   Width             uint64 `xml:"width,attr"`
+   adaptation_set    *AdaptationSet
 }

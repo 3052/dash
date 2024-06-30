@@ -72,10 +72,6 @@ func (d *Duration) UnmarshalText(text []byte) error {
    return nil
 }
 
-func (p Period) GetMpd() *Mpd {
-   return p.mpd
-}
-
 func (p Period) get_duration() *Duration {
    if p.Duration != nil {
       return p.Duration
