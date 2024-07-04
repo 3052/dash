@@ -10,33 +10,6 @@ import (
    "time"
 )
 
-type Duration struct {
-   Duration time.Duration
-}
-
-type BaseUrl struct {
-   Url *url.URL
-}
-
-func (b *BaseUrl) UnmarshalText(text []byte) error {
-   b.Url = new(url.URL)
-   return b.Url.UnmarshalBinary(text)
-}
-
-type Mpd struct {
-   BaseUrl *BaseUrl `xml:"BaseURL"`
-   MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
-}
-
-type Period struct {
-   AdaptationSet []AdaptationSet
-   BaseUrl *BaseUrl `xml:"BaseURL"`
-   Duration      *Duration `xml:"duration,attr"`
-   Id            string    `xml:"id,attr"`
-   mpd           *Mpd
-}
-
 type AdaptationSet struct {
    Codecs            string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
@@ -56,9 +29,22 @@ func (a AdaptationSet) GetPeriod() *Period {
    return a.period
 }
 
+type BaseUrl struct {
+   Url *url.URL
+}
+
+func (b *BaseUrl) UnmarshalText(text []byte) error {
+   b.Url = new(url.URL)
+   return b.Url.UnmarshalBinary(text)
+}
+
 type ContentProtection struct {
    Pssh        Pssh   `xml:"pssh"`
    SchemeIdUri string `xml:"schemeIdUri,attr"`
+}
+
+type Duration struct {
+   Duration time.Duration
 }
 
 func (d *Duration) UnmarshalText(text []byte) error {
@@ -70,6 +56,20 @@ func (d *Duration) UnmarshalText(text []byte) error {
       return err
    }
    return nil
+}
+
+type Mpd struct {
+   BaseUrl *BaseUrl `xml:"BaseURL"`
+   MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
+   Period                    []Period
+}
+
+type Period struct {
+   AdaptationSet []AdaptationSet
+   BaseUrl *BaseUrl `xml:"BaseURL"`
+   Duration      *Duration `xml:"duration,attr"`
+   Id            string    `xml:"id,attr"`
+   mpd           *Mpd
 }
 
 func (p Period) get_duration() *Duration {
