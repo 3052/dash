@@ -59,6 +59,19 @@ func TestExt(t *testing.T) {
    }
 }
 
+func TestMedia(t *testing.T) {
+   mpd, err := new_mpd("testdata/paramount.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   for _, rep := range mpd.Period[0].AdaptationSet[0].Representation {
+      for _, media := range rep.Media() {
+         fmt.Println(media)
+      }
+      fmt.Println()
+   }
+}
+
 func TestMimeType(t *testing.T) {
    for _, test := range tests {
       media, err := new_mpd(test)
