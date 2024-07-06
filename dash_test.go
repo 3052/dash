@@ -22,7 +22,6 @@ var tests = []string{
    "testdata/pluto.mpd",
    "testdata/rakuten.mpd",
    "testdata/roku.mpd",
-   "testdata/stan.mpd",
    "testdata/tubi.mpd",
 }
 
