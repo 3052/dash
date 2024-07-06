@@ -69,7 +69,10 @@ func TestMedia(t *testing.T) {
       t.Fatal(err)
    }
    for _, represent := range represents {
-      fmt.Println(represent.Id, represent.Media()[0])
+      media := represent.Media()
+      fmt.Println(represent.Id)
+      fmt.Println(media[0])
+      fmt.Println(media[len(media)-1])
    }
 }
 

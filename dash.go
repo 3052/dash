@@ -10,6 +10,28 @@ import (
    "time"
 )
 
+func (s SegmentTemplate) start() uint {
+   if s.StartNumber >= 1 {
+      return s.StartNumber
+   }
+   return s.PresentationTimeOffset
+}
+
+type SegmentTemplate struct {
+   StartNumber            uint   `xml:"startNumber,attr"`
+   Duration               uint64 `xml:"duration,attr"`
+   Initialization         string `xml:"initialization,attr"`
+   Media                  string `xml:"media,attr"`
+   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
+   Timescale              uint64 `xml:"timescale,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D uint `xml:"d,attr"` // duration
+         R uint `xml:"r,attr"` // repeat
+      }
+   }
+}
+
 type AdaptationSet struct {
    Codecs            string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
@@ -141,21 +163,6 @@ func (s SegmentTemplate) number(value uint) string {
    return fmt.Sprintf(s.Media, value)
 }
 
-type SegmentTemplate struct {
-   Duration               uint64 `xml:"duration,attr"`
-   Initialization         string `xml:"initialization,attr"`
-   Media                  string `xml:"media,attr"`
-   StartNumber            uint   `xml:"startNumber,attr"`
-   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
-   Timescale              uint64 `xml:"timescale,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D uint `xml:"d,attr"` // duration
-         R uint `xml:"r,attr"` // repeat
-      }
-   }
-}
-
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
 func (s SegmentTemplate) segment_count(seconds float64) uint64 {
    seconds /= float64(s.Duration) / float64(s.get_timescale())
@@ -173,11 +180,4 @@ func (s SegmentTemplate) get_timescale() uint64 {
       return s.Timescale
    }
    return 1
-}
-
-func (s SegmentTemplate) start() uint {
-   if s.PresentationTimeOffset >= 1 {
-      return s.PresentationTimeOffset
-   }
-   return s.StartNumber
 }
