@@ -11,6 +11,20 @@ import (
    "time"
 )
 
+type Representation struct {
+   Bandwidth         uint64 `xml:"bandwidth,attr"`
+   BaseUrl           *BaseUrl   `xml:"BaseURL"`
+   Codecs            string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            uint64 `xml:"height,attr"`
+   Id                string `xml:"id,attr"`
+   MimeType          string `xml:"mimeType,attr"`
+   SegmentBase       *SegmentBase
+   SegmentTemplate   *SegmentTemplate
+   Width             uint64 `xml:"width,attr"`
+   adaptation_set    *AdaptationSet
+}
+
 func (r Representation) Media() []string {
    template, ok := r.get_segment_template()
    if !ok {
@@ -204,20 +218,6 @@ func Unmarshal(text []byte, base *url.URL) ([]Representation, error) {
       }
    }
    return reps, nil
-}
-
-type Representation struct {
-   Bandwidth         uint64 `xml:"bandwidth,attr"`
-   BaseUrl           *BaseUrl   `xml:"BaseURL"`
-   Codecs            string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            uint64 `xml:"height,attr"`
-   Id                string `xml:"id,attr"`
-   MimeType          string `xml:"mimeType,attr"`
-   SegmentBase       *SegmentBase
-   SegmentTemplate   *SegmentTemplate
-   Width             uint64 `xml:"width,attr"`
-   adaptation_set    *AdaptationSet
 }
 
 func (r Representation) get_segment_template() (*SegmentTemplate, bool) {

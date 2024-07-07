@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Created with Unified Streaming Platform  (version=1.11.3-24483) -->
+<!-- Edited by Unified manifest-edit, using the following pipeline:
+mpd:
+- manifest_edit.plugins.mpd.element_remove:
+    periods:
+    - '*': .*
+      adaptationSets:
+      - contentType: text
+        mimeType: text/vtt
+        remove: this
+ -->
+<MPD
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="urn:mpeg:dash:schema:mpd:2011"
+  xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd"
+  type="static"
+  mediaPresentationDuration="PT28M37.562666S"
+  maxSegmentDuration="PT8S"
+  minBufferTime="PT10S"
+  profiles="urn:mpeg:dash:profile:isoff-live:2011,urn:com:dashif:dash264">
+  <Period
+    id="1"
+    duration="PT28M37.562666S">
+    <BaseURL>dash/</BaseURL>
+    <AdaptationSet
+      id="1"
+      group="1"
+      contentType="audio"
+      lang="fr"
+      segmentAlignment="true"
+      audioSamplingRate="48000"
+      mimeType="audio/mp4"
+      codecs="mp4a.40.2"
+      startWithSAP="1">
+      <AudioChannelConfiguration
+        schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011"
+        value="2" />
+      <Label>Français</Label>
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <SegmentTemplate
+        timescale="48000"
+        initialization="vod-idx-$RepresentationID$.dash"
+        media="vod-idx-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="6" />
+          <S d="368640" />
+          <S d="276480" r="4" />
+          <S d="51968" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation
+        id="audio_fra=128000"
+        bandwidth="128000">
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet
+      id="2"
+      group="2"
+      contentType="video"
+      par="16:9"
+      minBandwidth="200000"
+      maxBandwidth="4000000"
+      maxWidth="1920"
+      maxHeight="1080"
+      segmentAlignment="true"
+      frameRate="50"
+      mimeType="video/mp4"
+      startWithSAP="1">
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main" />
+      <SegmentTemplate
+        timescale="600"
+        initialization="vod-idx-$RepresentationID$.dash"
+        media="vod-idx-$RepresentationID$-$Time$.dash">
+        <SegmentTimeline>
+          <S t="0" d="3600" r="285" />
+          <S d="948" />
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation
+        id="video=200000"
+        bandwidth="200000"
+        width="416"
+        height="234"
+        sar="1:1"
+        codecs="avc1.42C015"
+        scanType="progressive">
+      </Representation>
+      <Representation
+        id="video=1152000"
+        bandwidth="1152000"
+        width="854"
+        height="480"
+        sar="1280:1281"
+        codecs="avc1.4D401F"
+        scanType="progressive">
+      </Representation>
+      <Representation
+        id="video=2000000"
+        bandwidth="2000000"
+        width="1280"
+        height="720"
+        sar="1:1"
+        codecs="avc1.4D4020"
+        scanType="progressive">
+      </Representation>
+      <Representation
+        id="video=4000000"
+        bandwidth="4000000"
+        width="1920"
+        height="1080"
+        sar="1:1"
+        codecs="avc1.64002A"
+        scanType="progressive">
+      </Representation>
+    </AdaptationSet>
+  </Period>
+</MPD>
