@@ -25,6 +25,131 @@ type Representation struct {
    adaptation_set    *AdaptationSet
 }
 
+type Duration struct {
+   Duration time.Duration
+}
+
+type Period struct {
+   AdaptationSet []AdaptationSet
+   BaseUrl *BaseUrl `xml:"BaseURL"`
+   Duration      *Duration `xml:"duration,attr"`
+   Id            string    `xml:"id,attr"`
+   mpd           *Mpd
+}
+
+type AdaptationSet struct {
+   Codecs            string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            uint64 `xml:"height,attr"`
+   Lang              string `xml:"lang,attr"`
+   MimeType          string `xml:"mimeType,attr"`
+   Representation    []Representation
+   Role              *struct {
+      Value string `xml:"value,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width           uint64 `xml:"width,attr"`
+   period          *Period
+}
+
+type BaseUrl struct {
+   Url *url.URL
+}
+
+type ContentProtection struct {
+   Pssh        Pssh   `xml:"pssh"`
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
+}
+
+type Mpd struct {
+   BaseUrl *BaseUrl `xml:"BaseURL"`
+   MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
+   Period                    []Period
+}
+
+type Pssh []byte
+
+// SegmentIndexBox uses:
+// unsigned int(32) subsegment_duration;
+// but range values can exceed 32 bits
+type Range struct {
+   Start uint64
+   End   uint64
+}
+
+type SegmentBase struct {
+   Initialization struct {
+      Range Range `xml:"range,attr"`
+   }
+   IndexRange Range `xml:"indexRange,attr"`
+}
+
+type SegmentTemplate struct {
+   StartNumber            uint   `xml:"startNumber,attr"`
+   Duration               uint64 `xml:"duration,attr"`
+   Initialization         string `xml:"initialization,attr"`
+   Media                  string `xml:"media,attr"`
+   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
+   Timescale              uint64 `xml:"timescale,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D uint `xml:"d,attr"` // duration
+         R uint `xml:"r,attr"` // repeat
+      }
+   }
+}
+
+func (r Representation) GetAdaptationSet() *AdaptationSet {
+   return r.adaptation_set
+}
+
+func (r Representation) get_mime_type() string {
+   if r.MimeType != "" {
+      return r.MimeType
+   }
+   return r.adaptation_set.MimeType
+}
+
+func (r Representation) Ext() (string, bool) {
+   switch r.get_mime_type() {
+   case "audio/mp4":
+      return ".m4a", true
+   case "video/mp4":
+      return ".m4v", true
+   }
+   return "", false
+}
+
+func (r Representation) get_content_protection() []ContentProtection {
+   if len(r.ContentProtection) >= 1 {
+      return r.ContentProtection
+   }
+   return r.adaptation_set.ContentProtection
+}
+
+func (r Representation) get_width() uint64 {
+   if r.Width >= 1 {
+      return r.Width
+   }
+   return r.adaptation_set.Width
+}
+
+func (r Representation) get_height() uint64 {
+   if r.Height >= 1 {
+      return r.Height
+   }
+   return r.adaptation_set.Height
+}
+
+func (r Representation) get_codecs() string {
+   if r.Codecs != "" {
+      return r.Codecs
+   }
+   return r.adaptation_set.Codecs
+}
+
+/////////////
+
 func (r Representation) Media() []string {
    template, ok := r.get_segment_template()
    if !ok {
@@ -57,57 +182,8 @@ func (r Representation) Media() []string {
    return media
 }
 
-func (r Representation) GetAdaptationSet() *AdaptationSet {
-   return r.adaptation_set
-}
-
-func (r Representation) Ext() (string, bool) {
-   switch r.get_mime_type() {
-   case "audio/mp4":
-      return ".m4a", true
-   case "video/mp4":
-      return ".m4v", true
-   }
-   return "", false
-}
-
 func (r Representation) id(value string) string {
    return strings.Replace(value, "$RepresentationID$", r.Id, 1)
-}
-
-func (r Representation) get_mime_type() string {
-   if r.MimeType != "" {
-      return r.MimeType
-   }
-   return r.adaptation_set.MimeType
-}
-
-func (r Representation) get_content_protection() []ContentProtection {
-   if len(r.ContentProtection) >= 1 {
-      return r.ContentProtection
-   }
-   return r.adaptation_set.ContentProtection
-}
-
-func (r Representation) get_width() uint64 {
-   if r.Width >= 1 {
-      return r.Width
-   }
-   return r.adaptation_set.Width
-}
-
-func (r Representation) get_height() uint64 {
-   if r.Height >= 1 {
-      return r.Height
-   }
-   return r.adaptation_set.Height
-}
-
-func (r Representation) get_codecs() string {
-   if r.Codecs != "" {
-      return r.Codecs
-   }
-   return r.adaptation_set.Codecs
 }
 
 func (r Representation) Widevine() (Pssh, bool) {
@@ -229,49 +305,14 @@ func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
    }
    return nil, false
 }
-type Period struct {
-   AdaptationSet []AdaptationSet
-   BaseUrl *BaseUrl `xml:"BaseURL"`
-   Duration      *Duration `xml:"duration,attr"`
-   Id            string    `xml:"id,attr"`
-   mpd           *Mpd
-}
-
-type Duration struct {
-   Duration time.Duration
-}
-
-type AdaptationSet struct {
-   Codecs            string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            uint64 `xml:"height,attr"`
-   Lang              string `xml:"lang,attr"`
-   MimeType          string `xml:"mimeType,attr"`
-   Representation    []Representation
-   Role              *struct {
-      Value string `xml:"value,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-   Width           uint64 `xml:"width,attr"`
-   period          *Period
-}
 
 func (a AdaptationSet) GetPeriod() *Period {
    return a.period
 }
 
-type BaseUrl struct {
-   Url *url.URL
-}
-
 func (b *BaseUrl) UnmarshalText(text []byte) error {
    b.Url = new(url.URL)
    return b.Url.UnmarshalBinary(text)
-}
-
-type ContentProtection struct {
-   Pssh        Pssh   `xml:"pssh"`
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
 }
 
 func (d *Duration) UnmarshalText(text []byte) error {
@@ -285,20 +326,12 @@ func (d *Duration) UnmarshalText(text []byte) error {
    return nil
 }
 
-type Mpd struct {
-   BaseUrl *BaseUrl `xml:"BaseURL"`
-   MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
-}
-
 func (p Period) get_duration() *Duration {
    if p.Duration != nil {
       return p.Duration
    }
    return p.mpd.MediaPresentationDuration
 }
-
-type Pssh []byte
 
 func (p *Pssh) UnmarshalText(src []byte) error {
    var err error
@@ -307,14 +340,6 @@ func (p *Pssh) UnmarshalText(src []byte) error {
       return err
    }
    return nil
-}
-
-// SegmentIndexBox uses:
-// unsigned int(32) subsegment_duration;
-// but range values can exceed 32 bits
-type Range struct {
-   Start uint64
-   End   uint64
 }
 
 func (r Range) MarshalText() ([]byte, error) {
@@ -338,33 +363,11 @@ func (r *Range) UnmarshalText(text []byte) error {
    return nil
 }
 
-type SegmentBase struct {
-   Initialization struct {
-      Range Range `xml:"range,attr"`
-   }
-   IndexRange Range `xml:"indexRange,attr"`
-}
-
 func (s SegmentTemplate) start() uint {
    if s.StartNumber >= 1 {
       return s.StartNumber
    }
    return s.PresentationTimeOffset
-}
-
-type SegmentTemplate struct {
-   StartNumber            uint   `xml:"startNumber,attr"`
-   Duration               uint64 `xml:"duration,attr"`
-   Initialization         string `xml:"initialization,attr"`
-   Media                  string `xml:"media,attr"`
-   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
-   Timescale              uint64 `xml:"timescale,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D uint `xml:"d,attr"` // duration
-         R uint `xml:"r,attr"` // repeat
-      }
-   }
 }
 
 func (s SegmentTemplate) number(value uint) string {
