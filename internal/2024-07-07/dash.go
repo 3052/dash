@@ -1,7 +1,6 @@
 package dash
 
 import (
-   "encoding/base64"
    "fmt"
    "math"
    "strings"
@@ -52,7 +51,7 @@ type Mpd struct {
 }
 
 type ContentProtection struct {
-   Pssh        Pssh   `xml:"pssh"`
+   Pssh        string   `xml:"pssh"`
    SchemeIdUri string `xml:"schemeIdUri,attr"`
 }
 
@@ -123,13 +122,30 @@ func (s SegmentTemplate) number(value uint) string {
    return fmt.Sprintf(s.Media, value)
 }
 
-/////////////
-
-type Duration struct {
-   Duration time.Duration
+func (s SegmentTemplate) start() uint {
+   if s.StartNumber >= 1 {
+      return s.StartNumber
+   }
+   return s.PresentationTimeOffset
 }
 
-type Pssh []byte
+func (p Period) get_duration() *Duration {
+   if p.Duration != nil {
+      return p.Duration
+   }
+   return p.mpd.MediaPresentationDuration
+}
+
+func (s SegmentTemplate) time(value uint) string {
+   f := strings.Replace(s.Media, "$Time$", "%d", 1)
+   return fmt.Sprintf(f, value)
+}
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
+func (s SegmentTemplate) segment_count(seconds float64) uint64 {
+   seconds /= float64(s.Duration) / float64(s.get_timescale())
+   return uint64(math.Ceil(seconds))
+}
 
 func (r Representation) Initialization() (string, bool) {
    if v, ok := r.get_segment_template(); ok {
@@ -138,6 +154,10 @@ func (r Representation) Initialization() (string, bool) {
       }
    }
    return "", false
+}
+
+type Duration struct {
+   Duration time.Duration
 }
 
 func (d *Duration) UnmarshalText(text []byte) error {
@@ -149,70 +169,4 @@ func (d *Duration) UnmarshalText(text []byte) error {
       return err
    }
    return nil
-}
-
-func (p Period) get_duration() *Duration {
-   if p.Duration != nil {
-      return p.Duration
-   }
-   return p.mpd.MediaPresentationDuration
-}
-
-func (p *Pssh) UnmarshalText(src []byte) error {
-   var err error
-   *p, err = base64.StdEncoding.AppendDecode(nil, src)
-   if err != nil {
-      return err
-   }
-   return nil
-}
-
-func (s SegmentTemplate) start() uint {
-   if s.StartNumber >= 1 {
-      return s.StartNumber
-   }
-   return s.PresentationTimeOffset
-}
-
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
-func (s SegmentTemplate) segment_count(seconds float64) uint64 {
-   seconds /= float64(s.Duration) / float64(s.get_timescale())
-   return uint64(math.Ceil(seconds))
-}
-
-func (s SegmentTemplate) time(value uint) string {
-   f := strings.Replace(s.Media, "$Time$", "%d", 1)
-   return fmt.Sprintf(f, value)
-}
-
-func (r Representation) Media() []string {
-   template, ok := r.get_segment_template()
-   if !ok {
-      return nil
-   }
-   number := template.start()
-   template.Media = r.id(template.Media)
-   var media []string
-   if template.SegmentTimeline != nil {
-      for _, segment := range template.SegmentTimeline.S {
-         for range 1 + segment.R {
-            var medium string
-            if strings.Contains(template.Media, "$Time$") {
-               medium = template.time(number)
-               number += segment.D
-            } else {
-               medium = template.number(number)
-               number++
-            }
-            media = append(media, medium)
-         }
-      }
-   } else {
-      seconds := r.adaptation_set.period.get_duration().Duration.Seconds()
-      for range template.segment_count(seconds) {
-         media = append(media, template.number(number))
-         number++
-      }
-   }
-   return media
 }
