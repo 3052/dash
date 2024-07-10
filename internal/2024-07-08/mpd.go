@@ -22,7 +22,7 @@ func main() {
       if strings.Contains(line, "<S ") {
          count++
       }
-      if strings.Contains(line, "</SegmentTimeline") {
+      if strings.Contains(line, "</SegmentTimeline>") {
          count = 0
       }
       if count <= max {
