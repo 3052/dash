@@ -10,18 +10,6 @@ import (
    "time"
 )
 
-type Period struct {
-   AdaptationSet []AdaptationSet
-   BaseUrl *BaseUrl `xml:"BaseURL"`
-   Duration      *Duration `xml:"duration,attr"`
-   Id            string    `xml:"id,attr"`
-   mpd           *Mpd
-}
-
-type Duration struct {
-   Duration time.Duration
-}
-
 type AdaptationSet struct {
    Codecs            string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
@@ -66,10 +54,22 @@ func (d *Duration) UnmarshalText(text []byte) error {
    return nil
 }
 
+type Duration struct {
+   Duration time.Duration
+}
+
 type Mpd struct {
    BaseUrl *BaseUrl `xml:"BaseURL"`
    MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
    Period                    []Period
+}
+
+type Period struct {
+   AdaptationSet []AdaptationSet
+   BaseUrl *BaseUrl `xml:"BaseURL"`
+   Duration      *Duration `xml:"duration,attr"`
+   Id            string    `xml:"id,attr"`
+   mpd           *Mpd
 }
 
 func (p Period) get_duration() *Duration {
