@@ -96,37 +96,6 @@ func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
    }
    return nil, false
 }
-func (r Representation) Media() []string {
-   template, ok := r.get_segment_template()
-   if !ok {
-      return nil
-   }
-   number := template.start()
-   template.Media = r.id(template.Media)
-   var media []string
-   if template.SegmentTimeline != nil {
-      for _, segment := range template.SegmentTimeline.S {
-         for range 1 + segment.R {
-            var medium string
-            if strings.Contains(template.Media, "$Time$") {
-               medium = template.time(number)
-               number += segment.D
-            } else {
-               medium = template.number(number)
-               number++
-            }
-            media = append(media, medium)
-         }
-      }
-   } else {
-      seconds := r.adaptation_set.period.get_duration().Duration.Seconds()
-      for range template.segment_count(seconds) {
-         media = append(media, template.number(number))
-         number++
-      }
-   }
-   return media
-}
 
 func (r Representation) GetAdaptationSet() *AdaptationSet {
    return r.adaptation_set
@@ -223,4 +192,37 @@ func (r Representation) GetBaseUrl() (*BaseUrl, bool) {
       return &BaseUrl{u}, true
    }
    return nil, false
+}
+
+func (r Representation) Media() []string {
+   // `template` is a pointer, so if we edit `template.Media` it is permanent
+   template, ok := r.get_segment_template()
+   if !ok {
+      return nil
+   }
+   id := r.id(template.Media)
+   number := template.start()
+   var media []string
+   if template.SegmentTimeline != nil {
+      for _, segment := range template.SegmentTimeline.S {
+         for range 1 + segment.R {
+            var medium string
+            if strings.Contains(template.Media, "$Time$") {
+               medium = replace_time(id, number)
+               number += segment.D
+            } else {
+               medium = replace_number(id, number)
+               number++
+            }
+            media = append(media, medium)
+         }
+      }
+   } else {
+      seconds := r.adaptation_set.period.get_duration().Duration.Seconds()
+      for range template.segment_count(seconds) {
+         media = append(media, replace_number(id, number))
+         number++
+      }
+   }
+   return media
 }

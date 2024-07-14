@@ -148,8 +148,22 @@ type SegmentTemplate struct {
    }
 }
 
-func (s SegmentTemplate) number(value uint) string {
-   s.Media = strings.NewReplacer(
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
+func (s SegmentTemplate) segment_count(seconds float64) uint64 {
+   seconds /= float64(s.Duration) / float64(s.get_timescale())
+   return uint64(math.Ceil(seconds))
+}
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
+func (s SegmentTemplate) get_timescale() uint64 {
+   if s.Timescale >= 1 {
+      return s.Timescale
+   }
+   return 1
+}
+
+func replace_number(format string, a uint) string {
+   format = strings.NewReplacer(
       "$Number$", "%d",
       "$Number%02d$", "%02d",
       "$Number%03d$", "%03d",
@@ -159,25 +173,11 @@ func (s SegmentTemplate) number(value uint) string {
       "$Number%07d$", "%07d",
       "$Number%08d$", "%08d",
       "$Number%09d$", "%09d",
-   ).Replace(s.Media)
-   return fmt.Sprintf(s.Media, value)
+   ).Replace(format)
+   return fmt.Sprintf(format, a)
 }
 
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
-func (s SegmentTemplate) segment_count(seconds float64) uint64 {
-   seconds /= float64(s.Duration) / float64(s.get_timescale())
-   return uint64(math.Ceil(seconds))
-}
-
-func (s SegmentTemplate) time(value uint) string {
-   f := strings.Replace(s.Media, "$Time$", "%d", 1)
-   return fmt.Sprintf(f, value)
-}
-
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
-func (s SegmentTemplate) get_timescale() uint64 {
-   if s.Timescale >= 1 {
-      return s.Timescale
-   }
-   return 1
+func replace_time(format string, a uint) string {
+   format = strings.Replace(format, "$Time$", "%d", 1)
+   return fmt.Sprintf(format, a)
 }
