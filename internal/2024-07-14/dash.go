@@ -7,30 +7,6 @@ import (
    "time"
 )
 
-func (r Representation) Initialization() (string, bool) {
-   if v, ok := r.get_segment_template(); ok {
-      if v := v.Initialization; v != "" {
-         return r.id(v), true
-      }
-   }
-   return "", false
-}
-
-type SegmentTemplate struct {
-   Initialization         string `xml:"initialization,attr"`
-   Media                  string `xml:"media,attr"`
-   StartNumber            uint   `xml:"startNumber,attr"`
-   Duration               uint64 `xml:"duration,attr"`
-   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
-   Timescale              uint64 `xml:"timescale,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D uint `xml:"d,attr"` // duration
-         R uint `xml:"r,attr"` // repeat
-      }
-   }
-}
-
 func (r Representation) Media() []string {
    // `template` is a pointer, so if we edit `template.Media` it is permanent
    template, ok := r.get_segment_template()
@@ -62,16 +38,6 @@ func (r Representation) Media() []string {
       }
    }
    return media
-}
-
-func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
-   if r.SegmentTemplate != nil {
-      return r.SegmentTemplate, true
-   }
-   if r.adaptation_set.SegmentTemplate != nil {
-      return r.adaptation_set.SegmentTemplate, true
-   }
-   return nil, false
 }
 
 type Mpd struct {
