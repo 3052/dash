@@ -11,6 +11,20 @@ import (
    "time"
 )
 
+func (r Representation) get_height() uint64 {
+   if r.Height >= 1 {
+      return r.Height
+   }
+   return r.adaptation_set.Height
+}
+
+func (r Representation) get_width() uint64 {
+   if r.Width >= 1 {
+      return r.Width
+   }
+   return r.adaptation_set.Width
+}
+
 func (r Representation) String() string {
    var b []byte
    if v := r.get_width(); v >= 1 {
@@ -52,29 +66,11 @@ func (r Representation) String() string {
    return string(b)
 }
 
-func Unmarshal(text []byte, base *url.URL) ([]Representation, error) {
-   var media Mpd
-   err := xml.Unmarshal(text, &media)
-   if err != nil {
-      return nil, err
+func (r Representation) get_codecs() string {
+   if r.Codecs != "" {
+      return r.Codecs
    }
-   if media.BaseUrl == nil {
-      if base != nil {
-         media.BaseUrl = &BaseUrl{base}
-      }
-   }
-   var reps []Representation
-   for _, per := range media.Period {
-      per.mpd = &media
-      for _, ada := range per.AdaptationSet {
-         ada.period = &per
-         for _, rep := range ada.Representation {
-            rep.adaptation_set = &ada
-            reps = append(reps, rep)
-         }
-      }
-   }
-   return reps, nil
+   return r.adaptation_set.Codecs
 }
 
 type Representation struct {
@@ -91,6 +87,15 @@ type Representation struct {
    adaptation_set    *AdaptationSet
 }
 
+func (r Representation) get_mime_type() string {
+   if r.MimeType != "" {
+      return r.MimeType
+   }
+   return r.adaptation_set.MimeType
+}
+
+//////////////
+
 func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
    if r.SegmentTemplate != nil {
       return r.SegmentTemplate, true
@@ -101,68 +106,8 @@ func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
    return nil, false
 }
 
-func (r Representation) GetAdaptationSet() *AdaptationSet {
-   return r.adaptation_set
-}
-
-func (r Representation) Ext() (string, bool) {
-   switch r.get_mime_type() {
-   case "audio/mp4":
-      return ".m4a", true
-   case "video/mp4":
-      return ".m4v", true
-   }
-   return "", false
-}
-
 func (r Representation) id(value string) string {
    return strings.Replace(value, "$RepresentationID$", r.Id, 1)
-}
-
-func (r Representation) get_mime_type() string {
-   if r.MimeType != "" {
-      return r.MimeType
-   }
-   return r.adaptation_set.MimeType
-}
-
-func (r Representation) get_content_protection() []ContentProtection {
-   if len(r.ContentProtection) >= 1 {
-      return r.ContentProtection
-   }
-   return r.adaptation_set.ContentProtection
-}
-
-func (r Representation) get_width() uint64 {
-   if r.Width >= 1 {
-      return r.Width
-   }
-   return r.adaptation_set.Width
-}
-
-func (r Representation) get_height() uint64 {
-   if r.Height >= 1 {
-      return r.Height
-   }
-   return r.adaptation_set.Height
-}
-
-func (r Representation) get_codecs() string {
-   if r.Codecs != "" {
-      return r.Codecs
-   }
-   return r.adaptation_set.Codecs
-}
-
-func (r Representation) Widevine() (Pssh, bool) {
-   for _, v := range r.get_content_protection() {
-      if v.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
-         if len(v.Pssh) >= 1 {
-            return v.Pssh, true
-         }
-      }
-   }
-   return nil, false
 }
 
 func (r Representation) Initialization() (string, bool) {
@@ -402,4 +347,29 @@ func replace_number(format string, a uint) string {
 func replace_time(format string, a uint) string {
    format = strings.Replace(format, "$Time$", "%d", 1)
    return fmt.Sprintf(format, a)
+}
+
+func Unmarshal(text []byte, base *url.URL) ([]Representation, error) {
+   var media Mpd
+   err := xml.Unmarshal(text, &media)
+   if err != nil {
+      return nil, err
+   }
+   if media.BaseUrl == nil {
+      if base != nil {
+         media.BaseUrl = &BaseUrl{base}
+      }
+   }
+   var reps []Representation
+   for _, per := range media.Period {
+      per.mpd = &media
+      for _, ada := range per.AdaptationSet {
+         ada.period = &per
+         for _, rep := range ada.Representation {
+            rep.adaptation_set = &ada
+            reps = append(reps, rep)
+         }
+      }
+   }
+   return reps, nil
 }

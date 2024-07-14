@@ -42,24 +42,6 @@ func TestCodecs(t *testing.T) {
    }
 }
 
-func TestExt(t *testing.T) {
-   for _, test := range tests {
-      media, err := new_mpd(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, v := range media.Period {
-         for _, v := range v.AdaptationSet {
-            for _, v := range v.Representation {
-               ext, ok := v.Ext()
-               fmt.Printf("%q %v\n", ext, ok)
-            }
-         }
-      }
-      fmt.Println()
-   }
-}
-
 func TestMedia(t *testing.T) {
    text, err := os.ReadFile("testdata/paramount.mpd")
    if err != nil {
