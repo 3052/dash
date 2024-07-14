@@ -14,7 +14,7 @@
   <body>
     <nav>
         154.pages.dev/dash<span class="navbar-right">
-          v1.24.2 | <a href="">Root</a> | <a href="#pkg-index">Index</a></span>
+          v1.24.3 | <a href="">Root</a> | <a href="#pkg-index">Index</a></span>
       </nav>
     <main><h2 id="pkg-overview">package dash</h2>
 <pre class="chroma"><span class="kn">import</span> <span class="s">&#34;154.pages.dev/dash&#34;</span></pre>
@@ -183,10 +183,10 @@ but range values can exceed 32 bits
 <span class="p">}</span></pre>
     <h3 id="SegmentTemplate">type SegmentTemplate</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">SegmentTemplate</span> <span class="kd">struct</span> <span class="p">{</span>
+	<span id="SegmentTemplate.StartNumber"><span class="nx">StartNumber</span></span>            <a href="https://pkg.go.dev/builtin#uint"><span class="kt">uint</span></a>   <span class="s">`xml:&#34;startNumber,attr&#34;`</span>
 	<span id="SegmentTemplate.Duration"><span class="nx">Duration</span></span>               <a href="https://pkg.go.dev/builtin#uint64"><span class="kt">uint64</span></a> <span class="s">`xml:&#34;duration,attr&#34;`</span>
 	<span id="SegmentTemplate.Initialization"><span class="nx">Initialization</span></span>         <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;initialization,attr&#34;`</span>
 	<span id="SegmentTemplate.Media"><span class="nx">Media</span></span>                  <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;media,attr&#34;`</span>
-	<span id="SegmentTemplate.StartNumber"><span class="nx">StartNumber</span></span>            <a href="https://pkg.go.dev/builtin#uint"><span class="kt">uint</span></a>   <span class="s">`xml:&#34;startNumber,attr&#34;`</span>
 	<span id="SegmentTemplate.PresentationTimeOffset"><span class="nx">PresentationTimeOffset</span></span> <a href="https://pkg.go.dev/builtin#uint"><span class="kt">uint</span></a>   <span class="s">`xml:&#34;presentationTimeOffset,attr&#34;`</span>
 	<span id="SegmentTemplate.Timescale"><span class="nx">Timescale</span></span>              <a href="https://pkg.go.dev/builtin#uint64"><span class="kt">uint64</span></a> <span class="s">`xml:&#34;timescale,attr&#34;`</span>
 	<span id="SegmentTemplate.SegmentTimeline"><span class="nx">SegmentTimeline</span></span>        <span class="o">*</span><span class="kd">struct</span> <span class="p">{</span>

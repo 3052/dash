@@ -7,6 +7,63 @@ import (
    "time"
 )
 
+func (r Representation) Initialization() (string, bool) {
+   if v, ok := r.get_segment_template(); ok {
+      if v := v.Initialization; v != "" {
+         return r.id(v), true
+      }
+   }
+   return "", false
+}
+
+type SegmentTemplate struct {
+   Initialization         string `xml:"initialization,attr"`
+   Media                  string `xml:"media,attr"`
+   StartNumber            uint   `xml:"startNumber,attr"`
+   Duration               uint64 `xml:"duration,attr"`
+   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
+   Timescale              uint64 `xml:"timescale,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D uint `xml:"d,attr"` // duration
+         R uint `xml:"r,attr"` // repeat
+      }
+   }
+}
+
+func (r Representation) Media() []string {
+   // `template` is a pointer, so if we edit `template.Media` it is permanent
+   template, ok := r.get_segment_template()
+   if !ok {
+      return nil
+   }
+   id := r.id(template.Media)
+   number := template.start()
+   var media []string
+   if template.SegmentTimeline != nil {
+      for _, segment := range template.SegmentTimeline.S {
+         for range 1 + segment.R {
+            var medium string
+            if strings.Contains(template.Media, "$Time$") {
+               medium = replace_time(id, number)
+               number += segment.D
+            } else {
+               medium = replace_number(id, number)
+               number++
+            }
+            media = append(media, medium)
+         }
+      }
+   } else {
+      seconds := r.adaptation_set.period.get_duration().Duration.Seconds()
+      for range template.segment_count(seconds) {
+         media = append(media, replace_number(id, number))
+         number++
+      }
+   }
+   return media
+}
+
 func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
    if r.SegmentTemplate != nil {
       return r.SegmentTemplate, true
@@ -21,21 +78,6 @@ type Mpd struct {
    BaseUrl string `xml:"BaseURL"`
    MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
    Period                    []Period
-}
-
-type SegmentTemplate struct {
-   StartNumber            uint   `xml:"startNumber,attr"`
-   Duration               uint64 `xml:"duration,attr"`
-   Initialization         string `xml:"initialization,attr"`
-   Media                  string `xml:"media,attr"`
-   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
-   Timescale              uint64 `xml:"timescale,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D uint `xml:"d,attr"` // duration
-         R uint `xml:"r,attr"` // repeat
-      }
-   }
 }
 
 func (r Representation) id(value string) string {
@@ -100,30 +142,10 @@ func (s SegmentTemplate) start() uint {
    return s.PresentationTimeOffset
 }
 
-func (s SegmentTemplate) number(value uint) string {
-   s.Media = strings.NewReplacer(
-      "$Number$", "%d",
-      "$Number%02d$", "%02d",
-      "$Number%03d$", "%03d",
-      "$Number%04d$", "%04d",
-      "$Number%05d$", "%05d",
-      "$Number%06d$", "%06d",
-      "$Number%07d$", "%07d",
-      "$Number%08d$", "%08d",
-      "$Number%09d$", "%09d",
-   ).Replace(s.Media)
-   return fmt.Sprintf(s.Media, value)
-}
-
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
 func (s SegmentTemplate) segment_count(seconds float64) uint64 {
    seconds /= float64(s.Duration) / float64(s.get_timescale())
    return uint64(math.Ceil(seconds))
-}
-
-func (s SegmentTemplate) time(value uint) string {
-   f := strings.Replace(s.Media, "$Time$", "%d", 1)
-   return fmt.Sprintf(f, value)
 }
 
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
@@ -145,34 +167,22 @@ func (d *Duration) UnmarshalText(text []byte) error {
    return nil
 }
 
-func (r Representation) Media() []string {
-   template, ok := r.get_segment_template()
-   if !ok {
-      return nil
-   }
-   number := template.start()
-   template.Media = r.id(template.Media)
-   var media []string
-   if template.SegmentTimeline != nil {
-      for _, segment := range template.SegmentTimeline.S {
-         for range 1 + segment.R {
-            var medium string
-            if strings.Contains(template.Media, "$Time$") {
-               medium = template.time(number)
-               number += segment.D
-            } else {
-               medium = template.number(number)
-               number++
-            }
-            media = append(media, medium)
-         }
-      }
-   } else {
-      seconds := r.adaptation_set.period.get_duration().Duration.Seconds()
-      for range template.segment_count(seconds) {
-         media = append(media, template.number(number))
-         number++
-      }
-   }
-   return media
+func replace_number(format string, a uint) string {
+   format = strings.NewReplacer(
+      "$Number$", "%d",
+      "$Number%02d$", "%02d",
+      "$Number%03d$", "%03d",
+      "$Number%04d$", "%04d",
+      "$Number%05d$", "%05d",
+      "$Number%06d$", "%06d",
+      "$Number%07d$", "%07d",
+      "$Number%08d$", "%08d",
+      "$Number%09d$", "%09d",
+   ).Replace(format)
+   return fmt.Sprintf(format, a)
+}
+
+func replace_time(format string, a uint) string {
+   format = strings.Replace(format, "$Time$", "%d", 1)
+   return fmt.Sprintf(format, a)
 }
