@@ -106,7 +106,7 @@ func (s SegmentTemplate) get_timescale() uint64 {
 
 ///
 
-func replace_number(format string, a uint) string {
+func replace_number(format string, u uint) string {
    format = strings.NewReplacer(
       "$Number$", "%d",
       "$Number%02d$", "%02d",
@@ -118,12 +118,12 @@ func replace_number(format string, a uint) string {
       "$Number%08d$", "%08d",
       "$Number%09d$", "%09d",
    ).Replace(format)
-   return fmt.Sprintf(format, a)
+   return fmt.Sprintf(format, u)
 }
 
-func replace_time(format string, a uint) string {
+func replace_time(format string, u uint) string {
    format = strings.Replace(format, "$Time$", "%d", 1)
-   return fmt.Sprintf(format, a)
+   return fmt.Sprintf(format, u)
 }
 
 func (s SegmentTemplate) start() uint {
