@@ -1,11 +1,8 @@
 package dash
 
 import (
-   "encoding/xml"
    "fmt"
    "math"
-   "net/url"
-   "strconv"
    "strings"
    "time"
 )
@@ -25,13 +22,9 @@ type AdaptationSet struct {
    period          *Period
 }
 
-type BaseUrl struct {
-   Url *url.URL
-}
-
-func (b *BaseUrl) UnmarshalText(text []byte) error {
-   b.Url = new(url.URL)
-   return b.Url.UnmarshalBinary(text)
+type ContentProtection struct {
+   Pssh        string   `xml:"pssh"`
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
 }
 
 func (d *Duration) UnmarshalText(text []byte) error {
@@ -50,56 +43,22 @@ type Duration struct {
 }
 
 type Mpd struct {
-   BaseUrl *BaseUrl `xml:"BaseURL"`
+   BaseUrl string `xml:"BaseURL"`
    MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
    Period                    []Period
 }
 
 type Period struct {
    AdaptationSet []AdaptationSet
-   BaseUrl *BaseUrl `xml:"BaseURL"`
+   BaseUrl string `xml:"BaseURL"`
    Duration      *Duration `xml:"duration,attr"`
    Id            string    `xml:"id,attr"`
    mpd           *Mpd
 }
 
-type ContentProtection struct {
-   Pssh        string   `xml:"pssh"`
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-}
-
-// SegmentIndexBox uses:
-// unsigned int(32) subsegment_duration;
-// but range values can exceed 32 bits
-type Range struct {
-   Start uint64
-   End   uint64
-}
-
-func (r Range) MarshalText() ([]byte, error) {
-   b := strconv.AppendUint(nil, r.Start, 10)
-   b = append(b, '-')
-   return strconv.AppendUint(b, r.End, 10), nil
-}
-
-func (r *Range) UnmarshalText(text []byte) error {
-   // the current testdata always has `-`, so lets assume for now
-   start, end, _ := strings.Cut(string(text), "-")
-   var err error
-   r.Start, err = strconv.ParseUint(start, 10, 64)
-   if err != nil {
-      return err
-   }
-   r.End, err = strconv.ParseUint(end, 10, 64)
-   if err != nil {
-      return err
-   }
-   return nil
-}
-
 type Representation struct {
    Bandwidth         uint64 `xml:"bandwidth,attr"`
-   BaseUrl           *BaseUrl   `xml:"BaseURL"`
+   BaseUrl           string   `xml:"BaseURL"`
    Codecs            string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
    Height            uint64 `xml:"height,attr"`
@@ -107,9 +66,9 @@ type Representation struct {
    MimeType          string `xml:"mimeType,attr"`
    SegmentBase       *struct {
       Initialization struct {
-         Range Range `xml:"range,attr"`
+         Range string `xml:"range,attr"`
       }
-      IndexRange Range `xml:"indexRange,attr"`
+      IndexRange string `xml:"indexRange,attr"`
    }
    SegmentTemplate   *SegmentTemplate
    Width             uint64 `xml:"width,attr"`
@@ -144,6 +103,8 @@ func (s SegmentTemplate) get_timescale() uint64 {
    }
    return 1
 }
+
+///
 
 func replace_number(format string, a uint) string {
    format = strings.NewReplacer(
@@ -193,33 +154,6 @@ func (p Period) get_duration() *Duration {
    return p.mpd.MediaPresentationDuration
 }
 
-/////////////////
-
-func Unmarshal(text []byte, base *url.URL) ([]Representation, error) {
-   var media Mpd
-   err := xml.Unmarshal(text, &media)
-   if err != nil {
-      return nil, err
-   }
-   if media.BaseUrl == nil {
-      if base != nil {
-         media.BaseUrl = &BaseUrl{base}
-      }
-   }
-   var reps []Representation
-   for _, per := range media.Period {
-      per.mpd = &media
-      for _, ada := range per.AdaptationSet {
-         ada.period = &per
-         for _, rep := range ada.Representation {
-            rep.adaptation_set = &ada
-            reps = append(reps, rep)
-         }
-      }
-   }
-   return reps, nil
-}
-
 func (r Representation) Media() []string {
    // `template` is a pointer, so if we edit `template.Media` it is permanent
    template, ok := r.get_segment_template()
@@ -251,28 +185,4 @@ func (r Representation) Media() []string {
       }
    }
    return media
-}
-
-func (r Representation) GetBaseUrl() (*BaseUrl, bool) {
-   var u *url.URL
-   if v := r.adaptation_set.period.mpd.BaseUrl; v != nil {
-      u = new(url.URL)
-      *u = *v.Url
-   }
-   if v := r.adaptation_set.period.BaseUrl; v != nil {
-      if u == nil {
-         u = new(url.URL)
-      }
-      u = u.ResolveReference(v.Url)
-   }
-   if v := r.BaseUrl; v != nil {
-      if u == nil {
-         u = new(url.URL)
-      }
-      u = u.ResolveReference(v.Url)
-   }
-   if u != nil {
-      return &BaseUrl{u}, true
-   }
-   return nil, false
 }
