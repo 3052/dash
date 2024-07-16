@@ -373,10 +373,8 @@ func (t *Template) UnmarshalText(text []byte) error {
    return nil
 }
 
-/////////////
-
 type SegmentTemplate struct {
-   StartNumber            uint   `xml:"startNumber,attr"`
+   StartNumber *uint `xml:"startNumber,attr"`
    Duration               uint64 `xml:"duration,attr"`
    PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
    Timescale              uint64 `xml:"timescale,attr"`
@@ -389,6 +387,8 @@ type SegmentTemplate struct {
    Initialization         Template `xml:"initialization,attr"`
    Media                  Template `xml:"media,attr"`
 }
+
+/////////////
 
 func (s SegmentTemplate) start() uint {
    if s.StartNumber >= 1 {
