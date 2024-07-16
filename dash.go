@@ -3,103 +3,12 @@ package dash
 import (
    "encoding/base64"
    "encoding/xml"
-   "fmt"
    "math"
    "net/url"
    "strconv"
    "strings"
    "time"
 )
-
-func (r Representation) String() string {
-   var b []byte
-   if v := r.get_width(); v >= 1 {
-      b = append(b, "width = "...)
-      b = strconv.AppendUint(b, v, 10)
-   }
-   if v := r.get_height(); v >= 1 {
-      if b != nil {
-         b = append(b, '\n')
-      }
-      b = append(b, "height = "...)
-      b = strconv.AppendUint(b, v, 10)
-   }
-   if b != nil {
-      b = append(b, '\n')
-   }
-   b = append(b, "bandwidth = "...)
-   b = strconv.AppendUint(b, r.Bandwidth, 10)
-   if v := r.get_codecs(); v != "" {
-      b = append(b, "\ncodecs = "...)
-      b = append(b, v...)
-   }
-   b = append(b, "\nmimeType = "...)
-   b = append(b, r.get_mime_type()...)
-   if v := r.adaptation_set.Role; v != nil {
-      b = append(b, "\nrole = "...)
-      b = append(b, v.Value...)
-   }
-   if v := r.adaptation_set.Lang; v != "" {
-      b = append(b, "\nlang = "...)
-      b = append(b, v...)
-   }
-   if v := r.adaptation_set.period.Id; v != "" {
-      b = append(b, "\nperiod = "...)
-      b = append(b, v...)
-   }
-   b = append(b, "\nid = "...)
-   b = append(b, r.Id...)
-   return string(b)
-}
-
-func Unmarshal(text []byte, base *url.URL) ([]Representation, error) {
-   var media Mpd
-   err := xml.Unmarshal(text, &media)
-   if err != nil {
-      return nil, err
-   }
-   if media.BaseUrl == nil {
-      if base != nil {
-         media.BaseUrl = &BaseUrl{base}
-      }
-   }
-   var reps []Representation
-   for _, per := range media.Period {
-      per.mpd = &media
-      for _, ada := range per.AdaptationSet {
-         ada.period = &per
-         for _, rep := range ada.Representation {
-            rep.adaptation_set = &ada
-            reps = append(reps, rep)
-         }
-      }
-   }
-   return reps, nil
-}
-
-type Representation struct {
-   Bandwidth         uint64 `xml:"bandwidth,attr"`
-   BaseUrl           *BaseUrl   `xml:"BaseURL"`
-   Codecs            string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            uint64 `xml:"height,attr"`
-   Id                string `xml:"id,attr"`
-   MimeType          string `xml:"mimeType,attr"`
-   SegmentBase       *SegmentBase
-   SegmentTemplate   *SegmentTemplate
-   Width             uint64 `xml:"width,attr"`
-   adaptation_set    *AdaptationSet
-}
-
-func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
-   if r.SegmentTemplate != nil {
-      return r.SegmentTemplate, true
-   }
-   if r.adaptation_set.SegmentTemplate != nil {
-      return r.adaptation_set.SegmentTemplate, true
-   }
-   return nil, false
-}
 
 func (r Representation) Media() []string {
    // `template` is a pointer, so if we edit `template.Media` it is permanent
@@ -148,10 +57,6 @@ func (r Representation) Ext() (string, bool) {
    return "", false
 }
 
-func (r Representation) id(value string) string {
-   return strings.Replace(value, "$RepresentationID$", r.Id, 1)
-}
-
 func (r Representation) get_mime_type() string {
    if r.MimeType != "" {
       return r.MimeType
@@ -196,15 +101,6 @@ func (r Representation) Widevine() (Pssh, bool) {
       }
    }
    return nil, false
-}
-
-func (r Representation) Initialization() (string, bool) {
-   if v, ok := r.get_segment_template(); ok {
-      if v := v.Initialization; v != "" {
-         return r.id(v), true
-      }
-   }
-   return "", false
 }
 
 func (r Representation) GetBaseUrl() (*BaseUrl, bool) {
@@ -353,45 +249,10 @@ func (s SegmentTemplate) start() uint {
    return s.PresentationTimeOffset
 }
 
-type SegmentTemplate struct {
-   StartNumber            uint   `xml:"startNumber,attr"`
-   Duration               uint64 `xml:"duration,attr"`
-   Initialization         string `xml:"initialization,attr"`
-   Media                  string `xml:"media,attr"`
-   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
-   Timescale              uint64 `xml:"timescale,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D uint `xml:"d,attr"` // duration
-         R uint `xml:"r,attr"` // repeat
-      }
-   }
-}
-
-func replace_number(format string, a uint) string {
-   format = strings.NewReplacer(
-      "$Number$", "%d",
-      "$Number%02d$", "%02d",
-      "$Number%03d$", "%03d",
-      "$Number%04d$", "%04d",
-      "$Number%05d$", "%05d",
-      "$Number%06d$", "%06d",
-      "$Number%07d$", "%07d",
-      "$Number%08d$", "%08d",
-      "$Number%09d$", "%09d",
-   ).Replace(format)
-   return fmt.Sprintf(format, a)
-}
-
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
 func (s SegmentTemplate) segment_count(seconds float64) uint64 {
    seconds /= float64(s.Duration) / float64(s.get_timescale())
    return uint64(math.Ceil(seconds))
-}
-
-func replace_time(format string, a uint) string {
-   format = strings.Replace(format, "$Time$", "%d", 1)
-   return fmt.Sprintf(format, a)
 }
 
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
@@ -400,4 +261,137 @@ func (s SegmentTemplate) get_timescale() uint64 {
       return s.Timescale
    }
    return 1
+}
+
+type Representation struct {
+   Bandwidth         uint64 `xml:"bandwidth,attr"`
+   BaseUrl           *BaseUrl   `xml:"BaseURL"`
+   Codecs            string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            uint64 `xml:"height,attr"`
+   Id                string `xml:"id,attr"`
+   MimeType          string `xml:"mimeType,attr"`
+   SegmentBase       *SegmentBase
+   SegmentTemplate   *SegmentTemplate
+   Width             uint64 `xml:"width,attr"`
+   adaptation_set    *AdaptationSet
+}
+
+type Template string
+
+func (r Representation) Initialization() (string, bool) {
+   if v, ok := r.get_segment_template(); ok {
+      if v := v.Initialization; v != "" {
+         return r.id(v), true
+      }
+   }
+   return "", false
+}
+
+func (t *Template) UnmarshalText(text []byte) error {
+   replace := strings.NewReplacer(
+      "$Number$", "{{.Number}}",
+      "$Number%02d$", `{{printf "%02d" .Number}}`,
+      "$Number%03d$", `{{printf "%03d" .Number}}`,
+      "$Number%04d$", `{{printf "%04d" .Number}}`,
+      "$Number%05d$", `{{printf "%05d" .Number}}`,
+      "$Number%06d$", `{{printf "%06d" .Number}}`,
+      "$Number%07d$", `{{printf "%07d" .Number}}`,
+      "$Number%08d$", `{{printf "%08d" .Number}}`,
+      "$Number%09d$", `{{printf "%09d" .Number}}`,
+      "$RepresentationID$", "{{.Representation.Id}}",
+      "$Time$", "{{.Time}}",
+   ).Replace(string(text))
+   *t = Template(replace)
+   return nil
+}
+
+type SegmentTemplate struct {
+   StartNumber            uint   `xml:"startNumber,attr"`
+   Duration               uint64 `xml:"duration,attr"`
+   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
+   Timescale              uint64 `xml:"timescale,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D uint `xml:"d,attr"` // duration
+         R uint `xml:"r,attr"` // repeat
+      }
+   }
+   Initialization         Template `xml:"initialization,attr"`
+   Media                  Template `xml:"media,attr"`
+}
+func (r Representation) String() string {
+   var b []byte
+   if v := r.get_width(); v >= 1 {
+      b = append(b, "width = "...)
+      b = strconv.AppendUint(b, v, 10)
+   }
+   if v := r.get_height(); v >= 1 {
+      if b != nil {
+         b = append(b, '\n')
+      }
+      b = append(b, "height = "...)
+      b = strconv.AppendUint(b, v, 10)
+   }
+   if b != nil {
+      b = append(b, '\n')
+   }
+   b = append(b, "bandwidth = "...)
+   b = strconv.AppendUint(b, r.Bandwidth, 10)
+   if v := r.get_codecs(); v != "" {
+      b = append(b, "\ncodecs = "...)
+      b = append(b, v...)
+   }
+   b = append(b, "\nmimeType = "...)
+   b = append(b, r.get_mime_type()...)
+   if v := r.adaptation_set.Role; v != nil {
+      b = append(b, "\nrole = "...)
+      b = append(b, v.Value...)
+   }
+   if v := r.adaptation_set.Lang; v != "" {
+      b = append(b, "\nlang = "...)
+      b = append(b, v...)
+   }
+   if v := r.adaptation_set.period.Id; v != "" {
+      b = append(b, "\nperiod = "...)
+      b = append(b, v...)
+   }
+   b = append(b, "\nid = "...)
+   b = append(b, r.Id...)
+   return string(b)
+}
+
+func Unmarshal(text []byte, base *url.URL) ([]Representation, error) {
+   var media Mpd
+   err := xml.Unmarshal(text, &media)
+   if err != nil {
+      return nil, err
+   }
+   if media.BaseUrl == nil {
+      if base != nil {
+         media.BaseUrl = &BaseUrl{base}
+      }
+   }
+   var reps []Representation
+   for _, per := range media.Period {
+      per.mpd = &media
+      for _, ada := range per.AdaptationSet {
+         ada.period = &per
+         for _, rep := range ada.Representation {
+            rep.adaptation_set = &ada
+            reps = append(reps, rep)
+         }
+      }
+   }
+   return reps, nil
+}
+
+func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
+   if r.SegmentTemplate != nil {
+      return r.SegmentTemplate, true
+   }
+   if r.adaptation_set.SegmentTemplate != nil {
+      return r.adaptation_set.SegmentTemplate, true
+   }
+   return nil, false
 }
