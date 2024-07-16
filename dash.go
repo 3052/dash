@@ -10,13 +10,19 @@ import (
    "time"
 )
 
+func (s SegmentTemplate) start() uint {
+   if s.StartNumber >= 1 {
+      return s.StartNumber
+   }
+   return s.PresentationTimeOffset
+}
+
 func (r Representation) Media() []string {
    // `template` is a pointer, so if we edit `template.Media` it is permanent
    template, ok := r.get_segment_template()
    if !ok {
       return nil
    }
-   id := r.id(template.Media)
    number := template.start()
    var media []string
    if template.SegmentTimeline != nil {
@@ -240,13 +246,6 @@ type SegmentBase struct {
       Range Range `xml:"range,attr"`
    }
    IndexRange Range `xml:"indexRange,attr"`
-}
-
-func (s SegmentTemplate) start() uint {
-   if s.StartNumber >= 1 {
-      return s.StartNumber
-   }
-   return s.PresentationTimeOffset
 }
 
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
