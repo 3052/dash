@@ -99,29 +99,21 @@ func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
    return nil, false
 }
 
-func (r Representation) GetBaseUrl() (*url.URL, bool) {
-   var u *url.URL
+func (r Representation) GetBaseUrl() *url.URL {
+   u := new(url.URL)
    if v := r.adaptation_set.period.mpd.BaseUrl; v != nil {
-      u = new(url.URL)
-      *u = *v.Url
+      u = v.Url
    }
    if v := r.adaptation_set.period.BaseUrl; v != nil {
-      if u == nil {
-         u = new(url.URL)
-      }
       u = u.ResolveReference(v.Url)
    }
    if v := r.BaseUrl; v != nil {
-      if u == nil {
-         u = new(url.URL)
-      }
       u = u.ResolveReference(v.Url)
    }
-   if u != nil {
-      return &BaseUrl{u}, true
-   }
-   return nil, false
+   return u
 }
+
+////////////
 
 func (r Representation) Initialization() (*url.URL, error) {
    var medium strings.Builder

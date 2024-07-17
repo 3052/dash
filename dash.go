@@ -9,6 +9,10 @@ import (
    "time"
 )
 
+type BaseUrl struct {
+   Url *url.URL
+}
+
 type Template struct {
    Template *template.Template
 }
@@ -41,10 +45,6 @@ type AdaptationSet struct {
    SegmentTemplate *SegmentTemplate
    Width           uint64 `xml:"width,attr"`
    period          *Period
-}
-
-type BaseUrl struct {
-   Url *url.URL
 }
 
 func (b *BaseUrl) UnmarshalText(text []byte) error {
