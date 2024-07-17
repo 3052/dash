@@ -1,8 +1,6 @@
 package dash
 
 import (
-   "encoding/base64"
-   "encoding/xml"
    "math"
    "net/url"
    "strconv"
@@ -13,61 +11,6 @@ import (
 
 type Template struct {
    Template *template.Template
-}
-
-func (r Representation) Initialization(t SegmentTemplate) (string, error) {
-   var medium strings.Builder
-   var hello struct {
-      Representation struct {
-         Id string
-      }
-   }
-   hello.Representation.Id = r.Id
-   err := t.Initialization.Template.Execute(&medium, hello)
-   if err != nil {
-      return "", err
-   }
-   return medium.String(), nil
-}
-
-func (r Representation) Media(t SegmentTemplate) ([]string, error) {
-   var media []string
-   var hello struct {
-      Number uint
-      Representation struct {
-         Id string
-      }
-      Time uint
-   }
-   hello.Number = t.StartNumber
-   hello.Time = t.PresentationTimeOffset
-   hello.Representation.Id = r.Id
-   if t.SegmentTimeline != nil {
-      for _, segment := range t.SegmentTimeline.S {
-         for range 1 + segment.R {
-            var medium strings.Builder
-            err := t.Media.Template.Execute(&medium, hello)
-            if err != nil {
-               return nil, err
-            }
-            media = append(media, medium.String())
-            hello.Number++
-            hello.Time += segment.D
-         }
-      }
-   } else {
-      seconds := r.adaptation_set.period.get_duration().Duration.Seconds()
-      for range t.segment_count(seconds) {
-         var medium strings.Builder
-         err := t.Media.Template.Execute(&medium, hello)
-         if err != nil {
-            return nil, err
-         }
-         media = append(media, medium.String())
-         hello.Number++
-      }
-   }
-   return media, nil
 }
 
 type SegmentTemplate struct {
@@ -126,16 +69,6 @@ func (r Representation) String() string {
    return string(b)
 }
 
-func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
-   if r.SegmentTemplate != nil {
-      return r.SegmentTemplate, true
-   }
-   if r.adaptation_set.SegmentTemplate != nil {
-      return r.adaptation_set.SegmentTemplate, true
-   }
-   return nil, false
-}
-
 func (r Representation) get_mime_type() string {
    if r.MimeType != "" {
       return r.MimeType
@@ -157,15 +90,6 @@ func (r Representation) get_height() uint64 {
    return r.adaptation_set.Height
 }
 
-////////
-
-func (r Representation) get_content_protection() []ContentProtection {
-   if len(r.ContentProtection) >= 1 {
-      return r.ContentProtection
-   }
-   return r.adaptation_set.ContentProtection
-}
-
 func (r Representation) get_codecs() string {
    if r.Codecs != "" {
       return r.Codecs
@@ -173,26 +97,12 @@ func (r Representation) get_codecs() string {
    return r.adaptation_set.Codecs
 }
 
-func (r Representation) GetBaseUrl() (*BaseUrl, bool) {
-   var u *url.URL
-   if v := r.adaptation_set.period.mpd.BaseUrl; v != nil {
-      u = new(url.URL)
-      *u = *v.Url
+func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
+   if r.SegmentTemplate != nil {
+      return r.SegmentTemplate, true
    }
-   if v := r.adaptation_set.period.BaseUrl; v != nil {
-      if u == nil {
-         u = new(url.URL)
-      }
-      u = u.ResolveReference(v.Url)
-   }
-   if v := r.BaseUrl; v != nil {
-      if u == nil {
-         u = new(url.URL)
-      }
-      u = u.ResolveReference(v.Url)
-   }
-   if u != nil {
-      return &BaseUrl{u}, true
+   if r.adaptation_set.SegmentTemplate != nil {
+      return r.adaptation_set.SegmentTemplate, true
    }
    return nil, false
 }
@@ -222,7 +132,7 @@ func (b *BaseUrl) UnmarshalText(text []byte) error {
 }
 
 type ContentProtection struct {
-   Pssh        Pssh   `xml:"pssh"`
+   Pssh        string   `xml:"pssh"`
    SchemeIdUri string `xml:"schemeIdUri,attr"`
 }
 
@@ -253,24 +163,6 @@ type Period struct {
    Duration      *Duration `xml:"duration,attr"`
    Id            string    `xml:"id,attr"`
    mpd           *Mpd
-}
-
-func (p Period) get_duration() *Duration {
-   if p.Duration != nil {
-      return p.Duration
-   }
-   return p.mpd.MediaPresentationDuration
-}
-
-type Pssh []byte
-
-func (p *Pssh) UnmarshalText(src []byte) error {
-   var err error
-   *p, err = base64.StdEncoding.AppendDecode(nil, src)
-   if err != nil {
-      return err
-   }
-   return nil
 }
 
 // SegmentIndexBox uses:
@@ -361,27 +253,90 @@ func (t *Template) UnmarshalText(text []byte) error {
    return nil
 }
 
-func Unmarshal(text []byte, base *url.URL) ([]Representation, error) {
-   var media Mpd
-   err := xml.Unmarshal(text, &media)
-   if err != nil {
-      return nil, err
+func (p Period) get_duration() *Duration {
+   if p.Duration != nil {
+      return p.Duration
    }
-   if media.BaseUrl == nil {
-      if base != nil {
-         media.BaseUrl = &BaseUrl{base}
+   return p.mpd.MediaPresentationDuration
+}
+
+/////////////
+
+func (r Representation) Initialization(t SegmentTemplate) (string, error) {
+   var medium strings.Builder
+   var hello struct {
+      Representation struct {
+         Id string
       }
    }
-   var reps []Representation
-   for _, per := range media.Period {
-      per.mpd = &media
-      for _, ada := range per.AdaptationSet {
-         ada.period = &per
-         for _, rep := range ada.Representation {
-            rep.adaptation_set = &ada
-            reps = append(reps, rep)
+   hello.Representation.Id = r.Id
+   err := t.Initialization.Template.Execute(&medium, hello)
+   if err != nil {
+      return "", err
+   }
+   return medium.String(), nil
+}
+
+func (r Representation) Media(t SegmentTemplate) ([]string, error) {
+   var media []string
+   var hello struct {
+      Number uint
+      Representation struct {
+         Id string
+      }
+      Time uint
+   }
+   hello.Number = t.StartNumber
+   hello.Time = t.PresentationTimeOffset
+   hello.Representation.Id = r.Id
+   if t.SegmentTimeline != nil {
+      for _, segment := range t.SegmentTimeline.S {
+         for range 1 + segment.R {
+            var medium strings.Builder
+            err := t.Media.Template.Execute(&medium, hello)
+            if err != nil {
+               return nil, err
+            }
+            media = append(media, medium.String())
+            hello.Number++
+            hello.Time += segment.D
          }
       }
+   } else {
+      seconds := r.adaptation_set.period.get_duration().Duration.Seconds()
+      for range t.segment_count(seconds) {
+         var medium strings.Builder
+         err := t.Media.Template.Execute(&medium, hello)
+         if err != nil {
+            return nil, err
+         }
+         media = append(media, medium.String())
+         hello.Number++
+      }
    }
-   return reps, nil
+   return media, nil
+}
+
+func (r Representation) GetBaseUrl() (*BaseUrl, bool) {
+   var u *url.URL
+   if v := r.adaptation_set.period.mpd.BaseUrl; v != nil {
+      u = new(url.URL)
+      *u = *v.Url
+   }
+   if v := r.adaptation_set.period.BaseUrl; v != nil {
+      if u == nil {
+         u = new(url.URL)
+      }
+      u = u.ResolveReference(v.Url)
+   }
+   if v := r.BaseUrl; v != nil {
+      if u == nil {
+         u = new(url.URL)
+      }
+      u = u.ResolveReference(v.Url)
+   }
+   if u != nil {
+      return &BaseUrl{u}, true
+   }
+   return nil, false
 }
