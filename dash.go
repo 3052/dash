@@ -11,99 +11,6 @@ import (
    "time"
 )
 
-func (r Representation) Initialization() (string, bool) {
-   if v, ok := r.get_segment_template(); ok {
-      if v := v.Initialization; v != "" {
-         return r.id(v), true
-      }
-   }
-   return "", false
-}
-
-func (t *Template) UnmarshalText(text []byte) error {
-   var (
-      err error
-      str = string(text)
-   )
-   t.Template, err = t.Template.Parse(strings.NewReplacer(
-      "$Number$", "{{.Number}}",
-      "$Number%02d$", `{{printf "%02d" .Number}}`,
-      "$Number%03d$", `{{printf "%03d" .Number}}`,
-      "$Number%04d$", `{{printf "%04d" .Number}}`,
-      "$Number%05d$", `{{printf "%05d" .Number}}`,
-      "$Number%06d$", `{{printf "%06d" .Number}}`,
-      "$Number%07d$", `{{printf "%07d" .Number}}`,
-      "$Number%08d$", `{{printf "%08d" .Number}}`,
-      "$Number%09d$", `{{printf "%09d" .Number}}`,
-      "$RepresentationID$", "{{.Representation.Id}}",
-      "$Time$", "{{.Time}}",
-   ).Replace(str))
-   if err != nil {
-      return err
-   }
-   return nil
-}
-
-type Template struct {
-   Template *template.Template
-}
-func (st SegmentTemplate) GetMedia(r Representation) ([]string, error) {
-   var media []string
-   var hello struct {
-      Time uint
-      Representation struct {
-         Id string
-      }
-      Number uint
-   }
-   if st.StartNumber != nil {
-      hello.Number = *st.StartNumber
-   }
-   hello.Time = st.PresentationTimeOffset
-   hello.Representation.Id = r.Id
-   if st.SegmentTimeline != nil {
-      for _, segment := range st.SegmentTimeline.S {
-         for range 1 + segment.R {
-            var medium strings.Builder
-            err := st.Media.Template.Execute(&medium, hello)
-            if err != nil {
-               return nil, err
-            }
-            media = append(media, medium.String())
-            hello.Number++
-            hello.Time += segment.D
-         }
-      }
-   } else {
-      seconds := r.adaptation_set.period.get_duration().Duration.Seconds()
-      for range st.segment_count(seconds) {
-         var medium strings.Builder
-         err := st.Media.Template.Execute(&medium, hello)
-         if err != nil {
-            return nil, err
-         }
-         media = append(media, medium.String())
-         hello.Number++
-      }
-   }
-   return media, nil
-}
-
-type SegmentTemplate struct {
-   Media Template `xml:"media,attr"`
-   Initialization *Template `xml:"initialization,attr"`
-   StartNumber *uint `xml:"startNumber,attr"`
-   Duration               uint64 `xml:"duration,attr"`
-   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
-   Timescale              uint64 `xml:"timescale,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D uint `xml:"d,attr"` // duration
-         R uint `xml:"r,attr"` // repeat
-      }
-   }
-}
-
 func (r Representation) String() string {
    var b []byte
    if v := r.get_width(); v >= 1 {
@@ -381,4 +288,97 @@ type Representation struct {
    SegmentTemplate   *SegmentTemplate
    Width             uint64 `xml:"width,attr"`
    adaptation_set    *AdaptationSet
+}
+func (r Representation) Initialization() (string, bool) {
+   if v, ok := r.get_segment_template(); ok {
+      if v := v.Initialization; v != "" {
+         return r.id(v), true
+      }
+   }
+   return "", false
+}
+
+func (t *Template) UnmarshalText(text []byte) error {
+   var (
+      err error
+      str = string(text)
+   )
+   t.Template, err = t.Template.Parse(strings.NewReplacer(
+      "$Number$", "{{.Number}}",
+      "$Number%02d$", `{{printf "%02d" .Number}}`,
+      "$Number%03d$", `{{printf "%03d" .Number}}`,
+      "$Number%04d$", `{{printf "%04d" .Number}}`,
+      "$Number%05d$", `{{printf "%05d" .Number}}`,
+      "$Number%06d$", `{{printf "%06d" .Number}}`,
+      "$Number%07d$", `{{printf "%07d" .Number}}`,
+      "$Number%08d$", `{{printf "%08d" .Number}}`,
+      "$Number%09d$", `{{printf "%09d" .Number}}`,
+      "$RepresentationID$", "{{.Representation.Id}}",
+      "$Time$", "{{.Time}}",
+   ).Replace(str))
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
+type Template struct {
+   Template *template.Template
+}
+
+type SegmentTemplate struct {
+   Media Template `xml:"media,attr"`
+   Initialization *Template `xml:"initialization,attr"`
+   StartNumber *uint `xml:"startNumber,attr"`
+   Duration               uint64 `xml:"duration,attr"`
+   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
+   Timescale              uint64 `xml:"timescale,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D uint `xml:"d,attr"` // duration
+         R uint `xml:"r,attr"` // repeat
+      }
+   }
+}
+
+func (st SegmentTemplate) GetMedia(r Representation) ([]string, error) {
+   var media []string
+   var hello struct {
+      Time uint
+      Representation struct {
+         Id string
+      }
+      Number uint
+   }
+   if st.StartNumber != nil {
+      hello.Number = *st.StartNumber
+   }
+   hello.Time = st.PresentationTimeOffset
+   hello.Representation.Id = r.Id
+   if st.SegmentTimeline != nil {
+      for _, segment := range st.SegmentTimeline.S {
+         for range 1 + segment.R {
+            var medium strings.Builder
+            err := st.Media.Template.Execute(&medium, hello)
+            if err != nil {
+               return nil, err
+            }
+            media = append(media, medium.String())
+            hello.Number++
+            hello.Time += segment.D
+         }
+      }
+   } else {
+      seconds := r.adaptation_set.period.get_duration().Duration.Seconds()
+      for range st.segment_count(seconds) {
+         var medium strings.Builder
+         err := st.Media.Template.Execute(&medium, hello)
+         if err != nil {
+            return nil, err
+         }
+         media = append(media, medium.String())
+         hello.Number++
+      }
+   }
+   return media, nil
 }
