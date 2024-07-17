@@ -329,7 +329,7 @@ type Template struct {
 type SegmentTemplate struct {
    Media Template `xml:"media,attr"`
    Initialization *Template `xml:"initialization,attr"`
-   StartNumber *uint `xml:"startNumber,attr"`
+   StartNumber uint `xml:"startNumber,attr"`
    Duration               uint64 `xml:"duration,attr"`
    PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
    Timescale              uint64 `xml:"timescale,attr"`
@@ -344,15 +344,13 @@ type SegmentTemplate struct {
 func (st SegmentTemplate) GetMedia(r Representation) ([]string, error) {
    var media []string
    var hello struct {
-      Time uint
+      Number uint
       Representation struct {
          Id string
       }
-      Number uint
+      Time uint
    }
-   if st.StartNumber != nil {
-      hello.Number = *st.StartNumber
-   }
+   hello.Number = st.StartNumber
    hello.Time = st.PresentationTimeOffset
    hello.Representation.Id = r.Id
    if st.SegmentTimeline != nil {
