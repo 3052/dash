@@ -130,7 +130,7 @@ func (r Representation) Initialization() (*url.URL, error) {
    return medium.String(), nil
 }
 
-func (r Representation) Media(t SegmentTemplate) ([]string, error) {
+func (r Representation) Media(t SegmentTemplate) ([]*url.URL, error) {
    var media []string
    var hello struct {
       Number uint
