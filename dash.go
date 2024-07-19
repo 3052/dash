@@ -9,6 +9,173 @@ import (
    "time"
 )
 
+type Representation struct {
+   Bandwidth         uint64 `xml:"bandwidth,attr"`
+   BaseUrl           *BaseUrl   `xml:"BaseURL"`
+   Codecs            string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            uint64 `xml:"height,attr"`
+   Id                string `xml:"id,attr"`
+   MimeType          string `xml:"mimeType,attr"`
+   SegmentBase       *struct {
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+      IndexRange Range `xml:"indexRange,attr"`
+   }
+   SegmentTemplate   *SegmentTemplate
+   Width             uint64 `xml:"width,attr"`
+   adaptation_set    *AdaptationSet
+}
+
+func (r Representation) get_base_url() *url.URL {
+   u := new(url.URL)
+   if v := r.adaptation_set.period.mpd.BaseUrl; v != nil {
+      u = v.Url
+   }
+   if v := r.adaptation_set.period.BaseUrl; v != nil {
+      u = u.ResolveReference(v.Url)
+   }
+   if v := r.BaseUrl; v != nil {
+      u = u.ResolveReference(v.Url)
+   }
+   return u
+}
+
+func (r Representation) Media(t SegmentTemplate) ([]*url.URL, error) {
+   var media []string
+   var data struct {
+      Number uint
+      Representation struct {
+         Id string
+      }
+      Time uint
+   }
+   data.Number = t.StartNumber
+   data.Time = t.PresentationTimeOffset
+   data.Representation.Id = r.Id
+   if t.SegmentTimeline != nil {
+      for _, segment := range t.SegmentTimeline.S {
+         for range 1 + segment.R {
+            var medium strings.Builder
+            err := t.Media.Template.Execute(&medium, data)
+            if err != nil {
+               return nil, err
+            }
+            media = append(media, medium.String())
+            data.Number++
+            data.Time += segment.D
+         }
+      }
+   } else {
+      seconds := r.adaptation_set.period.get_duration().Duration.Seconds()
+      for range t.segment_count(seconds) {
+         var medium strings.Builder
+         err := t.Media.Template.Execute(&medium, data)
+         if err != nil {
+            return nil, err
+         }
+         media = append(media, medium.String())
+         data.Number++
+      }
+   }
+   return media, nil
+}
+
+func (r Representation) String() string {
+   var b []byte
+   if v := r.get_width(); v >= 1 {
+      b = append(b, "width = "...)
+      b = strconv.AppendUint(b, v, 10)
+   }
+   if v := r.get_height(); v >= 1 {
+      if b != nil {
+         b = append(b, '\n')
+      }
+      b = append(b, "height = "...)
+      b = strconv.AppendUint(b, v, 10)
+   }
+   if b != nil {
+      b = append(b, '\n')
+   }
+   b = append(b, "bandwidth = "...)
+   b = strconv.AppendUint(b, r.Bandwidth, 10)
+   if v := r.get_codecs(); v != "" {
+      b = append(b, "\ncodecs = "...)
+      b = append(b, v...)
+   }
+   b = append(b, "\nmimeType = "...)
+   b = append(b, r.get_mime_type()...)
+   if v := r.adaptation_set.Role; v != nil {
+      b = append(b, "\nrole = "...)
+      b = append(b, v.Value...)
+   }
+   if v := r.adaptation_set.Lang; v != "" {
+      b = append(b, "\nlang = "...)
+      b = append(b, v...)
+   }
+   if v := r.adaptation_set.period.Id; v != "" {
+      b = append(b, "\nperiod = "...)
+      b = append(b, v...)
+   }
+   b = append(b, "\nid = "...)
+   b = append(b, r.Id...)
+   return string(b)
+}
+
+func (r Representation) get_mime_type() string {
+   if r.MimeType != "" {
+      return r.MimeType
+   }
+   return r.adaptation_set.MimeType
+}
+
+func (r Representation) get_width() uint64 {
+   if r.Width >= 1 {
+      return r.Width
+   }
+   return r.adaptation_set.Width
+}
+
+func (r Representation) get_height() uint64 {
+   if r.Height >= 1 {
+      return r.Height
+   }
+   return r.adaptation_set.Height
+}
+
+func (r Representation) get_codecs() string {
+   if r.Codecs != "" {
+      return r.Codecs
+   }
+   return r.adaptation_set.Codecs
+}
+
+func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
+   if r.SegmentTemplate != nil {
+      return r.SegmentTemplate, true
+   }
+   if r.adaptation_set.SegmentTemplate != nil {
+      return r.adaptation_set.SegmentTemplate, true
+   }
+   return nil, false
+}
+
+type SegmentTemplate struct {
+   Media Template `xml:"media,attr"`
+   Initialization *Template `xml:"initialization,attr"`
+   StartNumber uint `xml:"startNumber,attr"`
+   Duration               uint64 `xml:"duration,attr"`
+   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
+   Timescale              uint64 `xml:"timescale,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D uint `xml:"d,attr"` // duration
+         R uint `xml:"r,attr"` // repeat
+      }
+   }
+}
+
 type AdaptationSet struct {
    Codecs            string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
@@ -103,28 +270,6 @@ func (r *Range) UnmarshalText(text []byte) error {
    return nil
 }
 
-type SegmentBase struct {
-   Initialization struct {
-      Range Range `xml:"range,attr"`
-   }
-   IndexRange Range `xml:"indexRange,attr"`
-}
-
-type SegmentTemplate struct {
-   Media Template `xml:"media,attr"`
-   Initialization *Template `xml:"initialization,attr"`
-   StartNumber uint `xml:"startNumber,attr"`
-   Duration               uint64 `xml:"duration,attr"`
-   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
-   Timescale              uint64 `xml:"timescale,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D uint `xml:"d,attr"` // duration
-         R uint `xml:"r,attr"` // repeat
-      }
-   }
-}
-
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
 func (s SegmentTemplate) segment_count(seconds float64) uint64 {
    seconds /= float64(s.Duration) / float64(s.get_timescale())
@@ -137,10 +282,6 @@ func (s SegmentTemplate) get_timescale() uint64 {
       return s.Timescale
    }
    return 1
-}
-
-func (Template) Error() string {
-   return "Template"
 }
 
 type Template struct {
