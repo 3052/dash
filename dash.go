@@ -9,29 +9,6 @@ import (
    "time"
 )
 
-type BaseUrl struct {
-   Url *url.URL
-}
-
-type Template struct {
-   Template *template.Template
-}
-
-type SegmentTemplate struct {
-   Media Template `xml:"media,attr"`
-   Initialization *Template `xml:"initialization,attr"`
-   StartNumber uint `xml:"startNumber,attr"`
-   Duration               uint64 `xml:"duration,attr"`
-   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
-   Timescale              uint64 `xml:"timescale,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D uint `xml:"d,attr"` // duration
-         R uint `xml:"r,attr"` // repeat
-      }
-   }
-}
-
 type AdaptationSet struct {
    Codecs            string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
@@ -45,6 +22,10 @@ type AdaptationSet struct {
    SegmentTemplate *SegmentTemplate
    Width           uint64 `xml:"width,attr"`
    period          *Period
+}
+
+type BaseUrl struct {
+   Url *url.URL
 }
 
 func (b *BaseUrl) UnmarshalText(text []byte) error {
@@ -76,6 +57,13 @@ type Mpd struct {
    BaseUrl *BaseUrl `xml:"BaseURL"`
    MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
    Period                    []Period
+}
+
+func (p Period) get_duration() *Duration {
+   if p.Duration != nil {
+      return p.Duration
+   }
+   return p.mpd.MediaPresentationDuration
 }
 
 type Period struct {
@@ -122,6 +110,21 @@ type SegmentBase struct {
    IndexRange Range `xml:"indexRange,attr"`
 }
 
+type SegmentTemplate struct {
+   Media Template `xml:"media,attr"`
+   Initialization *Template `xml:"initialization,attr"`
+   StartNumber uint `xml:"startNumber,attr"`
+   Duration               uint64 `xml:"duration,attr"`
+   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
+   Timescale              uint64 `xml:"timescale,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D uint `xml:"d,attr"` // duration
+         R uint `xml:"r,attr"` // repeat
+      }
+   }
+}
+
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
 func (s SegmentTemplate) segment_count(seconds float64) uint64 {
    seconds /= float64(s.Duration) / float64(s.get_timescale())
@@ -134,6 +137,14 @@ func (s SegmentTemplate) get_timescale() uint64 {
       return s.Timescale
    }
    return 1
+}
+
+func (Template) Error() string {
+   return "Template"
+}
+
+type Template struct {
+   Template *template.Template
 }
 
 func (t *Template) UnmarshalText(text []byte) error {
@@ -158,11 +169,4 @@ func (t *Template) UnmarshalText(text []byte) error {
       return err
    }
    return nil
-}
-
-func (p Period) get_duration() *Duration {
-   if p.Duration != nil {
-      return p.Duration
-   }
-   return p.mpd.MediaPresentationDuration
 }

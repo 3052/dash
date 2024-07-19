@@ -6,6 +6,67 @@ import (
    "strings"
 )
 
+func (r Representation) Initialization() (*url.URL, error) {
+   if v, ok := r.get_segment_template(); ok {
+      if v := v.Initialization; v != nil {
+         var medium strings.Builder
+         var data struct {
+            Representation struct {
+               Id string
+            }
+         }
+         data.Representation.Id = r.Id
+         err := v.Template.Execute(&medium, data)
+         if err != nil {
+            return nil, err
+         }
+         return medium.String(), nil
+      }
+      return nil, Template{}
+   }
+   return nil, SegmentTemplate{}
+}
+
+func (r Representation) Media(t SegmentTemplate) ([]*url.URL, error) {
+   var media []string
+   var data struct {
+      Number uint
+      Representation struct {
+         Id string
+      }
+      Time uint
+   }
+   data.Number = t.StartNumber
+   data.Time = t.PresentationTimeOffset
+   data.Representation.Id = r.Id
+   if t.SegmentTimeline != nil {
+      for _, segment := range t.SegmentTimeline.S {
+         for range 1 + segment.R {
+            var medium strings.Builder
+            err := t.Media.Template.Execute(&medium, data)
+            if err != nil {
+               return nil, err
+            }
+            media = append(media, medium.String())
+            data.Number++
+            data.Time += segment.D
+         }
+      }
+   } else {
+      seconds := r.adaptation_set.period.get_duration().Duration.Seconds()
+      for range t.segment_count(seconds) {
+         var medium strings.Builder
+         err := t.Media.Template.Execute(&medium, data)
+         if err != nil {
+            return nil, err
+         }
+         media = append(media, medium.String())
+         data.Number++
+      }
+   }
+   return media, nil
+}
+
 func (r Representation) String() string {
    var b []byte
    if v := r.get_width(); v >= 1 {
@@ -89,16 +150,6 @@ type Representation struct {
    adaptation_set    *AdaptationSet
 }
 
-func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
-   if r.SegmentTemplate != nil {
-      return r.SegmentTemplate, true
-   }
-   if r.adaptation_set.SegmentTemplate != nil {
-      return r.adaptation_set.SegmentTemplate, true
-   }
-   return nil, false
-}
-
 func (r Representation) GetBaseUrl() *url.URL {
    u := new(url.URL)
    if v := r.adaptation_set.period.mpd.BaseUrl; v != nil {
@@ -113,59 +164,26 @@ func (r Representation) GetBaseUrl() *url.URL {
    return u
 }
 
-////////////
-
-func (r Representation) Initialization() (*url.URL, error) {
-   var medium strings.Builder
-   var hello struct {
-      Representation struct {
-         Id string
-      }
+func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
+   if r.SegmentTemplate != nil {
+      return r.SegmentTemplate, true
    }
-   hello.Representation.Id = r.Id
-   err := t.Initialization.Template.Execute(&medium, hello)
-   if err != nil {
-      return "", err
+   if r.adaptation_set.SegmentTemplate != nil {
+      return r.adaptation_set.SegmentTemplate, true
    }
-   return medium.String(), nil
+   return nil, false
 }
 
-func (r Representation) Media(t SegmentTemplate) ([]*url.URL, error) {
-   var media []string
-   var hello struct {
-      Number uint
-      Representation struct {
-         Id string
-      }
-      Time uint
+func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
+   if r.SegmentTemplate != nil {
+      return r.SegmentTemplate, true
    }
-   hello.Number = t.StartNumber
-   hello.Time = t.PresentationTimeOffset
-   hello.Representation.Id = r.Id
-   if t.SegmentTimeline != nil {
-      for _, segment := range t.SegmentTimeline.S {
-         for range 1 + segment.R {
-            var medium strings.Builder
-            err := t.Media.Template.Execute(&medium, hello)
-            if err != nil {
-               return nil, err
-            }
-            media = append(media, medium.String())
-            hello.Number++
-            hello.Time += segment.D
-         }
-      }
-   } else {
-      seconds := r.adaptation_set.period.get_duration().Duration.Seconds()
-      for range t.segment_count(seconds) {
-         var medium strings.Builder
-         err := t.Media.Template.Execute(&medium, hello)
-         if err != nil {
-            return nil, err
-         }
-         media = append(media, medium.String())
-         hello.Number++
-      }
+   if r.adaptation_set.SegmentTemplate != nil {
+      return r.adaptation_set.SegmentTemplate, true
    }
-   return media, nil
+   return nil, false
+}
+
+func (SegmentTemplate) Error() string {
+   return "SegmentTemplate"
 }
