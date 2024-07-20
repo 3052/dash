@@ -10,6 +10,33 @@ import (
    "time"
 )
 
+func (r Representation) Initialization() (*http.Request, error) {
+   var req http.Request
+   req.URL = r.get_base_url()
+   if v, ok := r.get_segment_template(); ok {
+      var initial strings.Builder
+      var data struct {
+         Representation struct {
+            Id string
+         }
+      }
+      data.Representation.Id = r.Id
+      err := v.Initialization.Template.Execute(&initial, data)
+      if err != nil {
+         return nil, err
+      }
+      req.URL, err = req.URL.Parse(initial.String())
+      if err != nil {
+         return nil, err
+      }
+      return &req, nil
+   }
+   req.Header = http.Header{
+      "range": {r.SegmentBase.Initialization.Range},
+   }
+   return &req, nil
+}
+
 func (r Representation) media_template(
    st *SegmentTemplate,
 ) ([]http.Request, error) {
@@ -60,33 +87,6 @@ func (r Representation) media_template(
       }
    }
    return reqs, nil
-}
-
-func (r Representation) Initialization() (*http.Request, error) {
-   var req http.Request
-   if v, ok := r.get_segment_template(); ok {
-      var initial strings.Builder
-      var data struct {
-         Representation struct {
-            Id string
-         }
-      }
-      data.Representation.Id = r.Id
-      err := v.Initialization.Template.Execute(&initial, data)
-      if err != nil {
-         return nil, err
-      }
-      req.URL, err = r.get_base_url().Parse(initial.String())
-      if err != nil {
-         return nil, err
-      }
-      return &req, nil
-   }
-   req.URL = r.get_base_url()
-   req.Header = http.Header{
-      "range": {r.SegmentBase.Initialization.Range},
-   }
-   return &req, nil
 }
 
 // pkg.go.dev/net/url#Values.Has
