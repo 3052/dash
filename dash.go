@@ -9,23 +9,19 @@ import (
    "time"
 )
 
-type Representation struct {
-   Bandwidth         uint64 `xml:"bandwidth,attr"`
-   BaseUrl           *BaseUrl   `xml:"BaseURL"`
-   Codecs            string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            uint64 `xml:"height,attr"`
-   Id                string `xml:"id,attr"`
-   MimeType          string `xml:"mimeType,attr"`
-   SegmentBase       *struct {
-      Initialization struct {
-         Range Range `xml:"range,attr"`
+type SegmentTemplate struct {
+   Initialization *Template `xml:"initialization,attr"`
+   Media Template `xml:"media,attr"`
+   StartNumber uint `xml:"startNumber,attr"`
+   Duration               uint64 `xml:"duration,attr"`
+   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
+   Timescale              uint64 `xml:"timescale,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D uint `xml:"d,attr"` // duration
+         R uint `xml:"r,attr"` // repeat
       }
-      IndexRange Range `xml:"indexRange,attr"`
    }
-   SegmentTemplate   *SegmentTemplate
-   Width             uint64 `xml:"width,attr"`
-   adaptation_set    *AdaptationSet
 }
 
 func (r Representation) get_base_url() *url.URL {
@@ -40,46 +36,6 @@ func (r Representation) get_base_url() *url.URL {
       u = u.ResolveReference(v.Url)
    }
    return u
-}
-
-func (r Representation) Media(t SegmentTemplate) ([]*url.URL, error) {
-   var media []string
-   var data struct {
-      Number uint
-      Representation struct {
-         Id string
-      }
-      Time uint
-   }
-   data.Number = t.StartNumber
-   data.Time = t.PresentationTimeOffset
-   data.Representation.Id = r.Id
-   if t.SegmentTimeline != nil {
-      for _, segment := range t.SegmentTimeline.S {
-         for range 1 + segment.R {
-            var medium strings.Builder
-            err := t.Media.Template.Execute(&medium, data)
-            if err != nil {
-               return nil, err
-            }
-            media = append(media, medium.String())
-            data.Number++
-            data.Time += segment.D
-         }
-      }
-   } else {
-      seconds := r.adaptation_set.period.get_duration().Duration.Seconds()
-      for range t.segment_count(seconds) {
-         var medium strings.Builder
-         err := t.Media.Template.Execute(&medium, data)
-         if err != nil {
-            return nil, err
-         }
-         media = append(media, medium.String())
-         data.Number++
-      }
-   }
-   return media, nil
 }
 
 func (r Representation) String() string {
@@ -161,21 +117,6 @@ func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
    return nil, false
 }
 
-type SegmentTemplate struct {
-   Media Template `xml:"media,attr"`
-   Initialization *Template `xml:"initialization,attr"`
-   StartNumber uint `xml:"startNumber,attr"`
-   Duration               uint64 `xml:"duration,attr"`
-   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
-   Timescale              uint64 `xml:"timescale,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D uint `xml:"d,attr"` // duration
-         R uint `xml:"r,attr"` // repeat
-      }
-   }
-}
-
 type AdaptationSet struct {
    Codecs            string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
@@ -239,35 +180,6 @@ type Period struct {
    Duration      *Duration `xml:"duration,attr"`
    Id            string    `xml:"id,attr"`
    mpd           *Mpd
-}
-
-// SegmentIndexBox uses:
-// unsigned int(32) subsegment_duration;
-// but range values can exceed 32 bits
-type Range struct {
-   Start uint64
-   End   uint64
-}
-
-func (r Range) MarshalText() ([]byte, error) {
-   b := strconv.AppendUint(nil, r.Start, 10)
-   b = append(b, '-')
-   return strconv.AppendUint(b, r.End, 10), nil
-}
-
-func (r *Range) UnmarshalText(text []byte) error {
-   // the current testdata always has `-`, so lets assume for now
-   start, end, _ := strings.Cut(string(text), "-")
-   var err error
-   r.Start, err = strconv.ParseUint(start, 10, 64)
-   if err != nil {
-      return err
-   }
-   r.End, err = strconv.ParseUint(end, 10, 64)
-   if err != nil {
-      return err
-   }
-   return nil
 }
 
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
