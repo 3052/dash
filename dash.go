@@ -9,6 +9,55 @@ import (
    "time"
 )
 
+type Representation struct {
+   Bandwidth         uint64 `xml:"bandwidth,attr"`
+   BaseUrl           *BaseUrl   `xml:"BaseURL"`
+   Codecs            string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            uint64 `xml:"height,attr"`
+   Id                string `xml:"id,attr"`
+   MimeType          string `xml:"mimeType,attr"`
+   SegmentBase       *struct {
+      Initialization struct {
+         Range string `xml:"range,attr"`
+      }
+      IndexRange string `xml:"indexRange,attr"`
+   }
+   SegmentTemplate   *SegmentTemplate
+   Width             uint64 `xml:"width,attr"`
+   adaptation_set    *AdaptationSet
+}
+
+func (r *Range) Set(text string) error {
+   // the current testdata always has `-`, so lets assume for now
+   start, end, _ := strings.Cut(text, "-")
+   var err error
+   r.Start, err = strconv.ParseUint(start, 10, 64)
+   if err != nil {
+      return err
+   }
+   r.End, err = strconv.ParseUint(end, 10, 64)
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
+// SegmentIndexBox uses:
+// unsigned int(32) subsegment_duration;
+// but range values can exceed 32 bits
+type Range struct {
+   Start uint64
+   End   uint64
+}
+
+func (r Range) String() string {
+   b := strconv.AppendUint(nil, r.Start, 10)
+   b = append(b, '-')
+   b = strconv.AppendUint(b, r.End, 10)
+   return string(b)
+}
+
 type SegmentTemplate struct {
    Initialization *Template `xml:"initialization,attr"`
    Media Template `xml:"media,attr"`
