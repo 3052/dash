@@ -2,12 +2,102 @@ package dash
 
 import (
    "math"
+   "net/http"
    "net/url"
    "strconv"
    "strings"
    "text/template"
    "time"
 )
+
+func (r Representation) media_template(
+   st *SegmentTemplate,
+) ([]http.Request, error) {
+   var reqs []http.Request
+   var data struct {
+      Number uint
+      Representation struct {
+         Id string
+      }
+      Time uint
+   }
+   data.Number = st.StartNumber
+   data.Time = st.PresentationTimeOffset
+   data.Representation.Id = r.Id
+   if st.SegmentTimeline != nil {
+      for _, segment := range st.SegmentTimeline.S {
+         for range 1 + segment.R {
+            var media strings.Builder
+            err := st.Media.Template.Execute(&media, data)
+            if err != nil {
+               return nil, err
+            }
+            var req http.Request
+            req.URL, err = r.get_base_url().Parse(media.String())
+            if err != nil {
+               return nil, err
+            }
+            reqs = append(reqs, req)
+            data.Number++
+            data.Time += segment.D
+         }
+      }
+   } else {
+      seconds := r.adaptation_set.period.get_duration().Duration.Seconds()
+      for range st.segment_count(seconds) {
+         var media strings.Builder
+         err := st.Media.Template.Execute(&media, data)
+         if err != nil {
+            return nil, err
+         }
+         var req http.Request
+         req.URL, err = r.get_base_url().Parse(media.String())
+         if err != nil {
+            return nil, err
+         }
+         reqs = append(reqs, req)
+         data.Number++
+      }
+   }
+   return reqs, nil
+}
+
+func (r Representation) Initialization() (*http.Request, error) {
+   var req http.Request
+   if v, ok := r.get_segment_template(); ok {
+      var initial strings.Builder
+      var data struct {
+         Representation struct {
+            Id string
+         }
+      }
+      data.Representation.Id = r.Id
+      err := v.Initialization.Template.Execute(&initial, data)
+      if err != nil {
+         return nil, err
+      }
+      req.URL, err = r.get_base_url().Parse(initial.String())
+      if err != nil {
+         return nil, err
+      }
+      return &req, nil
+   }
+   req.URL = r.get_base_url()
+   req.Header = http.Header{
+      "range": {r.SegmentBase.Initialization.Range},
+   }
+   return &req, nil
+}
+
+// pkg.go.dev/net/url#Values.Has
+func (r Representation) HasInitialization() bool {
+   if v, ok := r.get_segment_template(); ok {
+      if v.Initialization != nil {
+         return true
+      }
+   }
+   return r.SegmentBase != nil
+}
 
 type Representation struct {
    Bandwidth         uint64 `xml:"bandwidth,attr"`
@@ -271,4 +361,11 @@ func (t *Template) UnmarshalText(text []byte) error {
       return err
    }
    return nil
+}
+
+func (r Representation) Media() ([]http.Request, error) {
+   if v, ok := r.get_segment_template(); ok {
+      return r.media_template(v)
+   }
+   return r.media_base()
 }
