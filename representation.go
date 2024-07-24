@@ -7,6 +7,18 @@ import (
    "strings"
 )
 
+func (r Representation) Ext() (string, bool) {
+   switch r.get_mime_type() {
+   case "audio/mp4":
+      return ".m4a", true
+   case "text/vtt":
+      return ".vtt", true
+   case "video/mp4":
+      return ".m4v", true
+   }
+   return "", false
+}
+
 func (r Representation) String() string {
    var b []byte
    if v := r.get_width(); v >= 1 {
@@ -96,6 +108,7 @@ func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
    }
    return nil, false
 }
+
 func (r Representation) Media() []string {
    template, ok := r.get_segment_template()
    if !ok {
@@ -130,16 +143,6 @@ func (r Representation) Media() []string {
 
 func (r Representation) GetAdaptationSet() *AdaptationSet {
    return r.adaptation_set
-}
-
-func (r Representation) Ext() (string, bool) {
-   switch r.get_mime_type() {
-   case "audio/mp4":
-      return ".m4a", true
-   case "video/mp4":
-      return ".m4v", true
-   }
-   return "", false
 }
 
 func (r Representation) id(value string) string {
