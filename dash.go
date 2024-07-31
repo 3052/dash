@@ -15,6 +15,8 @@ type AdaptationSet struct {
    ContentProtection []ContentProtection
    Height            uint64 `xml:"height,attr"`
    Lang              string `xml:"lang,attr"`
+   MaxHeight int `xml:"maxHeight,attr"`
+   MaxWidth int `xml:"maxWidth,attr"`
    MimeType          string `xml:"mimeType,attr"`
    Representation    []Representation
    Role              *struct {
