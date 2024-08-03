@@ -27,7 +27,7 @@ type AdaptationSet struct {
    period          *Period
 }
 
-func (a AdaptationSet) GetPeriod() *Period {
+func (a *AdaptationSet) GetPeriod() *Period {
    return a.period
 }
 
