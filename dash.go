@@ -74,7 +74,7 @@ type Period struct {
    mpd           *Mpd
 }
 
-func (p Period) get_duration() *Duration {
+func (p *Period) get_duration() *Duration {
    if p.Duration != nil {
       return p.Duration
    }
