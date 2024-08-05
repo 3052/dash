@@ -147,7 +147,7 @@ func new_mpd(name string) (*Mpd, error) {
    if err != nil {
       return nil, err
    }
-   media := new(Mpd)
+   media := &Mpd{}
    err = xml.Unmarshal(text, media)
    if err != nil {
       return nil, err

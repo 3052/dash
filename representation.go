@@ -207,18 +207,18 @@ func (r Representation) Initialization() (string, bool) {
 func (r Representation) GetBaseUrl() (*BaseUrl, bool) {
    var u *url.URL
    if v := r.adaptation_set.period.mpd.BaseUrl; v != nil {
-      u = new(url.URL)
+      u = &url.URL{}
       *u = *v.Url
    }
    if v := r.adaptation_set.period.BaseUrl; v != nil {
       if u == nil {
-         u = new(url.URL)
+         u = &url.URL{}
       }
       u = u.ResolveReference(v.Url)
    }
    if v := r.BaseUrl; v != nil {
       if u == nil {
-         u = new(url.URL)
+         u = &url.URL{}
       }
       u = u.ResolveReference(v.Url)
    }

@@ -36,7 +36,7 @@ type BaseUrl struct {
 }
 
 func (b *BaseUrl) UnmarshalText(text []byte) error {
-   b.Url = new(url.URL)
+   b.Url = &url.URL{}
    return b.Url.UnmarshalBinary(text)
 }
 
