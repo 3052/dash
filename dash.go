@@ -90,9 +90,9 @@ func Unmarshal(text []byte, base *url.URL) ([]Representation, error) {
 }
 
 type Representation struct {
-   Bandwidth         uint64 `xml:"bandwidth,attr"`
-   BaseUrl           *BaseUrl   `xml:"BaseURL"`
-   Codecs            string `xml:"codecs,attr"`
+   Bandwidth         uint64   `xml:"bandwidth,attr"`
+   BaseUrl           *BaseUrl `xml:"BaseURL"`
+   Codecs            string   `xml:"codecs,attr"`
    ContentProtection []ContentProtection
    Height            uint64 `xml:"height,attr"`
    Id                string `xml:"id,attr"`
@@ -231,13 +231,14 @@ func (r Representation) GetBaseUrl() (*BaseUrl, bool) {
    }
    return nil, false
 }
+
 type AdaptationSet struct {
    Codecs            string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
    Height            uint64 `xml:"height,attr"`
    Lang              string `xml:"lang,attr"`
-   MaxHeight int `xml:"maxHeight,attr"`
-   MaxWidth int `xml:"maxWidth,attr"`
+   MaxHeight         int    `xml:"maxHeight,attr"`
+   MaxWidth          int    `xml:"maxWidth,attr"`
    MimeType          string `xml:"mimeType,attr"`
    Representation    []Representation
    Role              *struct {
@@ -282,14 +283,14 @@ type Duration struct {
 }
 
 type Mpd struct {
-   BaseUrl *BaseUrl `xml:"BaseURL"`
+   BaseUrl                   *BaseUrl  `xml:"BaseURL"`
    MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
    Period                    []Period
 }
 
 type Period struct {
    AdaptationSet []AdaptationSet
-   BaseUrl *BaseUrl `xml:"BaseURL"`
+   BaseUrl       *BaseUrl  `xml:"BaseURL"`
    Duration      *Duration `xml:"duration,attr"`
    Id            string    `xml:"id,attr"`
    mpd           *Mpd

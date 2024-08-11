@@ -140,6 +140,7 @@ func TestSegmentTemplate(t *testing.T) {
       }
    }
 }
+
 var tests = []string{
    "testdata/amc.mpd",
    "testdata/cine-member.mpd",
