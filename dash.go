@@ -11,6 +11,13 @@ import (
    "time"
 )
 
+func (r Representation) get_mime_type() string {
+   if r.MimeType != "" {
+      return r.MimeType
+   }
+   return r.adaptation_set.MimeType
+}
+
 func (r Representation) Ext() (string, bool) {
    switch r.get_mime_type() {
    case "audio/mp4":
@@ -151,13 +158,6 @@ func (r Representation) GetAdaptationSet() *AdaptationSet {
 
 func (r Representation) id(value string) string {
    return strings.Replace(value, "$RepresentationID$", r.Id, 1)
-}
-
-func (r Representation) get_mime_type() string {
-   if r.MimeType != "" {
-      return r.MimeType
-   }
-   return r.adaptation_set.MimeType
 }
 
 func (r Representation) get_content_protection() []ContentProtection {
