@@ -11,7 +11,7 @@ import (
    "time"
 )
 
-func (r Representation) get_mime_type() string {
+func (r *Representation) get_mime_type() string {
    if r.MimeType != "" {
       return r.MimeType
    }
