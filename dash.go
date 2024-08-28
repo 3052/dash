@@ -18,7 +18,7 @@ func (r *Representation) get_mime_type() string {
    return r.adaptation_set.MimeType
 }
 
-func (r Representation) Ext() (string, bool) {
+func (r *Representation) Ext() (string, bool) {
    switch r.get_mime_type() {
    case "audio/mp4":
       return ".m4a", true
