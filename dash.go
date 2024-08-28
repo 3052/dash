@@ -110,7 +110,7 @@ type Representation struct {
    adaptation_set    *AdaptationSet
 }
 
-func (r Representation) get_segment_template() (*SegmentTemplate, bool) {
+func (r *Representation) get_segment_template() (*SegmentTemplate, bool) {
    if r.SegmentTemplate != nil {
       return r.SegmentTemplate, true
    }
