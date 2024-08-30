@@ -152,7 +152,7 @@ func (r *Representation) Media() []string {
    return media
 }
 
-func (r Representation) GetAdaptationSet() *AdaptationSet {
+func (r *Representation) GetAdaptationSet() *AdaptationSet {
    return r.adaptation_set
 }
 
