@@ -120,7 +120,7 @@ func (r *Representation) get_segment_template() (*SegmentTemplate, bool) {
    return nil, false
 }
 
-func (r Representation) Media() []string {
+func (r *Representation) Media() []string {
    template, ok := r.get_segment_template()
    if !ok {
       return nil
