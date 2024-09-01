@@ -160,7 +160,7 @@ func (r *Representation) id(value string) string {
    return strings.Replace(value, "$RepresentationID$", r.Id, 1)
 }
 
-func (r Representation) get_content_protection() []ContentProtection {
+func (r *Representation) get_content_protection() []ContentProtection {
    if len(r.ContentProtection) >= 1 {
       return r.ContentProtection
    }
