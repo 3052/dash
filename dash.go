@@ -156,7 +156,7 @@ func (r *Representation) GetAdaptationSet() *AdaptationSet {
    return r.adaptation_set
 }
 
-func (r Representation) id(value string) string {
+func (r *Representation) id(value string) string {
    return strings.Replace(value, "$RepresentationID$", r.Id, 1)
 }
 
