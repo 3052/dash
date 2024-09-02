@@ -167,7 +167,7 @@ func (r *Representation) get_content_protection() []ContentProtection {
    return r.adaptation_set.ContentProtection
 }
 
-func (r Representation) get_width() uint64 {
+func (r *Representation) get_width() uint64 {
    if r.Width >= 1 {
       return r.Width
    }
