@@ -4,8 +4,34 @@ import (
    "encoding/xml"
    "fmt"
    "os"
+   "reflect"
    "testing"
 )
+
+func TestSize(t *testing.T) {
+   size := reflect.TypeOf(&struct{}{}).Size()
+   for _, test := range size_tests {
+      if reflect.TypeOf(test).Size() > size {
+         fmt.Printf("*%T\n", test)
+      } else {
+         fmt.Printf("%T\n", test)
+      }
+   }
+}
+
+var size_tests = []any{
+   AdaptationSet{},
+   BaseUrl{},
+   ContentProtection{},
+   Duration{},
+   Mpd{},
+   Period{},
+   Pssh{},
+   Range{},
+   Representation{},
+   SegmentBase{},
+   SegmentTemplate{},
+}
 
 func TestBandwidth(t *testing.T) {
    for _, test := range tests {
