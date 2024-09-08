@@ -260,14 +260,14 @@ type SegmentBase struct {
    IndexRange Range `xml:"indexRange,attr"`
 }
 
-///
-
-func (r Representation) get_height() uint64 {
+func (r *Representation) get_height() uint64 {
    if r.Height >= 1 {
       return r.Height
    }
    return r.adaptation_set.Height
 }
+
+///
 
 func (r Representation) get_codecs() string {
    if r.Codecs != "" {
