@@ -8,6 +8,28 @@ import (
    "testing"
 )
 
+func TestMedia(t *testing.T) {
+   text, err := os.ReadFile("testdata/criterion.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   represents, err := Unmarshal(text, nil)
+   if err != nil {
+      t.Fatal(err)
+   }
+   for _, represent := range represents {
+      fmt.Println(represent.Id)
+      media := represent.Media()
+      if len(media) >= 1 {
+         fmt.Println(media[0])
+      }
+      if len(media) >= 2 {
+         fmt.Println(media[len(media)-1])
+      }
+      fmt.Println()
+   }
+}
+
 func TestSize(t *testing.T) {
    size := reflect.TypeOf(&struct{}{}).Size()
    for _, test := range size_tests {
@@ -83,23 +105,6 @@ func TestExt(t *testing.T) {
          }
       }
       fmt.Println()
-   }
-}
-
-func TestMedia(t *testing.T) {
-   text, err := os.ReadFile("testdata/paramount.mpd")
-   if err != nil {
-      t.Fatal(err)
-   }
-   represents, err := Unmarshal(text, nil)
-   if err != nil {
-      t.Fatal(err)
-   }
-   for _, represent := range represents {
-      media := represent.Media()
-      fmt.Println(represent.Id)
-      fmt.Println(media[0])
-      fmt.Println(media[len(media)-1])
    }
 }
 
