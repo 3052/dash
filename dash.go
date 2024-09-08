@@ -11,6 +11,36 @@ import (
    "time"
 )
 
+type BaseUrl struct {
+   Url *url.URL
+}
+
+func Unmarshal(text []byte, base *url.URL) ([]Representation, error) {
+   var media Mpd
+   err := xml.Unmarshal(text, &media)
+   if err != nil {
+      return nil, err
+   }
+   if base != nil {
+      if media.BaseUrl != nil {
+         base = base.ResolveReference(media.BaseUrl.Url)
+      }
+      media.BaseUrl = &BaseUrl{base}
+   }
+   var reps []Representation
+   for _, per := range media.Period {
+      per.mpd = &media
+      for _, ada := range per.AdaptationSet {
+         ada.period = &per
+         for _, rep := range ada.Representation {
+            rep.adaptation_set = &ada
+            reps = append(reps, rep)
+         }
+      }
+   }
+   return reps, nil
+}
+
 type SegmentTemplate struct {
    StartNumber            uint   `xml:"startNumber,attr"`
    Duration               uint64 `xml:"duration,attr"`
@@ -50,31 +80,6 @@ func (r *Representation) get_width() uint64 {
       return r.Width
    }
    return r.adaptation_set.Width
-}
-
-func Unmarshal(text []byte, base *url.URL) ([]Representation, error) {
-   var media Mpd
-   err := xml.Unmarshal(text, &media)
-   if err != nil {
-      return nil, err
-   }
-   if media.BaseUrl == nil {
-      if base != nil {
-         media.BaseUrl = &BaseUrl{base}
-      }
-   }
-   var reps []Representation
-   for _, per := range media.Period {
-      per.mpd = &media
-      for _, ada := range per.AdaptationSet {
-         ada.period = &per
-         for _, rep := range ada.Representation {
-            rep.adaptation_set = &ada
-            reps = append(reps, rep)
-         }
-      }
-   }
-   return reps, nil
 }
 
 type Representation struct {
@@ -167,10 +172,6 @@ type AdaptationSet struct {
 
 func (a *AdaptationSet) GetPeriod() *Period {
    return a.period
-}
-
-type BaseUrl struct {
-   Url *url.URL
 }
 
 func (b *BaseUrl) UnmarshalText(text []byte) error {
@@ -267,16 +268,14 @@ func (r *Representation) get_height() uint64 {
    return r.adaptation_set.Height
 }
 
-///
-
-func (r Representation) get_codecs() string {
+func (r *Representation) get_codecs() string {
    if r.Codecs != "" {
       return r.Codecs
    }
    return r.adaptation_set.Codecs
 }
 
-func (r Representation) Widevine() (Pssh, bool) {
+func (r *Representation) Widevine() (Pssh, bool) {
    for _, v := range r.get_content_protection() {
       if v.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
          if len(v.Pssh) >= 1 {
@@ -287,7 +286,7 @@ func (r Representation) Widevine() (Pssh, bool) {
    return nil, false
 }
 
-func (r Representation) Initialization() (string, bool) {
+func (r *Representation) Initialization() (string, bool) {
    if v, ok := r.get_segment_template(); ok {
       if v := v.Initialization; v != "" {
          return r.id(v), true
@@ -296,7 +295,7 @@ func (r Representation) Initialization() (string, bool) {
    return "", false
 }
 
-func (r Representation) GetBaseUrl() (*BaseUrl, bool) {
+func (r *Representation) GetBaseUrl() (*BaseUrl, bool) {
    var u *url.URL
    if v := r.adaptation_set.period.mpd.BaseUrl; v != nil {
       u = &url.URL{}
@@ -320,20 +319,20 @@ func (r Representation) GetBaseUrl() (*BaseUrl, bool) {
    return nil, false
 }
 
-func (r Range) MarshalText() ([]byte, error) {
+func (r *Range) MarshalText() ([]byte, error) {
    b := strconv.AppendUint(nil, r.Start, 10)
    b = append(b, '-')
    return strconv.AppendUint(b, r.End, 10), nil
 }
 
-func (s SegmentTemplate) start() uint {
+func (s *SegmentTemplate) start() uint {
    if s.StartNumber >= 1 {
       return s.StartNumber
    }
    return s.PresentationTimeOffset
 }
 
-func (s SegmentTemplate) number(value uint) string {
+func (s *SegmentTemplate) number(value uint) string {
    s.Media = strings.NewReplacer(
       "$Number$", "%d",
       "$Number%02d$", "%02d",
@@ -349,25 +348,25 @@ func (s SegmentTemplate) number(value uint) string {
 }
 
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
-func (s SegmentTemplate) segment_count(seconds float64) uint64 {
+func (s *SegmentTemplate) segment_count(seconds float64) uint64 {
    seconds /= float64(s.Duration) / float64(s.get_timescale())
    return uint64(math.Ceil(seconds))
 }
 
-func (s SegmentTemplate) time(value uint) string {
-   f := strings.Replace(s.Media, "$Time$", "%d", 1)
-   return fmt.Sprintf(f, value)
+func (s *SegmentTemplate) time(value uint) string {
+   format := strings.Replace(s.Media, "$Time$", "%d", 1)
+   return fmt.Sprintf(format, value)
 }
 
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
-func (s SegmentTemplate) get_timescale() uint64 {
+func (s *SegmentTemplate) get_timescale() uint64 {
    if s.Timescale >= 1 {
       return s.Timescale
    }
    return 1
 }
 
-func (r Representation) String() string {
+func (r *Representation) String() string {
    var b []byte
    if v := r.get_width(); v >= 1 {
       b = append(b, "width = "...)
