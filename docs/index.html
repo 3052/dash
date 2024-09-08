@@ -14,7 +14,7 @@
   <body>
     <nav>
         154.pages.dev/dash<span class="navbar-right">
-          v1.24.5 | <a href="">Root</a> | <a href="#pkg-index">Index</a></span>
+          v1.24.8 | <a href="">Root</a> | <a href="#pkg-index">Index</a></span>
       </nav>
     <main><h2 id="pkg-overview">package dash</h2>
 <pre class="chroma"><span class="kn">import</span> <span class="s">&#34;154.pages.dev/dash&#34;</span></pre>
@@ -23,7 +23,7 @@
   <li>
       <a href="#AdaptationSet">type AdaptationSet</a>
       <ul>
-          <li><a href="#AdaptationSet.GetPeriod">func (a AdaptationSet) GetPeriod() *Period</a></li>
+          <li><a href="#AdaptationSet.GetPeriod">func (a *AdaptationSet) GetPeriod() *Period</a></li>
           </ul>
       </li>
   <li>
@@ -56,7 +56,7 @@
   <li>
       <a href="#Range">type Range</a>
       <ul>
-          <li><a href="#Range.MarshalText">func (r Range) MarshalText() ([]byte, error)</a></li>
+          <li><a href="#Range.MarshalText">func (r *Range) MarshalText() ([]byte, error)</a></li>
           <li><a href="#Range.UnmarshalText">func (r *Range) UnmarshalText(text []byte) error</a></li>
           </ul>
       </li>
@@ -64,13 +64,13 @@
       <a href="#Representation">type Representation</a>
       <ul>
           <li><a href="#Unmarshal">func Unmarshal(text []byte, base *url.URL) ([]Representation, error)</a></li>
-          <li><a href="#Representation.Ext">func (r Representation) Ext() (string, bool)</a></li>
-          <li><a href="#Representation.GetAdaptationSet">func (r Representation) GetAdaptationSet() *AdaptationSet</a></li>
-          <li><a href="#Representation.GetBaseUrl">func (r Representation) GetBaseUrl() (*BaseUrl, bool)</a></li>
-          <li><a href="#Representation.Initialization">func (r Representation) Initialization() (string, bool)</a></li>
-          <li><a href="#Representation.Media">func (r Representation) Media() []string</a></li>
-          <li><a href="#Representation.String">func (r Representation) String() string</a></li>
-          <li><a href="#Representation.Widevine">func (r Representation) Widevine() (Pssh, bool)</a></li>
+          <li><a href="#Representation.Ext">func (r *Representation) Ext() (string, bool)</a></li>
+          <li><a href="#Representation.GetAdaptationSet">func (r *Representation) GetAdaptationSet() *AdaptationSet</a></li>
+          <li><a href="#Representation.GetBaseUrl">func (r *Representation) GetBaseUrl() (*BaseUrl, bool)</a></li>
+          <li><a href="#Representation.Initialization">func (r *Representation) Initialization() (string, bool)</a></li>
+          <li><a href="#Representation.Media">func (r *Representation) Media() []string</a></li>
+          <li><a href="#Representation.String">func (r *Representation) String() string</a></li>
+          <li><a href="#Representation.Widevine">func (r *Representation) Widevine() (Pssh, bool)</a></li>
           </ul>
       </li>
   <li>
@@ -97,8 +97,8 @@
 	<span id="AdaptationSet.Width"><span class="nx">Width</span></span>           <a href="https://pkg.go.dev/builtin#uint64"><span class="kt">uint64</span></a> <span class="s">`xml:&#34;width,attr&#34;`</span>
 	<span class="c1">// contains filtered or unexported fields
 </span><span class="c1"></span><span class="p">}</span></pre>
-    <h4 id="AdaptationSet.GetPeriod">func (AdaptationSet) GetPeriod</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">a</span> <a href="#AdaptationSet"><span class="nx">AdaptationSet</span></a><span class="p">)</span> <span class="nf">GetPeriod</span><span class="p">()</span> <span class="o">*</span><a href="#Period"><span class="nx">Period</span></a></pre>
+    <h4 id="AdaptationSet.GetPeriod">func (*AdaptationSet) GetPeriod</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">a</span> <span class="o">*</span><a href="#AdaptationSet"><span class="nx">AdaptationSet</span></a><span class="p">)</span> <span class="nf">GetPeriod</span><span class="p">()</span> <span class="o">*</span><a href="#Period"><span class="nx">Period</span></a></pre>
   <h3 id="BaseUrl">type BaseUrl</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">BaseUrl</span> <span class="kd">struct</span> <span class="p">{</span>
 	<span id="BaseUrl.Url"><span class="nx">Url</span></span> <span class="o">*</span><a href="https://pkg.go.dev/net/url"><span class="nx">url</span></a><span class="p">.</span><a href="https://pkg.go.dev/net/url#URL"><span class="nx">URL</span></a>
@@ -142,8 +142,8 @@
     <p>SegmentIndexBox uses:
 unsigned int(32) subsegment_duration;
 but range values can exceed 32 bits
-<h4 id="Range.MarshalText">func (Range) MarshalText</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Range"><span class="nx">Range</span></a><span class="p">)</span> <span class="nf">MarshalText</span><span class="p">()</span> <span class="p">([]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+<h4 id="Range.MarshalText">func (*Range) MarshalText</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><a href="#Range"><span class="nx">Range</span></a><span class="p">)</span> <span class="nf">MarshalText</span><span class="p">()</span> <span class="p">([]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
   <h4 id="Range.UnmarshalText">func (*Range) UnmarshalText</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><a href="#Range"><span class="nx">Range</span></a><span class="p">)</span> <span class="nf">UnmarshalText</span><span class="p">(</span><span class="nx">text</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
   <h3 id="Representation">type Representation</h3>
@@ -162,20 +162,20 @@ but range values can exceed 32 bits
 </span><span class="c1"></span><span class="p">}</span></pre>
     <h4 id="Unmarshal">func Unmarshal</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="nf">Unmarshal</span><span class="p">(</span><span class="nx">text</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">,</span> <span class="nx">base</span> <span class="o">*</span><a href="https://pkg.go.dev/net/url"><span class="nx">url</span></a><span class="p">.</span><a href="https://pkg.go.dev/net/url#URL"><span class="nx">URL</span></a><span class="p">)</span> <span class="p">([]</span><a href="#Representation"><span class="nx">Representation</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
-  <h4 id="Representation.Ext">func (Representation) Ext</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Ext</span><span class="p">()</span> <span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
-  <h4 id="Representation.GetAdaptationSet">func (Representation) GetAdaptationSet</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">GetAdaptationSet</span><span class="p">()</span> <span class="o">*</span><a href="#AdaptationSet"><span class="nx">AdaptationSet</span></a></pre>
-  <h4 id="Representation.GetBaseUrl">func (Representation) GetBaseUrl</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">GetBaseUrl</span><span class="p">()</span> <span class="p">(</span><span class="o">*</span><a href="#BaseUrl"><span class="nx">BaseUrl</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
-  <h4 id="Representation.Initialization">func (Representation) Initialization</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Initialization</span><span class="p">()</span> <span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
-  <h4 id="Representation.Media">func (Representation) Media</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Media</span><span class="p">()</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
-  <h4 id="Representation.String">func (Representation) String</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">String</span><span class="p">()</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
-  <h4 id="Representation.Widevine">func (Representation) Widevine</h4>
-  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Widevine</span><span class="p">()</span> <span class="p">(</span><a href="#Pssh"><span class="nx">Pssh</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
+  <h4 id="Representation.Ext">func (*Representation) Ext</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Ext</span><span class="p">()</span> <span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
+  <h4 id="Representation.GetAdaptationSet">func (*Representation) GetAdaptationSet</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">GetAdaptationSet</span><span class="p">()</span> <span class="o">*</span><a href="#AdaptationSet"><span class="nx">AdaptationSet</span></a></pre>
+  <h4 id="Representation.GetBaseUrl">func (*Representation) GetBaseUrl</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">GetBaseUrl</span><span class="p">()</span> <span class="p">(</span><span class="o">*</span><a href="#BaseUrl"><span class="nx">BaseUrl</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
+  <h4 id="Representation.Initialization">func (*Representation) Initialization</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Initialization</span><span class="p">()</span> <span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
+  <h4 id="Representation.Media">func (*Representation) Media</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Media</span><span class="p">()</span> <span class="p">[]</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+  <h4 id="Representation.String">func (*Representation) String</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">String</span><span class="p">()</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+  <h4 id="Representation.Widevine">func (*Representation) Widevine</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Widevine</span><span class="p">()</span> <span class="p">(</span><a href="#Pssh"><span class="nx">Pssh</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
   <h3 id="SegmentBase">type SegmentBase</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">SegmentBase</span> <span class="kd">struct</span> <span class="p">{</span>
 	<span id="SegmentBase.Initialization"><span class="nx">Initialization</span></span> <span class="kd">struct</span> <span class="p">{</span>
@@ -185,18 +185,18 @@ but range values can exceed 32 bits
 <span class="p">}</span></pre>
     <h3 id="SegmentTemplate">type SegmentTemplate</h3>
     <pre class="chroma"><span class="kd">type</span> <span class="nx">SegmentTemplate</span> <span class="kd">struct</span> <span class="p">{</span>
-	<span id="SegmentTemplate.StartNumber"><span class="nx">StartNumber</span></span>            <a href="https://pkg.go.dev/builtin#uint"><span class="kt">uint</span></a>   <span class="s">`xml:&#34;startNumber,attr&#34;`</span>
 	<span id="SegmentTemplate.Duration"><span class="nx">Duration</span></span>               <a href="https://pkg.go.dev/builtin#uint64"><span class="kt">uint64</span></a> <span class="s">`xml:&#34;duration,attr&#34;`</span>
 	<span id="SegmentTemplate.Initialization"><span class="nx">Initialization</span></span>         <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;initialization,attr&#34;`</span>
 	<span id="SegmentTemplate.Media"><span class="nx">Media</span></span>                  <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a> <span class="s">`xml:&#34;media,attr&#34;`</span>
 	<span id="SegmentTemplate.PresentationTimeOffset"><span class="nx">PresentationTimeOffset</span></span> <a href="https://pkg.go.dev/builtin#uint"><span class="kt">uint</span></a>   <span class="s">`xml:&#34;presentationTimeOffset,attr&#34;`</span>
-	<span id="SegmentTemplate.Timescale"><span class="nx">Timescale</span></span>              <a href="https://pkg.go.dev/builtin#uint64"><span class="kt">uint64</span></a> <span class="s">`xml:&#34;timescale,attr&#34;`</span>
 	<span id="SegmentTemplate.SegmentTimeline"><span class="nx">SegmentTimeline</span></span>        <span class="o">*</span><span class="kd">struct</span> <span class="p">{</span>
 		<span id="SegmentTemplate.S"><span class="nx">S</span></span> <span class="p">[]</span><span class="kd">struct</span> <span class="p">{</span>
 			<span id="SegmentTemplate.D"><span class="nx">D</span></span> <a href="https://pkg.go.dev/builtin#uint"><span class="kt">uint</span></a> <span class="s">`xml:&#34;d,attr&#34;`</span> <span class="c1">// duration
 </span><span class="c1"></span>			<span id="SegmentTemplate.R"><span class="nx">R</span></span> <a href="https://pkg.go.dev/builtin#uint"><span class="kt">uint</span></a> <span class="s">`xml:&#34;r,attr&#34;`</span> <span class="c1">// repeat
 </span><span class="c1"></span>		<span class="p">}</span>
 	<span class="p">}</span>
+	<span id="SegmentTemplate.Timescale"><span class="nx">Timescale</span></span>   <a href="https://pkg.go.dev/builtin#uint64"><span class="kt">uint64</span></a> <span class="s">`xml:&#34;timescale,attr&#34;`</span>
+	<span id="SegmentTemplate.StartNumber"><span class="nx">StartNumber</span></span> <span class="o">*</span><a href="https://pkg.go.dev/builtin#uint"><span class="kt">uint</span></a>  <span class="s">`xml:&#34;startNumber,attr&#34;`</span>
 <span class="p">}</span></pre>
     </main>
     <hr>

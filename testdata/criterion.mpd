@@ -1,571 +1,85 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:cenc="urn:mpeg:cenc:2013" xmlns:mas="urn:marlin:mas:1-0:services:schemas:mpd" xmlns:mspr="usn:microsoft:playready" profiles="urn:mpeg:dash:profile:isoff-live:2011" type="static" mediaPresentationDuration="PT1H51M39.192S" minBufferTime="PT7.550S" maxSegmentDuration="PT7.550S">
-    <Period duration="PT1H51M39.192S">
-        <AdaptationSet startWithSAP="1" subsegmentStartsWithSAP="1" segmentAlignment="true" subsegmentAlignment="true" contentType="audio" mimeType="audio/mp4">
+<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:cenc="urn:mpeg:cenc:2013" xmlns:mspr="urn:microsoft:playready" profiles="urn:mpeg:dash:profile:isoff-live:2011" type="static" mediaPresentationDuration="PT1H51M39.193S" minBufferTime="PT6.000S">
+    <BaseURL>../../../../../../../../../</BaseURL>
+    <Period start="PT0.000S" duration="PT1H51M39.193S">
+        <AdaptationSet lang="en" mimeType="text/vtt">
+            <ContentComponent contentType="text"></ContentComponent>
+            <Accessibility schemeIdUri="urn:mpeg:dash:role:2011" value="caption"></Accessibility>
+            <Representation id="subs-7433271" bandwidth="256">
+                <BaseURL>texttrack/sub/7433271.vtt?pathsig=8c953e4f~UO056QMhmjVj394TCzXUSJJ4GI4BcpMoXktkwXsYSjw</BaseURL>
+            </Representation>
+        </AdaptationSet>
+        <AdaptationSet bitstreamSwitching="true">
+            <ContentComponent contentType="video"></ContentComponent>
             <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="e4576465-a745-213f-336c-1ef1bf5d513e"></ContentProtection>
             <ContentProtection schemeIdUri="urn:uuid:9a04f079-9840-4286-ab92-e65be0885f95" value="MSPR 2.0">
                 <cenc:pssh>AAACJnBzc2gAAAAAmgTweZhAQoarkuZb4IhflQAAAgYGAgAAAQABAPwBPABXAFIATQBIAEUAQQBEAEUAUgAgAHgAbQBsAG4AcwA9ACIAaAB0AHQAcAA6AC8ALwBzAGMAaABlAG0AYQBzAC4AbQBpAGMAcgBvAHMAbwBmAHQALgBjAG8AbQAvAEQAUgBNAC8AMgAwADAANwAvADAAMwAvAFAAbABhAHkAUgBlAGEAZAB5AEgAZQBhAGQAZQByACIAIAB2AGUAcgBzAGkAbwBuAD0AIgA0AC4AMAAuADAALgAwACIAPgA8AEQAQQBUAEEAPgA8AFAAUgBPAFQARQBDAFQASQBOAEYATwA+ADwASwBFAFkATABFAE4APgAxADYAPAAvAEsARQBZAEwARQBOAD4APABBAEwARwBJAEQAPgBBAEUAUwBDAFQAUgA8AC8AQQBMAEcASQBEAD4APAAvAFAAUgBPAFQARQBDAFQASQBOAEYATwA+ADwASwBJAEQAPgBaAFcAUgBYADUARQBXAG4AUAB5AEUAegBiAEIANwB4AHYAMQAxAFIAUABnAD0APQA8AC8ASwBJAEQAPgA8AEMASABFAEMASwBTAFUATQA+AHEAUABHAHgALwBjAGYAdAB2ADMARQA9ADwALwBDAEgARQBDAEsAUwBVAE0APgA8AC8ARABBAFQAQQA+ADwALwBXAFIATQBIAEUAQQBEAEUAUgA+AA==</cenc:pssh>
                 <mspr:pro>BgIAAAEAAQD8ATwAVwBSAE0ASABFAEEARABFAFIAIAB4AG0AbABuAHMAPQAiAGgAdAB0AHAAOgAvAC8AcwBjAGgAZQBtAGEAcwAuAG0AaQBjAHIAbwBzAG8AZgB0AC4AYwBvAG0ALwBEAFIATQAvADIAMAAwADcALwAwADMALwBQAGwAYQB5AFIAZQBhAGQAeQBIAGUAYQBkAGUAcgAiACAAdgBlAHIAcwBpAG8AbgA9ACIANAAuADAALgAwAC4AMAAiAD4APABEAEEAVABBAD4APABQAFIATwBUAEUAQwBUAEkATgBGAE8APgA8AEsARQBZAEwARQBOAD4AMQA2ADwALwBLAEUAWQBMAEUATgA+ADwAQQBMAEcASQBEAD4AQQBFAFMAQwBUAFIAPAAvAEEATABHAEkARAA+ADwALwBQAFIATwBUAEUAQwBUAEkATgBGAE8APgA8AEsASQBEAD4AWgBXAFIAWAA1AEUAVwBuAFAAeQBFAHoAYgBCADcAeAB2ADEAMQBSAFAAZwA9AD0APAAvAEsASQBEAD4APABDAEgARQBDAEsAUwBVAE0APgBxAFAARwB4AC8AYwBmAHQAdgAzAEUAPQA8AC8AQwBIAEUAQwBLAFMAVQBNAD4APAAvAEQAQQBUAEEAPgA8AC8AVwBSAE0ASABFAEEARABFAFIAPgA=</mspr:pro>
             </ContentProtection>
-            <ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed">
+            <ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" value="Widevine">
                 <cenc:pssh>AAAANHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABQIARIQ5FdkZadFIT8zbB7xv11RPg==</cenc:pssh>
             </ContentProtection>
-            <ContentProtection schemeIdUri="urn:uuid:5E629AF5-38DA-4063-8977-97FFBD9902D4">
-                <mas:MarlinContentIds>
-                    <mas:MarlinContentId>urn:marlin:kid:e4576465a745213f336c1ef1bf5d513e</mas:MarlinContentId>
-                </mas:MarlinContentIds>
-            </ContentProtection>
-            <Representation id="1273684307-t2" bandwidth="137956" codecs="mp4a.40.2" audioSamplingRate="48000">
-                <SegmentTemplate startNumber="1" media="1273684307-$Number$-t2.m4s?assetId=325579370" initialization="1273684307-0-t2.m4s?assetId=325579370" timescale="24000">
+            <Representation id="video-916e7eef-13ce-4a46-9bda-b2627ec04b4f" codecs="avc1.64081E" mimeType="video/mp4" width="598" height="360" frameRate="24000/1001" startWithSAP="1" bandwidth="560000">
+                <SegmentTemplate timescale="48000" media="drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/916e7eef-13ce-4a46-9bda-b2627ec04b4f/segment.mp4?pathsig=8c953e4f~ta8gBIdEHUUP_p39sTXzQwDgjmCoZMymCeDBI6DL2H4&amp;r=dXMtY2VudHJhbDE%3D&amp;sid=$Number$&amp;st=video" initialization="drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/916e7eef-13ce-4a46-9bda-b2627ec04b4f/segment.mp4?pathsig=8c953e4f~ta8gBIdEHUUP_p39sTXzQwDgjmCoZMymCeDBI6DL2H4&amp;r=dXMtY2VudHJhbDE%3D&amp;sid=0&amp;st=video">
                     <SegmentTimeline>
-                        <S d="144144" r="52"></S>
-                        <S d="120120"></S>
-                        <S d="168168"></S>
-                        <S d="144144" r="1"></S>
-                        <S d="136136"></S>
-                        <S d="147147"></S>
-                        <S d="149149"></S>
-                        <S d="144144" r="33"></S>
-                        <S d="136136"></S>
+                        <S t="0" d="288288" r="1113"></S>
+                        <S t="321152832" d="214214"></S>
+                        <S t="321367046" d="194194"></S>
                     </SegmentTimeline>
                 </SegmentTemplate>
             </Representation>
-            <Representation id="1273684308-t2" bandwidth="138023" codecs="mp4a.40.2" audioSamplingRate="48000">
-                <SegmentTemplate startNumber="1" media="1273684308-$Number$-t2.m4s?assetId=325579370" initialization="1273684308-0-t2.m4s?assetId=325579370" timescale="24000">
+            <Representation id="video-e7ec68aa-82de-46a0-9769-3c4fd83cfda4" codecs="avc1.64081F" mimeType="video/mp4" width="896" height="540" frameRate="24000/1001" startWithSAP="1" bandwidth="1656000">
+                <SegmentTemplate timescale="48000" media="drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/e7ec68aa-82de-46a0-9769-3c4fd83cfda4/segment.mp4?pathsig=8c953e4f~940pAJWpkApBzSAuszpBn7zE-2DjOC4J7vY3ZGA_Dlo&amp;r=dXMtd2VzdDE%3D&amp;sid=$Number$&amp;st=video" initialization="drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/e7ec68aa-82de-46a0-9769-3c4fd83cfda4/segment.mp4?pathsig=8c953e4f~940pAJWpkApBzSAuszpBn7zE-2DjOC4J7vY3ZGA_Dlo&amp;r=dXMtd2VzdDE%3D&amp;sid=0&amp;st=video">
                     <SegmentTimeline>
-                        <S d="144144" r="52"></S>
-                        <S d="120120"></S>
-                        <S d="168168"></S>
-                        <S d="144144" r="1"></S>
-                        <S d="136136"></S>
-                        <S d="147147"></S>
-                        <S d="149149"></S>
-                        <S d="144144" r="33"></S>
-                        <S d="136136"></S>
-                        <S d="152152"></S>
-                        <S d="144144" r="28"></S>
-                        <S d="132132"></S>
-                        <S d="156156"></S>
-                        <S d="144144" r="66"></S>
-                        <S d="143143"></S>
-                        <S d="145145"></S>
-                        <S d="144144" r="45"></S>
-                        <S d="126126"></S>
-                        <S d="162162"></S>
-                        <S d="144144" r="33"></S>
-                        <S d="121121"></S>
-                        <S d="167167"></S>
-                        <S d="144144" r="3"></S>
-                        <S d="128128"></S>
-                        <S d="160160"></S>
-                        <S d="144144" r="1"></S>
-                        <S d="135135"></S>
-                        <S d="153153"></S>
-                        <S d="144144"></S>
-                        <S d="123123"></S>
-                        <S d="165165"></S>
-                        <S d="144144" r="21"></S>
-                        <S d="142142"></S>
-                        <S d="146146"></S>
-                        <S d="144144" r="12"></S>
-                        <S d="120120"></S>
-                        <S d="168168"></S>
-                        <S d="144144" r="22"></S>
-                        <S d="121121"></S>
-                        <S d="167167"></S>
-                        <S d="144144" r="1"></S>
-                        <S d="124124"></S>
-                        <S d="164164"></S>
-                        <S d="144144" r="12"></S>
-                        <S d="139139"></S>
-                        <S d="149149"></S>
-                        <S d="144144" r="14"></S>
-                        <S d="129129"></S>
-                        <S d="159159"></S>
-                        <S d="144144" r="23"></S>
-                        <S d="131131"></S>
-                        <S d="157157"></S>
-                        <S d="144144" r="45"></S>
-                        <S d="129129"></S>
-                        <S d="122122"></S>
-                        <S d="181181"></S>
-                        <S d="144144" r="12"></S>
-                        <S d="127127"></S>
-                        <S d="161161"></S>
-                        <S d="144144" r="36"></S>
-                        <S d="124124"></S>
-                        <S d="164164"></S>
-                        <S d="144144" r="6"></S>
-                        <S d="134134"></S>
-                        <S d="154154"></S>
-                        <S d="144144" r="37"></S>
-                        <S d="127127"></S>
-                        <S d="161161"></S>
-                        <S d="144144" r="39"></S>
-                        <S d="126126"></S>
-                        <S d="162162"></S>
-                        <S d="144144" r="3"></S>
-                        <S d="127127"></S>
-                        <S d="161161"></S>
-                        <S d="123123"></S>
-                        <S d="165165"></S>
-                        <S d="144144" r="23"></S>
-                        <S d="138138"></S>
-                        <S d="150150"></S>
-                        <S d="144144" r="34"></S>
-                        <S d="129129"></S>
-                        <S d="159159"></S>
-                        <S d="144144" r="56"></S>
-                        <S d="137137"></S>
-                        <S d="151151"></S>
-                        <S d="144144" r="34"></S>
-                        <S d="140140"></S>
-                        <S d="148148"></S>
-                        <S d="144144" r="12"></S>
-                        <S d="126126"></S>
-                        <S d="162162"></S>
-                        <S d="144144" r="1"></S>
-                        <S d="137137"></S>
-                        <S d="151151"></S>
-                        <S d="144144" r="24"></S>
-                        <S d="127127"></S>
-                        <S d="161161"></S>
-                        <S d="144144" r="18"></S>
-                        <S d="122122"></S>
-                        <S d="166166"></S>
-                        <S d="144144" r="2"></S>
-                        <S d="123123"></S>
-                        <S d="165165"></S>
-                        <S d="144144" r="35"></S>
-                        <S d="143143"></S>
-                        <S d="145145"></S>
-                        <S d="144144" r="74"></S>
-                        <S d="143143"></S>
-                        <S d="145145"></S>
-                        <S d="144144" r="9"></S>
-                        <S d="130130"></S>
-                        <S d="158158"></S>
-                        <S d="144144" r="1"></S>
-                        <S d="123123"></S>
-                        <S d="165165"></S>
-                        <S d="144144" r="67"></S>
-                        <S d="127127"></S>
-                        <S d="161161"></S>
-                        <S d="144144" r="61"></S>
-                        <S d="60060"></S>
+                        <S t="0" d="288288" r="1113"></S>
+                        <S t="321152832" d="214214"></S>
+                        <S t="321367046" d="194194"></S>
+                    </SegmentTimeline>
+                </SegmentTemplate>
+            </Representation>
+            <Representation id="video-fb86c8c1-bf2b-401e-b3f4-d21d784026cb" codecs="avc1.640820" mimeType="video/mp4" width="1196" height="720" frameRate="24000/1001" startWithSAP="1" bandwidth="2877000">
+                <SegmentTemplate timescale="48000" media="drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/fb86c8c1-bf2b-401e-b3f4-d21d784026cb/segment.mp4?pathsig=8c953e4f~OFKWrG1fYs6DNeRdh-Sd9sty_V3sbpEhg_0b6v88ztQ&amp;r=dXM%3D&amp;sid=$Number$&amp;st=video" initialization="drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/fb86c8c1-bf2b-401e-b3f4-d21d784026cb/segment.mp4?pathsig=8c953e4f~OFKWrG1fYs6DNeRdh-Sd9sty_V3sbpEhg_0b6v88ztQ&amp;r=dXM%3D&amp;sid=0&amp;st=video">
+                    <SegmentTimeline>
+                        <S t="0" d="288288" r="1114"></S>
+                        <S t="321441120" d="120120"></S>
+                    </SegmentTimeline>
+                </SegmentTemplate>
+            </Representation>
+            <Representation id="video-888d2bc7-75b5-4264-bf57-08e3dc24ecbb" codecs="avc1.640828" mimeType="video/mp4" width="1792" height="1080" frameRate="24000/1001" startWithSAP="1" bandwidth="5796000">
+                <SegmentTemplate timescale="48000" media="drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/888d2bc7-75b5-4264-bf57-08e3dc24ecbb/segment.mp4?pathsig=8c953e4f~vEyD7FR7NMtgBhRbRGol6tYRL0pVp7AQxjE5pUlKliI&amp;r=dXM%3D&amp;sid=$Number$&amp;st=video" initialization="drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/888d2bc7-75b5-4264-bf57-08e3dc24ecbb/segment.mp4?pathsig=8c953e4f~vEyD7FR7NMtgBhRbRGol6tYRL0pVp7AQxjE5pUlKliI&amp;r=dXM%3D&amp;sid=0&amp;st=video">
+                    <SegmentTimeline>
+                        <S t="0" d="288288" r="1114"></S>
+                        <S t="321441120" d="120120"></S>
                     </SegmentTimeline>
                 </SegmentTemplate>
             </Representation>
         </AdaptationSet>
-        <AdaptationSet startWithSAP="1" subsegmentStartsWithSAP="1" segmentAlignment="true" subsegmentAlignment="true" contentType="video" mimeType="video/mp4">
+        <AdaptationSet>
+            <ContentComponent contentType="audio"></ContentComponent>
+            <Roles schemeIdUri="urn:mpeg:dash:role:2011" value="main"></Roles>
             <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="e4576465-a745-213f-336c-1ef1bf5d513e"></ContentProtection>
             <ContentProtection schemeIdUri="urn:uuid:9a04f079-9840-4286-ab92-e65be0885f95" value="MSPR 2.0">
                 <cenc:pssh>AAACJnBzc2gAAAAAmgTweZhAQoarkuZb4IhflQAAAgYGAgAAAQABAPwBPABXAFIATQBIAEUAQQBEAEUAUgAgAHgAbQBsAG4AcwA9ACIAaAB0AHQAcAA6AC8ALwBzAGMAaABlAG0AYQBzAC4AbQBpAGMAcgBvAHMAbwBmAHQALgBjAG8AbQAvAEQAUgBNAC8AMgAwADAANwAvADAAMwAvAFAAbABhAHkAUgBlAGEAZAB5AEgAZQBhAGQAZQByACIAIAB2AGUAcgBzAGkAbwBuAD0AIgA0AC4AMAAuADAALgAwACIAPgA8AEQAQQBUAEEAPgA8AFAAUgBPAFQARQBDAFQASQBOAEYATwA+ADwASwBFAFkATABFAE4APgAxADYAPAAvAEsARQBZAEwARQBOAD4APABBAEwARwBJAEQAPgBBAEUAUwBDAFQAUgA8AC8AQQBMAEcASQBEAD4APAAvAFAAUgBPAFQARQBDAFQASQBOAEYATwA+ADwASwBJAEQAPgBaAFcAUgBYADUARQBXAG4AUAB5AEUAegBiAEIANwB4AHYAMQAxAFIAUABnAD0APQA8AC8ASwBJAEQAPgA8AEMASABFAEMASwBTAFUATQA+AHEAUABHAHgALwBjAGYAdAB2ADMARQA9ADwALwBDAEgARQBDAEsAUwBVAE0APgA8AC8ARABBAFQAQQA+ADwALwBXAFIATQBIAEUAQQBEAEUAUgA+AA==</cenc:pssh>
                 <mspr:pro>BgIAAAEAAQD8ATwAVwBSAE0ASABFAEEARABFAFIAIAB4AG0AbABuAHMAPQAiAGgAdAB0AHAAOgAvAC8AcwBjAGgAZQBtAGEAcwAuAG0AaQBjAHIAbwBzAG8AZgB0AC4AYwBvAG0ALwBEAFIATQAvADIAMAAwADcALwAwADMALwBQAGwAYQB5AFIAZQBhAGQAeQBIAGUAYQBkAGUAcgAiACAAdgBlAHIAcwBpAG8AbgA9ACIANAAuADAALgAwAC4AMAAiAD4APABEAEEAVABBAD4APABQAFIATwBUAEUAQwBUAEkATgBGAE8APgA8AEsARQBZAEwARQBOAD4AMQA2ADwALwBLAEUAWQBMAEUATgA+ADwAQQBMAEcASQBEAD4AQQBFAFMAQwBUAFIAPAAvAEEATABHAEkARAA+ADwALwBQAFIATwBUAEUAQwBUAEkATgBGAE8APgA8AEsASQBEAD4AWgBXAFIAWAA1AEUAVwBuAFAAeQBFAHoAYgBCADcAeAB2ADEAMQBSAFAAZwA9AD0APAAvAEsASQBEAD4APABDAEgARQBDAEsAUwBVAE0APgBxAFAARwB4AC8AYwBmAHQAdgAzAEUAPQA8AC8AQwBIAEUAQwBLAFMAVQBNAD4APAAvAEQAQQBUAEEAPgA8AC8AVwBSAE0ASABFAEEARABFAFIAPgA=</mspr:pro>
             </ContentProtection>
-            <ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed">
+            <ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" value="Widevine">
                 <cenc:pssh>AAAANHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABQIARIQ5FdkZadFIT8zbB7xv11RPg==</cenc:pssh>
             </ContentProtection>
-            <ContentProtection schemeIdUri="urn:uuid:5E629AF5-38DA-4063-8977-97FFBD9902D4">
-                <mas:MarlinContentIds>
-                    <mas:MarlinContentId>urn:marlin:kid:e4576465a745213f336c1ef1bf5d513e</mas:MarlinContentId>
-                </mas:MarlinContentIds>
-            </ContentProtection>
-            <Representation id="1273684307-t1" bandwidth="564809" codecs="avc1.64081e" height="360" width="598" frameRate="23976/1000">
-                <SegmentTemplate startNumber="1" media="1273684307-$Number$-t1.m4s?assetId=325579370" initialization="1273684307-0-t1.m4s?assetId=325579370" timescale="24000">
+            <Representation id="audio-916e7eef-13ce-4a46-9bda-b2627ec04b4f" codecs="mp4a.40.2" mimeType="audio/mp4" startWithSAP="1" bandwidth="139000" audioSamplingRate="48000">
+                <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
+                <SegmentTemplate timescale="48000" media="drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/916e7eef-13ce-4a46-9bda-b2627ec04b4f/segment.mp4?pathsig=8c953e4f~ta8gBIdEHUUP_p39sTXzQwDgjmCoZMymCeDBI6DL2H4&amp;r=dXMtY2VudHJhbDE%3D&amp;sid=$Number$&amp;st=audio" initialization="drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/916e7eef-13ce-4a46-9bda-b2627ec04b4f/segment.mp4?pathsig=8c953e4f~ta8gBIdEHUUP_p39sTXzQwDgjmCoZMymCeDBI6DL2H4&amp;r=dXMtY2VudHJhbDE%3D&amp;sid=0&amp;st=audio">
                     <SegmentTimeline>
-                        <S d="144144" r="52"></S>
-                        <S d="120120"></S>
-                        <S d="168168"></S>
-                        <S d="144144" r="1"></S>
-                        <S d="136136"></S>
-                        <S d="147147"></S>
-                        <S d="149149"></S>
-                        <S d="144144" r="33"></S>
-                        <S d="136136"></S>
-                        <S d="152152"></S>
-                        <S d="144144" r="7"></S>
-                        <S d="140140"></S>
-                        <S d="148148"></S>
-                        <S d="144144" r="18"></S>
-                        <S d="132132"></S>
-                        <S d="156156"></S>
-                        <S d="144144" r="66"></S>
-                        <S d="143143"></S>
-                        <S d="145145"></S>
-                        <S d="144144" r="45"></S>
-                        <S d="126126"></S>
-                        <S d="162162"></S>
-                        <S d="144144" r="33"></S>
-                        <S d="121121"></S>
-                        <S d="167167"></S>
-                        <S d="144144" r="3"></S>
-                        <S d="128128"></S>
-                        <S d="160160"></S>
-                        <S d="144144" r="1"></S>
-                        <S d="135135"></S>
-                        <S d="153153"></S>
-                        <S d="144144"></S>
-                        <S d="123123"></S>
-                        <S d="165165"></S>
-                        <S d="144144" r="21"></S>
-                        <S d="142142"></S>
-                        <S d="146146"></S>
-                        <S d="144144" r="12"></S>
-                        <S d="120120"></S>
-                        <S d="168168"></S>
-                        <S d="144144" r="22"></S>
-                        <S d="121121"></S>
-                        <S d="167167"></S>
-                        <S d="144144" r="1"></S>
-                        <S d="124124"></S>
-                        <S d="164164"></S>
-                        <S d="144144" r="12"></S>
-                        <S d="139139"></S>
-                        <S d="149149"></S>
-                        <S d="144144" r="14"></S>
-                        <S d="129129"></S>
-                        <S d="159159"></S>
-                        <S d="144144" r="23"></S>
-                        <S d="131131"></S>
-                        <S d="157157"></S>
-                        <S d="144144" r="45"></S>
-                        <S d="129129"></S>
-                        <S d="122122"></S>
-                        <S d="181181"></S>
-                        <S d="144144" r="12"></S>
-                        <S d="127127"></S>
-                        <S d="161161"></S>
-                        <S d="144144" r="36"></S>
-                        <S d="124124"></S>
-                        <S d="164164"></S>
-                        <S d="144144" r="6"></S>
-                        <S d="134134"></S>
-                        <S d="154154"></S>
-                        <S d="144144" r="37"></S>
-                        <S d="127127"></S>
-                        <S d="161161"></S>
-                        <S d="144144" r="39"></S>
-                        <S d="126126"></S>
-                        <S d="162162"></S>
-                        <S d="144144" r="3"></S>
-                        <S d="127127"></S>
-                        <S d="161161"></S>
-                        <S d="123123"></S>
-                        <S d="165165"></S>
-                        <S d="144144" r="23"></S>
-                        <S d="138138"></S>
-                        <S d="150150"></S>
-                        <S d="144144" r="34"></S>
-                        <S d="129129"></S>
-                        <S d="159159"></S>
-                        <S d="144144" r="56"></S>
-                        <S d="137137"></S>
-                        <S d="151151"></S>
-                        <S d="144144" r="34"></S>
-                        <S d="140140"></S>
-                        <S d="148148"></S>
-                        <S d="144144" r="12"></S>
-                        <S d="126126"></S>
-                        <S d="162162"></S>
-                        <S d="144144" r="1"></S>
-                        <S d="137137"></S>
-                        <S d="151151"></S>
-                        <S d="144144" r="24"></S>
-                        <S d="127127"></S>
-                        <S d="161161"></S>
-                        <S d="144144" r="18"></S>
-                        <S d="122122"></S>
-                        <S d="166166"></S>
-                        <S d="144144" r="2"></S>
-                        <S d="123123"></S>
-                        <S d="165165"></S>
-                        <S d="144144" r="35"></S>
-                        <S d="143143"></S>
-                        <S d="145145"></S>
-                        <S d="144144" r="74"></S>
-                        <S d="143143"></S>
-                        <S d="145145"></S>
-                        <S d="144144" r="9"></S>
-                        <S d="130130"></S>
-                        <S d="158158"></S>
-                        <S d="144144" r="1"></S>
-                        <S d="123123"></S>
-                        <S d="165165"></S>
-                        <S d="144144" r="67"></S>
-                        <S d="127127"></S>
-                        <S d="161161"></S>
-                        <S d="144144" r="46"></S>
-                        <S d="132132"></S>
-                        <S d="156156"></S>
-                        <S d="144144" r="12"></S>
-                        <S d="60060"></S>
+                        <S t="0" d="288768"></S>
+                        <S t="288768" d="287744"></S>
+                        <S t="576512" d="288768"></S>
+                        <S t="865280" d="287744"></S>
+                        <S t="1153024" d="288768"></S>
+                        <S t="1441792" d="287744"></S>
+                        <S t="1729536" d="288768"></S>
+                        <S t="2018304" d="287744"></S>
+                        <S t="2306048" d="288768"></S>
                     </SegmentTimeline>
                 </SegmentTemplate>
-            </Representation>
-            <Representation id="1273684308-t1" bandwidth="1678929" codecs="avc1.64081f" height="540" width="896" frameRate="23976/1000">
-                <SegmentTemplate startNumber="1" media="1273684308-$Number$-t1.m4s?assetId=325579370" initialization="1273684308-0-t1.m4s?assetId=325579370" timescale="24000">
-                    <SegmentTimeline>
-                        <S d="144144" r="52"></S>
-                        <S d="120120"></S>
-                        <S d="168168"></S>
-                        <S d="144144" r="1"></S>
-                        <S d="136136"></S>
-                        <S d="147147"></S>
-                        <S d="149149"></S>
-                        <S d="144144" r="33"></S>
-                        <S d="136136"></S>
-                        <S d="152152"></S>
-                        <S d="144144" r="28"></S>
-                        <S d="132132"></S>
-                        <S d="156156"></S>
-                        <S d="144144" r="66"></S>
-                        <S d="143143"></S>
-                        <S d="145145"></S>
-                        <S d="144144" r="45"></S>
-                        <S d="126126"></S>
-                        <S d="162162"></S>
-                        <S d="144144" r="33"></S>
-                        <S d="121121"></S>
-                        <S d="167167"></S>
-                        <S d="144144" r="3"></S>
-                        <S d="128128"></S>
-                        <S d="160160"></S>
-                        <S d="144144" r="1"></S>
-                        <S d="135135"></S>
-                        <S d="153153"></S>
-                        <S d="144144"></S>
-                        <S d="123123"></S>
-                        <S d="165165"></S>
-                        <S d="144144" r="21"></S>
-                        <S d="142142"></S>
-                        <S d="146146"></S>
-                        <S d="144144" r="12"></S>
-                        <S d="120120"></S>
-                        <S d="168168"></S>
-                        <S d="144144" r="22"></S>
-                        <S d="121121"></S>
-                        <S d="167167"></S>
-                        <S d="144144" r="1"></S>
-                        <S d="124124"></S>
-                        <S d="164164"></S>
-                        <S d="144144" r="12"></S>
-                        <S d="139139"></S>
-                        <S d="149149"></S>
-                        <S d="144144" r="14"></S>
-                        <S d="129129"></S>
-                        <S d="159159"></S>
-                        <S d="144144" r="23"></S>
-                        <S d="131131"></S>
-                        <S d="157157"></S>
-                        <S d="144144" r="45"></S>
-                        <S d="129129"></S>
-                        <S d="122122"></S>
-                        <S d="181181"></S>
-                        <S d="144144" r="12"></S>
-                        <S d="127127"></S>
-                        <S d="161161"></S>
-                        <S d="144144" r="36"></S>
-                        <S d="124124"></S>
-                        <S d="164164"></S>
-                        <S d="144144" r="6"></S>
-                        <S d="134134"></S>
-                        <S d="154154"></S>
-                        <S d="144144" r="37"></S>
-                        <S d="127127"></S>
-                        <S d="161161"></S>
-                        <S d="144144" r="39"></S>
-                        <S d="126126"></S>
-                        <S d="162162"></S>
-                        <S d="144144" r="3"></S>
-                        <S d="127127"></S>
-                        <S d="161161"></S>
-                        <S d="123123"></S>
-                        <S d="165165"></S>
-                        <S d="144144" r="23"></S>
-                        <S d="138138"></S>
-                        <S d="150150"></S>
-                        <S d="144144" r="34"></S>
-                        <S d="129129"></S>
-                        <S d="159159"></S>
-                        <S d="144144" r="56"></S>
-                        <S d="137137"></S>
-                        <S d="151151"></S>
-                        <S d="144144" r="34"></S>
-                        <S d="140140"></S>
-                        <S d="148148"></S>
-                        <S d="144144" r="12"></S>
-                        <S d="126126"></S>
-                        <S d="162162"></S>
-                        <S d="144144" r="1"></S>
-                        <S d="137137"></S>
-                        <S d="151151"></S>
-                        <S d="144144" r="24"></S>
-                        <S d="127127"></S>
-                        <S d="161161"></S>
-                        <S d="144144" r="18"></S>
-                        <S d="122122"></S>
-                        <S d="166166"></S>
-                        <S d="144144" r="2"></S>
-                        <S d="123123"></S>
-                        <S d="165165"></S>
-                        <S d="144144" r="35"></S>
-                        <S d="143143"></S>
-                        <S d="145145"></S>
-                        <S d="144144" r="74"></S>
-                        <S d="143143"></S>
-                        <S d="145145"></S>
-                        <S d="144144" r="9"></S>
-                        <S d="130130"></S>
-                        <S d="158158"></S>
-                        <S d="144144" r="1"></S>
-                        <S d="123123"></S>
-                        <S d="165165"></S>
-                        <S d="144144" r="67"></S>
-                        <S d="127127"></S>
-                        <S d="161161"></S>
-                        <S d="144144" r="61"></S>
-                        <S d="60060"></S>
-                    </SegmentTimeline>
-                </SegmentTemplate>
-            </Representation>
-            <Representation id="1273684313-t1" bandwidth="3074698" codecs="avc1.640820" height="720" width="1196" frameRate="23976/1000">
-                <SegmentTemplate startNumber="1" media="1273684313-$Number$-t1.m4s?assetId=325579370" initialization="1273684313-0-t1.m4s?assetId=325579370" timescale="24000">
-                    <SegmentTimeline>
-                        <S d="144144" r="52"></S>
-                        <S d="120120"></S>
-                        <S d="168168"></S>
-                        <S d="144144" r="1"></S>
-                        <S d="136136"></S>
-                        <S d="147147"></S>
-                        <S d="149149"></S>
-                        <S d="144144" r="33"></S>
-                        <S d="136136"></S>
-                        <S d="152152"></S>
-                        <S d="144144" r="28"></S>
-                        <S d="132132"></S>
-                        <S d="156156"></S>
-                        <S d="144144" r="66"></S>
-                        <S d="143143"></S>
-                        <S d="145145"></S>
-                        <S d="144144" r="45"></S>
-                        <S d="126126"></S>
-                        <S d="162162"></S>
-                        <S d="144144" r="33"></S>
-                        <S d="121121"></S>
-                        <S d="167167"></S>
-                        <S d="144144" r="3"></S>
-                        <S d="128128"></S>
-                        <S d="160160"></S>
-                        <S d="144144" r="1"></S>
-                        <S d="135135"></S>
-                        <S d="153153"></S>
-                        <S d="144144"></S>
-                        <S d="123123"></S>
-                        <S d="165165"></S>
-                        <S d="144144" r="21"></S>
-                        <S d="142142"></S>
-                        <S d="146146"></S>
-                        <S d="144144" r="12"></S>
-                        <S d="120120"></S>
-                        <S d="168168"></S>
-                        <S d="144144" r="22"></S>
-                        <S d="121121"></S>
-                        <S d="167167"></S>
-                        <S d="144144" r="1"></S>
-                        <S d="124124"></S>
-                        <S d="164164"></S>
-                        <S d="144144" r="12"></S>
-                        <S d="139139"></S>
-                        <S d="149149"></S>
-                        <S d="144144" r="14"></S>
-                        <S d="129129"></S>
-                        <S d="159159"></S>
-                        <S d="144144" r="23"></S>
-                        <S d="131131"></S>
-                        <S d="157157"></S>
-                        <S d="144144" r="45"></S>
-                        <S d="129129"></S>
-                        <S d="122122"></S>
-                        <S d="181181"></S>
-                        <S d="144144" r="12"></S>
-                        <S d="127127"></S>
-                        <S d="161161"></S>
-                        <S d="144144" r="36"></S>
-                        <S d="124124"></S>
-                        <S d="164164"></S>
-                        <S d="144144" r="6"></S>
-                        <S d="134134"></S>
-                        <S d="154154"></S>
-                        <S d="144144" r="37"></S>
-                        <S d="127127"></S>
-                        <S d="161161"></S>
-                        <S d="144144" r="39"></S>
-                        <S d="126126"></S>
-                        <S d="162162"></S>
-                        <S d="144144" r="3"></S>
-                        <S d="127127"></S>
-                        <S d="161161"></S>
-                        <S d="123123"></S>
-                        <S d="165165"></S>
-                        <S d="144144" r="23"></S>
-                        <S d="138138"></S>
-                        <S d="150150"></S>
-                        <S d="144144" r="34"></S>
-                        <S d="129129"></S>
-                        <S d="159159"></S>
-                        <S d="144144" r="56"></S>
-                        <S d="137137"></S>
-                        <S d="151151"></S>
-                        <S d="144144" r="34"></S>
-                        <S d="140140"></S>
-                        <S d="148148"></S>
-                        <S d="144144" r="12"></S>
-                        <S d="126126"></S>
-                        <S d="162162"></S>
-                        <S d="144144" r="1"></S>
-                        <S d="137137"></S>
-                        <S d="151151"></S>
-                        <S d="144144" r="24"></S>
-                        <S d="127127"></S>
-                        <S d="161161"></S>
-                        <S d="144144" r="18"></S>
-                        <S d="122122"></S>
-                        <S d="166166"></S>
-                        <S d="144144" r="2"></S>
-                        <S d="123123"></S>
-                        <S d="165165"></S>
-                        <S d="144144" r="35"></S>
-                        <S d="143143"></S>
-                        <S d="145145"></S>
-                        <S d="144144" r="21"></S>
-                        <S d="143143"></S>
-                        <S d="145145"></S>
-                        <S d="144144" r="5"></S>
-                        <S d="143143"></S>
-                        <S d="145145"></S>
-                        <S d="144144" r="42"></S>
-                        <S d="143143"></S>
-                        <S d="145145"></S>
-                        <S d="144144" r="9"></S>
-                        <S d="130130"></S>
-                        <S d="158158"></S>
-                        <S d="144144" r="1"></S>
-                        <S d="123123"></S>
-                        <S d="165165"></S>
-                        <S d="144144" r="67"></S>
-                        <S d="127127"></S>
-                        <S d="161161"></S>
-                        <S d="144144" r="61"></S>
-                        <S d="60060"></S>
-                    </SegmentTimeline>
-                </SegmentTemplate>
-            </Representation>
-        </AdaptationSet>
-        <AdaptationSet contentType="text" mimeType="text/vtt" lang="en">
-            <Role schemeIdUri="urn:mpeg:dash:role:2011" value="caption"></Role>
-            <Representation id="subtitles-en-1" bandwidth="1000">
-                <BaseURL>7433271.vtt?assetId=325579370</BaseURL>
             </Representation>
         </AdaptationSet>
     </Period>
