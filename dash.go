@@ -11,9 +11,6 @@ import (
    "time"
 )
 
-// Either the `$Time$` or `$Number$` template variable SHALL be present in
-// `SegmentTemplate@media` to uniquely identify [=media segments=]:
-//
 // If using `$Number$` addressing, the number of the first segment reference is
 // defined by `SegmentTemplate@startNumber` (default value 1)
 //
