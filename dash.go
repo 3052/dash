@@ -11,88 +11,6 @@ import (
    "time"
 )
 
-// If using `$Number$` addressing, the number of the first segment reference is
-// defined by `SegmentTemplate@startNumber` (default value 1)
-//
-// If using `$Time$` addressing, the value for each [=segment reference=] is the
-// [=segment start point=] on the [=sample timeline=], in [=timescale units=]
-//
-// github.com/Dash-Industry-Forum/Guidelines-TimingModel/blob/master/22-Addressing.inc.md
-func (s *SegmentTemplate) start() uint {
-   if strings.Contains(s.Media, "$Time$") {
-      return s.PresentationTimeOffset
-   }
-   if s.StartNumber != nil {
-      return *s.StartNumber
-   }
-   return 1
-}
-
-func (r *Representation) get_mime_type() string {
-   if r.MimeType != "" {
-      return r.MimeType
-   }
-   return r.adaptation_set.MimeType
-}
-
-func (r *Representation) Ext() (string, bool) {
-   switch r.get_mime_type() {
-   case "audio/mp4":
-      return ".m4a", true
-   case "text/vtt":
-      return ".vtt", true
-   case "video/mp4":
-      return ".m4v", true
-   }
-   return "", false
-}
-
-func (r *Representation) get_width() uint64 {
-   if r.Width >= 1 {
-      return r.Width
-   }
-   return r.adaptation_set.Width
-}
-
-type Representation struct {
-   Bandwidth         uint64   `xml:"bandwidth,attr"`
-   BaseUrl           *BaseUrl `xml:"BaseURL"`
-   Codecs            string   `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            uint64 `xml:"height,attr"`
-   Id                string `xml:"id,attr"`
-   MimeType          string `xml:"mimeType,attr"`
-   SegmentBase       *SegmentBase
-   SegmentTemplate   *SegmentTemplate
-   Width             uint64 `xml:"width,attr"`
-   adaptation_set    *AdaptationSet
-}
-
-func (r *Representation) get_segment_template() (*SegmentTemplate, bool) {
-   if r.SegmentTemplate != nil {
-      return r.SegmentTemplate, true
-   }
-   if r.adaptation_set.SegmentTemplate != nil {
-      return r.adaptation_set.SegmentTemplate, true
-   }
-   return nil, false
-}
-
-func (r *Representation) GetAdaptationSet() *AdaptationSet {
-   return r.adaptation_set
-}
-
-func (r *Representation) id(value string) string {
-   return strings.Replace(value, "$RepresentationID$", r.Id, 1)
-}
-
-func (r *Representation) get_content_protection() []ContentProtection {
-   if len(r.ContentProtection) >= 1 {
-      return r.ContentProtection
-   }
-   return r.adaptation_set.ContentProtection
-}
-
 type AdaptationSet struct {
    Codecs            string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
@@ -112,6 +30,10 @@ type AdaptationSet struct {
 
 func (a *AdaptationSet) GetPeriod() *Period {
    return a.period
+}
+
+type BaseUrl struct {
+   Url *url.URL
 }
 
 func (b *BaseUrl) UnmarshalText(text []byte) error {
@@ -171,6 +93,12 @@ func (p *Pssh) UnmarshalText(src []byte) error {
    return nil
 }
 
+func (r *Range) MarshalText() ([]byte, error) {
+   b := strconv.AppendUint(nil, r.Start, 10)
+   b = append(b, '-')
+   return strconv.AppendUint(b, r.End, 10), nil
+}
+
 // SegmentIndexBox uses:
 // unsigned int(32) subsegment_duration;
 // but range values can exceed 32 bits
@@ -192,13 +120,6 @@ func (r *Range) UnmarshalText(text []byte) error {
       return err
    }
    return nil
-}
-
-type SegmentBase struct {
-   Initialization struct {
-      Range Range `xml:"range,attr"`
-   }
-   IndexRange Range `xml:"indexRange,attr"`
 }
 
 func (r *Representation) get_height() uint64 {
@@ -259,10 +180,11 @@ func (r *Representation) GetBaseUrl() (*BaseUrl, bool) {
    return nil, false
 }
 
-func (r *Range) MarshalText() ([]byte, error) {
-   b := strconv.AppendUint(nil, r.Start, 10)
-   b = append(b, '-')
-   return strconv.AppendUint(b, r.End, 10), nil
+func (r *Representation) get_mime_type() string {
+   if r.MimeType != "" {
+      return r.MimeType
+   }
+   return r.adaptation_set.MimeType
 }
 
 func (r *Representation) String() string {
@@ -306,25 +228,6 @@ func (r *Representation) String() string {
    return string(b)
 }
 
-func (s *SegmentTemplate) time(value uint) string {
-   format := strings.Replace(s.Media, "$Time$", "%d", 1)
-   return fmt.Sprintf(format, value)
-}
-
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
-func (s *SegmentTemplate) get_timescale() uint64 {
-   if s.Timescale >= 1 {
-      return s.Timescale
-   }
-   return 1
-}
-
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
-func (s *SegmentTemplate) segment_count(seconds float64) uint64 {
-   seconds /= float64(s.Duration) / float64(s.get_timescale())
-   return uint64(math.Ceil(seconds))
-}
-
 func (r *Representation) Media() []string {
    template, ok := r.get_segment_template()
    if !ok {
@@ -357,26 +260,6 @@ func (r *Representation) Media() []string {
    return media
 }
 
-func (s *SegmentTemplate) number(value uint) string {
-   format := strings.NewReplacer(
-      "%", "%%",
-      "$Number$", "%d",
-      "$Number%02d$", "%02d",
-      "$Number%03d$", "%03d",
-      "$Number%04d$", "%04d",
-      "$Number%05d$", "%05d",
-      "$Number%06d$", "%06d",
-      "$Number%07d$", "%07d",
-      "$Number%08d$", "%08d",
-      "$Number%09d$", "%09d",
-   ).Replace(s.Media)
-   return fmt.Sprintf(format, value)
-}
-
-type BaseUrl struct {
-   Url *url.URL
-}
-
 func Unmarshal(text []byte, base *url.URL) ([]Representation, error) {
    var media Mpd
    err := xml.Unmarshal(text, &media)
@@ -401,6 +284,123 @@ func Unmarshal(text []byte, base *url.URL) ([]Representation, error) {
       }
    }
    return reps, nil
+}
+
+func (r *Representation) Ext() (string, bool) {
+   switch r.get_mime_type() {
+   case "audio/mp4":
+      return ".m4a", true
+   case "text/vtt":
+      return ".vtt", true
+   case "video/mp4":
+      return ".m4v", true
+   }
+   return "", false
+}
+
+func (r *Representation) get_width() uint64 {
+   if r.Width >= 1 {
+      return r.Width
+   }
+   return r.adaptation_set.Width
+}
+
+type Representation struct {
+   Bandwidth         uint64   `xml:"bandwidth,attr"`
+   BaseUrl           *BaseUrl `xml:"BaseURL"`
+   Codecs            string   `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            uint64 `xml:"height,attr"`
+   Id                string `xml:"id,attr"`
+   MimeType          string `xml:"mimeType,attr"`
+   SegmentBase       *SegmentBase
+   SegmentTemplate   *SegmentTemplate
+   Width             uint64 `xml:"width,attr"`
+   adaptation_set    *AdaptationSet
+}
+
+func (r *Representation) get_segment_template() (*SegmentTemplate, bool) {
+   if r.SegmentTemplate != nil {
+      return r.SegmentTemplate, true
+   }
+   if r.adaptation_set.SegmentTemplate != nil {
+      return r.adaptation_set.SegmentTemplate, true
+   }
+   return nil, false
+}
+
+func (r *Representation) GetAdaptationSet() *AdaptationSet {
+   return r.adaptation_set
+}
+
+func (r *Representation) id(value string) string {
+   return strings.Replace(value, "$RepresentationID$", r.Id, 1)
+}
+
+func (r *Representation) get_content_protection() []ContentProtection {
+   if len(r.ContentProtection) >= 1 {
+      return r.ContentProtection
+   }
+   return r.adaptation_set.ContentProtection
+}
+
+type SegmentBase struct {
+   Initialization struct {
+      Range Range `xml:"range,attr"`
+   }
+   IndexRange Range `xml:"indexRange,attr"`
+}
+
+func (s *SegmentTemplate) time(value uint) string {
+   format := strings.Replace(s.Media, "$Time$", "%d", 1)
+   return fmt.Sprintf(format, value)
+}
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
+func (s *SegmentTemplate) get_timescale() uint64 {
+   if s.Timescale >= 1 {
+      return s.Timescale
+   }
+   return 1
+}
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
+func (s *SegmentTemplate) segment_count(seconds float64) uint64 {
+   seconds /= float64(s.Duration) / float64(s.get_timescale())
+   return uint64(math.Ceil(seconds))
+}
+
+func (s *SegmentTemplate) number(value uint) string {
+   format := strings.NewReplacer(
+      "%", "%%",
+      "$Number$", "%d",
+      "$Number%02d$", "%02d",
+      "$Number%03d$", "%03d",
+      "$Number%04d$", "%04d",
+      "$Number%05d$", "%05d",
+      "$Number%06d$", "%06d",
+      "$Number%07d$", "%07d",
+      "$Number%08d$", "%08d",
+      "$Number%09d$", "%09d",
+   ).Replace(s.Media)
+   return fmt.Sprintf(format, value)
+}
+
+// If using `$Number$` addressing, the number of the first segment reference is
+// defined by `SegmentTemplate@startNumber` (default value 1)
+//
+// If using `$Time$` addressing, the value for each [=segment reference=] is the
+// [=segment start point=] on the [=sample timeline=], in [=timescale units=]
+//
+// github.com/Dash-Industry-Forum/Guidelines-TimingModel/blob/master/22-Addressing.inc.md
+func (s *SegmentTemplate) start() uint {
+   if strings.Contains(s.Media, "$Time$") {
+      return s.PresentationTimeOffset
+   }
+   if s.StartNumber != nil {
+      return *s.StartNumber
+   }
+   return 1
 }
 
 type SegmentTemplate struct {
