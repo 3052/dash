@@ -1,24 +1,17 @@
 package main
 
 import (
-   "154.pages.dev/encoding/dash"
+   "154.pages.dev/dash"
    "errors"
    "flag"
    "fmt"
    "io"
    "net/http"
-   "net/url"
    "os"
    "path"
    "sort"
    "time"
 )
-
-type flags struct {
-   address string
-   id string
-   url *url.URL
-}
 
 func main() {
    var f flags
@@ -32,7 +25,7 @@ func main() {
       }
       index := func() int {
          for i, rep := range reps {
-            if rep.ID == f.id {
+            if rep.Id == f.id {
                return i
             }
          }
@@ -53,76 +46,85 @@ func main() {
             if i >= 1 {
                fmt.Println()
             }
-            fmt.Println(rep)
+            fmt.Println(&rep)
          }
       }
    } else {
       flag.Usage()
    }
 }
+
+type flags struct {
+   address string
+   id string
+}
+
+func (f *flags) manifest() ([]dash.Representation, error) {
+   resp, err := http.Get(f.address)
+   if err != nil {
+      return nil, err
+   }
+   defer resp.Body.Close()
+   if resp.StatusCode != http.StatusOK {
+      return nil, errors.New(resp.Status)
+   }
+   text, err := io.ReadAll(resp.Body)
+   if err != nil {
+      return nil, err
+   }
+   return dash.Unmarshal(text, resp.Request.URL)
+}
+
 func (f flags) download(rep dash.Representation) error {
-   template, ok := rep.GetSegmentTemplate()
+   base, ok := rep.GetBaseUrl()
    if !ok {
-      return errors.New("GetSegmentTemplate")
+      return errors.New("GetBaseUrl")
    }
-   initial, ok := template.GetInitialization(rep)
+   initial, ok := rep.Initialization()
    if !ok {
-      return errors.New("GetInitialization")
+      return errors.New("Initialization")
    }
-   address, err := f.url.Parse(initial)
+   req, err := http.NewRequest("", initial, nil)
    if err != nil {
       return err
    }
-   if err := create(address); err != nil {
-      return err
-   }
-   media, err := template.GetMedia(rep)
+   req.URL = base.Url.ResolveReference(req.URL)
+   err = create("init-", 0, req)
    if err != nil {
       return err
    }
+   media := rep.Media()
    for i, medium := range media {
       fmt.Println(len(media)-i)
-      // with DASH, initialization and media URLs are relative to the MPD URL
-      url, err := f.url.Parse(medium)
+      req.URL, err = base.Url.Parse(medium)
       if err != nil {
          return err
       }
-      if err := create(url); err != nil {
+      err = create("segment-", i, req)
+      if err != nil {
          return err
       }
    }
    return nil
 }
 
-func (f *flags) manifest() ([]dash.Representation, error) {
-   res, err := http.Get(f.address)
-   if err != nil {
-      return nil, err
-   }
-   defer res.Body.Close()
-   if res.StatusCode != http.StatusOK {
-      return nil, errors.New(res.Status)
-   }
-   f.url = res.Request.URL
-   text, err := io.ReadAll(res.Body)
-   if err != nil {
-      return nil, err
-   }
-   return dash.Unmarshal(text)
-}
-
-func create(url *url.URL) error {
-   res, err := http.Get(url.String())
+func create(base string, i int, req *http.Request) error {
+   resp, err := http.DefaultClient.Do(req)
    if err != nil {
       return err
    }
-   defer res.Body.Close()
-   file, err := os.Create(path.Base(url.Path))
+   defer resp.Body.Close()
+   if resp.StatusCode != http.StatusOK {
+      return errors.New(resp.Status)
+   }
+   file, err := os.Create(
+      base + fmt.Sprint(i) + path.Ext(req.URL.Path),
+   )
    if err != nil {
       return err
    }
    defer file.Close()
-   if _, err := file.ReadFrom(res.Body); err != nil {
+   if _, err := file.ReadFrom(resp.Body); err != nil {
       return err
    }
    return nil
