@@ -13,6 +13,28 @@ import (
    "time"
 )
 
+func create(base string, i int, req *http.Request) error {
+   resp, err := http.DefaultClient.Do(req)
+   if err != nil {
+      return err
+   }
+   defer resp.Body.Close()
+   if resp.StatusCode != http.StatusOK {
+      return errors.New(resp.Status)
+   }
+   file, err := os.Create(
+      base + fmt.Sprintf("%03v", i) + path.Ext(req.URL.Path),
+   )
+   if err != nil {
+      return err
+   }
+   defer file.Close()
+   if _, err := file.ReadFrom(resp.Body); err != nil {
+      return err
+   }
+   return nil
+}
+
 func main() {
    var f flags
    flag.StringVar(&f.address, "a", "", "address")
@@ -104,28 +126,6 @@ func (f flags) download(rep dash.Representation) error {
       if err != nil {
          return err
       }
-   }
-   return nil
-}
-
-func create(base string, i int, req *http.Request) error {
-   resp, err := http.DefaultClient.Do(req)
-   if err != nil {
-      return err
-   }
-   defer resp.Body.Close()
-   if resp.StatusCode != http.StatusOK {
-      return errors.New(resp.Status)
-   }
-   file, err := os.Create(
-      base + fmt.Sprint(i) + path.Ext(req.URL.Path),
-   )
-   if err != nil {
-      return err
-   }
-   defer file.Close()
-   if _, err := file.ReadFrom(resp.Body); err != nil {
-      return err
    }
    return nil
 }
