@@ -11,47 +11,6 @@ import (
    "time"
 )
 
-func (r *Representation) Media() []string {
-   template, ok := r.get_segment_template()
-   if !ok {
-      return nil
-   }
-   number := template.start()
-   template.Media = r.id(template.Media)
-   var media []string
-   if template.SegmentTimeline != nil {
-      for _, segment := range template.SegmentTimeline.S {
-         for range 1 + segment.R {
-            var medium string
-            if strings.Contains(template.Media, "$Time$") {
-               medium = template.time(number)
-               number += segment.D
-            } else {
-               medium = template.number(number)
-               number++
-            }
-            media = append(media, medium)
-         }
-      }
-   } else {
-      seconds := r.adaptation_set.period.get_duration().Duration.Seconds()
-      for range template.segment_count(seconds) {
-         media = append(media, template.number(number))
-         number++
-      }
-   }
-   return media
-}
-
-func (r *Representation) Initialization() (string, bool) {
-   if v, ok := r.get_segment_template(); ok {
-      if v := v.Initialization; v != "" {
-         return r.id(v), true
-      }
-   }
-   return "", false
-}
-
 type AdaptationSet struct {
    Codecs            string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
@@ -161,6 +120,47 @@ func (r *Range) UnmarshalText(text []byte) error {
       return err
    }
    return nil
+}
+
+func (r *Representation) Media() []string {
+   template, ok := r.get_segment_template()
+   if !ok {
+      return nil
+   }
+   number := template.start()
+   template.Media = r.id(template.Media)
+   var media []string
+   if template.SegmentTimeline != nil {
+      for _, segment := range template.SegmentTimeline.S {
+         for range 1 + segment.R {
+            var medium string
+            if strings.Contains(template.Media, "$Time$") {
+               medium = template.time(number)
+               number += segment.D
+            } else {
+               medium = template.number(number)
+               number++
+            }
+            media = append(media, medium)
+         }
+      }
+   } else {
+      seconds := r.adaptation_set.period.get_duration().Duration.Seconds()
+      for range template.segment_count(seconds) {
+         media = append(media, template.number(number))
+         number++
+      }
+   }
+   return media
+}
+
+func (r *Representation) Initialization() (string, bool) {
+   if v, ok := r.get_segment_template(); ok {
+      if v := v.Initialization; v != "" {
+         return r.id(v), true
+      }
+   }
+   return "", false
 }
 
 func (r *Representation) get_height() uint64 {
