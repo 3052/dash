@@ -1,3 +1,3 @@
-module 154.pages.dev/dash
+module 41.neocities.org/dash
 
 go 1.22.0
