@@ -11,6 +11,18 @@ import (
    "time"
 )
 
+func (r *Representation) Ext() (string, bool) {
+   switch r.get_mime_type() {
+   case "audio/mp4":
+      return ".m4a", true
+   case "text/vtt":
+      return ".vtt", true
+   case "video/mp4":
+      return ".m4v", true
+   }
+   return "", false
+}
+
 type AdaptationSet struct {
    Codecs            string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
@@ -284,18 +296,6 @@ func Unmarshal(text []byte, base *url.URL) ([]Representation, error) {
       }
    }
    return reps, nil
-}
-
-func (r *Representation) Ext() (string, bool) {
-   switch r.get_mime_type() {
-   case "audio/mp4":
-      return ".m4a", true
-   case "text/vtt":
-      return ".vtt", true
-   case "video/mp4":
-      return ".m4v", true
-   }
-   return "", false
 }
 
 func (r *Representation) get_width() uint64 {
