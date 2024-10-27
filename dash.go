@@ -11,18 +11,6 @@ import (
    "time"
 )
 
-func (r *Representation) Ext() (string, bool) {
-   switch r.get_mime_type() {
-   case "audio/mp4":
-      return ".m4a", true
-   case "text/vtt":
-      return ".vtt", true
-   case "video/mp4":
-      return ".m4v", true
-   }
-   return "", false
-}
-
 type AdaptationSet struct {
    Codecs            string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
@@ -342,6 +330,18 @@ func (r *Representation) get_content_protection() []ContentProtection {
       return r.ContentProtection
    }
    return r.adaptation_set.ContentProtection
+}
+
+func (r *Representation) Ext() (string, bool) {
+   switch r.get_mime_type() {
+   case "audio/mp4":
+      return ".m4a", true
+   case "text/vtt":
+      return ".vtt", true
+   case "video/mp4":
+      return ".m4v", true
+   }
+   return "", false
 }
 
 type SegmentBase struct {
