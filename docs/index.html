@@ -14,7 +14,7 @@
   <body>
     <nav>
         41.neocities.org/dash<span class="navbar-right">
-          v1.25.1 | <a href="">Root</a> | <a href="#pkg-index">Index</a></span>
+          v1.25.2 | <a href="">Root</a> | <a href="#pkg-index">Index</a></span>
       </nav>
     <main><h2 id="pkg-overview">package dash</h2>
 <pre class="chroma"><span class="kn">import</span> <span class="s">&#34;41.neocities.org/dash&#34;</span></pre>
@@ -67,6 +67,7 @@
           <li><a href="#Representation.Ext">func (r *Representation) Ext() (string, bool)</a></li>
           <li><a href="#Representation.GetAdaptationSet">func (r *Representation) GetAdaptationSet() *AdaptationSet</a></li>
           <li><a href="#Representation.GetBaseUrl">func (r *Representation) GetBaseUrl() (*BaseUrl, bool)</a></li>
+          <li><a href="#Representation.GetMimeType">func (r *Representation) GetMimeType() string</a></li>
           <li><a href="#Representation.Initialization">func (r *Representation) Initialization() (string, bool)</a></li>
           <li><a href="#Representation.Media">func (r *Representation) Media() []string</a></li>
           <li><a href="#Representation.String">func (r *Representation) String() string</a></li>
@@ -168,6 +169,8 @@ but range values can exceed 32 bits
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">GetAdaptationSet</span><span class="p">()</span> <span class="o">*</span><a href="#AdaptationSet"><span class="nx">AdaptationSet</span></a></pre>
   <h4 id="Representation.GetBaseUrl">func (*Representation) GetBaseUrl</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">GetBaseUrl</span><span class="p">()</span> <span class="p">(</span><span class="o">*</span><a href="#BaseUrl"><span class="nx">BaseUrl</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
+  <h4 id="Representation.GetMimeType">func (*Representation) GetMimeType</h4>
+  <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">GetMimeType</span><span class="p">()</span> <a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
   <h4 id="Representation.Initialization">func (*Representation) Initialization</h4>
   <pre class="chroma"><span class="kd">func</span> <span class="p">(</span><span class="nx">r</span> <span class="o">*</span><a href="#Representation"><span class="nx">Representation</span></a><span class="p">)</span> <span class="nf">Initialization</span><span class="p">()</span> <span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span> <a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
   <h4 id="Representation.Media">func (*Representation) Media</h4>

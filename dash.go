@@ -11,6 +11,13 @@ import (
    "time"
 )
 
+func (r *Representation) GetMimeType() string {
+   if r.MimeType != "" {
+      return r.MimeType
+   }
+   return r.adaptation_set.MimeType
+}
+
 type AdaptationSet struct {
    Codecs            string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
@@ -212,13 +219,6 @@ func (r *Representation) GetBaseUrl() (*BaseUrl, bool) {
    return nil, false
 }
 
-func (r *Representation) get_mime_type() string {
-   if r.MimeType != "" {
-      return r.MimeType
-   }
-   return r.adaptation_set.MimeType
-}
-
 func (r *Representation) String() string {
    var b []byte
    if v := r.get_width(); v >= 1 {
@@ -242,7 +242,7 @@ func (r *Representation) String() string {
       b = append(b, v...)
    }
    b = append(b, "\nmimeType = "...)
-   b = append(b, r.get_mime_type()...)
+   b = append(b, r.GetMimeType()...)
    if v := r.adaptation_set.Role; v != nil {
       b = append(b, "\nrole = "...)
       b = append(b, v.Value...)
@@ -333,7 +333,7 @@ func (r *Representation) get_content_protection() []ContentProtection {
 }
 
 func (r *Representation) Ext() (string, bool) {
-   switch r.get_mime_type() {
+   switch r.GetMimeType() {
    case "audio/mp4":
       return ".m4a", true
    case "text/vtt":
