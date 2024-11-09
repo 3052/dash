@@ -11,13 +11,6 @@ import (
    "time"
 )
 
-func (r *Representation) GetMimeType() string {
-   if r.MimeType != "" {
-      return r.MimeType
-   }
-   return r.adaptation_set.MimeType
-}
-
 type AdaptationSet struct {
    Codecs            string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
@@ -127,6 +120,13 @@ func (r *Range) UnmarshalText(text []byte) error {
       return err
    }
    return nil
+}
+
+func (r *Representation) GetMimeType() string {
+   if r.MimeType != "" {
+      return r.MimeType
+   }
+   return r.adaptation_set.MimeType
 }
 
 func (r *Representation) Media() []string {
