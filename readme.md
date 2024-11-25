@@ -17,5 +17,4 @@ ISO/IEC 23009-1
    <dd>srpen6@gmail.com</dd>
    <dt>Discord</dt>
    <dd>srpen6</dd>
-   <dd>https://discord.com/invite/rMFzDRQhSx</dd>
 </dl>
