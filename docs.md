@@ -6,29 +6,29 @@ package `dash`
 
 - [Types](#types)
   - [type AdaptationSet](#type-adaptationset)
-    - [func (a *AdaptationSet) GetPeriod() *Period](#func-adaptationset-getperiod)
+    - [func (a \*AdaptationSet) GetPeriod() \*Period](#func-adaptationset-getperiod)
   - [type BaseUrl](#type-baseurl)
-    - [func (b *BaseUrl) UnmarshalText(text []byte) error](#func-baseurl-unmarshaltext)
+    - [func (b \*BaseUrl) UnmarshalText(text []byte) error](#func-baseurl-unmarshaltext)
   - [type ContentProtection](#type-contentprotection)
   - [type Duration](#type-duration)
-    - [func (d *Duration) UnmarshalText(text []byte) error](#func-duration-unmarshaltext)
+    - [func (d \*Duration) UnmarshalText(text []byte) error](#func-duration-unmarshaltext)
   - [type Mpd](#type-mpd)
   - [type Period](#type-period)
   - [type Pssh](#type-pssh)
-    - [func (p *Pssh) UnmarshalText(src []byte) error](#func-pssh-unmarshaltext)
+    - [func (p \*Pssh) UnmarshalText(src []byte) error](#func-pssh-unmarshaltext)
   - [type Range](#type-range)
-    - [func (r *Range) MarshalText() ([]byte, error)](#func-range-marshaltext)
-    - [func (r *Range) UnmarshalText(text []byte) error](#func-range-unmarshaltext)
+    - [func (r \*Range) MarshalText() ([]byte, error)](#func-range-marshaltext)
+    - [func (r \*Range) UnmarshalText(text []byte) error](#func-range-unmarshaltext)
   - [type Representation](#type-representation)
-    - [func Unmarshal(text []byte, base *url.URL) ([]Representation, error)](#func-unmarshal)
-    - [func (r *Representation) Ext() (string, bool)](#func-representation-ext)
-    - [func (r *Representation) GetAdaptationSet() *AdaptationSet](#func-representation-getadaptationset)
-    - [func (r *Representation) GetBaseUrl() (*BaseUrl, bool)](#func-representation-getbaseurl)
-    - [func (r *Representation) GetMimeType() string](#func-representation-getmimetype)
-    - [func (r *Representation) Initialization() (string, bool)](#func-representation-initialization)
-    - [func (r *Representation) Media() []string](#func-representation-media)
-    - [func (r *Representation) String() string](#func-representation-string)
-    - [func (r *Representation) Widevine() (Pssh, bool)](#func-representation-widevine)
+    - [func Unmarshal(text []byte, base \*url.URL) ([]Representation, error)](#func-unmarshal)
+    - [func (r \*Representation) Ext() (string, bool)](#func-representation-ext)
+    - [func (r \*Representation) GetAdaptationSet() \*AdaptationSet](#func-representation-getadaptationset)
+    - [func (r \*Representation) GetBaseUrl() (\*BaseUrl, bool)](#func-representation-getbaseurl)
+    - [func (r \*Representation) GetMimeType() string](#func-representation-getmimetype)
+    - [func (r \*Representation) Initialization() (string, bool)](#func-representation-initialization)
+    - [func (r \*Representation) Media() []string](#func-representation-media)
+    - [func (r \*Representation) String() string](#func-representation-string)
+    - [func (r \*Representation) Widevine() (Pssh, bool)](#func-representation-widevine)
   - [type SegmentBase](#type-segmentbase)
   - [type SegmentTemplate](#type-segmenttemplate)
 - [Source files](#source-files)
@@ -56,7 +56,7 @@ type AdaptationSet struct {
 }
 ```
 
-### func (*AdaptationSet) [GetPeriod](./dash.go#L31)
+### func (\*AdaptationSet) [GetPeriod](./dash.go#L31)
 
 ```go
 func (a *AdaptationSet) GetPeriod() *Period
@@ -70,7 +70,7 @@ type BaseUrl struct {
 }
 ```
 
-### func (*BaseUrl) [UnmarshalText](./dash.go#L39)
+### func (\*BaseUrl) [UnmarshalText](./dash.go#L39)
 
 ```go
 func (b *BaseUrl) UnmarshalText(text []byte) error
@@ -93,7 +93,7 @@ type Duration struct {
 }
 ```
 
-### func (*Duration) [UnmarshalText](./dash.go#L49)
+### func (\*Duration) [UnmarshalText](./dash.go#L49)
 
 ```go
 func (d *Duration) UnmarshalText(text []byte) error
@@ -127,7 +127,7 @@ type Period struct {
 type Pssh []byte
 ```
 
-### func (*Pssh) [UnmarshalText](./dash.go#L87)
+### func (\*Pssh) [UnmarshalText](./dash.go#L87)
 
 ```go
 func (p *Pssh) UnmarshalText(src []byte) error
@@ -146,13 +146,13 @@ SegmentIndexBox uses:
 unsigned int(32) subsegment_duration;
 but range values can exceed 32 bits
 
-### func (*Range) [MarshalText](./dash.go#L96)
+### func (\*Range) [MarshalText](./dash.go#L96)
 
 ```go
 func (r *Range) MarshalText() ([]byte, error)
 ```
 
-### func (*Range) [UnmarshalText](./dash.go#L110)
+### func (\*Range) [UnmarshalText](./dash.go#L110)
 
 ```go
 func (r *Range) UnmarshalText(text []byte) error
@@ -182,49 +182,49 @@ type Representation struct {
 func Unmarshal(text []byte, base *url.URL) ([]Representation, error)
 ```
 
-### func (*Representation) [Ext](./dash.go#L335)
+### func (\*Representation) [Ext](./dash.go#L335)
 
 ```go
 func (r *Representation) Ext() (string, bool)
 ```
 
-### func (*Representation) [GetAdaptationSet](./dash.go#L320)
+### func (\*Representation) [GetAdaptationSet](./dash.go#L320)
 
 ```go
 func (r *Representation) GetAdaptationSet() *AdaptationSet
 ```
 
-### func (*Representation) [GetBaseUrl](./dash.go#L198)
+### func (\*Representation) [GetBaseUrl](./dash.go#L198)
 
 ```go
 func (r *Representation) GetBaseUrl() (*BaseUrl, bool)
 ```
 
-### func (*Representation) [GetMimeType](./dash.go#L125)
+### func (\*Representation) [GetMimeType](./dash.go#L125)
 
 ```go
 func (r *Representation) GetMimeType() string
 ```
 
-### func (*Representation) [Initialization](./dash.go#L164)
+### func (\*Representation) [Initialization](./dash.go#L164)
 
 ```go
 func (r *Representation) Initialization() (string, bool)
 ```
 
-### func (*Representation) [Media](./dash.go#L132)
+### func (\*Representation) [Media](./dash.go#L132)
 
 ```go
 func (r *Representation) Media() []string
 ```
 
-### func (*Representation) [String](./dash.go#L222)
+### func (\*Representation) [String](./dash.go#L222)
 
 ```go
 func (r *Representation) String() string
 ```
 
-### func (*Representation) [Widevine](./dash.go#L187)
+### func (\*Representation) [Widevine](./dash.go#L187)
 
 ```go
 func (r *Representation) Widevine() (Pssh, bool)
