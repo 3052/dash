@@ -4,9 +4,22 @@ import (
    "encoding/xml"
    "fmt"
    "os"
-   "reflect"
    "testing"
 )
+
+func TestDuration(t *testing.T) {
+   for _, test := range tests {
+      media, err := new_mpd(test)
+      if err != nil {
+         t.Fatal(err)
+      }
+      fmt.Println("MPD", media.MediaPresentationDuration())
+      for _, v := range media.Period {
+         fmt.Println("Period", v.Duration())
+      }
+      fmt.Println()
+   }
+}
 
 func TestMedia(t *testing.T) {
    text, err := os.ReadFile("testdata/criterion.mpd")
@@ -28,31 +41,6 @@ func TestMedia(t *testing.T) {
       }
       fmt.Println()
    }
-}
-
-func TestSize(t *testing.T) {
-   size := reflect.TypeOf(&struct{}{}).Size()
-   for _, test := range size_tests {
-      if reflect.TypeOf(test).Size() > size {
-         fmt.Printf("*%T\n", test)
-      } else {
-         fmt.Printf("%T\n", test)
-      }
-   }
-}
-
-var size_tests = []any{
-   AdaptationSet{},
-   BaseUrl{},
-   ContentProtection{},
-   Duration{},
-   Mpd{},
-   Period{},
-   Pssh{},
-   Range{},
-   Representation{},
-   SegmentBase{},
-   SegmentTemplate{},
 }
 
 func TestBandwidth(t *testing.T) {
@@ -205,20 +193,6 @@ func TestBaseUrl(t *testing.T) {
          if v, ok := rep.GetBaseUrl(); ok {
             fmt.Println(v)
          }
-      }
-      fmt.Println()
-   }
-}
-
-func TestDuration(t *testing.T) {
-   for _, test := range tests {
-      media, err := new_mpd(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      fmt.Printf("MPD %q\n", media.MediaPresentationDuration)
-      for _, v := range media.Period {
-         fmt.Printf("Period %q\n", v.Duration)
       }
       fmt.Println()
    }

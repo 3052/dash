@@ -36,50 +36,14 @@ type BaseUrl struct {
    Url *url.URL
 }
 
-func (b *BaseUrl) UnmarshalText(text []byte) error {
+func (b *BaseUrl) UnmarshalText(data []byte) error {
    b.Url = &url.URL{}
-   return b.Url.UnmarshalBinary(text)
+   return b.Url.UnmarshalBinary(data)
 }
 
 type ContentProtection struct {
    Pssh        Pssh   `xml:"pssh"`
    SchemeIdUri string `xml:"schemeIdUri,attr"`
-}
-
-func (d *Duration) UnmarshalText(text []byte) error {
-   var err error
-   d.Duration, err = time.ParseDuration(strings.ToLower(
-      strings.TrimPrefix(string(text), "PT"),
-   ))
-   if err != nil {
-      return err
-   }
-   return nil
-}
-
-type Duration struct {
-   Duration time.Duration
-}
-
-type Mpd struct {
-   BaseUrl                   *BaseUrl  `xml:"BaseURL"`
-   MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
-}
-
-type Period struct {
-   AdaptationSet []AdaptationSet
-   BaseUrl       *BaseUrl  `xml:"BaseURL"`
-   Duration      *Duration `xml:"duration,attr"`
-   Id            string    `xml:"id,attr"`
-   mpd           *Mpd
-}
-
-func (p *Period) get_duration() *Duration {
-   if p.Duration != nil {
-      return p.Duration
-   }
-   return p.mpd.MediaPresentationDuration
 }
 
 type Pssh []byte
@@ -107,9 +71,9 @@ type Range struct {
    End   uint64
 }
 
-func (r *Range) UnmarshalText(text []byte) error {
+func (r *Range) UnmarshalText(data []byte) error {
    // the current testdata always has `-`, so lets assume for now
-   start, end, _ := strings.Cut(string(text), "-")
+   start, end, _ := strings.Cut(string(data), "-")
    var err error
    r.Start, err = strconv.ParseUint(start, 10, 64)
    if err != nil {
@@ -127,38 +91,6 @@ func (r *Representation) GetMimeType() string {
       return r.MimeType
    }
    return r.adaptation_set.MimeType
-}
-
-func (r *Representation) Media() []string {
-   template, ok := r.get_segment_template()
-   if !ok {
-      return nil
-   }
-   number := template.start()
-   template.Media = r.id(template.Media)
-   var media []string
-   if template.SegmentTimeline != nil {
-      for _, segment := range template.SegmentTimeline.S {
-         for range 1 + segment.R {
-            var medium string
-            if strings.Contains(template.Media, "$Time$") {
-               medium = template.time(number)
-               number += segment.D
-            } else {
-               medium = template.number(number)
-               number++
-            }
-            media = append(media, medium)
-         }
-      }
-   } else {
-      seconds := r.adaptation_set.period.get_duration().Duration.Seconds()
-      for range template.segment_count(seconds) {
-         media = append(media, template.number(number))
-         number++
-      }
-   }
-   return media
 }
 
 func (r *Representation) Initialization() (string, bool) {
@@ -260,9 +192,9 @@ func (r *Representation) String() string {
    return string(b)
 }
 
-func Unmarshal(text []byte, base *url.URL) ([]Representation, error) {
+func Unmarshal(data []byte, base *url.URL) ([]Representation, error) {
    var media Mpd
-   err := xml.Unmarshal(text, &media)
+   err := xml.Unmarshal(data, &media)
    if err != nil {
       return nil, err
    }
@@ -364,12 +296,6 @@ func (s *SegmentTemplate) get_timescale() uint64 {
    return 1
 }
 
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
-func (s *SegmentTemplate) segment_count(seconds float64) uint64 {
-   seconds /= float64(s.Duration) / float64(s.get_timescale())
-   return uint64(math.Ceil(seconds))
-}
-
 func (s *SegmentTemplate) number(value uint) string {
    format := strings.NewReplacer(
       "%", "%%",
@@ -403,6 +329,20 @@ func (s *SegmentTemplate) start() uint {
    return 1
 }
 
+type Mpd struct {
+   BaseUrl                   *BaseUrl  `xml:"BaseURL"`
+   MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
+   Period                    []Period
+}
+
+type Period struct {
+   AdaptationSet []AdaptationSet
+   BaseUrl       *BaseUrl  `xml:"BaseURL"`
+   Duration      Duration `xml:"duration,attr"`
+   Id            string    `xml:"id,attr"`
+   mpd           *Mpd
+}
+
 type SegmentTemplate struct {
    Duration               uint64 `xml:"duration,attr"`
    Initialization         string `xml:"initialization,attr"`
@@ -416,4 +356,64 @@ type SegmentTemplate struct {
    }
    Timescale              uint64 `xml:"timescale,attr"`
    StartNumber            *uint   `xml:"startNumber,attr"`
+}
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
+func (s *SegmentTemplate) segment_count(seconds float64) uint64 {
+   seconds /= float64(s.Duration) / float64(s.get_timescale())
+   return uint64(math.Ceil(seconds))
+}
+
+func (p *Period) get_duration() time.Duration {
+   if p.Duration != nil {
+      return p.Duration()
+   }
+   return p.mpd.MediaPresentationDuration()
+}
+
+func (r *Representation) Media() []string {
+   template, ok := r.get_segment_template()
+   if !ok {
+      return nil
+   }
+   number := template.start()
+   template.Media = r.id(template.Media)
+   var media []string
+   if template.SegmentTimeline != nil {
+      for _, segment := range template.SegmentTimeline.S {
+         for range 1 + segment.R {
+            var medium string
+            if strings.Contains(template.Media, "$Time$") {
+               medium = template.time(number)
+               number += segment.D
+            } else {
+               medium = template.number(number)
+               number++
+            }
+            media = append(media, medium)
+         }
+      }
+   } else {
+      seconds := r.adaptation_set.period.get_duration().Seconds()
+      for range template.segment_count(seconds) {
+         media = append(media, template.number(number))
+         number++
+      }
+   }
+   return media
+}
+
+type Duration func() time.Duration
+
+func (d *Duration) UnmarshalText(data []byte) error {
+   value, err := time.ParseDuration(strings.ToLower(
+      strings.TrimPrefix(string(data), "PT"),
+   ))
+   if err != nil {
+      return err
+   }
+   *d = func() time.Duration {
+      return value
+   }
+   return nil
 }
