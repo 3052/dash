@@ -32,15 +32,6 @@ func (a *AdaptationSet) GetPeriod() *Period {
    return a.period
 }
 
-type BaseUrl struct {
-   Url *url.URL
-}
-
-func (b *BaseUrl) UnmarshalText(data []byte) error {
-   b.Url = &url.URL{}
-   return b.Url.UnmarshalBinary(data)
-}
-
 type ContentProtection struct {
    Pssh        Pssh   `xml:"pssh"`
    SchemeIdUri string `xml:"schemeIdUri,attr"`
@@ -127,30 +118,6 @@ func (r *Representation) Widevine() (Pssh, bool) {
    return nil, false
 }
 
-func (r *Representation) GetBaseUrl() (*BaseUrl, bool) {
-   var u *url.URL
-   if v := r.adaptation_set.period.mpd.BaseUrl; v != nil {
-      u = &url.URL{}
-      *u = *v.Url
-   }
-   if v := r.adaptation_set.period.BaseUrl; v != nil {
-      if u == nil {
-         u = &url.URL{}
-      }
-      u = u.ResolveReference(v.Url)
-   }
-   if v := r.BaseUrl; v != nil {
-      if u == nil {
-         u = &url.URL{}
-      }
-      u = u.ResolveReference(v.Url)
-   }
-   if u != nil {
-      return &BaseUrl{u}, true
-   }
-   return nil, false
-}
-
 func (r *Representation) String() string {
    var b []byte
    if v := r.get_width(); v >= 1 {
@@ -192,32 +159,6 @@ func (r *Representation) String() string {
    return string(b)
 }
 
-func Unmarshal(data []byte, base *url.URL) ([]Representation, error) {
-   var media Mpd
-   err := xml.Unmarshal(data, &media)
-   if err != nil {
-      return nil, err
-   }
-   if base != nil {
-      if media.BaseUrl != nil {
-         base = base.ResolveReference(media.BaseUrl.Url)
-      }
-      media.BaseUrl = &BaseUrl{base}
-   }
-   var reps []Representation
-   for _, per := range media.Period {
-      per.mpd = &media
-      for _, ada := range per.AdaptationSet {
-         ada.period = &per
-         for _, rep := range ada.Representation {
-            rep.adaptation_set = &ada
-            reps = append(reps, rep)
-         }
-      }
-   }
-   return reps, nil
-}
-
 func (r *Representation) get_width() uint64 {
    if r.Width >= 1 {
       return r.Width
@@ -225,18 +166,79 @@ func (r *Representation) get_width() uint64 {
    return r.adaptation_set.Width
 }
 
-type Representation struct {
-   Bandwidth         uint64   `xml:"bandwidth,attr"`
-   BaseUrl           *BaseUrl `xml:"BaseURL"`
-   Codecs            string   `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            uint64 `xml:"height,attr"`
-   Id                string `xml:"id,attr"`
-   MimeType          string `xml:"mimeType,attr"`
-   SegmentBase       *SegmentBase
-   SegmentTemplate   *SegmentTemplate
-   Width             uint64 `xml:"width,attr"`
-   adaptation_set    *AdaptationSet
+type SegmentTemplate struct {
+   Duration               uint64 `xml:"duration,attr"`
+   Initialization         string `xml:"initialization,attr"`
+   Media                  string `xml:"media,attr"`
+   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D uint `xml:"d,attr"` // duration
+         R uint `xml:"r,attr"` // repeat
+      }
+   }
+   Timescale              uint64 `xml:"timescale,attr"`
+   StartNumber            *uint   `xml:"startNumber,attr"`
+}
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
+func (s *SegmentTemplate) segment_count(seconds float64) uint64 {
+   seconds /= float64(s.Duration) / float64(s.get_timescale())
+   return uint64(math.Ceil(seconds))
+}
+
+func (p *Period) get_duration() time.Duration {
+   if p.Duration != nil {
+      return p.Duration()
+   }
+   return p.mpd.MediaPresentationDuration()
+}
+
+func (r *Representation) Media() []string {
+   template, ok := r.get_segment_template()
+   if !ok {
+      return nil
+   }
+   number := template.start()
+   template.Media = r.id(template.Media)
+   var media []string
+   if template.SegmentTimeline != nil {
+      for _, segment := range template.SegmentTimeline.S {
+         for range 1 + segment.R {
+            var medium string
+            if strings.Contains(template.Media, "$Time$") {
+               medium = template.time(number)
+               number += segment.D
+            } else {
+               medium = template.number(number)
+               number++
+            }
+            media = append(media, medium)
+         }
+      }
+   } else {
+      seconds := r.adaptation_set.period.get_duration().Seconds()
+      for range template.segment_count(seconds) {
+         media = append(media, template.number(number))
+         number++
+      }
+   }
+   return media
+}
+
+type Duration func() time.Duration
+
+func (d *Duration) UnmarshalText(data []byte) error {
+   value, err := time.ParseDuration(strings.ToLower(
+      strings.TrimPrefix(string(data), "PT"),
+   ))
+   if err != nil {
+      return err
+   }
+   *d = func() time.Duration {
+      return value
+   }
+   return nil
 }
 
 func (r *Representation) get_segment_template() (*SegmentTemplate, bool) {
@@ -329,6 +331,81 @@ func (s *SegmentTemplate) start() uint {
    return 1
 }
 
+///
+
+type BaseUrl struct {
+   Url *url.URL
+}
+
+func (b *BaseUrl) UnmarshalText(data []byte) error {
+   b.Url = &url.URL{}
+   return b.Url.UnmarshalBinary(data)
+}
+
+func (r *Representation) GetBaseUrl() (*BaseUrl, bool) {
+   var u *url.URL
+   if v := r.adaptation_set.period.mpd.BaseUrl; v != nil {
+      u = &url.URL{}
+      *u = *v.Url
+   }
+   if v := r.adaptation_set.period.BaseUrl; v != nil {
+      if u == nil {
+         u = &url.URL{}
+      }
+      u = u.ResolveReference(v.Url)
+   }
+   if v := r.BaseUrl; v != nil {
+      if u == nil {
+         u = &url.URL{}
+      }
+      u = u.ResolveReference(v.Url)
+   }
+   if u != nil {
+      return &BaseUrl{u}, true
+   }
+   return nil, false
+}
+
+func Unmarshal(data []byte, base *url.URL) ([]Representation, error) {
+   var media Mpd
+   err := xml.Unmarshal(data, &media)
+   if err != nil {
+      return nil, err
+   }
+   if base != nil {
+      if media.BaseUrl != nil {
+         base = base.ResolveReference(media.BaseUrl.Url)
+      }
+      media.BaseUrl = &BaseUrl{base}
+   }
+   var reps []Representation
+   for _, per := range media.Period {
+      per.mpd = &media
+      for _, ada := range per.AdaptationSet {
+         ada.period = &per
+         for _, rep := range ada.Representation {
+            rep.adaptation_set = &ada
+            reps = append(reps, rep)
+         }
+      }
+   }
+   return reps, nil
+}
+
+type Representation struct {
+   Bandwidth         uint64   `xml:"bandwidth,attr"`
+   BaseUrl           *BaseUrl `xml:"BaseURL"`
+   Codecs            string   `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            uint64 `xml:"height,attr"`
+   Id                string `xml:"id,attr"`
+   MimeType          string `xml:"mimeType,attr"`
+   SegmentBase       *SegmentBase
+   SegmentTemplate   *SegmentTemplate
+   Width             uint64 `xml:"width,attr"`
+   adaptation_set    *AdaptationSet
+}
+
 type Mpd struct {
    BaseUrl                   *BaseUrl  `xml:"BaseURL"`
    MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
@@ -341,79 +418,4 @@ type Period struct {
    Duration      Duration `xml:"duration,attr"`
    Id            string    `xml:"id,attr"`
    mpd           *Mpd
-}
-
-type SegmentTemplate struct {
-   Duration               uint64 `xml:"duration,attr"`
-   Initialization         string `xml:"initialization,attr"`
-   Media                  string `xml:"media,attr"`
-   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D uint `xml:"d,attr"` // duration
-         R uint `xml:"r,attr"` // repeat
-      }
-   }
-   Timescale              uint64 `xml:"timescale,attr"`
-   StartNumber            *uint   `xml:"startNumber,attr"`
-}
-
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
-func (s *SegmentTemplate) segment_count(seconds float64) uint64 {
-   seconds /= float64(s.Duration) / float64(s.get_timescale())
-   return uint64(math.Ceil(seconds))
-}
-
-func (p *Period) get_duration() time.Duration {
-   if p.Duration != nil {
-      return p.Duration()
-   }
-   return p.mpd.MediaPresentationDuration()
-}
-
-func (r *Representation) Media() []string {
-   template, ok := r.get_segment_template()
-   if !ok {
-      return nil
-   }
-   number := template.start()
-   template.Media = r.id(template.Media)
-   var media []string
-   if template.SegmentTimeline != nil {
-      for _, segment := range template.SegmentTimeline.S {
-         for range 1 + segment.R {
-            var medium string
-            if strings.Contains(template.Media, "$Time$") {
-               medium = template.time(number)
-               number += segment.D
-            } else {
-               medium = template.number(number)
-               number++
-            }
-            media = append(media, medium)
-         }
-      }
-   } else {
-      seconds := r.adaptation_set.period.get_duration().Seconds()
-      for range template.segment_count(seconds) {
-         media = append(media, template.number(number))
-         number++
-      }
-   }
-   return media
-}
-
-type Duration func() time.Duration
-
-func (d *Duration) UnmarshalText(data []byte) error {
-   value, err := time.ParseDuration(strings.ToLower(
-      strings.TrimPrefix(string(data), "PT"),
-   ))
-   if err != nil {
-      return err
-   }
-   *d = func() time.Duration {
-      return value
-   }
-   return nil
 }
