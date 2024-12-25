@@ -166,81 +166,6 @@ func (r *Representation) get_width() uint64 {
    return r.adaptation_set.Width
 }
 
-type SegmentTemplate struct {
-   Duration               uint64 `xml:"duration,attr"`
-   Initialization         string `xml:"initialization,attr"`
-   Media                  string `xml:"media,attr"`
-   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D uint `xml:"d,attr"` // duration
-         R uint `xml:"r,attr"` // repeat
-      }
-   }
-   Timescale              uint64 `xml:"timescale,attr"`
-   StartNumber            *uint   `xml:"startNumber,attr"`
-}
-
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
-func (s *SegmentTemplate) segment_count(seconds float64) uint64 {
-   seconds /= float64(s.Duration) / float64(s.get_timescale())
-   return uint64(math.Ceil(seconds))
-}
-
-func (p *Period) get_duration() time.Duration {
-   if p.Duration != nil {
-      return p.Duration()
-   }
-   return p.mpd.MediaPresentationDuration()
-}
-
-func (r *Representation) Media() []string {
-   template, ok := r.get_segment_template()
-   if !ok {
-      return nil
-   }
-   number := template.start()
-   template.Media = r.id(template.Media)
-   var media []string
-   if template.SegmentTimeline != nil {
-      for _, segment := range template.SegmentTimeline.S {
-         for range 1 + segment.R {
-            var medium string
-            if strings.Contains(template.Media, "$Time$") {
-               medium = template.time(number)
-               number += segment.D
-            } else {
-               medium = template.number(number)
-               number++
-            }
-            media = append(media, medium)
-         }
-      }
-   } else {
-      seconds := r.adaptation_set.period.get_duration().Seconds()
-      for range template.segment_count(seconds) {
-         media = append(media, template.number(number))
-         number++
-      }
-   }
-   return media
-}
-
-type Duration func() time.Duration
-
-func (d *Duration) UnmarshalText(data []byte) error {
-   value, err := time.ParseDuration(strings.ToLower(
-      strings.TrimPrefix(string(data), "PT"),
-   ))
-   if err != nil {
-      return err
-   }
-   *d = func() time.Duration {
-      return value
-   }
-   return nil
-}
-
 func (r *Representation) get_segment_template() (*SegmentTemplate, bool) {
    if r.SegmentTemplate != nil {
       return r.SegmentTemplate, true
@@ -406,16 +331,91 @@ type Representation struct {
    adaptation_set    *AdaptationSet
 }
 
-type Mpd struct {
-   BaseUrl                   *BaseUrl  `xml:"BaseURL"`
-   MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
+type SegmentTemplate struct {
+   Duration               float64 `xml:"duration,attr"`
+   Initialization         string `xml:"initialization,attr"`
+   Media                  string `xml:"media,attr"`
+   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D uint `xml:"d,attr"` // duration
+         R uint `xml:"r,attr"` // repeat
+      }
+   }
+   Timescale              uint64 `xml:"timescale,attr"`
+   StartNumber            *uint   `xml:"startNumber,attr"`
+}
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
+func (s *SegmentTemplate) segment_count(seconds float64) uint64 {
+   seconds /= s.Duration / float64(s.get_timescale())
+   return uint64(math.Ceil(seconds))
+}
+
+func (d *Duration) UnmarshalText(data []byte) error {
+   var err error
+   d.Duration, err = time.ParseDuration(strings.ToLower(
+      strings.TrimPrefix(string(data), "PT"),
+   ))
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
+type Duration struct {
+   Duration time.Duration
+}
+
+func (r *Representation) Media() []string {
+   template, ok := r.get_segment_template()
+   if !ok {
+      return nil
+   }
+   number := template.start()
+   template.Media = r.id(template.Media)
+   var media []string
+   if template.SegmentTimeline != nil {
+      for _, segment := range template.SegmentTimeline.S {
+         for range 1 + segment.R {
+            var medium string
+            if strings.Contains(template.Media, "$Time$") {
+               medium = template.time(number)
+               number += segment.D
+            } else {
+               medium = template.number(number)
+               number++
+            }
+            media = append(media, medium)
+         }
+      }
+   } else {
+      seconds := r.adaptation_set.period.get_duration().Seconds()
+      for range template.segment_count(seconds) {
+         media = append(media, template.number(number))
+         number++
+      }
+   }
+   return media
+}
+
+func (p *Period) get_duration() time.Duration {
+   if p.Duration != nil {
+      return p.Duration.Duration
+   }
+   return p.mpd.MediaPresentationDuration.Duration
 }
 
 type Period struct {
    AdaptationSet []AdaptationSet
    BaseUrl       *BaseUrl  `xml:"BaseURL"`
-   Duration      Duration `xml:"duration,attr"`
+   Duration      *Duration `xml:"duration,attr"`
    Id            string    `xml:"id,attr"`
    mpd           *Mpd
+}
+
+type Mpd struct {
+   BaseUrl                   *BaseUrl  `xml:"BaseURL"`
+   MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
+   Period                    []Period
 }
