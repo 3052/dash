@@ -1,30 +1,16 @@
 package dash
 
 import (
-   "encoding/base64"
-   "encoding/xml"
    "fmt"
    "math"
-   "net/url"
    "strconv"
    "strings"
    "time"
 )
 
 type ContentProtection struct {
-   Pssh        Pssh   `xml:"pssh"`
+   Pssh        string   `xml:"pssh"`
    SchemeIdUri string `xml:"schemeIdUri,attr"`
-}
-
-type Pssh []byte
-
-func (p *Pssh) UnmarshalText(data []byte) error {
-   var err error
-   *p, err = base64.StdEncoding.AppendDecode(nil, data)
-   if err != nil {
-      return err
-   }
-   return nil
 }
 
 type AdaptationSet struct {
@@ -43,7 +29,30 @@ type AdaptationSet struct {
    Width           uint64 `xml:"width,attr"`
 }
 
+func (d *Duration) UnmarshalText(data []byte) error {
+   var err error
+   d.Duration, err = time.ParseDuration(strings.ToLower(
+      strings.TrimPrefix(string(data), "PT"),
+   ))
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
+type Duration struct {
+   Duration time.Duration
+}
+
 ///
+
+// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
+func (s *SegmentTemplate) get_timescale() uint64 {
+   if s.Timescale >= 1 {
+      return s.Timescale
+   }
+   return 1
+}
 
 func (r *Range) MarshalText() ([]byte, error) {
    b := strconv.AppendUint(nil, r.Start, 10)
@@ -83,17 +92,6 @@ func (r *Representation) Initialization() (string, bool) {
    return "", false
 }
 
-func (r *Representation) Widevine() (Pssh, bool) {
-   for _, v := range r.get_content_protection() {
-      if v.SchemeIdUri == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" {
-         if len(v.Pssh) >= 1 {
-            return v.Pssh, true
-         }
-      }
-   }
-   return nil, false
-}
-
 func (r *Representation) id(value string) string {
    return strings.Replace(value, "$RepresentationID$", r.Id, 1)
 }
@@ -108,14 +106,6 @@ type SegmentBase struct {
 func (s *SegmentTemplate) time(value uint) string {
    format := strings.Replace(s.Media, "$Time$", "%d", 1)
    return fmt.Sprintf(format, value)
-}
-
-// dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#timing-sampletimeline
-func (s *SegmentTemplate) get_timescale() uint64 {
-   if s.Timescale >= 1 {
-      return s.Timescale
-   }
-   return 1
 }
 
 func (s *SegmentTemplate) number(value uint) string {
@@ -151,81 +141,6 @@ func (s *SegmentTemplate) start() uint {
    return 1
 }
 
-///
-
-type BaseUrl struct {
-   Url *url.URL
-}
-
-func (b *BaseUrl) UnmarshalText(data []byte) error {
-   b.Url = &url.URL{}
-   return b.Url.UnmarshalBinary(data)
-}
-
-func (r *Representation) GetBaseUrl() (*BaseUrl, bool) {
-   var u *url.URL
-   if v := r.adaptation_set.period.mpd.BaseUrl; v != nil {
-      u = &url.URL{}
-      *u = *v.Url
-   }
-   if v := r.adaptation_set.period.BaseUrl; v != nil {
-      if u == nil {
-         u = &url.URL{}
-      }
-      u = u.ResolveReference(v.Url)
-   }
-   if v := r.BaseUrl; v != nil {
-      if u == nil {
-         u = &url.URL{}
-      }
-      u = u.ResolveReference(v.Url)
-   }
-   if u != nil {
-      return &BaseUrl{u}, true
-   }
-   return nil, false
-}
-
-func Unmarshal(data []byte, base *url.URL) ([]Representation, error) {
-   var media Mpd
-   err := xml.Unmarshal(data, &media)
-   if err != nil {
-      return nil, err
-   }
-   if base != nil {
-      if media.BaseUrl != nil {
-         base = base.ResolveReference(media.BaseUrl.Url)
-      }
-      media.BaseUrl = &BaseUrl{base}
-   }
-   var reps []Representation
-   for _, per := range media.Period {
-      per.mpd = &media
-      for _, ada := range per.AdaptationSet {
-         ada.period = &per
-         for _, rep := range ada.Representation {
-            rep.adaptation_set = &ada
-            reps = append(reps, rep)
-         }
-      }
-   }
-   return reps, nil
-}
-
-type Representation struct {
-   Bandwidth         uint64   `xml:"bandwidth,attr"`
-   BaseUrl           *BaseUrl `xml:"BaseURL"`
-   Codecs            string   `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            uint64 `xml:"height,attr"`
-   Id                string `xml:"id,attr"`
-   MimeType          string `xml:"mimeType,attr"`
-   SegmentBase       *SegmentBase
-   SegmentTemplate   *SegmentTemplate
-   Width             uint64 `xml:"width,attr"`
-   adaptation_set    *AdaptationSet
-}
-
 type SegmentTemplate struct {
    Duration               float64 `xml:"duration,attr"`
    Initialization         string  `xml:"initialization,attr"`
@@ -241,25 +156,24 @@ type SegmentTemplate struct {
    StartNumber *uint  `xml:"startNumber,attr"`
 }
 
+type Representation struct {
+   Bandwidth         uint64   `xml:"bandwidth,attr"`
+   BaseUrl           string `xml:"BaseURL"`
+   Codecs            string   `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            uint64 `xml:"height,attr"`
+   Id                string `xml:"id,attr"`
+   MimeType          string `xml:"mimeType,attr"`
+   SegmentBase       *SegmentBase
+   SegmentTemplate   *SegmentTemplate
+   Width             uint64 `xml:"width,attr"`
+   adaptation_set    *AdaptationSet
+}
+
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
 func (s *SegmentTemplate) segment_count(seconds float64) uint64 {
    seconds /= s.Duration / float64(s.get_timescale())
    return uint64(math.Ceil(seconds))
-}
-
-func (d *Duration) UnmarshalText(data []byte) error {
-   var err error
-   d.Duration, err = time.ParseDuration(strings.ToLower(
-      strings.TrimPrefix(string(data), "PT"),
-   ))
-   if err != nil {
-      return err
-   }
-   return nil
-}
-
-type Duration struct {
-   Duration time.Duration
 }
 
 func (r *Representation) Media() []string {
@@ -303,14 +217,14 @@ func (p *Period) get_duration() time.Duration {
 
 type Period struct {
    AdaptationSet []AdaptationSet
-   BaseUrl       *BaseUrl  `xml:"BaseURL"`
+   BaseUrl       string  `xml:"BaseURL"`
    Duration      *Duration `xml:"duration,attr"`
    Id            string    `xml:"id,attr"`
    mpd           *Mpd
 }
 
 type Mpd struct {
-   BaseUrl                   *BaseUrl  `xml:"BaseURL"`
+   BaseUrl                   string  `xml:"BaseURL"`
    MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
    Period                    []Period
 }
