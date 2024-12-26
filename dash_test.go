@@ -7,53 +7,6 @@ import (
    "testing"
 )
 
-func TestRepresentation(t *testing.T) {
-   text, err := os.ReadFile("testdata/max.mpd")
-   if err != nil {
-      t.Fatal(err)
-   }
-   reps, err := Unmarshal(text, nil)
-   if err != nil {
-      t.Fatal(err)
-   }
-   for _, rep := range reps {
-      fmt.Print(rep, "\n\n")
-   }
-}
-
-func TestSegmentBase(t *testing.T) {
-   for _, test := range tests {
-      media, err := new_mpd(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, v := range media.Period {
-         for _, v := range v.AdaptationSet {
-            for _, v := range v.Representation {
-               fmt.Printf("%+v\n", v.SegmentBase)
-            }
-         }
-      }
-   }
-}
-
-func TestSegmentTemplate(t *testing.T) {
-   for _, test := range tests {
-      media, err := new_mpd(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, v := range media.Period {
-         for _, v := range v.AdaptationSet {
-            fmt.Printf("AdaptationSet %+v\n", v.SegmentTemplate)
-            for _, v := range v.Representation {
-               fmt.Printf("Representation %+v\n", v.SegmentTemplate)
-            }
-         }
-      }
-   }
-}
-
 var tests = []string{
    "testdata/amc.mpd",
    "testdata/cine-member.mpd",
@@ -70,59 +23,6 @@ var tests = []string{
    "testdata/rakuten.mpd",
    "testdata/roku.mpd",
    "testdata/tubi.mpd",
-}
-
-func TestBaseUrl(t *testing.T) {
-   for _, test := range tests {
-      fmt.Println(test)
-      text, err := os.ReadFile(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      reps, err := Unmarshal(text, nil)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, rep := range reps {
-         if v, ok := rep.GetBaseUrl(); ok {
-            fmt.Println(v)
-         }
-      }
-      fmt.Println()
-   }
-}
-
-func TestId(t *testing.T) {
-   for _, test := range tests {
-      media, err := new_mpd(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, v := range media.Period {
-         fmt.Printf("%q\n", v.Id)
-      }
-   }
-}
-
-func TestInitialization(t *testing.T) {
-   for _, test := range tests {
-      media, err := new_mpd(test)
-      if err != nil {
-         t.Fatal(err)
-      }
-      for _, v := range media.Period {
-         for _, v := range v.AdaptationSet {
-            if v := v.SegmentTemplate; v != nil {
-               fmt.Printf("%q\n", v.Initialization)
-            }
-            for _, v := range v.Representation {
-               if v := v.SegmentTemplate; v != nil {
-                  fmt.Printf("%q\n", v.Initialization)
-               }
-            }
-         }
-      }
-   }
 }
 
 func TestLang(t *testing.T) {
