@@ -11,6 +11,22 @@ import (
    "time"
 )
 
+type ContentProtection struct {
+   Pssh        Pssh   `xml:"pssh"`
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
+}
+
+type Pssh []byte
+
+func (p *Pssh) UnmarshalText(data []byte) error {
+   var err error
+   *p, err = base64.StdEncoding.AppendDecode(nil, data)
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
 type AdaptationSet struct {
    Codecs            string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
@@ -25,28 +41,9 @@ type AdaptationSet struct {
    }
    SegmentTemplate *SegmentTemplate
    Width           uint64 `xml:"width,attr"`
-   period          *Period
 }
 
-func (a *AdaptationSet) GetPeriod() *Period {
-   return a.period
-}
-
-type ContentProtection struct {
-   Pssh        Pssh   `xml:"pssh"`
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-}
-
-type Pssh []byte
-
-func (p *Pssh) UnmarshalText(src []byte) error {
-   var err error
-   *p, err = base64.StdEncoding.AppendDecode(nil, src)
-   if err != nil {
-      return err
-   }
-   return nil
-}
+///
 
 func (r *Range) MarshalText() ([]byte, error) {
    b := strconv.AppendUint(nil, r.Start, 10)
@@ -77,13 +74,6 @@ func (r *Range) UnmarshalText(data []byte) error {
    return nil
 }
 
-func (r *Representation) GetMimeType() string {
-   if r.MimeType != "" {
-      return r.MimeType
-   }
-   return r.adaptation_set.MimeType
-}
-
 func (r *Representation) Initialization() (string, bool) {
    if v, ok := r.get_segment_template(); ok {
       if v := v.Initialization; v != "" {
@@ -91,20 +81,6 @@ func (r *Representation) Initialization() (string, bool) {
       }
    }
    return "", false
-}
-
-func (r *Representation) get_height() uint64 {
-   if r.Height >= 1 {
-      return r.Height
-   }
-   return r.adaptation_set.Height
-}
-
-func (r *Representation) get_codecs() string {
-   if r.Codecs != "" {
-      return r.Codecs
-   }
-   return r.adaptation_set.Codecs
 }
 
 func (r *Representation) Widevine() (Pssh, bool) {
@@ -118,89 +94,8 @@ func (r *Representation) Widevine() (Pssh, bool) {
    return nil, false
 }
 
-func (r *Representation) String() string {
-   var b []byte
-   if v := r.get_width(); v >= 1 {
-      b = append(b, "width = "...)
-      b = strconv.AppendUint(b, v, 10)
-   }
-   if v := r.get_height(); v >= 1 {
-      if b != nil {
-         b = append(b, '\n')
-      }
-      b = append(b, "height = "...)
-      b = strconv.AppendUint(b, v, 10)
-   }
-   if b != nil {
-      b = append(b, '\n')
-   }
-   b = append(b, "bandwidth = "...)
-   b = strconv.AppendUint(b, r.Bandwidth, 10)
-   if v := r.get_codecs(); v != "" {
-      b = append(b, "\ncodecs = "...)
-      b = append(b, v...)
-   }
-   b = append(b, "\nmimeType = "...)
-   b = append(b, r.GetMimeType()...)
-   if v := r.adaptation_set.Role; v != nil {
-      b = append(b, "\nrole = "...)
-      b = append(b, v.Value...)
-   }
-   if v := r.adaptation_set.Lang; v != "" {
-      b = append(b, "\nlang = "...)
-      b = append(b, v...)
-   }
-   if v := r.adaptation_set.period.Id; v != "" {
-      b = append(b, "\nperiod = "...)
-      b = append(b, v...)
-   }
-   b = append(b, "\nid = "...)
-   b = append(b, r.Id...)
-   return string(b)
-}
-
-func (r *Representation) get_width() uint64 {
-   if r.Width >= 1 {
-      return r.Width
-   }
-   return r.adaptation_set.Width
-}
-
-func (r *Representation) get_segment_template() (*SegmentTemplate, bool) {
-   if r.SegmentTemplate != nil {
-      return r.SegmentTemplate, true
-   }
-   if r.adaptation_set.SegmentTemplate != nil {
-      return r.adaptation_set.SegmentTemplate, true
-   }
-   return nil, false
-}
-
-func (r *Representation) GetAdaptationSet() *AdaptationSet {
-   return r.adaptation_set
-}
-
 func (r *Representation) id(value string) string {
    return strings.Replace(value, "$RepresentationID$", r.Id, 1)
-}
-
-func (r *Representation) get_content_protection() []ContentProtection {
-   if len(r.ContentProtection) >= 1 {
-      return r.ContentProtection
-   }
-   return r.adaptation_set.ContentProtection
-}
-
-func (r *Representation) Ext() (string, bool) {
-   switch r.GetMimeType() {
-   case "audio/mp4":
-      return ".m4a", true
-   case "text/vtt":
-      return ".vtt", true
-   case "video/mp4":
-      return ".m4v", true
-   }
-   return "", false
 }
 
 type SegmentBase struct {
