@@ -8,25 +8,8 @@ import (
    "time"
 )
 
-type ContentProtection struct {
-   Pssh        string   `xml:"pssh"`
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-}
-
-type AdaptationSet struct {
-   Codecs            string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            uint64 `xml:"height,attr"`
-   Lang              string `xml:"lang,attr"`
-   MaxHeight         int    `xml:"maxHeight,attr"`
-   MaxWidth          int    `xml:"maxWidth,attr"`
-   MimeType          string `xml:"mimeType,attr"`
-   Representation    []Representation
-   Role              *struct {
-      Value string `xml:"value,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-   Width           uint64 `xml:"width,attr"`
+type Duration struct {
+   Duration time.Duration
 }
 
 func (d *Duration) UnmarshalText(data []byte) error {
@@ -40,8 +23,73 @@ func (d *Duration) UnmarshalText(data []byte) error {
    return nil
 }
 
-type Duration struct {
-   Duration time.Duration
+type Mpd struct {
+   BaseUrl                   string  `xml:"BaseURL"`
+   Period                    []Period
+   MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
+}
+
+type Period struct {
+   mpd           *Mpd
+   BaseUrl       string  `xml:"BaseURL"`
+   Id            string    `xml:"id,attr"`
+   Duration      *Duration `xml:"duration,attr"`
+   AdaptationSet []AdaptationSet
+}
+
+type AdaptationSet struct {
+   Codecs            string `xml:"codecs,attr"`
+   Height            uint64 `xml:"height,attr"`
+   Lang              string `xml:"lang,attr"`
+   MaxHeight         int    `xml:"maxHeight,attr"`
+   MaxWidth          int    `xml:"maxWidth,attr"`
+   MimeType          string `xml:"mimeType,attr"`
+   Role              *struct {
+      Value string `xml:"value,attr"`
+   }
+   Width           uint64 `xml:"width,attr"`
+   Representation    []Representation
+   ContentProtection []ContentProtection
+   SegmentTemplate *SegmentTemplate
+}
+
+type SegmentTemplate struct {
+   Duration               float64 `xml:"duration,attr"`
+   Initialization         string  `xml:"initialization,attr"`
+   Media                  string  `xml:"media,attr"`
+   PresentationTimeOffset uint    `xml:"presentationTimeOffset,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D uint `xml:"d,attr"` // duration
+         R uint `xml:"r,attr"` // repeat
+      }
+   }
+   Timescale   uint64 `xml:"timescale,attr"`
+   StartNumber *uint  `xml:"startNumber,attr"`
+}
+
+type ContentProtection struct {
+   Pssh        string   `xml:"pssh"`
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
+}
+
+type Representation struct {
+   Bandwidth         uint64   `xml:"bandwidth,attr"`
+   BaseUrl           string `xml:"BaseURL"`
+   Codecs            string   `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            uint64 `xml:"height,attr"`
+   Id                string `xml:"id,attr"`
+   MimeType          string `xml:"mimeType,attr"`
+   Width             uint64 `xml:"width,attr"`
+   adaptation_set    *AdaptationSet
+   SegmentTemplate   *SegmentTemplate
+   SegmentBase       *struct {
+      Initialization struct {
+         Range string `xml:"range,attr"`
+      }
+      IndexRange string `xml:"indexRange,attr"`
+   }
 }
 
 ///
@@ -52,35 +100,6 @@ func (s *SegmentTemplate) get_timescale() uint64 {
       return s.Timescale
    }
    return 1
-}
-
-func (r *Range) MarshalText() ([]byte, error) {
-   b := strconv.AppendUint(nil, r.Start, 10)
-   b = append(b, '-')
-   return strconv.AppendUint(b, r.End, 10), nil
-}
-
-// SegmentIndexBox uses:
-// unsigned int(32) subsegment_duration;
-// but range values can exceed 32 bits
-type Range struct {
-   Start uint64
-   End   uint64
-}
-
-func (r *Range) UnmarshalText(data []byte) error {
-   // the current testdata always has `-`, so lets assume for now
-   start, end, _ := strings.Cut(string(data), "-")
-   var err error
-   r.Start, err = strconv.ParseUint(start, 10, 64)
-   if err != nil {
-      return err
-   }
-   r.End, err = strconv.ParseUint(end, 10, 64)
-   if err != nil {
-      return err
-   }
-   return nil
 }
 
 func (r *Representation) Initialization() (string, bool) {
@@ -94,13 +113,6 @@ func (r *Representation) Initialization() (string, bool) {
 
 func (r *Representation) id(value string) string {
    return strings.Replace(value, "$RepresentationID$", r.Id, 1)
-}
-
-type SegmentBase struct {
-   Initialization struct {
-      Range Range `xml:"range,attr"`
-   }
-   IndexRange Range `xml:"indexRange,attr"`
 }
 
 func (s *SegmentTemplate) time(value uint) string {
@@ -139,35 +151,6 @@ func (s *SegmentTemplate) start() uint {
       return *s.StartNumber
    }
    return 1
-}
-
-type SegmentTemplate struct {
-   Duration               float64 `xml:"duration,attr"`
-   Initialization         string  `xml:"initialization,attr"`
-   Media                  string  `xml:"media,attr"`
-   PresentationTimeOffset uint    `xml:"presentationTimeOffset,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D uint `xml:"d,attr"` // duration
-         R uint `xml:"r,attr"` // repeat
-      }
-   }
-   Timescale   uint64 `xml:"timescale,attr"`
-   StartNumber *uint  `xml:"startNumber,attr"`
-}
-
-type Representation struct {
-   Bandwidth         uint64   `xml:"bandwidth,attr"`
-   BaseUrl           string `xml:"BaseURL"`
-   Codecs            string   `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            uint64 `xml:"height,attr"`
-   Id                string `xml:"id,attr"`
-   MimeType          string `xml:"mimeType,attr"`
-   SegmentBase       *SegmentBase
-   SegmentTemplate   *SegmentTemplate
-   Width             uint64 `xml:"width,attr"`
-   adaptation_set    *AdaptationSet
 }
 
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
@@ -213,18 +196,4 @@ func (p *Period) get_duration() time.Duration {
       return p.Duration.Duration
    }
    return p.mpd.MediaPresentationDuration.Duration
-}
-
-type Period struct {
-   AdaptationSet []AdaptationSet
-   BaseUrl       string  `xml:"BaseURL"`
-   Duration      *Duration `xml:"duration,attr"`
-   Id            string    `xml:"id,attr"`
-   mpd           *Mpd
-}
-
-type Mpd struct {
-   BaseUrl                   string  `xml:"BaseURL"`
-   MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
 }
