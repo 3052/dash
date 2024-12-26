@@ -333,17 +333,17 @@ type Representation struct {
 
 type SegmentTemplate struct {
    Duration               float64 `xml:"duration,attr"`
-   Initialization         string `xml:"initialization,attr"`
-   Media                  string `xml:"media,attr"`
-   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
+   Initialization         string  `xml:"initialization,attr"`
+   Media                  string  `xml:"media,attr"`
+   PresentationTimeOffset uint    `xml:"presentationTimeOffset,attr"`
    SegmentTimeline        *struct {
       S []struct {
          D uint `xml:"d,attr"` // duration
          R uint `xml:"r,attr"` // repeat
       }
    }
-   Timescale              uint64 `xml:"timescale,attr"`
-   StartNumber            *uint   `xml:"startNumber,attr"`
+   Timescale   uint64 `xml:"timescale,attr"`
+   StartNumber *uint  `xml:"startNumber,attr"`
 }
 
 // dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#addressing-simple-to-explicit
