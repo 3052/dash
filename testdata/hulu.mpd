@@ -1,174 +1,168 @@
 <?xml version="1.0" encoding="utf-8"?>
-<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:cenc="urn:mpeg:cenc:2013" xmlns:hulu="urn:com:hulu:schema:mpd:2015" xmlns:xlink="http://www.w3.org/1999/xlink" profiles="urn:mpeg:dash:profile:isoff-on-demand:2011" type="static" minBufferTime="PT5.0S" mediaPresentationDuration="PT6082.875S">
-  <Period id="ad-bumper-0-0" duration="PT5.005S" start="PT0.000S" xmlns:hulu="urn:com:hulu:schema:mpd:2015">
+<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:cenc="urn:mpeg:cenc:2013" xmlns:hulu="urn:com:hulu:schema:mpd:2015" xmlns:xlink="http://www.w3.org/1999/xlink" profiles="urn:mpeg:dash:profile:isoff-on-demand:2011" type="static" minBufferTime="PT5.0S" mediaPresentationDuration="PT8097.464S">
+  <Period id="content-0" duration="PT8097.464S" start="PT0.000S">
+    <AssetIdentifier schemeIdUri="urn:com:hulu:asset-id:2016" value="209574897"></AssetIdentifier>
     <AdaptationSet mimeType="video/mp4" maxWidth="1920" maxHeight="1080" segmentAlignment="true" bitstreamSwitching="true">
-      <Representation id="0178aa90-b484-9a15-3da6-000e8fa9de64" codecs="avc1.64001E" bandwidth="1310511" startWithSAP="1" width="704" height="396" frameRate="24000/1001">
+      <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="d6dfc1bd602e4f0b9f5707a2bf5d0f3c"></ContentProtection>
+      <ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"></ContentProtection>
+      <Representation id="018efa6b-f135-da98-3da6-00b901211a23" codecs="hev1.2.4.L90.90" bandwidth="1300687" startWithSAP="1" width="864" height="486" frameRate="24000/1001">
         <hulu:Cdn>fa</hulu:Cdn>
-        <hulu:ProfileBandwidth>1000</hulu:ProfileBandwidth>
-        <BaseURL>https://ads-fa-darwin.hulustream.com/published/prerolls/v2/000/62756d70-6572-7632-0002-000000000000/sp_bumper_0173ff76-6464-990a-356f-005d70f161ec_1000018461861_H264_1000_1000018462012_video.mp4</BaseURL>
-        <SegmentBase indexRange="689-732" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
-          <Initialization range="0-688"></Initialization>
+        <hulu:ProfileBandwidth>900</hulu:ProfileBandwidth>
+        <BaseURL>https://http-fa-darwin.hulustream.com/897/209574897/stream_018eeda2-9b9c-69cf-356f-0005ee02756b_1000175230839_HEVC10_900_1000175312607_video.mp4?expires=1735498947&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=mj-d9SBlbNsg8_4kfJc3NsYZmiWxIkzjbvQJcdY6ZW8%3D</BaseURL>
+        <SegmentBase indexRange="1592-25935" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
+          <Initialization range="0-1591"></Initialization>
         </SegmentBase>
       </Representation>
-      <Representation id="0178aa90-af1d-2850-3da6-007766cdfd3f" codecs="avc1.640015" bandwidth="430599" startWithSAP="1" width="512" height="288" frameRate="24000/1001">
+      <Representation id="018efa13-959f-40cb-3da6-00b85bc18c91" codecs="hev1.2.4.L60.90" bandwidth="416115" startWithSAP="1" width="384" height="216" frameRate="24000/1001">
+        <hulu:Cdn>fa</hulu:Cdn>
+        <hulu:ProfileBandwidth>280</hulu:ProfileBandwidth>
+        <BaseURL>https://http-fa-darwin.hulustream.com/897/209574897/stream_018eeda2-9b9c-69cf-356f-0005ee02756b_1000175230825_HEVC10_280_1000175263881_video.mp4?expires=1735498947&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=7vpOYlM_I_3D6-wZKAk9AAuCKKx5LSLPOLkrVYGdN1o%3D</BaseURL>
+        <SegmentBase indexRange="1592-25935" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
+          <Initialization range="0-1591"></Initialization>
+        </SegmentBase>
+      </Representation>
+      <Representation id="018efa11-badd-efe8-3da6-000f51abaad2" codecs="hev1.2.4.L63.90" bandwidth="586601" startWithSAP="1" width="480" height="270" frameRate="24000/1001">
         <hulu:Cdn>fa</hulu:Cdn>
         <hulu:ProfileBandwidth>400</hulu:ProfileBandwidth>
-        <BaseURL>https://ads-fa-darwin.hulustream.com/published/prerolls/v2/000/62756d70-6572-7632-0002-000000000000/sp_bumper_0173ff76-6464-990a-356f-005d70f161ec_1000018461857_H264_400_1000018461996_video.mp4</BaseURL>
-        <SegmentBase indexRange="689-732" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
-          <Initialization range="0-688"></Initialization>
+        <BaseURL>https://http-fa-darwin.hulustream.com/897/209574897/stream_018eeda2-9b9c-69cf-356f-0005ee02756b_1000175230830_HEVC10_400_1000175263408_video.mp4?expires=1735498947&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=tuaJNzcVy32VilgPdJVUod_pCn98zi7jI2z57GME8Xc%3D</BaseURL>
+        <SegmentBase indexRange="1593-25936" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
+          <Initialization range="0-1592"></Initialization>
         </SegmentBase>
       </Representation>
-      <Representation id="0178aa90-b0e0-1ccc-3da6-0039abaffcae" codecs="avc1.64001E" bandwidth="746521" startWithSAP="1" width="640" height="360" frameRate="24000/1001">
+      <Representation id="018efa6b-e828-7158-3da6-004f44934f64" codecs="hev1.2.4.L63.90" bandwidth="874167" startWithSAP="1" width="640" height="360" frameRate="24000/1001">
+        <hulu:Cdn>fa</hulu:Cdn>
+        <hulu:ProfileBandwidth>600</hulu:ProfileBandwidth>
+        <BaseURL>https://http-fa-darwin.hulustream.com/897/209574897/stream_018eeda2-9b9c-69cf-356f-0005ee02756b_1000175230840_HEVC10_600_1000175312595_video.mp4?expires=1735498947&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=OZu_4NuirU3qo3LB8_QF-e8zThNKe5QWolnoeadSnEM%3D</BaseURL>
+        <SegmentBase indexRange="1592-25935" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
+          <Initialization range="0-1591"></Initialization>
+        </SegmentBase>
+      </Representation>
+      <Representation id="018efad3-9921-e4c0-3da6-00431eed6bc6" codecs="hev1.2.4.L93.90" bandwidth="2287360" startWithSAP="1" width="1280" height="720" frameRate="24000/1001">
+        <hulu:Cdn>fa</hulu:Cdn>
+        <hulu:ProfileBandwidth>1600</hulu:ProfileBandwidth>
+        <BaseURL>https://http-fa-darwin.hulustream.com/897/209574897/stream_018eeda2-9b9c-69cf-356f-0005ee02756b_1000175230848_HEVC10_1600_1000175327835_video.mp4?expires=1735498947&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=heYbNGv7eoAFnrdfP4MxiYkqUB3nI65O_LYqY8bfkxE%3D</BaseURL>
+        <SegmentBase indexRange="1593-25936" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
+          <Initialization range="0-1592"></Initialization>
+        </SegmentBase>
+      </Representation>
+      <Representation id="018efad3-ac45-7448-3da6-009b43ef4a59" codecs="hev1.2.4.L93.90" bandwidth="3453436" startWithSAP="1" width="1280" height="720" frameRate="24000/1001">
+        <hulu:Cdn>fa</hulu:Cdn>
+        <hulu:ProfileBandwidth>2400</hulu:ProfileBandwidth>
+        <BaseURL>https://http-fa-darwin.hulustream.com/897/209574897/stream_018eeda2-9b9c-69cf-356f-0005ee02756b_1000175230847_HEVC10_2400_1000175327842_video.mp4?expires=1735498947&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=oqcgyCGS_aL5aA2akML96yHdURy56yas43zLA7nnHm4%3D</BaseURL>
+        <SegmentBase indexRange="1593-25936" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
+          <Initialization range="0-1592"></Initialization>
+        </SegmentBase>
+      </Representation>
+      <Representation id="018efb2d-3803-371c-3da6-0088e240c324" codecs="hev1.2.4.L120.90" bandwidth="4854407" startWithSAP="1" width="1920" height="1080" frameRate="24000/1001">
+        <hulu:Cdn>fa</hulu:Cdn>
+        <hulu:ProfileBandwidth>3600</hulu:ProfileBandwidth>
+        <BaseURL>https://http-fa-darwin.hulustream.com/897/209574897/stream_018eeda2-9b9c-69cf-356f-0005ee02756b_1000175230849_HEVC10_3600_1000175336027_video.mp4?expires=1735498947&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=YOJ_1pKWg6jKGsO29of3AyZ8eSalP0hG3YoKAB_j1B8%3D</BaseURL>
+        <SegmentBase indexRange="1592-25935" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
+          <Initialization range="0-1591"></Initialization>
+        </SegmentBase>
+      </Representation>
+      <Representation id="018efb85-eea3-7919-3da6-006998f99540" codecs="hev1.2.4.L123.90" bandwidth="6863810" startWithSAP="1" width="1920" height="1080" frameRate="24000/1001">
+        <hulu:Cdn>fa</hulu:Cdn>
+        <hulu:ProfileBandwidth>4800</hulu:ProfileBandwidth>
+        <BaseURL>https://http-fa-darwin.hulustream.com/897/209574897/stream_018eeda2-9b9c-69cf-356f-0005ee02756b_1000175230850_HEVC10_4800_1000175341336_video.mp4?expires=1735498947&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=mWUvDctC2LL7umNAOu4g29lUakYffO4TpRRh5owaq9Q%3D</BaseURL>
+        <SegmentBase indexRange="1592-25935" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
+          <Initialization range="0-1591"></Initialization>
+        </SegmentBase>
+      </Representation>
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"></Role>
+    </AdaptationSet>
+    <AdaptationSet mimeType="video/mp4" maxWidth="1920" maxHeight="1080" segmentAlignment="true" bitstreamSwitching="true">
+      <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="d6dfc1bd602e4f0b9f5707a2bf5d0f3c"></ContentProtection>
+      <ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"></ContentProtection>
+      <Representation id="018ef915-0118-e455-3da6-003800afa59b" codecs="avc1.64001E" bandwidth="1288748" startWithSAP="1" width="704" height="396" frameRate="24000/1001">
+        <hulu:Cdn>fa</hulu:Cdn>
+        <hulu:ProfileBandwidth>1000</hulu:ProfileBandwidth>
+        <BaseURL>https://http-fa-darwin.hulustream.com/897/209574897/stream_018eeda2-9b9c-69cf-356f-0005ee02756b_1000175044289_H264_1000_1000175223874_video.mp4?expires=1735498947&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=MHR8q2phFyaKoLAigCX45P6tLcEsFHgYroP-UufuuTk%3D</BaseURL>
+        <SegmentBase indexRange="1530-21013" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
+          <Initialization range="0-1529"></Initialization>
+        </SegmentBase>
+      </Representation>
+      <Representation id="018ef914-154d-6737-3da6-00aca14eccc7" codecs="avc1.640015" bandwidth="482829" startWithSAP="1" width="512" height="288" frameRate="24000/1001">
+        <hulu:Cdn>fa</hulu:Cdn>
+        <hulu:ProfileBandwidth>400</hulu:ProfileBandwidth>
+        <BaseURL>https://http-fa-darwin.hulustream.com/897/209574897/stream_018eeda2-9b9c-69cf-356f-0005ee02756b_1000175044284_H264_400_1000175223820_video.mp4?expires=1735498947&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=XWdpd9LCKygwOAdyev_xW6k_oD0L5Kz5qeEvVqTRb04%3D</BaseURL>
+        <SegmentBase indexRange="1530-21013" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
+          <Initialization range="0-1529"></Initialization>
+        </SegmentBase>
+      </Representation>
+      <Representation id="018efa0b-9bf6-1e05-3da6-00babcf9231c" codecs="avc1.64001E" bandwidth="843374" startWithSAP="1" width="640" height="360" frameRate="24000/1001">
         <hulu:Cdn>fa</hulu:Cdn>
         <hulu:ProfileBandwidth>650</hulu:ProfileBandwidth>
-        <BaseURL>https://ads-fa-darwin.hulustream.com/published/prerolls/v2/000/62756d70-6572-7632-0002-000000000000/sp_bumper_0173ff76-6464-990a-356f-005d70f161ec_1000018461859_H264_650_1000018462001_video.mp4</BaseURL>
-        <SegmentBase indexRange="690-733" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
-          <Initialization range="0-689"></Initialization>
+        <BaseURL>https://http-fa-darwin.hulustream.com/897/209574897/stream_018eeda2-9b9c-69cf-356f-0005ee02756b_1000175044286_H264_650_1000175262508_video.mp4?expires=1735498947&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=mp3WTZssCz9lj-AFGIfBLbjZTNvAWiexdvcNOmvvgVc%3D</BaseURL>
+        <SegmentBase indexRange="1531-21014" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
+          <Initialization range="0-1530"></Initialization>
         </SegmentBase>
       </Representation>
-      <Representation id="0178aa90-b883-65fa-3da6-00225a8119e1" codecs="avc1.64001F" bandwidth="1336072" startWithSAP="1" width="1280" height="720" frameRate="24000/1001">
+      <Representation id="018efa0b-9f97-42ae-3da6-0098a432504a" codecs="avc1.64001F" bandwidth="1974561" startWithSAP="1" width="1280" height="720" frameRate="24000/1001">
         <hulu:Cdn>fa</hulu:Cdn>
         <hulu:ProfileBandwidth>1500</hulu:ProfileBandwidth>
-        <BaseURL>https://ads-fa-darwin.hulustream.com/published/prerolls/v2/000/62756d70-6572-7632-0002-000000000000/sp_bumper_0173ff76-6464-990a-356f-005d70f161ec_1000018461863_H264_1500_1000018462018_video.mp4</BaseURL>
-        <SegmentBase indexRange="688-731" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
-          <Initialization range="0-687"></Initialization>
+        <BaseURL>https://http-fa-darwin.hulustream.com/897/209574897/stream_018eeda2-9b9c-69cf-356f-0005ee02756b_1000175044285_H264_1500_1000175262509_video.mp4?expires=1735498947&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=O6FSxzqTLPcBORL8GqRikTx7ma2IJqIYhkq9krAl8Gw%3D</BaseURL>
+        <SegmentBase indexRange="1530-21013" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
+          <Initialization range="0-1529"></Initialization>
         </SegmentBase>
       </Representation>
-      <Representation id="0178aa90-bd93-2852-3da6-0057049a95b0" codecs="avc1.64001F" bandwidth="2441893" startWithSAP="1" width="1280" height="720" frameRate="24000/1001">
+      <Representation id="018efa0b-a15e-dcbd-3da6-009c3a912df3" codecs="avc1.64001F" bandwidth="2665088" startWithSAP="1" width="1280" height="720" frameRate="24000/1001">
         <hulu:Cdn>fa</hulu:Cdn>
         <hulu:ProfileBandwidth>2000</hulu:ProfileBandwidth>
-        <BaseURL>https://ads-fa-darwin.hulustream.com/published/prerolls/v2/000/62756d70-6572-7632-0002-000000000000/sp_bumper_0173ff76-6464-990a-356f-005d70f161ec_1000018461865_H264_2000_1000018462027_video.mp4</BaseURL>
-        <SegmentBase indexRange="689-732" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
-          <Initialization range="0-688"></Initialization>
+        <BaseURL>https://http-fa-darwin.hulustream.com/897/209574897/stream_018eeda2-9b9c-69cf-356f-0005ee02756b_1000175044288_H264_2000_1000175262501_video.mp4?expires=1735498947&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=FYb2-ygzNudUJaPb6uN5Jtka3zoJDVZKgqbw86MA6pc%3D</BaseURL>
+        <SegmentBase indexRange="1530-21013" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
+          <Initialization range="0-1529"></Initialization>
         </SegmentBase>
       </Representation>
-      <Representation id="0178aa90-bcec-f921-3da6-006c80be5af5" codecs="avc1.64001F" bandwidth="2695977" startWithSAP="1" width="1280" height="720" frameRate="24000/1001">
+      <Representation id="018efa0b-a0ba-b6fc-3da6-000b1fd543ef" codecs="avc1.64001F" bandwidth="3330816" startWithSAP="1" width="1280" height="720" frameRate="24000/1001">
         <hulu:Cdn>fa</hulu:Cdn>
         <hulu:ProfileBandwidth>2500</hulu:ProfileBandwidth>
-        <BaseURL>https://ads-fa-darwin.hulustream.com/published/prerolls/v2/000/62756d70-6572-7632-0002-000000000000/sp_bumper_0173ff76-6464-990a-356f-005d70f161ec_1000018461867_H264_2500_1000018462026_video.mp4</BaseURL>
-        <SegmentBase indexRange="689-732" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
-          <Initialization range="0-688"></Initialization>
+        <BaseURL>https://http-fa-darwin.hulustream.com/897/209574897/stream_018eeda2-9b9c-69cf-356f-0005ee02756b_1000175044290_H264_2500_1000175262510_video.mp4?expires=1735498947&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=lHu62OaZ9YxAWWv2DM-VYBCn-fnnYGnB_7DoHlJu9PQ%3D</BaseURL>
+        <SegmentBase indexRange="1530-21013" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
+          <Initialization range="0-1529"></Initialization>
         </SegmentBase>
       </Representation>
-      <Representation id="0178aa90-c02a-6b24-3da6-0027131a084e" codecs="avc1.640028" bandwidth="8660716" startWithSAP="1" width="1920" height="1080" frameRate="24000/1001">
+      <Representation id="018efa0c-8d37-96db-3da6-00867dbe234f" codecs="avc1.64001F" bandwidth="4169449" startWithSAP="1" width="1280" height="720" frameRate="24000/1001">
+        <hulu:Cdn>fa</hulu:Cdn>
+        <hulu:ProfileBandwidth>3200</hulu:ProfileBandwidth>
+        <BaseURL>https://http-fa-darwin.hulustream.com/897/209574897/stream_018eeda2-9b9c-69cf-356f-0005ee02756b_1000175044291_H264_3200_1000175262506_video.mp4?expires=1735498947&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=pZU7M7rmST6HHaoeWXvSyXpSuiPgqCNX6sN1z8gXVaI%3D</BaseURL>
+        <SegmentBase indexRange="1530-21013" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
+          <Initialization range="0-1529"></Initialization>
+        </SegmentBase>
+      </Representation>
+      <Representation id="018ef91b-6f37-71ea-3da6-005427e1a75e" codecs="avc1.640028" bandwidth="8097926" startWithSAP="1" width="1920" height="1080" frameRate="24000/1001">
         <hulu:Cdn>fa</hulu:Cdn>
         <hulu:ProfileBandwidth>6000</hulu:ProfileBandwidth>
-        <BaseURL>https://ads-fa-darwin.hulustream.com/published/prerolls/v2/000/62756d70-6572-7632-0002-000000000000/sp_bumper_0173ff76-6464-990a-356f-005d70f161ec_1000018461871_H264_6000_1000018462031_video.mp4</BaseURL>
-        <SegmentBase indexRange="689-732" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
-          <Initialization range="0-688"></Initialization>
-        </SegmentBase>
-      </Representation>
-    </AdaptationSet>
-    <AdaptationSet mimeType="audio/mp4" segmentAlignment="true" bitstreamSwitching="true" lang="en" label="main">
-      <InbandEventStream schemeIdUri="www.nielsen.com:id3:v1" value="1"></InbandEventStream>
-      <Representation id="0178aa90-a3dd-1ccb-3da6-00e622f0e4d7" codecs="ec-3" bandwidth="192000" startWithSAP="1" audioSamplingRate="48000">
-        <hulu:Cdn>fa</hulu:Cdn>
-        <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
-        <BaseURL>https://ads-fa-darwin.hulustream.com/published/prerolls/v2/000/62756d70-6572-7632-0002-000000000000/sp_bumper_0173ff76-6464-990a-356f-005d70f161ec_1000018461854_2_channels_eac3_128k_2ch_1000018461990_audio.mp4</BaseURL>
-        <SegmentBase indexRange="591-634" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
-          <Initialization range="0-590"></Initialization>
+        <BaseURL>https://http-fa-darwin.hulustream.com/897/209574897/stream_018eeda2-9b9c-69cf-356f-0005ee02756b_1000175044287_H264_6000_1000175224330_video.mp4?expires=1735498947&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=GvlCUVd3lcIcacpdsxSd1pZ5T4ESBKZS9Wm_u8C7nHU%3D</BaseURL>
+        <SegmentBase indexRange="1531-21014" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
+          <Initialization range="0-1530"></Initialization>
         </SegmentBase>
       </Representation>
       <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"></Role>
     </AdaptationSet>
     <AdaptationSet mimeType="audio/mp4" segmentAlignment="true" bitstreamSwitching="true" lang="en" label="main">
-      <InbandEventStream schemeIdUri="www.nielsen.com:id3:v1" value="1"></InbandEventStream>
-      <Representation id="0178aa90-abe9-4d8b-3da6-0055622ec549" codecs="mp4a.40.5" bandwidth="96001" startWithSAP="1" audioSamplingRate="48000">
-        <hulu:Cdn>fa</hulu:Cdn>
-        <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
-        <BaseURL>https://ads-fa-darwin.hulustream.com/published/prerolls/v2/000/62756d70-6572-7632-0002-000000000000/sp_bumper_0173ff76-6464-990a-356f-005d70f161ec_1000018461853_2_channels_aac_64k_2ch_1000018461991_audio.mp4</BaseURL>
-        <SegmentBase indexRange="631-686" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
-          <Initialization range="0-630"></Initialization>
-        </SegmentBase>
-      </Representation>
-      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"></Role>
-    </AdaptationSet>
-  </Period>
-  <Period id="content-0" duration="PT6077.870S" start="PT5.005S">
-    <AssetIdentifier schemeIdUri="urn:com:hulu:asset-id:2016" value="197787772"></AssetIdentifier>
-    <AdaptationSet mimeType="video/mp4" maxWidth="1920" maxHeight="1080" segmentAlignment="true" bitstreamSwitching="true">
-      <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="587a6ed6d98740efbab362ebd1ae7a4a"></ContentProtection>
-      <ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"></ContentProtection>
-      <Representation id="018b6acb-a817-8967-3da6-00c6a247b6dd" codecs="avc1.64001E" bandwidth="1339418" startWithSAP="1" width="704" height="396" frameRate="24000/1001">
-        <hulu:Cdn>fa</hulu:Cdn>
-        <hulu:ProfileBandwidth>1000</hulu:ProfileBandwidth>
-        <BaseURL>https://http-fa-darwin.hulustream.com/772/197787772/stream_018b63d9-5c42-415e-356f-006d1294dc07_1000130997436_H264_1000_1000131002660_video.mp4?expires=1704165272&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=XOUOa-EUj3wk1uC0G7DcV43wHqXjfdfSIc9tWoTLCUw%3D</BaseURL>
-        <SegmentBase indexRange="1530-16177" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
-          <Initialization range="0-1529"></Initialization>
-        </SegmentBase>
-      </Representation>
-      <Representation id="018b6acb-a5e6-fc44-3da6-00a430bfcfe8" codecs="avc1.640015" bandwidth="471828" startWithSAP="1" width="512" height="288" frameRate="24000/1001">
-        <hulu:Cdn>fa</hulu:Cdn>
-        <hulu:ProfileBandwidth>400</hulu:ProfileBandwidth>
-        <BaseURL>https://http-fa-darwin.hulustream.com/772/197787772/stream_018b63d9-5c42-415e-356f-006d1294dc07_1000130997431_H264_400_1000131002658_video.mp4?expires=1704165272&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=l3kMJl6NXnXbOCZMhTQVdhBQuNixNabPkpSkMxqk2DE%3D</BaseURL>
-        <SegmentBase indexRange="1530-16177" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
-          <Initialization range="0-1529"></Initialization>
-        </SegmentBase>
-      </Representation>
-      <Representation id="018b6b1d-2b12-8b9e-3da6-00a38e51d5e6" codecs="avc1.64001E" bandwidth="827458" startWithSAP="1" width="640" height="360" frameRate="24000/1001">
-        <hulu:Cdn>fa</hulu:Cdn>
-        <hulu:ProfileBandwidth>650</hulu:ProfileBandwidth>
-        <BaseURL>https://http-fa-darwin.hulustream.com/772/197787772/stream_018b63d9-5c42-415e-356f-006d1294dc07_1000130997434_H264_650_1000131007854_video.mp4?expires=1704165272&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=jRBvartsR_id1S8umnUgoKMpV3mYvfUkI5M_yeErfGo%3D</BaseURL>
-        <SegmentBase indexRange="1531-16178" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
-          <Initialization range="0-1530"></Initialization>
-        </SegmentBase>
-      </Representation>
-      <Representation id="018b6b1d-2767-8b9d-3da6-00262e783d2d" codecs="avc1.64001F" bandwidth="1974890" startWithSAP="1" width="1280" height="720" frameRate="24000/1001">
-        <hulu:Cdn>fa</hulu:Cdn>
-        <hulu:ProfileBandwidth>1500</hulu:ProfileBandwidth>
-        <BaseURL>https://http-fa-darwin.hulustream.com/772/197787772/stream_018b63d9-5c42-415e-356f-006d1294dc07_1000130997428_H264_1500_1000131007851_video.mp4?expires=1704165272&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=GyCQT2WXIDvclZcpViAnr94sax-gHKvDiobnJwPybjs%3D</BaseURL>
-        <SegmentBase indexRange="1530-16177" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
-          <Initialization range="0-1529"></Initialization>
-        </SegmentBase>
-      </Representation>
-      <Representation id="018b6b1d-2b28-0cd3-3da6-0043287cbeea" codecs="avc1.64001F" bandwidth="2745178" startWithSAP="1" width="1280" height="720" frameRate="24000/1001">
-        <hulu:Cdn>fa</hulu:Cdn>
-        <hulu:ProfileBandwidth>2000</hulu:ProfileBandwidth>
-        <BaseURL>https://http-fa-darwin.hulustream.com/772/197787772/stream_018b63d9-5c42-415e-356f-006d1294dc07_1000130997432_H264_2000_1000131007852_video.mp4?expires=1704165272&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=Owu-5aoUPb5UKyZE_Z7HgrJ0GbI6bTYJA9P3Vu38obk%3D</BaseURL>
-        <SegmentBase indexRange="1530-16177" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
-          <Initialization range="0-1529"></Initialization>
-        </SegmentBase>
-      </Representation>
-      <Representation id="018b6b1d-2622-9bf0-3da6-00f2fb5fe6f4" codecs="avc1.64001F" bandwidth="3391098" startWithSAP="1" width="1280" height="720" frameRate="24000/1001">
-        <hulu:Cdn>fa</hulu:Cdn>
-        <hulu:ProfileBandwidth>2500</hulu:ProfileBandwidth>
-        <BaseURL>https://http-fa-darwin.hulustream.com/772/197787772/stream_018b63d9-5c42-415e-356f-006d1294dc07_1000130997435_H264_2500_1000131007849_video.mp4?expires=1704165272&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=lwyklvfTtKfvwKj1Nd-HK4duL5UT8SQg8-KyBpHuwwA%3D</BaseURL>
-        <SegmentBase indexRange="1530-16177" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
-          <Initialization range="0-1529"></Initialization>
-        </SegmentBase>
-      </Representation>
-      <Representation id="018b6aea-c85a-0b8e-3da6-006be2736812" codecs="avc1.640028" bandwidth="8491505" startWithSAP="1" width="1920" height="1080" frameRate="24000/1001">
-        <hulu:Cdn>fa</hulu:Cdn>
-        <hulu:ProfileBandwidth>6000</hulu:ProfileBandwidth>
-        <BaseURL>https://http-fa-darwin.hulustream.com/772/197787772/stream_018b63d9-5c42-415e-356f-006d1294dc07_1000130997429_H264_6000_1000131005304_video.mp4?expires=1704165272&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=h4WU-banfzpBKJAJv1xbhQQX2asfzLQUIh1QP6bPvPI%3D</BaseURL>
-        <SegmentBase indexRange="1531-16178" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
-          <Initialization range="0-1530"></Initialization>
-        </SegmentBase>
-      </Representation>
-    </AdaptationSet>
-    <AdaptationSet mimeType="audio/mp4" segmentAlignment="true" bitstreamSwitching="true" lang="en" label="main">
-      <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="587a6ed6d98740efbab362ebd1ae7a4a"></ContentProtection>
+      <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="d6dfc1bd602e4f0b9f5707a2bf5d0f3c"></ContentProtection>
       <ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"></ContentProtection>
       <InbandEventStream schemeIdUri="www.nielsen.com:id3:v1" value="1"></InbandEventStream>
-      <Representation id="018b6afc-93f3-30cb-3da6-00179eb7e036" codecs="ec-3" bandwidth="260441" startWithSAP="1" audioSamplingRate="48000">
+      <Representation id="018ef936-ba25-1300-3da6-005d1565bad7" codecs="ec-3" bandwidth="260460" startWithSAP="1" audioSamplingRate="48000">
         <hulu:Cdn>fa</hulu:Cdn>
         <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="6"></AudioChannelConfiguration>
-        <BaseURL>https://http-fa-darwin.hulustream.com/772/197787772/stream_018b63d9-5c42-415e-356f-006d1294dc07_1000130997506_6_channels_eac3_256k_6ch_1000131005811_audio.mp4?expires=1704165272&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=tfxIc4ZLaQ2AwJpTFniSp7cqcet9KW327-y5rYZnSCM%3D</BaseURL>
-        <SegmentBase indexRange="1433-15732" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
+        <BaseURL>https://http-fa-darwin.hulustream.com/897/209574897/stream_018eeda2-9b9c-69cf-356f-0005ee02756b_1000175044275_6_channels_eac3_256k_6ch_1000175227079_audio.mp4?expires=1735498947&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=z_Cqlv8_hNvjQk5PmRX_NH6L36MCQori2587TFa1ZAI%3D</BaseURL>
+        <SegmentBase indexRange="1433-20496" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
           <Initialization range="0-1432"></Initialization>
         </SegmentBase>
       </Representation>
       <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"></Role>
     </AdaptationSet>
     <AdaptationSet mimeType="audio/mp4" segmentAlignment="true" bitstreamSwitching="true" lang="en" label="main">
-      <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="587a6ed6d98740efbab362ebd1ae7a4a"></ContentProtection>
+      <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="d6dfc1bd602e4f0b9f5707a2bf5d0f3c"></ContentProtection>
       <ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"></ContentProtection>
       <InbandEventStream schemeIdUri="www.nielsen.com:id3:v1" value="1"></InbandEventStream>
-      <Representation id="018b6ab9-ee3c-98b6-3da6-004b1f029150" codecs="mp4a.40.5" bandwidth="68520" startWithSAP="1" audioSamplingRate="48000">
+      <Representation id="018ef914-125f-18fa-3da6-009ee4f017b3" codecs="mp4a.40.5" bandwidth="68559" startWithSAP="1" audioSamplingRate="48000">
         <hulu:Cdn>fa</hulu:Cdn>
         <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
-        <BaseURL>https://http-fa-darwin.hulustream.com/772/197787772/stream_018b63d9-5c42-415e-356f-006d1294dc07_1000130997516_2_channels_aac_64k_2ch_1000131001062_audio.mp4?expires=1704165272&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=eqwR_IbdRsY-Kmf59wsWW201d1TWenOrYy5fkdEnvgs%3D</BaseURL>
-        <SegmentBase indexRange="1473-15772" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
+        <BaseURL>https://http-fa-darwin.hulustream.com/897/209574897/stream_018eeda2-9b9c-69cf-356f-0005ee02756b_1000175044280_2_channels_aac_64k_2ch_1000175223817_audio.mp4?expires=1735498947&amp;keyid=NzkwYmRlZWMzM2VlZDQK&amp;signature=dx3Qli9-1Qz1koiB6ZCHIP--0LzDnzpYZMv4YuTLLu4%3D</BaseURL>
+        <SegmentBase indexRange="1473-20536" indexRangeExact="true" presentationTimeOffset="0" timescale="10000000">
           <Initialization range="0-1472"></Initialization>
         </SegmentBase>
       </Representation>
