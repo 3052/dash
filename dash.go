@@ -1,7 +1,5 @@
 package dash
 
-import "iter"
-
 type Representation struct {
    Bandwidth      int64  `xml:"bandwidth,attr"`
    adaptation_set *AdaptationSet
@@ -10,20 +8,6 @@ type Representation struct {
    Id             string `xml:"id,attr"`
    MimeType       string `xml:"mimeType,attr"`
    Width          int64  `xml:"width,attr"`
-}
-
-func (p *Period) representation() iter.Seq[Representation] {
-   return func(yield func(Representation) bool) {
-      for _, adapt := range p.AdaptationSet {
-         adapt.period = p
-         for _, represent := range adapt.Representation {
-            represent.adaptation_set = &adapt
-            if !yield(represent) {
-               return
-            }
-         }
-      }
-   }
 }
 
 type Period struct {
