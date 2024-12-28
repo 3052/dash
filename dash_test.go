@@ -7,7 +7,16 @@ import (
    "testing"
 )
 
-func TestPull(t *testing.T) {
+func (p *Period) hd() (*Representation, bool) {
+   for value := range p.representation() {
+      if value.Height > 576 {
+         return &value, true
+      }
+   }
+   return nil, false
+}
+
+func TestPush(t *testing.T) {
    data, err := os.ReadFile("testdata/amc.mpd")
    if err != nil {
       t.Fatal(err)
@@ -18,7 +27,7 @@ func TestPull(t *testing.T) {
       t.Fatal(err)
    }
    for _, p := range media.Period {
-      represent, ok := p.hd_pull()
+      represent, ok := p.hd()
       fmt.Printf("%+v %v\n", represent, ok)
    }
 }
