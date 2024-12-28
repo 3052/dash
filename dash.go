@@ -1,44 +1,49 @@
 package dash
 
-type Mpd struct {
-   BaseUrl                   string  `xml:"BaseURL"`
-   Period                    []Period
+import "iter"
+
+type Representation struct {
+   Bandwidth      int64  `xml:"bandwidth,attr"`
+   adaptation_set *AdaptationSet
+   Codecs         string `xml:"codecs,attr"`
+   Height         int64  `xml:"height,attr"`
+   Id             string `xml:"id,attr"`
+   MimeType       string `xml:"mimeType,attr"`
+   Width          int64  `xml:"width,attr"`
+}
+
+func (p *Period) representation() iter.Seq[Representation] {
+   return func(yield func(Representation) bool) {
+      for _, adapt := range p.AdaptationSet {
+         adapt.period = p
+         for _, represent := range adapt.Representation {
+            represent.adaptation_set = &adapt
+            if !yield(represent) {
+               return
+            }
+         }
+      }
+   }
 }
 
 type Period struct {
-   mpd           *Mpd
-   BaseUrl       string  `xml:"BaseURL"`
-   Id            string    `xml:"id,attr"`
    AdaptationSet []AdaptationSet
+   Id            string `xml:"id,attr"`
+}
+
+type Mpd struct {
+   Period []Period
 }
 
 type AdaptationSet struct {
-   Codecs            string `xml:"codecs,attr"`
-   Height            uint64 `xml:"height,attr"`
-   Lang              string `xml:"lang,attr"`
-   MaxHeight         int    `xml:"maxHeight,attr"`
-   MaxWidth          int    `xml:"maxWidth,attr"`
-   MimeType          string `xml:"mimeType,attr"`
-   Role              *struct {
+   Codecs         string `xml:"codecs,attr"`
+   Height         int64  `xml:"height,attr"`
+   Lang           string `xml:"lang,attr"`
+   MimeType       string `xml:"mimeType,attr"`
+   Representation []Representation
+   Role           *struct {
       Value string `xml:"value,attr"`
    }
-   Width           uint64 `xml:"width,attr"`
-   Representation    []Representation
-}
-
-type Representation struct {
-   Bandwidth         uint64   `xml:"bandwidth,attr"`
-   BaseUrl           string `xml:"BaseURL"`
-   Codecs            string   `xml:"codecs,attr"`
-   Height            uint64 `xml:"height,attr"`
-   Id                string `xml:"id,attr"`
-   MimeType          string `xml:"mimeType,attr"`
-   Width             uint64 `xml:"width,attr"`
-   SegmentBase       *struct {
-      Initialization struct {
-         Range string `xml:"range,attr"`
-      }
-      IndexRange string `xml:"indexRange,attr"`
-   }
-   adaptation_set    *AdaptationSet
+   Width  int64 `xml:"width,attr"`
+   period *Period
 }
