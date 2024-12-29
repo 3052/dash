@@ -21,16 +21,27 @@ func main() {
       if err != nil {
          panic(err)
       }
-      var count int
+      var (
+         period_count int
+         s_count int
+      )
       for _, line := range strings.SplitAfter(string(text), "\n") {
+         if strings.Contains(line, "<Period") {
+            period_count++
+         }
+         if strings.Contains(line, "</MPD>") {
+            period_count = 0
+         }
          if strings.Contains(line, "<S ") {
-            count++
+            s_count++
          }
          if strings.Contains(line, "</SegmentTimeline>") {
-            count = 0
+            s_count = 0
          }
-         if count <= *max {
-            file.WriteString(line)
+         if period_count <= *max {
+            if s_count <= *max {
+               file.WriteString(line)
+            }
          }
       }
    } else {
