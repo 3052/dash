@@ -7,16 +7,31 @@ import (
    "testing"
 )
 
-func (p *Period) hd() (*Representation, bool) {
-   for value := range p.representation() {
-      if value.Height > 576 {
-         return &value, true
+func (m Mpd) hd() (*Representation, bool) {
+   for represent := range m.representation() {
+      if *represent.Height > 576 {
+         return &represent, true
       }
    }
    return nil, false
 }
 
-func TestPush(t *testing.T) {
+func TestPeriod(t *testing.T) {
+   data, err := os.ReadFile("testdata/paramount.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   var media Mpd
+   err = xml.Unmarshal(data, &media)
+   if err != nil {
+      t.Fatal(err)
+   }
+   for represent := range media.representation() {
+      fmt.Printf("%+v\n", represent)
+   }
+}
+
+func TestHd(t *testing.T) {
    data, err := os.ReadFile("testdata/amc.mpd")
    if err != nil {
       t.Fatal(err)
@@ -26,8 +41,6 @@ func TestPush(t *testing.T) {
    if err != nil {
       t.Fatal(err)
    }
-   for _, p := range media.Period {
-      represent, ok := p.hd()
-      fmt.Printf("%+v %v\n", represent, ok)
-   }
+   represent, ok := media.hd()
+   fmt.Printf("%+v %v\n", represent, ok)
 }
