@@ -7,16 +7,7 @@ import (
    "testing"
 )
 
-func (m Mpd) hd() (*Representation, bool) {
-   for represent := range m.representation() {
-      if *represent.Height > 576 {
-         return &represent, true
-      }
-   }
-   return nil, false
-}
-
-func TestPeriod(t *testing.T) {
+func TestRepresentation(t *testing.T) {
    data, err := os.ReadFile("testdata/paramount.mpd")
    if err != nil {
       t.Fatal(err)
@@ -27,8 +18,17 @@ func TestPeriod(t *testing.T) {
       t.Fatal(err)
    }
    for represent := range media.representation() {
-      fmt.Printf("%+v\n", represent)
+      fmt.Print(&represent, "\n\n")
    }
+}
+
+func (m Mpd) hd() (*Representation, bool) {
+   for represent := range m.representation() {
+      if *represent.Height > 576 {
+         return &represent, true
+      }
+   }
+   return nil, false
 }
 
 func TestHd(t *testing.T) {
