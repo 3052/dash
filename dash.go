@@ -5,8 +5,48 @@ import (
    "strconv"
 )
 
-type Mpd struct {
-   Period []Period
+func (r *Representation) seq() iter.Seq[Representation] {
+   return func(yield func(Representation) bool) {
+      for rb := range r.adaptation_set.period.mpd.representation() {
+         if rb.Id == r.Id {
+            if !yield(rb) {
+               return
+            }
+         }
+      }
+   }
+}
+
+func (m Mpd) representation() iter.Seq[Representation] {
+   return func(yield func(Representation) bool) {
+      for _, p := range m.Period {
+         p.mpd = &m
+         for _, adapt := range p.AdaptationSet {
+            adapt.period = &p
+            for _, represent := range adapt.Representation {
+               if represent.Codecs == nil {
+                  represent.Codecs = adapt.Codecs
+               }
+               if represent.Height == nil {
+                  represent.Height = adapt.Height
+               }
+               if represent.MimeType == nil {
+                  represent.MimeType = adapt.MimeType
+               }
+               if represent.SegmentTemplate == nil {
+                  represent.SegmentTemplate = adapt.SegmentTemplate
+               }
+               if represent.Width == nil {
+                  represent.Width = adapt.Width
+               }
+               represent.adaptation_set = &adapt
+               if !yield(represent) {
+                  return
+               }
+            }
+         }
+      }
+   }
 }
 
 func (r *Representation) String() string {
@@ -50,13 +90,8 @@ func (r *Representation) String() string {
    return string(b)
 }
 
-type Period struct {
-   AdaptationSet []AdaptationSet
-   Id            string `xml:"id,attr"`
-}
-
-type SegmentTemplate struct {
-   Initialization string `xml:"initialization,attr"`
+type Mpd struct {
+   Period []Period
 }
 
 type AdaptationSet struct {
@@ -84,38 +119,16 @@ type Representation struct {
    adaptation_set *AdaptationSet
 }
 
-func (m Mpd) representation() iter.Seq[Representation] {
-   id := map[string]struct{}{}
-   return func(yield func(Representation) bool) {
-      for _, p := range m.Period {
-         for _, adapt := range p.AdaptationSet {
-            adapt.period = &p
-            for _, represent := range adapt.Representation {
-               if represent.Codecs == nil {
-                  represent.Codecs = adapt.Codecs
-               }
-               if represent.Height == nil {
-                  represent.Height = adapt.Height
-               }
-               if represent.MimeType == nil {
-                  represent.MimeType = adapt.MimeType
-               }
-               if represent.SegmentTemplate == nil {
-                  represent.SegmentTemplate = adapt.SegmentTemplate
-               }
-               if represent.Width == nil {
-                  represent.Width = adapt.Width
-               }
-               represent.adaptation_set = &adapt
-               _, ok := id[represent.Id]
-               if !ok {
-                  if !yield(represent) {
-                     return
-                  }
-               }
-               id[represent.Id] = struct{}{}
-            }
-         }
+type Period struct {
+   AdaptationSet []AdaptationSet
+   Id            string `xml:"id,attr"`
+   mpd *Mpd
+}
+
+type SegmentTemplate struct {
+   SegmentTimeline *struct {
+      S []struct {
+         R int `xml:"r,attr"` // repeat
       }
    }
 }
