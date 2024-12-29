@@ -5,69 +5,8 @@ import (
    "strconv"
 )
 
-type AdaptationSet struct {
-   period         *Period
-   Representation []Representation
-   Role           *struct {
-      Value string `xml:"value,attr"`
-   }
-   Codecs   *string `xml:"codecs,attr"`
-   Height   *int64  `xml:"height,attr"`
-   Lang     string  `xml:"lang,attr"`
-   MimeType *string `xml:"mimeType,attr"`
-   Width    *int64  `xml:"width,attr"`
-}
-
-func (m Mpd) representation() iter.Seq[Representation] {
-   id := map[string]struct{}{}
-   return func(yield func(Representation) bool) {
-      for _, p := range m.Period {
-         for _, adapt := range p.AdaptationSet {
-            adapt.period = &p
-            for _, represent := range adapt.Representation {
-               if represent.Codecs == nil {
-                  represent.Codecs = adapt.Codecs
-               }
-               if represent.Height == nil {
-                  represent.Height = adapt.Height
-               }
-               if represent.MimeType == nil {
-                  represent.MimeType = adapt.MimeType
-               }
-               if represent.Width == nil {
-                  represent.Width = adapt.Width
-               }
-               represent.adaptation_set = &adapt
-               _, ok := id[represent.Id]
-               if !ok {
-                  if !yield(represent) {
-                     return
-                  }
-               }
-               id[represent.Id] = struct{}{}
-            }
-         }
-      }
-   }
-}
-
 type Mpd struct {
    Period []Period
-}
-
-type Period struct {
-   AdaptationSet []AdaptationSet
-   Id            string `xml:"id,attr"`
-}
-
-type Representation struct {
-   Bandwidth      int64  `xml:"bandwidth,attr"`
-   Id             string `xml:"id,attr"`
-   adaptation_set *AdaptationSet
-   Width          *int64  `xml:"width,attr"`
-   Codecs         *string `xml:"codecs,attr"`
-   Height         *int64  `xml:"height,attr"`
-   MimeType       *string `xml:"mimeType,attr"`
 }
 
 func (r *Representation) String() string {
@@ -109,4 +48,74 @@ func (r *Representation) String() string {
    b = append(b, "\nid = "...)
    b = append(b, r.Id...)
    return string(b)
+}
+
+type Period struct {
+   AdaptationSet []AdaptationSet
+   Id            string `xml:"id,attr"`
+}
+
+type SegmentTemplate struct {
+   Initialization string `xml:"initialization,attr"`
+}
+
+type AdaptationSet struct {
+   Codecs         *string `xml:"codecs,attr"`
+   Height         *int64  `xml:"height,attr"`
+   Lang           string  `xml:"lang,attr"`
+   MimeType       *string `xml:"mimeType,attr"`
+   Representation []Representation
+   Role           *struct {
+      Value string `xml:"value,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width  *int64 `xml:"width,attr"`
+   period *Period
+}
+
+type Representation struct {
+   Bandwidth      int64  `xml:"bandwidth,attr"`
+   Codecs         *string `xml:"codecs,attr"`
+   Height         *int64  `xml:"height,attr"`
+   Id             string `xml:"id,attr"`
+   MimeType       *string `xml:"mimeType,attr"`
+   SegmentTemplate *SegmentTemplate
+   Width          *int64  `xml:"width,attr"`
+   adaptation_set *AdaptationSet
+}
+
+func (m Mpd) representation() iter.Seq[Representation] {
+   id := map[string]struct{}{}
+   return func(yield func(Representation) bool) {
+      for _, p := range m.Period {
+         for _, adapt := range p.AdaptationSet {
+            adapt.period = &p
+            for _, represent := range adapt.Representation {
+               if represent.Codecs == nil {
+                  represent.Codecs = adapt.Codecs
+               }
+               if represent.Height == nil {
+                  represent.Height = adapt.Height
+               }
+               if represent.MimeType == nil {
+                  represent.MimeType = adapt.MimeType
+               }
+               if represent.SegmentTemplate == nil {
+                  represent.SegmentTemplate = adapt.SegmentTemplate
+               }
+               if represent.Width == nil {
+                  represent.Width = adapt.Width
+               }
+               represent.adaptation_set = &adapt
+               _, ok := id[represent.Id]
+               if !ok {
+                  if !yield(represent) {
+                     return
+                  }
+               }
+               id[represent.Id] = struct{}{}
+            }
+         }
+      }
+   }
 }
