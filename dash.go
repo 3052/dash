@@ -3,18 +3,23 @@ package dash
 import (
    "iter"
    "strconv"
+   "strings"
 )
 
-func (r *Representation) seq() iter.Seq[Representation] {
-   return func(yield func(Representation) bool) {
-      for rb := range r.adaptation_set.period.mpd.representation() {
-         if rb.Id == r.Id {
-            if !yield(rb) {
-               return
-            }
-         }
+type Period struct {
+   AdaptationSet []AdaptationSet
+   BaseUrl       string `xml:"BaseURL"`
+   Id            string `xml:"id,attr"`
+   mpd           *Mpd
+}
+
+func (r *Representation) initialization() (string, bool) {
+   if v := r.SegmentTemplate; v != nil {
+      if v := v.Initialization; v != "" {
+         return strings.Replace(v, "$RepresentationID$", r.Id, 1), true
       }
    }
+   return "", false
 }
 
 func (m Mpd) representation() iter.Seq[Representation] {
@@ -43,6 +48,52 @@ func (m Mpd) representation() iter.Seq[Representation] {
                if !yield(represent) {
                   return
                }
+            }
+         }
+      }
+   }
+}
+
+type Representation struct {
+   Bandwidth       int64   `xml:"bandwidth,attr"`
+   Codecs          *string `xml:"codecs,attr"`
+   Height          *int64  `xml:"height,attr"`
+   Id              string  `xml:"id,attr"`
+   MimeType        *string `xml:"mimeType,attr"`
+   SegmentTemplate *SegmentTemplate
+   Width           *int64 `xml:"width,attr"`
+   adaptation_set  *AdaptationSet
+}
+
+type SegmentTemplate struct {
+   Initialization  string `xml:"initialization,attr"`
+   SegmentTimeline *struct {
+      S []struct {
+         R int `xml:"r,attr"` // repeat
+      }
+   }
+}
+
+type AdaptationSet struct {
+   Codecs         *string `xml:"codecs,attr"`
+   Height         *int64  `xml:"height,attr"`
+   Lang           string  `xml:"lang,attr"`
+   MimeType       *string `xml:"mimeType,attr"`
+   Representation []Representation
+   Role           *struct {
+      Value string `xml:"value,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width           *int64 `xml:"width,attr"`
+   period          *Period
+}
+
+func (r *Representation) seq() iter.Seq[Representation] {
+   return func(yield func(Representation) bool) {
+      for r2 := range r.adaptation_set.period.mpd.representation() {
+         if r2.Id == r.Id {
+            if !yield(r2) {
+               return
             }
          }
       }
@@ -92,43 +143,4 @@ func (r *Representation) String() string {
 
 type Mpd struct {
    Period []Period
-}
-
-type AdaptationSet struct {
-   Codecs         *string `xml:"codecs,attr"`
-   Height         *int64  `xml:"height,attr"`
-   Lang           string  `xml:"lang,attr"`
-   MimeType       *string `xml:"mimeType,attr"`
-   Representation []Representation
-   Role           *struct {
-      Value string `xml:"value,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-   Width  *int64 `xml:"width,attr"`
-   period *Period
-}
-
-type Representation struct {
-   Bandwidth      int64  `xml:"bandwidth,attr"`
-   Codecs         *string `xml:"codecs,attr"`
-   Height         *int64  `xml:"height,attr"`
-   Id             string `xml:"id,attr"`
-   MimeType       *string `xml:"mimeType,attr"`
-   SegmentTemplate *SegmentTemplate
-   Width          *int64  `xml:"width,attr"`
-   adaptation_set *AdaptationSet
-}
-
-type Period struct {
-   AdaptationSet []AdaptationSet
-   Id            string `xml:"id,attr"`
-   mpd *Mpd
-}
-
-type SegmentTemplate struct {
-   SegmentTimeline *struct {
-      S []struct {
-         R int `xml:"r,attr"` // repeat
-      }
-   }
 }
