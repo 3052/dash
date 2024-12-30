@@ -8,7 +8,7 @@ import (
 )
 
 func TestInitialization(t *testing.T) {
-   data, err := os.ReadFile("testdata/cineMember.mpd")
+   data, err := os.ReadFile("testdata/amc.mpd")
    if err != nil {
       t.Fatal(err)
    }
@@ -18,19 +18,9 @@ func TestInitialization(t *testing.T) {
       t.Fatal(err)
    }
    represent, _ := media.hd()
-   initial, ok := represent.initialization()
-   fmt.Println(&initial.Url, ok)
-}
-
-func (m Mpd) hd() (*Representation, bool) {
-   for represent := range m.representation() {
-      if represent.Height != nil {
-         if *represent.Height > 576 {
-            return &represent, true
-         }
-      }
-   }
-   return nil, false
+   initial := represent.SegmentTemplate.Initialization
+   fmt.Printf("%q\n", initial("HELLO"))
+   fmt.Printf("%q\n", initial(represent.Id))
 }
 
 func TestHd(t *testing.T) {
@@ -45,6 +35,17 @@ func TestHd(t *testing.T) {
    }
    represent, ok := media.hd()
    fmt.Printf("%+v %v\n", represent, ok)
+}
+
+func (m Mpd) hd() (*Representation, bool) {
+   for represent := range m.representation() {
+      if represent.Height != nil {
+         if *represent.Height > 576 {
+            return &represent, true
+         }
+      }
+   }
+   return nil, false
 }
 
 func TestRepresentation(t *testing.T) {
