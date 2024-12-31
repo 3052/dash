@@ -5,9 +5,30 @@ import (
    "strconv"
 )
 
+type Representation struct {
+   Bandwidth       int64   `xml:"bandwidth,attr"`
+   Codecs          *string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height          *int64  `xml:"height,attr"`
+   Id              string  `xml:"id,attr"`
+   MimeType        *string `xml:"mimeType,attr"`
+   SegmentBase *struct {
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+      IndexRange Range `xml:"indexRange,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width           *int64 `xml:"width,attr"`
+   adaptation_set  *AdaptationSet
+}
+
 func (r *Representation) set() {
    if r.Codecs == nil {
       r.Codecs = r.adaptation_set.Codecs
+   }
+   if len(r.ContentProtection) == 0 {
+      r.ContentProtection = r.adaptation_set.ContentProtection
    }
    if r.Height == nil {
       r.Height = r.adaptation_set.Height
@@ -35,17 +56,6 @@ func (r *Representation) set() {
    if r.Width == nil {
       r.Width = r.adaptation_set.Width
    }
-}
-
-type Representation struct {
-   Bandwidth       int64   `xml:"bandwidth,attr"`
-   Codecs          *string `xml:"codecs,attr"`
-   Height          *int64  `xml:"height,attr"`
-   Id              string  `xml:"id,attr"`
-   MimeType        *string `xml:"mimeType,attr"`
-   SegmentTemplate *SegmentTemplate
-   Width           *int64 `xml:"width,attr"`
-   adaptation_set  *AdaptationSet
 }
 
 func (r *Representation) String() string {
