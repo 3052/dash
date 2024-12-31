@@ -5,24 +5,6 @@ import (
    "strconv"
 )
 
-type Representation struct {
-   Bandwidth       int64   `xml:"bandwidth,attr"`
-   Codecs          *string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height          *int64  `xml:"height,attr"`
-   Id              string  `xml:"id,attr"`
-   MimeType        *string `xml:"mimeType,attr"`
-   SegmentBase *struct {
-      Initialization struct {
-         Range Range `xml:"range,attr"`
-      }
-      IndexRange Range `xml:"indexRange,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-   Width           *int64 `xml:"width,attr"`
-   adaptation_set  *AdaptationSet
-}
-
 func (r *Representation) set() {
    if r.Codecs == nil {
       r.Codecs = r.adaptation_set.Codecs
@@ -39,23 +21,30 @@ func (r *Representation) set() {
    if r.SegmentTemplate == nil {
       r.SegmentTemplate = r.adaptation_set.SegmentTemplate
    }
-   // dashif.org/Guidelines-TimingModel#addressing-simple
    if r.SegmentTemplate != nil {
-      if r.SegmentTemplate.StartNumber == nil {
-         value := 1
-         r.SegmentTemplate.StartNumber = &value
-      }
-   }
-   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
-   if r.SegmentTemplate != nil {
-      if r.SegmentTemplate.Timescale == nil {
-         value := 1
-         r.SegmentTemplate.Timescale = &value
-      }
+      r.SegmentTemplate.set()
    }
    if r.Width == nil {
       r.Width = r.adaptation_set.Width
    }
+}
+
+type Representation struct {
+   Bandwidth         int64   `xml:"bandwidth,attr"`
+   Codecs            *string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            *int64  `xml:"height,attr"`
+   Id                string  `xml:"id,attr"`
+   MimeType          *string `xml:"mimeType,attr"`
+   SegmentBase       *struct {
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+      IndexRange Range `xml:"indexRange,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width           *int64 `xml:"width,attr"`
+   adaptation_set  *AdaptationSet
 }
 
 func (r *Representation) String() string {
