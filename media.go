@@ -5,32 +5,27 @@ import (
    "strings"
 )
 
-// %0[width]d
-// 23009-1
-// standards.iso.org/ittf/PubliclyAvailableStandards
 func (m *Media) UnmarshalText(data []byte) error {
-   format := string(data)
-   *m = func(id string, value int) string {
-      oldnew := []string{"%", "%%"} // first
-      if strings.Contains(format, "$Time$") {
-         oldnew = append(oldnew, "$Time$", "%d")
-      } else {
-         oldnew = append(oldnew,
-            "$Number$", "%d",
-            "$Number%02d$", "%02d",
-            "$Number%03d$", "%03d",
-            "$Number%04d$", "%04d",
-            "$Number%05d$", "%05d",
-            "$Number%06d$", "%06d",
-            "$Number%07d$", "%07d",
-            "$Number%08d$", "%08d",
-            "$Number%09d$", "%09d",
-         )
-      }
-      oldnew = append(oldnew, "$RepresentationID$", id) // last
-      return fmt.Sprintf(strings.NewReplacer(oldnew...).Replace(format), value)
+   *m = func(represent string, i int) string {
+      s := string(data)
+      s = replace(s, "$Number$", fmt.Sprint(i))
+      s = replace(s, "$Number%02d$", fmt.Sprintf("%02d", i))
+      s = replace(s, "$Number%03d$", fmt.Sprintf("%03d", i))
+      s = replace(s, "$Number%04d$", fmt.Sprintf("%04d", i))
+      s = replace(s, "$Number%05d$", fmt.Sprintf("%05d", i))
+      s = replace(s, "$Number%06d$", fmt.Sprintf("%06d", i))
+      s = replace(s, "$Number%07d$", fmt.Sprintf("%07d", i))
+      s = replace(s, "$Number%08d$", fmt.Sprintf("%08d", i))
+      s = replace(s, "$Number%09d$", fmt.Sprintf("%09d", i))
+      s = replace(s, "$RepresentationID$", represent)
+      s = replace(s, "$Time$", fmt.Sprint(i))
+      return s
    }
    return nil
+}
+
+func replace(s, a, b string) string {
+   return strings.Replace(s, a, b, 1)
 }
 
 type Media func(string, int) string
