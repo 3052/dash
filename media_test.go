@@ -8,7 +8,7 @@ import (
 )
 
 func TestMedia(t *testing.T) {
-   data, err := os.ReadFile("testdata/amc.mpd")
+   data, err := os.ReadFile("testdata/cineMember.mpd")
    if err != nil {
       t.Fatal(err)
    }
@@ -18,5 +18,15 @@ func TestMedia(t *testing.T) {
       t.Fatal(err)
    }
    represent, _ := present.hd()
-   fmt.Printf("%q\n", represent.SegmentTemplate.Media("HELLO", 999))
+   template := represent.SegmentTemplate.Media
+   media_url, err := template(&Representation{Id: "HELLO"}, 999)
+   if err != nil {
+      t.Fatal(err)
+   }
+   fmt.Printf("%q\n", media_url)
+   media_url, err = template(represent, 999)
+   if err != nil {
+      t.Fatal(err)
+   }
+   fmt.Printf("%q\n", media_url)
 }

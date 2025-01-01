@@ -2,10 +2,17 @@ package dash
 
 import (
    "iter"
+   "net/url"
    "strconv"
 )
 
 func (r *Representation) set() {
+   if v := r.adaptation_set.period.BaseUrl; v != nil {
+      if r.BaseUrl == nil {
+         r.BaseUrl = &Url{&url.URL{}}
+      }
+      r.BaseUrl.Url = v.Url.ResolveReference(r.BaseUrl.Url)
+   }
    if r.Codecs == nil {
       r.Codecs = r.adaptation_set.Codecs
    }
@@ -31,6 +38,7 @@ func (r *Representation) set() {
 
 type Representation struct {
    Bandwidth         int64   `xml:"bandwidth,attr"`
+   BaseUrl           *Url    `xml:"BaseURL"`
    Codecs            *string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
    Height            *int64  `xml:"height,attr"`

@@ -1,18 +1,5 @@
 package dash
 
-func (s *SegmentTemplate) set() {
-   // dashif.org/Guidelines-TimingModel#addressing-simple
-   if s.StartNumber == nil {
-      value := 1
-      s.StartNumber = &value
-   }
-   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
-   if s.Timescale == nil {
-      value := 1
-      s.Timescale = &value
-   }
-}
-
 type SegmentTemplate struct {
    Media                  Media          `xml:"media,attr"`
    Initialization         Initialization `xml:"initialization,attr"`
@@ -26,4 +13,17 @@ type SegmentTemplate struct {
    }
    StartNumber *int `xml:"startNumber,attr"`
    Timescale   *int `xml:"timescale,attr"`
+}
+
+func (s *SegmentTemplate) set() {
+   // dashif.org/Guidelines-TimingModel#addressing-simple
+   if s.StartNumber == nil {
+      value := 1
+      s.StartNumber = &value
+   }
+   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
+   if s.Timescale == nil {
+      value := 1
+      s.Timescale = &value
+   }
 }

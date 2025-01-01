@@ -2,6 +2,12 @@ package dash
 
 import "iter"
 
+type Mpd struct {
+   BaseUrl                   *Url      `xml:"BaseURL"`
+   MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
+   Period                    []Period
+}
+
 func (m *Mpd) representation() iter.Seq[Representation] {
    return func(yield func(Representation) bool) {
       for _, p := range m.Period {
@@ -19,9 +25,4 @@ func (m *Mpd) representation() iter.Seq[Representation] {
          }
       }
    }
-}
-
-type Mpd struct {
-   MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
 }

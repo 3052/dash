@@ -1,21 +1,21 @@
 package dash
 
-import (
-   "net/url"
-   "strings"
-)
+import "net/url"
 
-type Initialization func(string) *url.URL
+type Initialization func(*Representation) (*url.URL, error)
 
 func (i *Initialization) UnmarshalText(data []byte) error {
-   var u url.URL
-   err := u.UnmarshalBinary(data)
-   if err != nil {
-      return err
-   }
-   *i = func(s string) *url.URL {
-      u.Path = strings.Replace(u.Path, "$RepresentationID$", s, 1)
-      return &u
+   *i = func(r *Representation) (*url.URL, error) {
+      u := &url.URL{}
+      err := u.UnmarshalBinary(data)
+      if err != nil {
+         return nil, err
+      }
+      u.Path = execute(u.Path, r.Id, 0)
+      if r.BaseUrl != nil {
+         u = r.BaseUrl.Url.ResolveReference(u)
+      }
+      return u, nil
    }
    return nil
 }

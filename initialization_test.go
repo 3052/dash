@@ -1,24 +1,32 @@
 package dash
 
 import (
-	"encoding/xml"
-	"fmt"
-	"os"
-	"testing"
+   "encoding/xml"
+   "fmt"
+   "os"
+   "testing"
 )
 
 func TestInitialization(t *testing.T) {
-	data, err := os.ReadFile("testdata/amc.mpd")
-	if err != nil {
-		t.Fatal(err)
-	}
-	var media Mpd
-	err = xml.Unmarshal(data, &media)
-	if err != nil {
-		t.Fatal(err)
-	}
-	represent, _ := media.hd()
-	initial := represent.SegmentTemplate.Initialization
-	fmt.Printf("%q\n", initial("HELLO"))
-	fmt.Printf("%q\n", initial(represent.Id))
+   data, err := os.ReadFile("testdata/cineMember.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   var present Mpd
+   err = xml.Unmarshal(data, &present)
+   if err != nil {
+      t.Fatal(err)
+   }
+   represent, _ := present.hd()
+   template := represent.SegmentTemplate.Initialization
+   initial, err := template(&Representation{Id: "HELLO"})
+   if err != nil {
+      t.Fatal(err)
+   }
+   fmt.Printf("%q\n", initial)
+   initial, err = template(represent)
+   if err != nil {
+      t.Fatal(err)
+   }
+   fmt.Printf("%q\n", initial)
 }
