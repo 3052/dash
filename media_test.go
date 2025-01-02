@@ -19,12 +19,12 @@ func TestMedia(t *testing.T) {
    }
    represent, _ := present.hd()
    template := represent.SegmentTemplate.Media
-   media_url, err := template(&Representation{Id: "HELLO"}, 999)
+   media_url, err := template.Url(&Representation{Id: "HELLO"}, 999)
    if err != nil {
       t.Fatal(err)
    }
    fmt.Printf("%q\n", media_url)
-   media_url, err = template(represent, 999)
+   media_url, err = template.Url(represent, 999)
    if err != nil {
       t.Fatal(err)
    }

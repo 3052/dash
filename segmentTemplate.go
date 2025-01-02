@@ -1,8 +1,8 @@
 package dash
 
 type SegmentTemplate struct {
-   Media                  Media          `xml:"media,attr"`
    Initialization         Initialization `xml:"initialization,attr"`
+   Media                  Media          `xml:"media,attr"`
    Duration               int            `xml:"duration,attr"`
    PresentationTimeOffset int            `xml:"presentationTimeOffset,attr"`
    SegmentTimeline        *struct {

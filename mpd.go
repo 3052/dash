@@ -11,13 +11,11 @@ type Mpd struct {
 func (m *Mpd) representation() iter.Seq[Representation] {
    return func(yield func(Representation) bool) {
       for _, p := range m.Period {
-         p.mpd = m
-         p.set()
+         p.set(m)
          for _, adapt := range p.AdaptationSet {
-            adapt.period = &p
+            adapt.set(&p)
             for _, represent := range adapt.Representation {
-               represent.adaptation_set = &adapt
-               represent.set()
+               represent.set(&adapt)
                if !yield(represent) {
                   return
                }

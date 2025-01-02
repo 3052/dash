@@ -1,5 +1,9 @@
 package dash
 
+func (a *AdaptationSet) set(p *Period) {
+   a.period = p
+}
+
 type AdaptationSet struct {
    Codecs            *string `xml:"codecs,attr"`
    ContentProtection []ContentProtection

@@ -2,20 +2,14 @@ package dash
 
 import "net/url"
 
-type Initialization func(*Representation) (*url.URL, error)
+type Initialization struct {
+   S string
+}
 
 func (i *Initialization) UnmarshalText(data []byte) error {
-   *i = func(r *Representation) (*url.URL, error) {
-      u := &url.URL{}
-      err := u.UnmarshalBinary(data)
-      if err != nil {
-         return nil, err
-      }
-      u.Path = execute(u.Path, r.Id, 0)
-      if r.BaseUrl != nil {
-         u = r.BaseUrl.Url.ResolveReference(u)
-      }
-      return u, nil
-   }
-   return nil
+   return (*Media)(i).UnmarshalText(data)
+}
+
+func (i Initialization) Url(r *Representation) (*url.URL, error) {
+   return Media(i).Url(r, 0)
 }

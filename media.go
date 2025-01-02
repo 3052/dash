@@ -6,39 +6,48 @@ import (
    "strings"
 )
 
-type Media func(*Representation, int) (*url.URL, error)
-
-func replace(s, from, to string) string {
-   return strings.Replace(s, from, to, 1)
+type Media struct {
+   S string
 }
 
-func execute(s, represent string, i int) string {
-   s = replace(s, "$Number$", fmt.Sprint(i))
-   s = replace(s, "$Number%02d$", fmt.Sprintf("%02d", i))
-   s = replace(s, "$Number%03d$", fmt.Sprintf("%03d", i))
-   s = replace(s, "$Number%04d$", fmt.Sprintf("%04d", i))
-   s = replace(s, "$Number%05d$", fmt.Sprintf("%05d", i))
-   s = replace(s, "$Number%06d$", fmt.Sprintf("%06d", i))
-   s = replace(s, "$Number%07d$", fmt.Sprintf("%07d", i))
-   s = replace(s, "$Number%08d$", fmt.Sprintf("%08d", i))
-   s = replace(s, "$Number%09d$", fmt.Sprintf("%09d", i))
-   s = replace(s, "$RepresentationID$", represent)
-   return replace(s, "$Time$", fmt.Sprint(i))
+func (m Media) Url(r *Representation, i int) (*url.URL, error) {
+   m.execute(r.Id, i)
+   u, err := url.Parse(m.S)
+   if err != nil {
+      return nil, err
+   }
+   if r.BaseUrl != nil {
+      u = r.BaseUrl.Url.ResolveReference(u)
+   }
+   return u, nil
+}
+
+func (m Media) time() bool {
+   return strings.Contains(m.S, "$Time$")
+}
+
+func (m *Media) replace(from, to string) {
+   m.S = strings.Replace(m.S, from, to, 1)
+}
+
+func (m *Media) execute(represent string, i int) {
+   m.replace("$RepresentationID$", represent)
+   if m.time() {
+      m.replace("$Time$", fmt.Sprint(i))
+   } else {
+      m.replace("$Number$", fmt.Sprint(i))
+      m.replace("$Number%02d$", fmt.Sprintf("%02d", i))
+      m.replace("$Number%03d$", fmt.Sprintf("%03d", i))
+      m.replace("$Number%04d$", fmt.Sprintf("%04d", i))
+      m.replace("$Number%05d$", fmt.Sprintf("%05d", i))
+      m.replace("$Number%06d$", fmt.Sprintf("%06d", i))
+      m.replace("$Number%07d$", fmt.Sprintf("%07d", i))
+      m.replace("$Number%08d$", fmt.Sprintf("%08d", i))
+      m.replace("$Number%09d$", fmt.Sprintf("%09d", i))
+   }
 }
 
 func (m *Media) UnmarshalText(data []byte) error {
-   *m = func(r *Representation, i int) (*url.URL, error) {
-      u := &url.URL{}
-      err := u.UnmarshalBinary(data)
-      if err != nil {
-         return nil, err
-      }
-      u.Path = execute(u.Path, r.Id, i)
-      u.RawQuery = execute(u.RawQuery, "", i)
-      if r.BaseUrl != nil {
-         u = r.BaseUrl.Url.ResolveReference(u)
-      }
-      return u, nil
-   }
+   m.S = string(data)
    return nil
 }

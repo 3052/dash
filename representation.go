@@ -6,7 +6,8 @@ import (
    "strconv"
 )
 
-func (r *Representation) set() {
+func (r *Representation) set(adapt *AdaptationSet) {
+   r.adaptation_set = adapt
    if v := r.adaptation_set.period.BaseUrl; v != nil {
       if r.BaseUrl == nil {
          r.BaseUrl = &Url{&url.URL{}}

@@ -19,12 +19,12 @@ func TestInitialization(t *testing.T) {
    }
    represent, _ := present.hd()
    template := represent.SegmentTemplate.Initialization
-   initial, err := template(&Representation{Id: "HELLO"})
+   initial, err := template.Url(&Representation{Id: "HELLO"})
    if err != nil {
       t.Fatal(err)
    }
    fmt.Printf("%q\n", initial)
-   initial, err = template(represent)
+   initial, err = template.Url(represent)
    if err != nil {
       t.Fatal(err)
    }
