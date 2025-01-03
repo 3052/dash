@@ -7,9 +7,18 @@ type Initialization struct {
 }
 
 func (i *Initialization) UnmarshalText(data []byte) error {
-   return (*Media)(i).UnmarshalText(data)
+   i.S = string(data)
+   return nil
 }
 
 func (i Initialization) Url(r *Representation) (*url.URL, error) {
-   return Media(i).Url(r, 0)
+   replace(&i.S, "$RepresentationID$", r.Id)
+   u, err := url.Parse(i.S)
+   if err != nil {
+      return nil, err
+   }
+   if r.BaseUrl != nil {
+      u = r.BaseUrl.Url.ResolveReference(u)
+   }
+   return u, nil
 }
