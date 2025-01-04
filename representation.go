@@ -6,6 +6,64 @@ import (
    "strconv"
 )
 
+func (r *Representation) segment() iter.Seq[int] {
+   template := r.SegmentTemplate
+   var address int
+   if template.Media.time() {
+      address = template.PresentationTimeOffset
+   } else {
+      address = *template.StartNumber
+   }
+   return func(yield func(int) bool) {
+      if template.SegmentTimeline != nil {
+         for _, segment := range template.SegmentTimeline.S {
+            for range 1 + segment.R {
+               if !yield(address) {
+                  return 
+               }
+               if template.Media.time() {
+                  address += segment.D
+               } else {
+                  address++
+               }
+            }
+         }
+      } else {
+      }
+   }
+}
+
+type Representation struct {
+   SegmentTemplate *SegmentTemplate
+   Bandwidth         int64   `xml:"bandwidth,attr"`
+   BaseUrl           *Url    `xml:"BaseURL"`
+   Codecs            *string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            *int64  `xml:"height,attr"`
+   Id                string  `xml:"id,attr"`
+   MimeType          *string `xml:"mimeType,attr"`
+   SegmentBase       *struct {
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+      IndexRange Range `xml:"indexRange,attr"`
+   }
+   Width           *int64 `xml:"width,attr"`
+   adaptation_set  *AdaptationSet
+}
+
+func (r *Representation) representation() iter.Seq[Representation] {
+   return func(yield func(Representation) bool) {
+      for r2 := range r.adaptation_set.period.mpd.representation() {
+         if r2.Id == r.Id {
+            if !yield(r2) {
+               return
+            }
+         }
+      }
+   }
+}
+
 func (r *Representation) set(adapt *AdaptationSet) {
    r.adaptation_set = adapt
    if v := r.adaptation_set.period.BaseUrl; v != nil {
@@ -35,25 +93,6 @@ func (r *Representation) set(adapt *AdaptationSet) {
    if r.Width == nil {
       r.Width = r.adaptation_set.Width
    }
-}
-
-type Representation struct {
-   Bandwidth         int64   `xml:"bandwidth,attr"`
-   BaseUrl           *Url    `xml:"BaseURL"`
-   Codecs            *string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            *int64  `xml:"height,attr"`
-   Id                string  `xml:"id,attr"`
-   MimeType          *string `xml:"mimeType,attr"`
-   SegmentBase       *struct {
-      Initialization struct {
-         Range Range `xml:"range,attr"`
-      }
-      IndexRange Range `xml:"indexRange,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-   Width           *int64 `xml:"width,attr"`
-   adaptation_set  *AdaptationSet
 }
 
 func (r *Representation) String() string {
@@ -95,16 +134,4 @@ func (r *Representation) String() string {
    b = append(b, "\nid = "...)
    b = append(b, r.Id...)
    return string(b)
-}
-
-func (r *Representation) seq() iter.Seq[Representation] {
-   return func(yield func(Representation) bool) {
-      for r2 := range r.adaptation_set.period.mpd.representation() {
-         if r2.Id == r.Id {
-            if !yield(r2) {
-               return
-            }
-         }
-      }
-   }
 }

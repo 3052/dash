@@ -4,6 +4,8 @@ type SegmentTemplate struct {
    Initialization         Initialization `xml:"initialization,attr"`
    Media                  Media          `xml:"media,attr"`
    Duration               int            `xml:"duration,attr"`
+   Timescale              *int           `xml:"timescale,attr"`
+   StartNumber            *int           `xml:"startNumber,attr"`
    PresentationTimeOffset int            `xml:"presentationTimeOffset,attr"`
    SegmentTimeline        *struct {
       S []struct {
@@ -11,8 +13,6 @@ type SegmentTemplate struct {
          R int `xml:"r,attr"` // repeat
       }
    }
-   StartNumber *int `xml:"startNumber,attr"`
-   Timescale   *int `xml:"timescale,attr"`
 }
 
 func (s *SegmentTemplate) set() {
