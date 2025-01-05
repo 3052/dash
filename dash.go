@@ -9,6 +9,21 @@ import (
    "time"
 )
 
+type SegmentTemplate struct {
+   Initialization         Initialization `xml:"initialization,attr"`
+   Media                  Media          `xml:"media,attr"`
+   Duration               float64        `xml:"duration,attr"`
+   Timescale              *float64       `xml:"timescale,attr"`
+   StartNumber            *int           `xml:"startNumber,attr"`
+   PresentationTimeOffset int            `xml:"presentationTimeOffset,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D int `xml:"d,attr"` // duration
+         R int `xml:"r,attr"` // repeat
+      }
+   }
+}
+
 func (m *Mpd) Representation() iter.Seq[Representation] {
    return func(yield func(Representation) bool) {
       for _, p := range m.Period {
@@ -24,6 +39,19 @@ func (m *Mpd) Representation() iter.Seq[Representation] {
          }
       }
    }
+}
+
+type Mpd struct {
+   BaseUrl                   *Url      `xml:"BaseURL"`
+   MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
+   Period                    []Period
+}
+
+func (m *Mpd) Set(base *url.URL) {
+   if m.BaseUrl == nil {
+      m.BaseUrl = &Url{&url.URL{}}
+   }
+   m.BaseUrl.Url = base.ResolveReference(m.BaseUrl.Url)
 }
 
 func replace(s *string, from, to string) {
@@ -90,12 +118,6 @@ func (i Initialization) Url(r *Representation) (*url.URL, error) {
    return u, nil
 }
 
-type Mpd struct {
-   BaseUrl                   *Url      `xml:"BaseURL"`
-   MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
-}
-
 type Pssh []byte
 
 func (p *Pssh) UnmarshalText(data []byte) error {
@@ -138,21 +160,6 @@ func (s SchemeIdUri) Widevine() bool {
 }
 
 type SchemeIdUri string
-
-type SegmentTemplate struct {
-   Initialization         Initialization `xml:"initialization,attr"`
-   Media                  Media          `xml:"media,attr"`
-   Duration               float64        `xml:"duration,attr"`
-   Timescale              *float64       `xml:"timescale,attr"`
-   StartNumber            *int           `xml:"startNumber,attr"`
-   PresentationTimeOffset int            `xml:"presentationTimeOffset,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D int `xml:"d,attr"` // duration
-         R int `xml:"r,attr"` // repeat
-      }
-   }
-}
 
 func (s *SegmentTemplate) set() {
    // dashif.org/Guidelines-TimingModel#addressing-simple

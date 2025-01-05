@@ -6,16 +6,23 @@ import (
    "strconv"
 )
 
-func (r *Representation) Representation() iter.Seq[Representation] {
-   return func(yield func(Representation) bool) {
-      for r2 := range r.adaptation_set.period.mpd.Representation() {
-         if r2.Id == r.Id {
-            if !yield(r2) {
-               return
-            }
-         }
+type Representation struct {
+   SegmentTemplate   *SegmentTemplate
+   Bandwidth         int64   `xml:"bandwidth,attr"`
+   BaseUrl           *Url    `xml:"BaseURL"`
+   Codecs            *string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            *int64  `xml:"height,attr"`
+   Id                string  `xml:"id,attr"`
+   MimeType          *string `xml:"mimeType,attr"`
+   SegmentBase       *struct {
+      Initialization struct {
+         Range Range `xml:"range,attr"`
       }
+      IndexRange Range `xml:"indexRange,attr"`
    }
+   Width          *int64 `xml:"width,attr"`
+   adaptation_set *AdaptationSet
 }
 
 func (r *Representation) Segment() iter.Seq[int] {
@@ -52,23 +59,16 @@ func (r *Representation) Segment() iter.Seq[int] {
    }
 }
 
-type Representation struct {
-   SegmentTemplate   *SegmentTemplate
-   Bandwidth         int64   `xml:"bandwidth,attr"`
-   BaseUrl           *Url    `xml:"BaseURL"`
-   Codecs            *string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            *int64  `xml:"height,attr"`
-   Id                string  `xml:"id,attr"`
-   MimeType          *string `xml:"mimeType,attr"`
-   SegmentBase       *struct {
-      Initialization struct {
-         Range Range `xml:"range,attr"`
+func (r *Representation) Representation() iter.Seq[Representation] {
+   return func(yield func(Representation) bool) {
+      for r2 := range r.adaptation_set.period.mpd.Representation() {
+         if r2.Id == r.Id {
+            if !yield(r2) {
+               return
+            }
+         }
       }
-      IndexRange Range `xml:"indexRange,attr"`
    }
-   Width          *int64 `xml:"width,attr"`
-   adaptation_set *AdaptationSet
 }
 
 func (r *Representation) set(adapt *AdaptationSet) {

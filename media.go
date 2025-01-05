@@ -6,19 +6,6 @@ import (
    "strings"
 )
 
-func (m Media) time() bool {
-   return strings.Contains(m.S, "$Time$")
-}
-
-type Media struct {
-   S string
-}
-
-func (m *Media) UnmarshalText(data []byte) error {
-   m.S = string(data)
-   return nil
-}
-
 func (m Media) Url(r *Representation, i int) (*url.URL, error) {
    replace(&m.S, "$RepresentationID$", r.Id)
    if m.time() {
@@ -42,4 +29,17 @@ func (m Media) Url(r *Representation, i int) (*url.URL, error) {
       u = r.BaseUrl.Url.ResolveReference(u)
    }
    return u, nil
+}
+
+func (m Media) time() bool {
+   return strings.Contains(m.S, "$Time$")
+}
+
+type Media struct {
+   S string
+}
+
+func (m *Media) UnmarshalText(data []byte) error {
+   m.S = string(data)
+   return nil
 }

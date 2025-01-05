@@ -2,10 +2,13 @@ package dash
 
 import (
    "encoding/xml"
-   "fmt"
+   "net/http"
+   "net/url"
    "os"
    "testing"
 )
+
+const pluto_mpd = "http://silo-hybrik.pluto.tv.s3.amazonaws.com/576_pluto/clip/64ff3987cecd3f001332df52_Memento/720pDRM/20230911_090007/dash/0-end/main.mpd"
 
 func TestPluto(t *testing.T) {
    data, err := os.ReadFile("ignore/pluto.mpd")
@@ -17,5 +20,29 @@ func TestPluto(t *testing.T) {
    if err != nil {
       t.Fatal(err)
    }
-   fmt.Println(media)
+   base, err := url.Parse(pluto_mpd)
+   if err != nil {
+      t.Fatal(err)
+   }
+   media.Set(base)
+   var represent Representation
+   for represent = range media.Representation() {
+      if *represent.MimeType == "video/mp4" {
+         break
+      }
+   }
+   var media_url *url.URL
+   for segment := range represent.Segment() {
+      media_url, err = represent.SegmentTemplate.Media.Url(&represent, segment)
+      if err != nil {
+         t.Fatal(err)
+      }
+   }
+   resp, err := http.Head(media_url.String())
+   if err != nil {
+      t.Fatal(err)
+   }
+   if resp.StatusCode != http.StatusOK {
+      t.Fatal(resp.Status)
+   }
 }
