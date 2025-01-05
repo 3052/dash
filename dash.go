@@ -9,6 +9,23 @@ import (
    "time"
 )
 
+func (m *Mpd) Representation() iter.Seq[Representation] {
+   return func(yield func(Representation) bool) {
+      for _, p := range m.Period {
+         p.set(m)
+         for _, adapt := range p.AdaptationSet {
+            adapt.set(&p)
+            for _, represent := range adapt.Representation {
+               represent.set(&adapt)
+               if !yield(represent) {
+                  return
+               }
+            }
+         }
+      }
+   }
+}
+
 func replace(s *string, from, to string) {
    *s = strings.Replace(*s, from, to, 1)
 }
@@ -79,23 +96,6 @@ type Mpd struct {
    Period                    []Period
 }
 
-func (m *Mpd) representation() iter.Seq[Representation] {
-   return func(yield func(Representation) bool) {
-      for _, p := range m.Period {
-         p.set(m)
-         for _, adapt := range p.AdaptationSet {
-            adapt.set(&p)
-            for _, represent := range adapt.Representation {
-               represent.set(&adapt)
-               if !yield(represent) {
-                  return
-               }
-            }
-         }
-      }
-   }
-}
-
 type Pssh []byte
 
 func (p *Pssh) UnmarshalText(data []byte) error {
@@ -142,8 +142,8 @@ type SchemeIdUri string
 type SegmentTemplate struct {
    Initialization         Initialization `xml:"initialization,attr"`
    Media                  Media          `xml:"media,attr"`
-   Duration               float64         `xml:"duration,attr"`
-   Timescale              *float64           `xml:"timescale,attr"`
+   Duration               float64        `xml:"duration,attr"`
+   Timescale              *float64       `xml:"timescale,attr"`
    StartNumber            *int           `xml:"startNumber,attr"`
    PresentationTimeOffset int            `xml:"presentationTimeOffset,attr"`
    SegmentTimeline        *struct {

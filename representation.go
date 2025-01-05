@@ -6,7 +6,19 @@ import (
    "strconv"
 )
 
-func (r *Representation) segment() iter.Seq[int] {
+func (r *Representation) Representation() iter.Seq[Representation] {
+   return func(yield func(Representation) bool) {
+      for r2 := range r.adaptation_set.period.mpd.Representation() {
+         if r2.Id == r.Id {
+            if !yield(r2) {
+               return
+            }
+         }
+      }
+   }
+}
+
+func (r *Representation) Segment() iter.Seq[int] {
    template := r.SegmentTemplate
    var address int
    if template.Media.time() {
@@ -19,7 +31,7 @@ func (r *Representation) segment() iter.Seq[int] {
          for _, segment := range template.SegmentTimeline.S {
             for range 1 + segment.R {
                if !yield(address) {
-                  return 
+                  return
                }
                if template.Media.time() {
                   address += segment.D
@@ -41,7 +53,7 @@ func (r *Representation) segment() iter.Seq[int] {
 }
 
 type Representation struct {
-   SegmentTemplate *SegmentTemplate
+   SegmentTemplate   *SegmentTemplate
    Bandwidth         int64   `xml:"bandwidth,attr"`
    BaseUrl           *Url    `xml:"BaseURL"`
    Codecs            *string `xml:"codecs,attr"`
@@ -55,20 +67,8 @@ type Representation struct {
       }
       IndexRange Range `xml:"indexRange,attr"`
    }
-   Width           *int64 `xml:"width,attr"`
-   adaptation_set  *AdaptationSet
-}
-
-func (r *Representation) representation() iter.Seq[Representation] {
-   return func(yield func(Representation) bool) {
-      for r2 := range r.adaptation_set.period.mpd.representation() {
-         if r2.Id == r.Id {
-            if !yield(r2) {
-               return
-            }
-         }
-      }
-   }
+   Width          *int64 `xml:"width,attr"`
+   adaptation_set *AdaptationSet
 }
 
 func (r *Representation) set(adapt *AdaptationSet) {
