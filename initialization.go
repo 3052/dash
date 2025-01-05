@@ -1,7 +1,29 @@
 package dash
 
-import "net/url"
+import (
+   "encoding/base64"
+   "net/url"
+)
 
+type Url struct {
+   Url *url.URL
+}
+
+func (b *Url) UnmarshalText(data []byte) error {
+   b.Url = &url.URL{}
+   return b.Url.UnmarshalBinary(data)
+}
+
+type Pssh []byte
+
+func (p *Pssh) UnmarshalText(data []byte) error {
+   var err error
+   *p, err = base64.StdEncoding.AppendDecode(nil, data)
+   if err != nil {
+      return err
+   }
+   return nil
+}
 type Initialization struct {
    S string
 }

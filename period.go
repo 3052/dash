@@ -1,6 +1,24 @@
 package dash
 
-import "net/url"
+import (
+   "math"
+   "net/url"
+)
+
+// dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
+func (p *Period) segment_count(template *SegmentTemplate) float64 {
+   return math.Ceil(
+      *template.Timescale * p.Duration.D.Seconds() / template.Duration,
+   )
+}
+
+type Period struct {
+   AdaptationSet []AdaptationSet
+   BaseUrl       *Url      `xml:"BaseURL"`
+   Duration      *Duration `xml:"duration,attr"`
+   Id            string    `xml:"id,attr"`
+   mpd           *Mpd
+}
 
 func (p *Period) set(media *Mpd) {
    p.mpd = media
@@ -13,12 +31,4 @@ func (p *Period) set(media *Mpd) {
    if p.Duration == nil {
       p.Duration = p.mpd.MediaPresentationDuration
    }
-}
-
-type Period struct {
-   AdaptationSet []AdaptationSet
-   BaseUrl       *Url      `xml:"BaseURL"`
-   Duration      *Duration `xml:"duration,attr"`
-   Id            string    `xml:"id,attr"`
-   mpd           *Mpd
 }

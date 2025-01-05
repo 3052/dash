@@ -2,7 +2,6 @@ package dash
 
 import (
    "iter"
-   "math"
    "net/url"
    "strconv"
 )
@@ -30,9 +29,12 @@ func (r *Representation) segment() iter.Seq[int] {
             }
          }
       } else {
-         seconds := r.adaptation_set.period.Duration.D.Seconds()
-         seconds /= template.Duration / *template.Timescale
-         for range int64(math.Ceil(seconds)) {
+         segment_count := r.adaptation_set.period.segment_count(template)
+         for range int64(segment_count) {
+            if !yield(address) {
+               return
+            }
+            address++
          }
       }
    }
