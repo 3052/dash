@@ -6,71 +6,6 @@ import (
    "strconv"
 )
 
-type Representation struct {
-   SegmentTemplate   *SegmentTemplate
-   Bandwidth         int64   `xml:"bandwidth,attr"`
-   BaseUrl           *Url    `xml:"BaseURL"`
-   Codecs            *string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            *int64  `xml:"height,attr"`
-   Id                string  `xml:"id,attr"`
-   MimeType          *string `xml:"mimeType,attr"`
-   SegmentBase       *struct {
-      Initialization struct {
-         Range Range `xml:"range,attr"`
-      }
-      IndexRange Range `xml:"indexRange,attr"`
-   }
-   Width          *int64 `xml:"width,attr"`
-   adaptation_set *AdaptationSet
-}
-
-func (r *Representation) Segment() iter.Seq[int] {
-   template := r.SegmentTemplate
-   var address int
-   if template.Media.time() {
-      address = template.PresentationTimeOffset
-   } else {
-      address = *template.StartNumber
-   }
-   return func(yield func(int) bool) {
-      if template.SegmentTimeline != nil {
-         for _, segment := range template.SegmentTimeline.S {
-            for range 1 + segment.R {
-               if !yield(address) {
-                  return
-               }
-               if template.Media.time() {
-                  address += segment.D
-               } else {
-                  address++
-               }
-            }
-         }
-      } else {
-         segment_count := r.adaptation_set.period.segment_count(template)
-         for range int64(segment_count) {
-            if !yield(address) {
-               return
-            }
-            address++
-         }
-      }
-   }
-}
-
-func (r *Representation) Representation() iter.Seq[Representation] {
-   return func(yield func(Representation) bool) {
-      for r2 := range r.adaptation_set.period.mpd.Representation() {
-         if r2.Id == r.Id {
-            if !yield(r2) {
-               return
-            }
-         }
-      }
-   }
-}
-
 func (r *Representation) set(adapt *AdaptationSet) {
    r.adaptation_set = adapt
    if v := r.adaptation_set.period.BaseUrl; v != nil {
@@ -141,4 +76,68 @@ func (r *Representation) String() string {
    b = append(b, "\nid = "...)
    b = append(b, r.Id...)
    return string(b)
+}
+type Representation struct {
+   SegmentTemplate   *SegmentTemplate
+   Bandwidth         int64   `xml:"bandwidth,attr"`
+   BaseUrl           *Url    `xml:"BaseURL"`
+   Codecs            *string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            *int64  `xml:"height,attr"`
+   Id                string  `xml:"id,attr"`
+   MimeType          *string `xml:"mimeType,attr"`
+   SegmentBase       *struct {
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+      IndexRange Range `xml:"indexRange,attr"`
+   }
+   Width          *int64 `xml:"width,attr"`
+   adaptation_set *AdaptationSet
+}
+
+func (r *Representation) Segment() iter.Seq[int] {
+   template := r.SegmentTemplate
+   var address int
+   if template.Media.time() {
+      address = template.PresentationTimeOffset
+   } else {
+      address = *template.StartNumber
+   }
+   return func(yield func(int) bool) {
+      if template.SegmentTimeline != nil {
+         for _, segment := range template.SegmentTimeline.S {
+            for range 1 + segment.R {
+               if !yield(address) {
+                  return
+               }
+               if template.Media.time() {
+                  address += segment.D
+               } else {
+                  address++
+               }
+            }
+         }
+      } else {
+         segment_count := r.adaptation_set.period.segment_count(template)
+         for range int64(segment_count) {
+            if !yield(address) {
+               return
+            }
+            address++
+         }
+      }
+   }
+}
+
+func (r *Representation) Representation() iter.Seq[Representation] {
+   return func(yield func(Representation) bool) {
+      for r2 := range r.adaptation_set.period.mpd.Representation() {
+         if r2.Id == r.Id {
+            if !yield(r2) {
+               return
+            }
+         }
+      }
+   }
 }

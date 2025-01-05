@@ -2,15 +2,12 @@ package dash
 
 import (
    "encoding/xml"
-   "net/http"
    "net/url"
    "os"
    "testing"
 )
 
-const pluto_mpd = "http://silo-hybrik.pluto.tv.s3.amazonaws.com/576_pluto/clip/64ff3987cecd3f001332df52_Memento/720pDRM/20230911_090007/dash/0-end/main.mpd"
-
-func TestPluto(t *testing.T) {
+func TestMedia(t *testing.T) {
    data, err := os.ReadFile("ignore/pluto.mpd")
    if err != nil {
       t.Fatal(err)
@@ -20,7 +17,7 @@ func TestPluto(t *testing.T) {
    if err != nil {
       t.Fatal(err)
    }
-   base, err := url.Parse(pluto_mpd)
+   base, err := url.Parse(pluto.mpd)
    if err != nil {
       t.Fatal(err)
    }
@@ -38,11 +35,17 @@ func TestPluto(t *testing.T) {
          t.Fatal(err)
       }
    }
-   resp, err := http.Head(media_url.String())
-   if err != nil {
-      t.Fatal(err)
+   if media_url.String() != pluto.media {
+      t.Fatal(media_url)
    }
-   if resp.StatusCode != http.StatusOK {
-      t.Fatal(resp.Status)
-   }
+}
+
+var pluto = struct{
+   init string
+   media string
+   mpd string
+}{
+   init: "http://silo-hybrik.pluto.tv.s3.amazonaws.com/576_pluto/clip/64ff3987cecd3f001332df52_Memento/720pDRM/20230911_090007/dash/0-end/video/240p-300/init.mp4",
+   media: "http://silo-hybrik.pluto.tv.s3.amazonaws.com/576_pluto/clip/64ff3987cecd3f001332df52_Memento/720pDRM/20230911_090007/dash/0-end/video/240p-300/01362.m4s",
+   mpd: "http://silo-hybrik.pluto.tv.s3.amazonaws.com/576_pluto/clip/64ff3987cecd3f001332df52_Memento/720pDRM/20230911_090007/dash/0-end/main.mpd",
 }

@@ -2,12 +2,52 @@ package dash
 
 import (
    "encoding/xml"
-   "log"
-   "net/http"
    "net/url"
    "os"
    "testing"
 )
+
+func TestSegmentTemplate(t *testing.T) {
+   data, err := os.ReadFile("testdata/itv.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   var media Mpd
+   err = xml.Unmarshal(data, &media)
+   if err != nil {
+      t.Fatal(err)
+   }
+}
+
+func TestInitialization(t *testing.T) {
+   data, err := os.ReadFile("ignore/pluto.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   var media Mpd
+   err = xml.Unmarshal(data, &media)
+   if err != nil {
+      t.Fatal(err)
+   }
+   base, err := url.Parse(pluto.mpd)
+   if err != nil {
+      t.Fatal(err)
+   }
+   media.Set(base)
+   var represent Representation
+   for represent = range media.Representation() {
+      if *represent.MimeType == "video/mp4" {
+         break
+      }
+   }
+   initial, err := represent.SegmentTemplate.Initialization.Url(&represent)
+   if err != nil {
+      t.Fatal(err)
+   }
+   if initial.String() != pluto.init {
+      t.Fatal(initial)
+   }
+}
 
 func TestWidevine(t *testing.T) {
    data, err := os.ReadFile("ignore/pluto.mpd")
@@ -28,48 +68,6 @@ func TestWidevine(t *testing.T) {
    }
    t.Fatal("SchemeIdUri.Widevine")
 }
-
-func TestInitialization(t *testing.T) {
-   data, err := os.ReadFile("ignore/pluto.mpd")
-   if err != nil {
-      t.Fatal(err)
-   }
-   var media Mpd
-   err = xml.Unmarshal(data, &media)
-   if err != nil {
-      t.Fatal(err)
-   }
-   base, err := url.Parse(pluto_mpd)
-   if err != nil {
-      t.Fatal(err)
-   }
-   media.Set(base)
-   var represent Representation
-   for represent = range media.Representation() {
-      if *represent.MimeType == "video/mp4" {
-         break
-      }
-   }
-   initial, err := represent.SegmentTemplate.Initialization.Url(&represent)
-   if err != nil {
-      t.Fatal(err)
-   }
-   http.DefaultClient.Transport = transport{}
-   resp, err := http.Head(initial.String())
-   if err != nil {
-      t.Fatal(err)
-   }
-   if resp.StatusCode != http.StatusOK {
-      t.Fatal(resp.Status)
-   }
-}
-
-func (transport) RoundTrip(req *http.Request) (*http.Response, error) {
-   log.Print(req.URL)
-   return http.DefaultTransport.RoundTrip(req)
-}
-
-type transport struct{}
 
 func Test2Initialization(t *testing.T) {
    _, err := Initialization{"\n"}.Url(&Representation{})
