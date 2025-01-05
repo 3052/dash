@@ -7,7 +7,21 @@ import (
    "testing"
 )
 
-func TestSegmentTemplate(t *testing.T) {
+func TestTimescale(t *testing.T) {
+   data, err := os.ReadFile("testdata/max.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   var media Mpd
+   err = xml.Unmarshal(data, &media)
+   if err != nil {
+      t.Fatal(err)
+   }
+   for range media.Representation() {
+   }
+}
+
+func TestStartNumber(t *testing.T) {
    data, err := os.ReadFile("testdata/itv.mpd")
    if err != nil {
       t.Fatal(err)
@@ -16,6 +30,8 @@ func TestSegmentTemplate(t *testing.T) {
    err = xml.Unmarshal(data, &media)
    if err != nil {
       t.Fatal(err)
+   }
+   for range media.Representation() {
    }
 }
 

@@ -6,6 +6,40 @@ import (
    "strconv"
 )
 
+func (r *Representation) Segment() iter.Seq[int] {
+   template := r.SegmentTemplate
+   var address int
+   if template.Media.time() {
+      address = template.PresentationTimeOffset
+   } else {
+      address = *template.StartNumber
+   }
+   return func(yield func(int) bool) {
+      if template.SegmentTimeline != nil {
+         for _, segment := range template.SegmentTimeline.S {
+            for range 1 + segment.R {
+               if !yield(address) {
+                  return
+               }
+               if template.Media.time() {
+                  address += segment.D
+               } else {
+                  address++
+               }
+            }
+         }
+      } else {
+         segment_count := r.adaptation_set.period.segment_count(template)
+         for range int64(segment_count) {
+            if !yield(address) {
+               return
+            }
+            address++
+         }
+      }
+   }
+}
+
 func (r *Representation) set(adapt *AdaptationSet) {
    r.adaptation_set = adapt
    if v := r.adaptation_set.period.BaseUrl; v != nil {
@@ -94,40 +128,6 @@ type Representation struct {
    }
    Width          *int64 `xml:"width,attr"`
    adaptation_set *AdaptationSet
-}
-
-func (r *Representation) Segment() iter.Seq[int] {
-   template := r.SegmentTemplate
-   var address int
-   if template.Media.time() {
-      address = template.PresentationTimeOffset
-   } else {
-      address = *template.StartNumber
-   }
-   return func(yield func(int) bool) {
-      if template.SegmentTimeline != nil {
-         for _, segment := range template.SegmentTimeline.S {
-            for range 1 + segment.R {
-               if !yield(address) {
-                  return
-               }
-               if template.Media.time() {
-                  address += segment.D
-               } else {
-                  address++
-               }
-            }
-         }
-      } else {
-         segment_count := r.adaptation_set.period.segment_count(template)
-         for range int64(segment_count) {
-            if !yield(address) {
-               return
-            }
-            address++
-         }
-      }
-   }
 }
 
 func (r *Representation) Representation() iter.Seq[Representation] {
