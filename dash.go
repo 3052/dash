@@ -9,6 +9,19 @@ import (
    "time"
 )
 
+func (s *SegmentTemplate) set() {
+   // dashif.org/Guidelines-TimingModel#addressing-simple
+   if s.StartNumber == nil {
+      value := 1
+      s.StartNumber = &value
+   }
+   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
+   if s.Timescale == nil {
+      var value uint64 = 1
+      s.Timescale = &value
+   }
+}
+
 func (r *Range) UnmarshalText(data []byte) error {
    before, after, _ := strings.Cut(string(data), "-")
    var err error
@@ -16,6 +29,11 @@ func (r *Range) UnmarshalText(data []byte) error {
       (*r)[0], err = strconv.ParseUint(before, 10, 64)
       if err != nil {
          return err
+      }
+   }
+   if before != "" {
+      if after == "" {
+         return nil
       }
    }
    (*r)[1], err = strconv.ParseUint(after, 10, 64)
@@ -28,28 +46,16 @@ func (r *Range) UnmarshalText(data []byte) error {
 func (r Range) MarshalText() ([]byte, error) {
    b := strconv.AppendUint(nil, r[0], 10)
    b = append(b, '-')
-   return strconv.AppendUint(b, r[1], 10), nil
+   if r[1] != 0 {
+      b = strconv.AppendUint(b, r[1], 10)
+   }
+   return b, nil
 }
 
 // SegmentIndexBox uses:
 // unsigned int(32) subsegment_duration;
 // but range values can exceed 32 bits
 type Range [2]uint64
-
-type SegmentTemplate struct {
-   Initialization         Initialization `xml:"initialization,attr"`
-   Media                  Media          `xml:"media,attr"`
-   Duration               float64        `xml:"duration,attr"`
-   Timescale              *float64       `xml:"timescale,attr"`
-   StartNumber            *int           `xml:"startNumber,attr"`
-   PresentationTimeOffset int            `xml:"presentationTimeOffset,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D int `xml:"d,attr"` // duration
-         R int `xml:"r,attr"` // repeat
-      }
-   }
-}
 
 func (m *Mpd) Representation() iter.Seq[Representation] {
    return func(yield func(Representation) bool) {
@@ -162,19 +168,6 @@ func (s SchemeIdUri) Widevine() bool {
 
 type SchemeIdUri string
 
-func (s *SegmentTemplate) set() {
-   // dashif.org/Guidelines-TimingModel#addressing-simple
-   if s.StartNumber == nil {
-      value := 1
-      s.StartNumber = &value
-   }
-   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
-   if s.Timescale == nil {
-      var value float64 = 1
-      s.Timescale = &value
-   }
-}
-
 type Url struct {
    Url *url.URL
 }
@@ -182,4 +175,21 @@ type Url struct {
 func (b *Url) UnmarshalText(data []byte) error {
    b.Url = &url.URL{}
    return b.Url.UnmarshalBinary(data)
+}
+
+type SegmentTemplate struct {
+   Initialization Initialization `xml:"initialization,attr"`
+   Media          Media          `xml:"media,attr"`
+   Duration       float64        `xml:"duration,attr"`
+   // This can be any frequency but typically is the media clock frequency of
+   // one of the media streams (or a positive integer multiple thereof).
+   Timescale              *uint64 `xml:"timescale,attr"`
+   StartNumber            *int    `xml:"startNumber,attr"`
+   PresentationTimeOffset int     `xml:"presentationTimeOffset,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D int `xml:"d,attr"` // duration
+         R int `xml:"r,attr"` // repeat
+      }
+   }
 }

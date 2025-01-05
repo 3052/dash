@@ -8,7 +8,7 @@ import (
 // dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
 func (p *Period) segment_count(template *SegmentTemplate) float64 {
    return math.Ceil(
-      *template.Timescale * p.Duration.D.Seconds() / template.Duration,
+      p.Duration.D.Seconds() * float64(*template.Timescale) / template.Duration,
    )
 }
 
