@@ -13,8 +13,8 @@ ISO/IEC 23009-1
 ## test
 
 ~~~
-go test -coverprofile cover.txt
-go tool cover -html cover.txt
+go test -coverprofile ignore/coverage.txt
+go tool cover -html ignore/coverage.txt -o ignore/coverage.html
 ~~~
 
 ## contact

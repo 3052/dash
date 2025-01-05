@@ -15,7 +15,7 @@ func TestDuration(t *testing.T) {
 }
 
 func TestInitialization(t *testing.T) {
-   data, err := os.ReadFile("ignore/pluto.mpd")
+   data, err := os.ReadFile("testdata/pluto.mpd")
    if err != nil {
       t.Fatal(err)
    }
@@ -89,7 +89,7 @@ func TestRange(t *testing.T) {
 }
 
 func TestSchemeIdUri(t *testing.T) {
-   data, err := os.ReadFile("ignore/pluto.mpd")
+   data, err := os.ReadFile("testdata/pluto.mpd")
    if err != nil {
       t.Fatal(err)
    }

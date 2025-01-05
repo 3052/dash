@@ -22,7 +22,9 @@ func TestPeriod(t *testing.T) {
          break
       }
    }
-   for range represent.Segment() {
-      break
+   for segment := range represent.Segment() {
+      if segment >= 1 {
+         break
+      }
    }
 }
