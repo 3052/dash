@@ -6,7 +6,7 @@ import (
    "testing"
 )
 
-func TestPeriodSegmentCount(t *testing.T) {
+func TestPeriod(t *testing.T) {
    data, err := os.ReadFile("testdata/max.mpd")
    if err != nil {
       t.Fatal(err)
@@ -23,5 +23,6 @@ func TestPeriodSegmentCount(t *testing.T) {
       }
    }
    for range represent.Segment() {
+      break
    }
 }

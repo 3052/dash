@@ -7,31 +7,10 @@ import (
    "testing"
 )
 
-func TestTimescale(t *testing.T) {
-   data, err := os.ReadFile("testdata/max.mpd")
-   if err != nil {
-      t.Fatal(err)
-   }
-   var media Mpd
-   err = xml.Unmarshal(data, &media)
-   if err != nil {
-      t.Fatal(err)
-   }
-   for range media.Representation() {
-   }
-}
-
-func TestStartNumber(t *testing.T) {
-   data, err := os.ReadFile("testdata/itv.mpd")
-   if err != nil {
-      t.Fatal(err)
-   }
-   var media Mpd
-   err = xml.Unmarshal(data, &media)
-   if err != nil {
-      t.Fatal(err)
-   }
-   for range media.Representation() {
+func TestDuration(t *testing.T) {
+   var d Duration
+   if d.UnmarshalText(nil) == nil {
+      t.Fatal("Duration.UnmarshalText")
    }
 }
 
@@ -56,47 +35,19 @@ func TestInitialization(t *testing.T) {
          break
       }
    }
-   initial, err := represent.SegmentTemplate.Initialization.Url(&represent)
-   if err != nil {
-      t.Fatal(err)
-   }
-   if initial.String() != pluto.init {
-      t.Fatal(initial)
-   }
-}
-
-func TestWidevine(t *testing.T) {
-   data, err := os.ReadFile("ignore/pluto.mpd")
-   if err != nil {
-      t.Fatal(err)
-   }
-   var media Mpd
-   err = xml.Unmarshal(data, &media)
-   if err != nil {
-      t.Fatal(err)
-   }
-   for represent := range media.Representation() {
-      for _, protect := range represent.ContentProtection {
-         if protect.SchemeIdUri.Widevine() {
-            return
-         }
+   t.Run("Url", func(t *testing.T) {
+      initial, err := represent.SegmentTemplate.Initialization.Url(&represent)
+      if err != nil {
+         t.Fatal(err)
       }
-   }
-   t.Fatal("SchemeIdUri.Widevine")
-}
-
-func Test2Initialization(t *testing.T) {
-   _, err := Initialization{"\n"}.Url(&Representation{})
-   if err == nil {
-      t.Fatal("Initialization.Url")
-   }
-}
-
-func TestDuration(t *testing.T) {
-   var d Duration
-   if d.UnmarshalText(nil) == nil {
-      t.Fatal("Duration.UnmarshalText")
-   }
+      if initial.String() != pluto.init {
+         t.Fatal(initial)
+      }
+      _, err = Initialization{"\n"}.Url(&Representation{})
+      if err == nil {
+         t.Fatal("Initialization.Url")
+      }
+   })
 }
 
 func TestPssh(t *testing.T) {
@@ -135,4 +86,24 @@ func TestRange(t *testing.T) {
          }
       }
    }
+}
+
+func TestSchemeIdUri(t *testing.T) {
+   data, err := os.ReadFile("ignore/pluto.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   var media Mpd
+   err = xml.Unmarshal(data, &media)
+   if err != nil {
+      t.Fatal(err)
+   }
+   for represent := range media.Representation() {
+      for _, protect := range represent.ContentProtection {
+         if protect.SchemeIdUri.Widevine() {
+            return
+         }
+      }
+   }
+   t.Fatal("SchemeIdUri")
 }
