@@ -7,7 +7,7 @@ import (
 
 func (d *Duration) UnmarshalText(data []byte) error {
    var err error
-   d.Duration, err = time.ParseDuration(strings.ToLower(
+   d.D, err = time.ParseDuration(strings.ToLower(
       strings.TrimPrefix(string(data), "PT"),
    ))
    if err != nil {
@@ -17,5 +17,5 @@ func (d *Duration) UnmarshalText(data []byte) error {
 }
 
 type Duration struct {
-   Duration time.Duration
+   D time.Duration
 }

@@ -2,6 +2,7 @@ package dash
 
 import (
    "iter"
+   "math"
    "net/url"
    "strconv"
 )
@@ -29,6 +30,10 @@ func (r *Representation) segment() iter.Seq[int] {
             }
          }
       } else {
+         seconds := r.adaptation_set.period.Duration.D.Seconds()
+         seconds /= template.Duration / *template.Timescale
+         for range int64(math.Ceil(seconds)) {
+         }
       }
    }
 }

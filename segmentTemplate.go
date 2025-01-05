@@ -3,8 +3,8 @@ package dash
 type SegmentTemplate struct {
    Initialization         Initialization `xml:"initialization,attr"`
    Media                  Media          `xml:"media,attr"`
-   Duration               int            `xml:"duration,attr"`
-   Timescale              *int           `xml:"timescale,attr"`
+   Duration               float64         `xml:"duration,attr"`
+   Timescale              *float64           `xml:"timescale,attr"`
    StartNumber            *int           `xml:"startNumber,attr"`
    PresentationTimeOffset int            `xml:"presentationTimeOffset,attr"`
    SegmentTimeline        *struct {
@@ -23,7 +23,7 @@ func (s *SegmentTemplate) set() {
    }
    // dashif.org/Guidelines-TimingModel#timing-sampletimeline
    if s.Timescale == nil {
-      value := 1
+      var value float64 = 1
       s.Timescale = &value
    }
 }
