@@ -8,14 +8,42 @@ import (
 
 func (r *Representation) Representation() iter.Seq[Representation] {
    return func(yield func(Representation) bool) {
-      for r2 := range r.adaptation_set.period.mpd.Representation() {
-         if r2.Id == r.Id {
-            if !yield(r2) {
-               return
+      for _, p := range r.adaptation_set.period.mpd.Period {
+         for _, adapt := range p.AdaptationSet {
+            for _, represent := range adapt.Representation {
+               if represent.Id == r.Id {
+                  if adapt.period == nil {
+                     p.set(r.adaptation_set.period.mpd)
+                     adapt.set(&p)
+                  }
+                  represent.set(&adapt)
+                  if !yield(represent) {
+                     return
+                  }
+               }
             }
          }
       }
    }
+}
+
+type Representation struct {
+   Id                string  `xml:"id,attr"`
+   SegmentTemplate   *SegmentTemplate
+   Bandwidth         int64   `xml:"bandwidth,attr"`
+   BaseUrl           *Url    `xml:"BaseURL"`
+   Codecs            *string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            *int64  `xml:"height,attr"`
+   MimeType          *string `xml:"mimeType,attr"`
+   SegmentBase       *struct {
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+      IndexRange Range `xml:"indexRange,attr"`
+   }
+   Width          *int64 `xml:"width,attr"`
+   adaptation_set *AdaptationSet
 }
 
 func (r *Representation) Segment() iter.Seq[int] {
@@ -122,23 +150,4 @@ func (r *Representation) String() string {
    b = append(b, "\nid = "...)
    b = append(b, r.Id...)
    return string(b)
-}
-
-type Representation struct {
-   SegmentTemplate   *SegmentTemplate
-   Bandwidth         int64   `xml:"bandwidth,attr"`
-   BaseUrl           *Url    `xml:"BaseURL"`
-   Codecs            *string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            *int64  `xml:"height,attr"`
-   Id                string  `xml:"id,attr"`
-   MimeType          *string `xml:"mimeType,attr"`
-   SegmentBase       *struct {
-      Initialization struct {
-         Range Range `xml:"range,attr"`
-      }
-      IndexRange Range `xml:"indexRange,attr"`
-   }
-   Width          *int64 `xml:"width,attr"`
-   adaptation_set *AdaptationSet
 }

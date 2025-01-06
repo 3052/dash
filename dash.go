@@ -73,23 +73,6 @@ func (i Initialization) Url(r *Representation) (*url.URL, error) {
    return u, nil
 }
 
-func (m *Mpd) Representation() iter.Seq[Representation] {
-   return func(yield func(Representation) bool) {
-      for _, p := range m.Period {
-         p.set(m)
-         for _, adapt := range p.AdaptationSet {
-            adapt.set(&p)
-            for _, represent := range adapt.Representation {
-               represent.set(&adapt)
-               if !yield(represent) {
-                  return
-               }
-            }
-         }
-      }
-   }
-}
-
 type Mpd struct {
    BaseUrl                   *Url      `xml:"BaseURL"`
    MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
@@ -101,6 +84,30 @@ func (m *Mpd) Set(base *url.URL) {
       m.BaseUrl = &Url{&url.URL{}}
    }
    m.BaseUrl.Url = base.ResolveReference(m.BaseUrl.Url)
+}
+
+func (m *Mpd) Representation() iter.Seq[Representation] {
+   id := map[string]struct{}{}
+   return func(yield func(Representation) bool) {
+      for _, p := range m.Period {
+         for _, adapt := range p.AdaptationSet {
+            for _, represent := range adapt.Representation {
+               _, ok := id[represent.Id]
+               if !ok {
+                  if adapt.period == nil {
+                     p.set(m)
+                     adapt.set(&p)
+                  }
+                  represent.set(&adapt)
+                  if !yield(represent) {
+                     return
+                  }
+                  id[represent.Id] = struct{}{}
+               }
+            }
+         }
+      }
+   }
 }
 
 type Pssh []byte
@@ -155,6 +162,19 @@ func (s SchemeIdUri) Widevine() bool {
 
 type SchemeIdUri string
 
+func (s *SegmentTemplate) set() {
+   // dashif.org/Guidelines-TimingModel#addressing-simple
+   if s.StartNumber == nil {
+      value := 1
+      s.StartNumber = &value
+   }
+   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
+   if s.Timescale == nil {
+      var value uint64 = 1
+      s.Timescale = &value
+   }
+}
+
 type SegmentTemplate struct {
    Initialization Initialization `xml:"initialization,attr"`
    Media          Media          `xml:"media,attr"`
@@ -169,19 +189,6 @@ type SegmentTemplate struct {
          D int `xml:"d,attr"` // duration
          R int `xml:"r,attr"` // repeat
       }
-   }
-}
-
-func (s *SegmentTemplate) set() {
-   // dashif.org/Guidelines-TimingModel#addressing-simple
-   if s.StartNumber == nil {
-      value := 1
-      s.StartNumber = &value
-   }
-   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
-   if s.Timescale == nil {
-      var value uint64 = 1
-      s.Timescale = &value
    }
 }
 
