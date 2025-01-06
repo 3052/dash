@@ -7,6 +7,24 @@ import (
    "testing"
 )
 
+func TestUrl(t *testing.T) {
+   data, err := os.ReadFile("testdata/criterion.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   var media Mpd
+   media.BaseUrl = &Url{&url.URL{
+      Path: "/0/1/2/3/4/5/6/7/8/9/10",
+   }}
+   err = xml.Unmarshal(data, &media)
+   if err != nil {
+      t.Fatal(err)
+   }
+   if media.BaseUrl.UnmarshalText([]byte{'\n'}) == nil {
+      t.Fatal("BaseUrl.UnmarshalText")
+   }
+}
+
 func TestDuration(t *testing.T) {
    var d Duration
    if d.UnmarshalText(nil) == nil {
@@ -20,15 +38,15 @@ func TestInitialization(t *testing.T) {
       t.Fatal(err)
    }
    var media Mpd
+   media.BaseUrl = &Url{}
+   media.BaseUrl.Url, err = url.Parse(pluto.mpd)
+   if err != nil {
+      t.Fatal(err)
+   }
    err = xml.Unmarshal(data, &media)
    if err != nil {
       t.Fatal(err)
    }
-   base, err := url.Parse(pluto.mpd)
-   if err != nil {
-      t.Fatal(err)
-   }
-   media.Set(base)
    var represent Representation
    for represent = range media.Representation() {
       if *represent.MimeType == "video/mp4" {
