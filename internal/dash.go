@@ -1,10 +1,73 @@
 package dash
 
 import (
-   "iter"
    "net/url"
+   "strconv"
+   "strings"
    "time"
 )
+
+func (r *Representation) String() string {
+   var b []byte
+   if r.Width != nil {
+      b = append(b, "width = "...)
+      b = strconv.AppendInt(b, *r.Width, 10)
+   }
+   if r.Height != nil {
+      if b != nil {
+         b = append(b, '\n')
+      }
+      b = append(b, "height = "...)
+      b = strconv.AppendInt(b, *r.Height, 10)
+   }
+   if b != nil {
+      b = append(b, '\n')
+   }
+   b = append(b, "bandwidth = "...)
+   b = strconv.AppendInt(b, r.Bandwidth, 10)
+   if r.Codecs != nil {
+      b = append(b, "\ncodecs = "...)
+      b = append(b, *r.Codecs...)
+   }
+   b = append(b, "\nmimeType = "...)
+   b = append(b, *r.MimeType...)
+   if role := r.adaptation_set.Role; role != nil {
+      b = append(b, "\nrole = "...)
+      b = append(b, role.Value...)
+   }
+   if lang := r.adaptation_set.Lang; lang != "" {
+      b = append(b, "\nlang = "...)
+      b = append(b, lang...)
+   }
+   if id := r.adaptation_set.period.Id; id != "" {
+      b = append(b, "\nperiod = "...)
+      b = append(b, id...)
+   }
+   b = append(b, "\nid = "...)
+   b = append(b, r.Id...)
+   return string(b)
+}
+
+func (i *Initialization) UnmarshalText(data []byte) error {
+   i.S = string(data)
+   return nil
+}
+
+func (m *Media) UnmarshalText(data []byte) error {
+   m.S = string(data)
+   return nil
+}
+
+func (d *Duration) UnmarshalText(data []byte) error {
+   var err error
+   d.D, err = time.ParseDuration(strings.ToLower(
+      strings.TrimPrefix(string(data), "PT"),
+   ))
+   if err != nil {
+      return err
+   }
+   return nil
+}
 
 func (s *SegmentTemplate) set() {
    // dashif.org/Guidelines-TimingModel#addressing-simple
@@ -154,35 +217,6 @@ type Representation struct {
    }
    Width          *int64 `xml:"width,attr"`
    adaptation_set *AdaptationSet
-}
-
-func (r *Representation) Representation() iter.Seq[Representation] {
-   return func(yield func(Representation) bool) {
-      for r2 := range r.adaptation_set.period.mpd.Representation() {
-         if r2.Id == r.Id {
-            if !yield(r2) {
-               return
-            }
-         }
-      }
-   }
-}
-
-func (m *Mpd) Representation() iter.Seq[Representation] {
-   return func(yield func(Representation) bool) {
-      for _, p := range m.Period {
-         p.set(m)
-         for _, adapt := range p.AdaptationSet {
-            adapt.set(&p)
-            for _, represent := range adapt.Representation {
-               represent.set(&adapt)
-               if !yield(represent) {
-                  return
-               }
-            }
-         }
-      }
-   }
 }
 
 type Mpd struct {
