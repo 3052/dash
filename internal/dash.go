@@ -1,11 +1,43 @@
 package dash
 
 import (
+   "iter"
    "net/url"
    "strconv"
    "strings"
    "time"
 )
+
+func (m *Mpd) Representation() []*Representation {
+   var represents []*Representation
+   for _, p := range m.Period {
+      p.set(m)
+      for _, adapt := range p.AdaptationSet {
+         adapt.set(p)
+         for _, represent := range adapt.Representation {
+            represent.set(adapt)
+            represents = append(represents, represent)
+         }
+      }
+   }
+   return represents
+}
+
+func (r *Representation) Representation() iter.Seq[*Representation] {
+   return func(yield func(*Representation) bool) {
+      for _, p := range r.adaptation_set.period.mpd.Period {
+         for _, adapt := range p.AdaptationSet {
+            for _, represent := range adapt.Representation {
+               if represent.Id == r.Id {
+                  if !yield(represent) {
+                     return
+                  }
+               }
+            }
+         }
+      }
+   }
+}
 
 func (r *Representation) String() string {
    var b []byte
@@ -130,6 +162,25 @@ func (p *Period) set(media *Mpd) {
    }
 }
 
+type Representation struct {
+   SegmentTemplate   *SegmentTemplate
+   Bandwidth         int64   `xml:"bandwidth,attr"`
+   BaseUrl           *Url    `xml:"BaseURL"`
+   Codecs            *string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            *int64  `xml:"height,attr"`
+   Id                string  `xml:"id,attr"`
+   MimeType          *string `xml:"mimeType,attr"`
+   SegmentBase       *struct {
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+      IndexRange Range `xml:"indexRange,attr"`
+   }
+   Width          *int64 `xml:"width,attr"`
+   adaptation_set *AdaptationSet
+}
+
 // SegmentIndexBox uses:
 // unsigned int(32) subsegment_duration;
 // but range values can exceed 32 bits
@@ -144,31 +195,8 @@ type ContentProtection struct {
    SchemeIdUri SchemeIdUri `xml:"schemeIdUri,attr"`
 }
 
-type AdaptationSet struct {
-   Codecs            *string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            *int64  `xml:"height,attr"`
-   Lang              string  `xml:"lang,attr"`
-   MimeType          *string `xml:"mimeType,attr"`
-   Representation    []Representation
-   Role              *struct {
-      Value string `xml:"value,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-   Width           *int64 `xml:"width,attr"`
-   period          *Period
-}
-
 type Duration struct {
    D time.Duration
-}
-
-type Period struct {
-   AdaptationSet []AdaptationSet
-   BaseUrl       *Url      `xml:"BaseURL"`
-   Duration      *Duration `xml:"duration,attr"`
-   Id            string    `xml:"id,attr"`
-   mpd           *Mpd
 }
 
 type Url struct {
@@ -200,27 +228,31 @@ type SegmentTemplate struct {
    }
 }
 
-type Representation struct {
-   SegmentTemplate   *SegmentTemplate
-   Bandwidth         int64   `xml:"bandwidth,attr"`
-   BaseUrl           *Url    `xml:"BaseURL"`
-   Codecs            *string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            *int64  `xml:"height,attr"`
-   Id                string  `xml:"id,attr"`
-   MimeType          *string `xml:"mimeType,attr"`
-   SegmentBase       *struct {
-      Initialization struct {
-         Range Range `xml:"range,attr"`
-      }
-      IndexRange Range `xml:"indexRange,attr"`
-   }
-   Width          *int64 `xml:"width,attr"`
-   adaptation_set *AdaptationSet
-}
-
 type Mpd struct {
    BaseUrl                   *Url      `xml:"BaseURL"`
    MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
+   Period                    []*Period
+}
+
+type Period struct {
+   AdaptationSet []*AdaptationSet
+   BaseUrl       *Url      `xml:"BaseURL"`
+   Duration      *Duration `xml:"duration,attr"`
+   Id            string    `xml:"id,attr"`
+   mpd           *Mpd
+}
+
+type AdaptationSet struct {
+   Representation    []*Representation
+   Codecs            *string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            *int64  `xml:"height,attr"`
+   Lang              string  `xml:"lang,attr"`
+   MimeType          *string `xml:"mimeType,attr"`
+   Role              *struct {
+      Value string `xml:"value,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width           *int64 `xml:"width,attr"`
+   period          *Period
 }
