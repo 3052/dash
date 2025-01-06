@@ -6,6 +6,18 @@ import (
    "strconv"
 )
 
+func (r *Representation) Representation() iter.Seq[Representation] {
+   return func(yield func(Representation) bool) {
+      for r2 := range r.adaptation_set.period.mpd.Representation() {
+         if r2.Id == r.Id {
+            if !yield(r2) {
+               return
+            }
+         }
+      }
+   }
+}
+
 func (r *Representation) Segment() iter.Seq[int] {
    template := r.SegmentTemplate
    var address int
@@ -129,16 +141,4 @@ type Representation struct {
    }
    Width          *int64 `xml:"width,attr"`
    adaptation_set *AdaptationSet
-}
-
-func (r *Representation) Representation() iter.Seq[Representation] {
-   return func(yield func(Representation) bool) {
-      for r2 := range r.adaptation_set.period.mpd.Representation() {
-         if r2.Id == r.Id {
-            if !yield(r2) {
-               return
-            }
-         }
-      }
-   }
 }
