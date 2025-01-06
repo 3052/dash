@@ -29,12 +29,6 @@ func (r *Representation) Representation() iter.Seq[Representation] {
    }
 }
 
-type Mpd struct {
-   BaseUrl                   *Url      `xml:"BaseURL"`
-   MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
-}
-
 type Period struct {
    AdaptationSet []AdaptationSet
    BaseUrl       *Url      `xml:"BaseURL"`
