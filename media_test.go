@@ -30,10 +30,10 @@ func TestMedia(t *testing.T) {
    }
 }
 
-var pluto = struct{
-   init string
+var pluto = struct {
+   init  string
    media string
-   mpd string
+   mpd   string
 }{
    mpd:   "http://silo-hybrik.pluto.tv.s3.amazonaws.com/576_pluto/clip/64ff3987cecd3f001332df52_Memento/720pDRM/20230911_090007/dash/0-end/main.mpd",
    init:  "http://silo-hybrik.pluto.tv.s3.amazonaws.com/576_pluto/clip/64ff3987cecd3f001332df52_Memento/720pDRM/20230911_090007/dash/0-end/video/240p-300/init.mp4",

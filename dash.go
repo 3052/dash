@@ -9,84 +9,6 @@ import (
    "time"
 )
 
-func (s *SegmentTemplate) set() {
-   // dashif.org/Guidelines-TimingModel#addressing-simple
-   if s.StartNumber == nil {
-      value := 1
-      s.StartNumber = &value
-   }
-   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
-   if s.Timescale == nil {
-      var value uint64 = 1
-      s.Timescale = &value
-   }
-}
-
-func (r *Range) UnmarshalText(data []byte) error {
-   before, after, _ := strings.Cut(string(data), "-")
-   var err error
-   if before != "" {
-      (*r)[0], err = strconv.ParseUint(before, 10, 64)
-      if err != nil {
-         return err
-      }
-   }
-   if before != "" {
-      if after == "" {
-         return nil
-      }
-   }
-   (*r)[1], err = strconv.ParseUint(after, 10, 64)
-   if err != nil {
-      return err
-   }
-   return nil
-}
-
-func (r Range) MarshalText() ([]byte, error) {
-   b := strconv.AppendUint(nil, r[0], 10)
-   b = append(b, '-')
-   if r[1] != 0 {
-      b = strconv.AppendUint(b, r[1], 10)
-   }
-   return b, nil
-}
-
-// SegmentIndexBox uses:
-// unsigned int(32) subsegment_duration;
-// but range values can exceed 32 bits
-type Range [2]uint64
-
-func (m *Mpd) Representation() iter.Seq[Representation] {
-   return func(yield func(Representation) bool) {
-      for _, p := range m.Period {
-         p.set(m)
-         for _, adapt := range p.AdaptationSet {
-            adapt.set(&p)
-            for _, represent := range adapt.Representation {
-               represent.set(&adapt)
-               if !yield(represent) {
-                  return
-               }
-            }
-         }
-      }
-   }
-}
-
-type Mpd struct {
-   BaseUrl                   *Url      `xml:"BaseURL"`
-   MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
-}
-
-func (m *Mpd) Set(base *url.URL) {
-   if m.BaseUrl == nil {
-      m.BaseUrl = &Url{&url.URL{}}
-   }
-   m.BaseUrl.Url = base.ResolveReference(m.BaseUrl.Url)
-}
-
 func replace(s *string, from, to string) {
    *s = strings.Replace(*s, from, to, 1)
 }
@@ -151,6 +73,36 @@ func (i Initialization) Url(r *Representation) (*url.URL, error) {
    return u, nil
 }
 
+func (m *Mpd) Representation() iter.Seq[Representation] {
+   return func(yield func(Representation) bool) {
+      for _, p := range m.Period {
+         p.set(m)
+         for _, adapt := range p.AdaptationSet {
+            adapt.set(&p)
+            for _, represent := range adapt.Representation {
+               represent.set(&adapt)
+               if !yield(represent) {
+                  return
+               }
+            }
+         }
+      }
+   }
+}
+
+type Mpd struct {
+   BaseUrl                   *Url      `xml:"BaseURL"`
+   MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
+   Period                    []Period
+}
+
+func (m *Mpd) Set(base *url.URL) {
+   if m.BaseUrl == nil {
+      m.BaseUrl = &Url{&url.URL{}}
+   }
+   m.BaseUrl.Url = base.ResolveReference(m.BaseUrl.Url)
+}
+
 type Pssh []byte
 
 func (p *Pssh) UnmarshalText(data []byte) error {
@@ -162,20 +114,46 @@ func (p *Pssh) UnmarshalText(data []byte) error {
    return nil
 }
 
+func (r *Range) UnmarshalText(data []byte) error {
+   before, after, _ := strings.Cut(string(data), "-")
+   var err error
+   if before != "" {
+      (*r)[0], err = strconv.ParseUint(before, 10, 64)
+      if err != nil {
+         return err
+      }
+   }
+   if before != "" {
+      if after == "" {
+         return nil
+      }
+   }
+   (*r)[1], err = strconv.ParseUint(after, 10, 64)
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
+func (r Range) MarshalText() ([]byte, error) {
+   b := strconv.AppendUint(nil, r[0], 10)
+   b = append(b, '-')
+   if r[1] != 0 {
+      b = strconv.AppendUint(b, r[1], 10)
+   }
+   return b, nil
+}
+
+// SegmentIndexBox uses:
+// unsigned int(32) subsegment_duration;
+// but range values can exceed 32 bits
+type Range [2]uint64
+
 func (s SchemeIdUri) Widevine() bool {
    return s == "urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"
 }
 
 type SchemeIdUri string
-
-type Url struct {
-   Url *url.URL
-}
-
-func (b *Url) UnmarshalText(data []byte) error {
-   b.Url = &url.URL{}
-   return b.Url.UnmarshalBinary(data)
-}
 
 type SegmentTemplate struct {
    Initialization Initialization `xml:"initialization,attr"`
@@ -192,4 +170,26 @@ type SegmentTemplate struct {
          R int `xml:"r,attr"` // repeat
       }
    }
+}
+
+func (s *SegmentTemplate) set() {
+   // dashif.org/Guidelines-TimingModel#addressing-simple
+   if s.StartNumber == nil {
+      value := 1
+      s.StartNumber = &value
+   }
+   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
+   if s.Timescale == nil {
+      var value uint64 = 1
+      s.Timescale = &value
+   }
+}
+
+type Url struct {
+   Url *url.URL
+}
+
+func (b *Url) UnmarshalText(data []byte) error {
+   b.Url = &url.URL{}
+   return b.Url.UnmarshalBinary(data)
 }

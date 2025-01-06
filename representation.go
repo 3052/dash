@@ -111,6 +111,7 @@ func (r *Representation) String() string {
    b = append(b, r.Id...)
    return string(b)
 }
+
 type Representation struct {
    SegmentTemplate   *SegmentTemplate
    Bandwidth         int64   `xml:"bandwidth,attr"`
