@@ -8,16 +8,16 @@ import (
    "time"
 )
 
-func (r *Representation) Representation() iter.Seq[*Representation] {
-   return func(yield func(*Representation) bool) {
+func (r *Representation) Representation() iter.Seq[Representation] {
+   return func(yield func(Representation) bool) {
       for _, p := range r.adaptation_set.period.mpd.Period {
          for _, adapt := range p.AdaptationSet {
             for _, represent := range adapt.Representation {
                if represent.Id == r.Id {
                   if represent.adaptation_set == nil {
                      p.set(r.adaptation_set.period.mpd)
-                     adapt.set(p)
-                     represent.set(adapt)
+                     adapt.set(&p)
+                     represent.set(&adapt)
                   }
                   if !yield(represent) {
                      return
@@ -27,21 +27,6 @@ func (r *Representation) Representation() iter.Seq[*Representation] {
          }
       }
    }
-}
-
-func (m *Mpd) Representation() []*Representation {
-   var represents []*Representation
-   for _, p := range m.Period {
-      p.set(m)
-      for _, adapt := range p.AdaptationSet {
-         adapt.set(p)
-         for _, represent := range adapt.Representation {
-            represent.set(adapt)
-            represents = append(represents, represent)
-         }
-      }
-   }
-   return represents
 }
 
 func (r *Representation) String() string {
@@ -236,11 +221,11 @@ type SegmentTemplate struct {
 type Mpd struct {
    BaseUrl                   *Url      `xml:"BaseURL"`
    MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []*Period
+   Period                    []Period
 }
 
 type Period struct {
-   AdaptationSet []*AdaptationSet
+   AdaptationSet []AdaptationSet
    BaseUrl       *Url      `xml:"BaseURL"`
    Duration      *Duration `xml:"duration,attr"`
    Id            string    `xml:"id,attr"`
@@ -248,7 +233,7 @@ type Period struct {
 }
 
 type AdaptationSet struct {
-   Representation    []*Representation
+   Representation    []Representation
    Codecs            *string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
    Height            *int64  `xml:"height,attr"`
@@ -260,4 +245,21 @@ type AdaptationSet struct {
    SegmentTemplate *SegmentTemplate
    Width           *int64 `xml:"width,attr"`
    period          *Period
+}
+
+func (m *Mpd) Representation() iter.Seq[Representation] {
+   return func(yield func(Representation) bool) {
+      for _, p := range m.Period {
+         p.set(m)
+         for _, adapt := range p.AdaptationSet {
+            adapt.set(&p)
+            for _, represent := range adapt.Representation {
+               represent.set(&adapt)
+               if !yield(represent) {
+                  return
+               }
+            }
+         }
+      }
+   }
 }
