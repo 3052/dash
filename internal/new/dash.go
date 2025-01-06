@@ -8,6 +8,27 @@ import (
    "time"
 )
 
+func (r *Representation) Representation() iter.Seq[*Representation] {
+   return func(yield func(*Representation) bool) {
+      for _, p := range r.adaptation_set.period.mpd.Period {
+         for _, adapt := range p.AdaptationSet {
+            for _, represent := range adapt.Representation {
+               if represent.Id == r.Id {
+                  if represent.adaptation_set == nil {
+                     p.set(r.adaptation_set.period.mpd)
+                     adapt.set(p)
+                     represent.set(adapt)
+                  }
+                  if !yield(represent) {
+                     return
+                  }
+               }
+            }
+         }
+      }
+   }
+}
+
 func (m *Mpd) Representation() []*Representation {
    var represents []*Representation
    for _, p := range m.Period {
@@ -21,22 +42,6 @@ func (m *Mpd) Representation() []*Representation {
       }
    }
    return represents
-}
-
-func (r *Representation) Representation() iter.Seq[*Representation] {
-   return func(yield func(*Representation) bool) {
-      for _, p := range r.adaptation_set.period.mpd.Period {
-         for _, adapt := range p.AdaptationSet {
-            for _, represent := range adapt.Representation {
-               if represent.Id == r.Id {
-                  if !yield(represent) {
-                     return
-                  }
-               }
-            }
-         }
-      }
-   }
 }
 
 func (r *Representation) String() string {
