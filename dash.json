@@ -5,7 +5,7 @@
    "modules": {
       "dash": {
          "archive_ref_prefix": "tags/",
-         "ref": "v1.25.3",
+         "ref": "v1.25.5",
          "type": "github",
          "url": "https://github.com/3052/dash"
       }
