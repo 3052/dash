@@ -1,2 +1,64 @@
 <?xml version='1.0' encoding='utf-8'?>
-<MPD xmlns:cenc="urn:mpeg:cenc:2013" xmlns:mspr="urn:microsoft:playready" xmlns="urn:mpeg:dash:schema:mpd:2011" mediaPresentationDuration="PT1H47M59.062S" minBufferTime="PT2.00S" profiles="urn:mpeg:dash:profile:isoff-on-demand:2011" type="static"><BaseURL>https://prod-avod-pmd-edgecast.cdn.rakuten.tv/a/f/e/afe44e514d58d721051d028a2929b092-mc-0-143-0-0_DS2BB/</BaseURL><Period><AdaptationSet maxHeight="1080" maxWidth="1920" mimeType="video/mp4" minHeight="252" minWidth="448" par="16:9" sar="1:1" segmentAlignment="true" startWithSAP="1"><ContentProtection cenc:default_KID="afe44e51-4d58-d721-051d-028a2929b092" schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc"/><ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"><cenc:pssh>AAAAcHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAAFAIARIQr+ROUU1Y1yEFHQKKKSmwkhoFd3Vha2kiLWFmZTQ0ZTUxNGQ1OGQ3MjEwNTFkMDI4YTI5MjliMDkyLW1jLTAtMTQzLTAtMEjj3JWbBg==</cenc:pssh></ContentProtection><Representation bandwidth="365346" codecs="avc1.4D4015" frameRate="2997/125" height="252" id="video-avc1-1" scanType="progressive" width="448"><BaseURL>video-avc1-1.ismv?token=Kk8uTCYHyFZB1EmLiNQGAD149rmuF6Y3gjYUJMtqFL5kOMlVduMPdw4BHhfasJPJM9QPs_uUbL5hwsfkZxpQRez-7qR753QHTuD1p-HGtmC0ldXV4GlaGYV8patN1joUhZaZyFCEEhZgb2TH2CgbwAUAjFhScUY-Z8Eo3YPc6taAXoJ9aikwg5RGovURATzaac5WZG62vuUAUvxd-xVdUsMyk2Lg9HeFe2PWwYg=&amp;streaming_id=b8a5e724-8c9a-4a7c-864c-8b8e6e055a40</BaseURL><SegmentBase indexRange="1474-40349"><Initialization range="0-1473"/></SegmentBase></Representation><Representation bandwidth="759755" codecs="avc1.4D401E" frameRate="2997/125" height="432" id="video-avc1-2" scanType="progressive" width="768"><BaseURL>video-avc1-2.ismv?token=bTQ3gAG8pgNCPWwqSy-2V70TGPssQj-tO9UvGb4eYAEWlizniD-bpyeakqhMQ-mSRhTe47uRd8OxjxhcAGInOlYjWfhNC339yeLwNCdCZMgDDWpkcDZbyaEI526g2YxnNW_I1KhGW4F0M0BeVEAlJWYwXtHAbwVdu9XRtlbaPDaYKfQRTBAXYcEgPqm6nwPzw-vXciN2UuMGGXO9FNaPtM1x__94cN6Lm5cTN3A=&amp;streaming_id=b8a5e724-8c9a-4a7c-864c-8b8e6e055a40</BaseURL><SegmentBase indexRange="1472-40347"><Initialization range="0-1471"/></SegmentBase></Representation><Representation bandwidth="1151425" codecs="avc1.4D401E" frameRate="2997/125" height="432" id="video-avc1-3" scanType="progressive" width="768"><BaseURL>video-avc1-3.ismv?token=LU0pNb2iYOGIAR6t1Q2LkY0o0TeSsf2h_69BeJkxgq5sMKblIu4-x2Imuj_aRUn__khsjeMAWQ-iHEgfcU177ZCLpxzSdSnP2rAHJWIwaAInC3Qxvp02uGFjCVnphpAeYaIMUFjqCSbiGfze-3EwEXFHq0NKvTadvaHgmSBErHQw-rK1jvdu7YRqo9E1v5hLaHCdF5tjsSmewKzz6aMFep8mSV1RLaCH_UFM3-c=&amp;streaming_id=b8a5e724-8c9a-4a7c-864c-8b8e6e055a40</BaseURL><SegmentBase indexRange="1472-40347"><Initialization range="0-1471"/></SegmentBase></Representation><Representation bandwidth="1749431" codecs="avc1.4D401F" frameRate="2997/125" height="540" id="video-avc1-4" scanType="progressive" width="960"><BaseURL>video-avc1-4.ismv?token=iQhZU6JlQBqgsGRk8r9PnFVJQq4NPAw7LdSxrB0DdQ3VVRgC3L5zM5JOeju2XGbJQEDVNFnOg1aGGW3EZVki2ui7DljzTFTMg8pn9inb971gjlxPhKvInwmfvUZj40RSY9ncpEYOQS8-dca_2TZnzfwnQdn0Mc_mlRMMkV6unpFkg38J_OzFNfzZP00nYY3iwihx9GSzOnUhU99Yv9_ham6FmwnwfQ5PDS59hzo=&amp;streaming_id=b8a5e724-8c9a-4a7c-864c-8b8e6e055a40</BaseURL><SegmentBase indexRange="1473-40348"><Initialization range="0-1472"/></SegmentBase></Representation><Representation bandwidth="2816927" codecs="avc1.4D401F" frameRate="2997/125" height="720" id="video-avc1-5" scanType="progressive" width="1280"><BaseURL>video-avc1-5.ismv?token=TTDUpiWwhz40Chv5UjyT7nrPdDcSXbDkd7IMT14UYUIcrPo4pFAnaEbhvgZfNOziejtuODlHTiRs1rRnVO1FMsG2m2sKp96ribXv9964XJPp3WiBlorUlfP4GlGxx0CPN2OqXOTQKquQasZ619ohNP0o8cuGk17P9XIO_0gzfciJbekvHsdlX1I1kEtOxV1McY2aRaEbyeNXNI129DNef9N0MSSQ7HA310mjk_8=&amp;streaming_id=b8a5e724-8c9a-4a7c-864c-8b8e6e055a40</BaseURL><SegmentBase indexRange="1474-40349"><Initialization range="0-1473"/></SegmentBase></Representation><Representation bandwidth="4378944" codecs="avc1.4D4028" frameRate="2997/125" height="1080" id="video-avc1-6" scanType="progressive" width="1920"><BaseURL>video-avc1-6.ismv?token=G_HdKxQOHtwhQ1AdFgPe2oNeZMJXnFyy-fPN-XHP0Ah3A0qJ6PqNC510sEftr9KtG1OYBKYFsKQPrAkiwIfi9Wp7ibGxaXreS3F3tRfTvaeyEqo6Y2sEO5810N44vbyfzIffX5iOhW5MHS3EkqcgVgksxxBxqiONEdtrMH_9wROXznCLA9VDP0CTbbR_Seji2Jvy_sC5QU7sMy4n1164EqROsxZjeoMrr-Z6rWY=&amp;streaming_id=b8a5e724-8c9a-4a7c-864c-8b8e6e055a40</BaseURL><SegmentBase indexRange="1475-40350"><Initialization range="0-1474"/></SegmentBase></Representation></AdaptationSet><AdaptationSet lang="eng" mimeType="audio/mp4" segmentAlignment="true" startWithSAP="1"><ContentProtection cenc:default_KID="afe44e51-4d58-d721-051d-028a2929b092" schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc"/><ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"><cenc:pssh>AAAAcHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAAFAIARIQr+ROUU1Y1yEFHQKKKSmwkhoFd3Vha2kiLWFmZTQ0ZTUxNGQ1OGQ3MjEwNTFkMDI4YTI5MjliMDkyLW1jLTAtMTQzLTAtMEjj3JWbBg==</cenc:pssh></ContentProtection><Representation audioSamplingRate="48000" bandwidth="201773" codecs="mp4a.40.2" id="audio-eng-mp4a-1"><AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/><BaseURL>audio-eng-mp4a-1.isma?token=3d6zN8AhBJnLlmraVU4a7Vam-EzVAZvLoXRUVDRrOO8-jya9CsISaYodTkXM6erJAOFbia5RQYmEUEb-iVS1Y7tBpN0PywuXYBqVpTqNGrNtL61zQYdwsJO4WZTD4JETTkZEnJ56wJU-zr9AdRBRNJu5Wg5DTP3pUoA6Q7T3n_blJfd9o3dDkZ1BJPhm2KbGCPo7DSgihK5qvZ8LaurIdCvhLP4Phn7V7PD2qJQnoClt&amp;streaming_id=b8a5e724-8c9a-4a7c-864c-8b8e6e055a40</BaseURL><SegmentBase indexRange="1392-40303"><Initialization range="0-1391"/></SegmentBase></Representation></AdaptationSet></Period></MPD>
+<MPD
+   xmlns:cenc="urn:mpeg:cenc:2013"
+   xmlns:mspr="urn:microsoft:playready"
+   xmlns="urn:mpeg:dash:schema:mpd:2011" mediaPresentationDuration="PT1H47M59.062S" minBufferTime="PT2.00S" profiles="urn:mpeg:dash:profile:isoff-on-demand:2011" type="static">
+   <BaseURL>https://prod-avod-pmd-edgecast.cdn.rakuten.tv/a/f/e/afe44e514d58d721051d028a2929b092-mc-0-143-0-0_DS2BB/</BaseURL>
+   <Period>
+      <AdaptationSet maxHeight="1080" maxWidth="1920" mimeType="video/mp4" minHeight="252" minWidth="448" par="16:9" sar="1:1" segmentAlignment="true" startWithSAP="1">
+         <ContentProtection cenc:default_KID="afe44e51-4d58-d721-051d-028a2929b092" schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc"/>
+         <ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed">
+            <cenc:pssh>AAAAcHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAAFAIARIQr+ROUU1Y1yEFHQKKKSmwkhoFd3Vha2kiLWFmZTQ0ZTUxNGQ1OGQ3MjEwNTFkMDI4YTI5MjliMDkyLW1jLTAtMTQzLTAtMEjj3JWbBg==</cenc:pssh>
+         </ContentProtection>
+         <Representation bandwidth="365346" codecs="avc1.4D4015" frameRate="2997/125" height="252" id="video-avc1-1" scanType="progressive" width="448">
+            <BaseURL>video-avc1-1.ismv?token=Kk8uTCYHyFZB1EmLiNQGAD149rmuF6Y3gjYUJMtqFL5kOMlVduMPdw4BHhfasJPJM9QPs_uUbL5hwsfkZxpQRez-7qR753QHTuD1p-HGtmC0ldXV4GlaGYV8patN1joUhZaZyFCEEhZgb2TH2CgbwAUAjFhScUY-Z8Eo3YPc6taAXoJ9aikwg5RGovURATzaac5WZG62vuUAUvxd-xVdUsMyk2Lg9HeFe2PWwYg=&amp;streaming_id=b8a5e724-8c9a-4a7c-864c-8b8e6e055a40</BaseURL>
+            <SegmentBase indexRange="1474-40349">
+               <Initialization range="0-1473"/>
+            </SegmentBase>
+         </Representation>
+         <Representation bandwidth="759755" codecs="avc1.4D401E" frameRate="2997/125" height="432" id="video-avc1-2" scanType="progressive" width="768">
+            <BaseURL>video-avc1-2.ismv?token=bTQ3gAG8pgNCPWwqSy-2V70TGPssQj-tO9UvGb4eYAEWlizniD-bpyeakqhMQ-mSRhTe47uRd8OxjxhcAGInOlYjWfhNC339yeLwNCdCZMgDDWpkcDZbyaEI526g2YxnNW_I1KhGW4F0M0BeVEAlJWYwXtHAbwVdu9XRtlbaPDaYKfQRTBAXYcEgPqm6nwPzw-vXciN2UuMGGXO9FNaPtM1x__94cN6Lm5cTN3A=&amp;streaming_id=b8a5e724-8c9a-4a7c-864c-8b8e6e055a40</BaseURL>
+            <SegmentBase indexRange="1472-40347">
+               <Initialization range="0-1471"/>
+            </SegmentBase>
+         </Representation>
+         <Representation bandwidth="1151425" codecs="avc1.4D401E" frameRate="2997/125" height="432" id="video-avc1-3" scanType="progressive" width="768">
+            <BaseURL>video-avc1-3.ismv?token=LU0pNb2iYOGIAR6t1Q2LkY0o0TeSsf2h_69BeJkxgq5sMKblIu4-x2Imuj_aRUn__khsjeMAWQ-iHEgfcU177ZCLpxzSdSnP2rAHJWIwaAInC3Qxvp02uGFjCVnphpAeYaIMUFjqCSbiGfze-3EwEXFHq0NKvTadvaHgmSBErHQw-rK1jvdu7YRqo9E1v5hLaHCdF5tjsSmewKzz6aMFep8mSV1RLaCH_UFM3-c=&amp;streaming_id=b8a5e724-8c9a-4a7c-864c-8b8e6e055a40</BaseURL>
+            <SegmentBase indexRange="1472-40347">
+               <Initialization range="0-1471"/>
+            </SegmentBase>
+         </Representation>
+         <Representation bandwidth="1749431" codecs="avc1.4D401F" frameRate="2997/125" height="540" id="video-avc1-4" scanType="progressive" width="960">
+            <BaseURL>video-avc1-4.ismv?token=iQhZU6JlQBqgsGRk8r9PnFVJQq4NPAw7LdSxrB0DdQ3VVRgC3L5zM5JOeju2XGbJQEDVNFnOg1aGGW3EZVki2ui7DljzTFTMg8pn9inb971gjlxPhKvInwmfvUZj40RSY9ncpEYOQS8-dca_2TZnzfwnQdn0Mc_mlRMMkV6unpFkg38J_OzFNfzZP00nYY3iwihx9GSzOnUhU99Yv9_ham6FmwnwfQ5PDS59hzo=&amp;streaming_id=b8a5e724-8c9a-4a7c-864c-8b8e6e055a40</BaseURL>
+            <SegmentBase indexRange="1473-40348">
+               <Initialization range="0-1472"/>
+            </SegmentBase>
+         </Representation>
+         <Representation bandwidth="2816927" codecs="avc1.4D401F" frameRate="2997/125" height="720" id="video-avc1-5" scanType="progressive" width="1280">
+            <BaseURL>video-avc1-5.ismv?token=TTDUpiWwhz40Chv5UjyT7nrPdDcSXbDkd7IMT14UYUIcrPo4pFAnaEbhvgZfNOziejtuODlHTiRs1rRnVO1FMsG2m2sKp96ribXv9964XJPp3WiBlorUlfP4GlGxx0CPN2OqXOTQKquQasZ619ohNP0o8cuGk17P9XIO_0gzfciJbekvHsdlX1I1kEtOxV1McY2aRaEbyeNXNI129DNef9N0MSSQ7HA310mjk_8=&amp;streaming_id=b8a5e724-8c9a-4a7c-864c-8b8e6e055a40</BaseURL>
+            <SegmentBase indexRange="1474-40349">
+               <Initialization range="0-1473"/>
+            </SegmentBase>
+         </Representation>
+         <Representation bandwidth="4378944" codecs="avc1.4D4028" frameRate="2997/125" height="1080" id="video-avc1-6" scanType="progressive" width="1920">
+            <BaseURL>video-avc1-6.ismv?token=G_HdKxQOHtwhQ1AdFgPe2oNeZMJXnFyy-fPN-XHP0Ah3A0qJ6PqNC510sEftr9KtG1OYBKYFsKQPrAkiwIfi9Wp7ibGxaXreS3F3tRfTvaeyEqo6Y2sEO5810N44vbyfzIffX5iOhW5MHS3EkqcgVgksxxBxqiONEdtrMH_9wROXznCLA9VDP0CTbbR_Seji2Jvy_sC5QU7sMy4n1164EqROsxZjeoMrr-Z6rWY=&amp;streaming_id=b8a5e724-8c9a-4a7c-864c-8b8e6e055a40</BaseURL>
+            <SegmentBase indexRange="1475-40350">
+               <Initialization range="0-1474"/>
+            </SegmentBase>
+         </Representation>
+      </AdaptationSet>
+      <AdaptationSet lang="eng" mimeType="audio/mp4" segmentAlignment="true" startWithSAP="1">
+         <ContentProtection cenc:default_KID="afe44e51-4d58-d721-051d-028a2929b092" schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc"/>
+         <ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed">
+            <cenc:pssh>AAAAcHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAAFAIARIQr+ROUU1Y1yEFHQKKKSmwkhoFd3Vha2kiLWFmZTQ0ZTUxNGQ1OGQ3MjEwNTFkMDI4YTI5MjliMDkyLW1jLTAtMTQzLTAtMEjj3JWbBg==</cenc:pssh>
+         </ContentProtection>
+         <Representation audioSamplingRate="48000" bandwidth="201773" codecs="mp4a.40.2" id="audio-eng-mp4a-1">
+            <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+            <BaseURL>audio-eng-mp4a-1.isma?token=3d6zN8AhBJnLlmraVU4a7Vam-EzVAZvLoXRUVDRrOO8-jya9CsISaYodTkXM6erJAOFbia5RQYmEUEb-iVS1Y7tBpN0PywuXYBqVpTqNGrNtL61zQYdwsJO4WZTD4JETTkZEnJ56wJU-zr9AdRBRNJu5Wg5DTP3pUoA6Q7T3n_blJfd9o3dDkZ1BJPhm2KbGCPo7DSgihK5qvZ8LaurIdCvhLP4Phn7V7PD2qJQnoClt&amp;streaming_id=b8a5e724-8c9a-4a7c-864c-8b8e6e055a40</BaseURL>
+            <SegmentBase indexRange="1392-40303">
+               <Initialization range="0-1391"/>
+            </SegmentBase>
+         </Representation>
+      </AdaptationSet>
+   </Period>
+</MPD>
