@@ -6,6 +6,28 @@ import (
    "strconv"
 )
 
+type Representation struct {
+   Bandwidth         int     `xml:"bandwidth,attr"`
+   BaseUrl           *Url    `xml:"BaseURL"`
+   Codecs            *string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            *int64  `xml:"height,attr"`
+   Id                string  `xml:"id,attr"`
+   MimeType          *string `xml:"mimeType,attr"`
+   SegmentBase       *SegmentBase
+   SegmentList       *struct {
+      Initialization struct {
+         SourceUrl string `xml:"sourceURL,attr"`
+      }
+      SegmentUrl []struct {
+         Media string `xml:"media,attr"`
+      } `xml:"SegmentURL"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width           *int64 `xml:"width,attr"`
+   adaptation_set  *AdaptationSet
+}
+
 func (r *Representation) String() string {
    var b []byte
    if r.Width != nil {
@@ -45,20 +67,6 @@ func (r *Representation) String() string {
    b = append(b, "\nid = "...)
    b = append(b, r.Id...)
    return string(b)
-}
-
-type Representation struct {
-   Bandwidth         int    `xml:"bandwidth,attr"`
-   Id                string `xml:"id,attr"`
-   SegmentTemplate   *SegmentTemplate
-   BaseUrl           *Url    `xml:"BaseURL"`
-   Codecs            *string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            *int64  `xml:"height,attr"`
-   MimeType          *string `xml:"mimeType,attr"`
-   SegmentBase       *SegmentBase
-   Width             *int64 `xml:"width,attr"`
-   adaptation_set    *AdaptationSet
 }
 
 func (r *Representation) Representation() iter.Seq[Representation] {
