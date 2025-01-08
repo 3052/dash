@@ -7,8 +7,8 @@ import (
 )
 
 type SegmentTemplate struct {
-   Initialization *Initialization `xml:"initialization,attr"`
    Media          Media           `xml:"media,attr"`
+   Initialization *Initialization `xml:"initialization,attr"`
    Duration       float64         `xml:"duration,attr"`
    // This can be any frequency but typically is the media clock frequency of
    // one of the media streams (or a positive integer multiple thereof).
