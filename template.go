@@ -6,6 +6,23 @@ import (
    "strings"
 )
 
+type SegmentTemplate struct {
+   Initialization *Initialization `xml:"initialization,attr"`
+   Media          Media           `xml:"media,attr"`
+   Duration       float64         `xml:"duration,attr"`
+   // This can be any frequency but typically is the media clock frequency of
+   // one of the media streams (or a positive integer multiple thereof).
+   Timescale              *uint64 `xml:"timescale,attr"`
+   StartNumber            *int    `xml:"startNumber,attr"`
+   PresentationTimeOffset int     `xml:"presentationTimeOffset,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D int `xml:"d,attr"` // duration
+         R int `xml:"r,attr"` // repeat
+      }
+   }
+}
+
 type Initialization struct {
    S string
 }
@@ -63,22 +80,6 @@ type Media struct {
 func (m *Media) UnmarshalText(data []byte) error {
    m.S = string(data)
    return nil
-}
-type SegmentTemplate struct {
-   Initialization *Initialization `xml:"initialization,attr"`
-   Media          Media           `xml:"media,attr"`
-   Duration       float64         `xml:"duration,attr"`
-   // This can be any frequency but typically is the media clock frequency of
-   // one of the media streams (or a positive integer multiple thereof).
-   Timescale              *uint64 `xml:"timescale,attr"`
-   StartNumber            *int    `xml:"startNumber,attr"`
-   PresentationTimeOffset int     `xml:"presentationTimeOffset,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D int `xml:"d,attr"` // duration
-         R int `xml:"r,attr"` // repeat
-      }
-   }
 }
 
 func (s *SegmentTemplate) set() {
