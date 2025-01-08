@@ -1,27 +1,20 @@
 package dash
 
 import (
-   "encoding/xml"
    "net/url"
    "os"
    "testing"
 )
 
-func TestUrl(t *testing.T) {
-   data, err := os.ReadFile("testdata/criterion.mpd")
+func TestMpd(t *testing.T) {
+   data, err := os.ReadFile("testdata/pluto.mpd")
    if err != nil {
       t.Fatal(err)
    }
    var media Mpd
-   media.BaseUrl = &Url{&url.URL{
-      Path: "/0/1/2/3/4/5/6/7/8/9/10",
-   }}
-   err = xml.Unmarshal(data, &media)
+   err = media.Unmarshal(data)
    if err != nil {
       t.Fatal(err)
-   }
-   if media.BaseUrl.UnmarshalText([]byte{'\n'}) == nil {
-      t.Fatal("BaseUrl.UnmarshalText")
    }
 }
 
@@ -43,7 +36,7 @@ func TestInitialization(t *testing.T) {
    if err != nil {
       t.Fatal(err)
    }
-   err = xml.Unmarshal(data, &media)
+   err = media.Unmarshal(data)
    if err != nil {
       t.Fatal(err)
    }
@@ -53,19 +46,17 @@ func TestInitialization(t *testing.T) {
          break
       }
    }
-   t.Run("Url", func(t *testing.T) {
-      initial, err := represent.SegmentTemplate.Initialization.Url(&represent)
-      if err != nil {
-         t.Fatal(err)
-      }
-      if initial.String() != pluto.init {
-         t.Fatal(initial)
-      }
-      _, err = Initialization{"\n"}.Url(&Representation{})
-      if err == nil {
-         t.Fatal("Initialization.Url")
-      }
-   })
+   initial, err := represent.SegmentTemplate.Initialization.Url(&represent)
+   if err != nil {
+      t.Fatal(err)
+   }
+   if initial.String() != pluto.init {
+      t.Fatal(initial)
+   }
+   _, err = Initialization{"\n"}.Url(&Representation{})
+   if err == nil {
+      t.Fatal("Initialization.Url")
+   }
 }
 
 func TestPssh(t *testing.T) {
@@ -112,7 +103,7 @@ func TestSchemeIdUri(t *testing.T) {
       t.Fatal(err)
    }
    var media Mpd
-   err = xml.Unmarshal(data, &media)
+   err = media.Unmarshal(data)
    if err != nil {
       t.Fatal(err)
    }
@@ -124,4 +115,22 @@ func TestSchemeIdUri(t *testing.T) {
       }
    }
    t.Fatal("SchemeIdUri")
+}
+
+func TestUrl(t *testing.T) {
+   data, err := os.ReadFile("testdata/criterion.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   var media Mpd
+   media.BaseUrl = &Url{&url.URL{
+      Path: "/0/1/2/3/4/5/6/7/8/9/10",
+   }}
+   err = media.Unmarshal(data)
+   if err != nil {
+      t.Fatal(err)
+   }
+   if media.BaseUrl.UnmarshalText([]byte{'\n'}) == nil {
+      t.Fatal("BaseUrl.UnmarshalText")
+   }
 }
