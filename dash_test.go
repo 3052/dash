@@ -6,6 +6,79 @@ import (
    "testing"
 )
 
+func TestListUrl(t *testing.T) {
+   data, err := os.ReadFile("testdata/criterion.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   var media Mpd
+   err = media.Unmarshal(data)
+   if err != nil {
+      t.Fatal(err)
+   }
+   var represent Representation
+   for represent = range media.Representation() {
+      if *represent.MimeType == "video/mp4" {
+         break
+      }
+   }
+   _, err = represent.SegmentList.SegmentUrl[0].Media.Url(&represent)
+   if err != nil {
+      t.Fatal(err)
+   }
+   _, err = ListUrl{}.Url(&Representation{})
+   if err != nil {
+      t.Fatal(err)
+   }
+}
+
+func TestUrl(t *testing.T) {
+   data, err := os.ReadFile("testdata/criterion.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   var media Mpd
+   media.BaseUrl = &Url{&url.URL{
+      Path: "/0/1/2/3/4/5/6/7/8/9/10",
+   }}
+   err = media.Unmarshal(data)
+   if err != nil {
+      t.Fatal(err)
+   }
+   if media.BaseUrl.UnmarshalText([]byte{'\n'}) == nil {
+      t.Fatal("BaseUrl.UnmarshalText")
+   }
+}
+
+var range_tests = []struct {
+   in  string
+   out string
+   ok  bool
+}{
+   {"!-3", "", false},
+   {"-", "", false},
+   {"-3", "0-3", true},
+   {"2-", "2-", true},
+   {"2-3", "2-3", true},
+}
+
+var initial_test = struct {
+   init  string
+   media string
+   mpd   string
+}{
+   mpd:   "http://silo-hybrik.pluto.tv.s3.amazonaws.com/576_pluto/clip/64ff3987cecd3f001332df52_Memento/720pDRM/20230911_090007/dash/0-end/main.mpd",
+   init:  "http://silo-hybrik.pluto.tv.s3.amazonaws.com/576_pluto/clip/64ff3987cecd3f001332df52_Memento/720pDRM/20230911_090007/dash/0-end/video/240p-300/init.mp4",
+   media: "http://silo-hybrik.pluto.tv.s3.amazonaws.com/576_pluto/clip/64ff3987cecd3f001332df52_Memento/720pDRM/20230911_090007/dash/0-end/video/240p-300/01362.m4s",
+}
+
+func TestDuration(t *testing.T) {
+   var d Duration
+   if d.UnmarshalText(nil) == nil {
+      t.Fatal("Duration.UnmarshalText")
+   }
+}
+
 func TestInitialization(t *testing.T) {
    data, err := os.ReadFile("testdata/pluto.mpd")
    if err != nil {
@@ -13,7 +86,7 @@ func TestInitialization(t *testing.T) {
    }
    var media Mpd
    media.BaseUrl = &Url{}
-   media.BaseUrl.Url, err = url.Parse(pluto.mpd)
+   media.BaseUrl.Url, err = url.Parse(initial_test.mpd)
    if err != nil {
       t.Fatal(err)
    }
@@ -31,7 +104,7 @@ func TestInitialization(t *testing.T) {
    if err != nil {
       t.Fatal(err)
    }
-   if initial.String() != pluto.init {
+   if initial.String() != initial_test.init {
       t.Fatal(initial)
    }
    _, err = Initialization{"\n"}.Url(&Representation{})
@@ -64,30 +137,15 @@ func TestMedia(t *testing.T) {
    }
 }
 
-var pluto = struct {
-   init  string
-   media string
-   mpd   string
-}{
-   mpd:   "http://silo-hybrik.pluto.tv.s3.amazonaws.com/576_pluto/clip/64ff3987cecd3f001332df52_Memento/720pDRM/20230911_090007/dash/0-end/main.mpd",
-   init:  "http://silo-hybrik.pluto.tv.s3.amazonaws.com/576_pluto/clip/64ff3987cecd3f001332df52_Memento/720pDRM/20230911_090007/dash/0-end/video/240p-300/init.mp4",
-   media: "http://silo-hybrik.pluto.tv.s3.amazonaws.com/576_pluto/clip/64ff3987cecd3f001332df52_Memento/720pDRM/20230911_090007/dash/0-end/video/240p-300/01362.m4s",
-}
-func TestUrl(t *testing.T) {
-   data, err := os.ReadFile("testdata/criterion.mpd")
+func TestMpd(t *testing.T) {
+   data, err := os.ReadFile("testdata/pluto.mpd")
    if err != nil {
       t.Fatal(err)
    }
    var media Mpd
-   media.BaseUrl = &Url{&url.URL{
-      Path: "/0/1/2/3/4/5/6/7/8/9/10",
-   }}
    err = media.Unmarshal(data)
    if err != nil {
       t.Fatal(err)
-   }
-   if media.BaseUrl.UnmarshalText([]byte{'\n'}) == nil {
-      t.Fatal("BaseUrl.UnmarshalText")
    }
 }
 
@@ -114,42 +172,11 @@ func TestPeriod(t *testing.T) {
    }
 }
 
-func TestMpd(t *testing.T) {
-   data, err := os.ReadFile("testdata/pluto.mpd")
-   if err != nil {
-      t.Fatal(err)
-   }
-   var media Mpd
-   err = media.Unmarshal(data)
-   if err != nil {
-      t.Fatal(err)
-   }
-}
-
-func TestDuration(t *testing.T) {
-   var d Duration
-   if d.UnmarshalText(nil) == nil {
-      t.Fatal("Duration.UnmarshalText")
-   }
-}
-
 func TestPssh(t *testing.T) {
    var p Pssh
    if p.UnmarshalText([]byte{0}) == nil {
       t.Fatal("Pssh.UnmarshalText")
    }
-}
-
-var range_tests = []struct {
-   in  string
-   out string
-   ok  bool
-}{
-   {"!-3", "", false},
-   {"-", "", false},
-   {"-3", "0-3", true},
-   {"2-", "2-", true},
-   {"2-3", "2-3", true},
 }
 
 func TestRange(t *testing.T) {
