@@ -1,7 +1,7 @@
 package dash
 
 import (
-   "41.neocities.org/dash/url"
+   "net/url"
    "os"
    "testing"
 )
@@ -12,7 +12,8 @@ func TestInitialization(t *testing.T) {
       t.Fatal(err)
    }
    var media Mpd
-   media.BaseUrl, err = url.Parse(pluto.mpd)
+   media.BaseUrl = &Url{}
+   media.BaseUrl.Url, err = url.Parse(pluto.mpd)
    if err != nil {
       t.Fatal(err)
    }

@@ -1,7 +1,7 @@
 package dash
 
 import (
-   "41.neocities.org/dash/url"
+   "net/url"
    "os"
    "testing"
 )
@@ -12,10 +12,9 @@ func TestUrl(t *testing.T) {
       t.Fatal(err)
    }
    var media Mpd
-   media.BaseUrl, err = url.Parse("/0/1/2/3/4/5/6/7/8/9/10")
-   if err != nil {
-      t.Fatal(err)
-   }
+   media.BaseUrl = &Url{&url.URL{
+      Path: "/0/1/2/3/4/5/6/7/8/9/10",
+   }}
    err = media.Unmarshal(data)
    if err != nil {
       t.Fatal(err)

@@ -6,6 +6,26 @@ import (
    "strings"
 )
 
+func (i Initialization) Url(r *Representation) (*url.URL, error) {
+   replace(&i.S, "$RepresentationID$", r.Id)
+   u, err := url.Parse(i.S)
+   if err != nil {
+      return nil, err
+   }
+   if r.BaseUrl != nil {
+      u = r.BaseUrl.Url.ResolveReference(u)
+   }
+   return u, nil
+}
+
+type Initialization struct {
+   S string
+}
+
+type Media struct {
+   S string
+}
+
 type SegmentTemplate struct {
    StartNumber            *int    `xml:"startNumber,attr"`
    // This can be any frequency but typically is the media clock frequency of
@@ -36,25 +56,9 @@ func (s *SegmentTemplate) set() {
    }
 }
 
-type Initialization struct {
-   S string
-}
-
 func (i *Initialization) UnmarshalText(data []byte) error {
    i.S = string(data)
    return nil
-}
-
-func (i Initialization) Url(r *Representation) (*url.URL, error) {
-   replace(&i.S, "$RepresentationID$", r.Id)
-   u, err := url.Parse(i.S)
-   if err != nil {
-      return nil, err
-   }
-   if r.BaseUrl != nil {
-      u = r.BaseUrl.Url.ResolveReference(u)
-   }
-   return u, nil
 }
 
 func (m Media) Url(r *Representation, i int) (*url.URL, error) {
@@ -84,10 +88,6 @@ func (m Media) Url(r *Representation, i int) (*url.URL, error) {
 
 func (m Media) time() bool {
    return strings.Contains(m.S, "$Time$")
-}
-
-type Media struct {
-   S string
 }
 
 func (m *Media) UnmarshalText(data []byte) error {

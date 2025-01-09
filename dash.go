@@ -1,16 +1,37 @@
 package dash
 
 import (
-   "41.neocities.org/dash/segment"
-   "41.neocities.org/dash/url"
    "encoding/base64"
    "encoding/xml"
    "iter"
    "math"
+   "net/url"
    "strconv"
    "strings"
    "time"
 )
+
+type Representation struct {
+   SegmentList       *struct {
+      Initialization struct {
+         SourceUrl Url `xml:"sourceURL,attr"`
+      }
+      SegmentUrl []struct {
+         Media Url `xml:"media,attr"`
+      }
+   }
+   SegmentTemplate   *SegmentTemplate
+   Bandwidth         int      `xml:"bandwidth,attr"`
+   BaseUrl           *Url `xml:"BaseURL"`
+   Codecs            *string  `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            *int64  `xml:"height,attr"`
+   Id                string  `xml:"id,attr"`
+   MimeType          *string `xml:"mimeType,attr"`
+   SegmentBase       *SegmentBase
+   Width             *int64 `xml:"width,attr"`
+   adaptation_set    *AdaptationSet
+}
 
 func (r *Representation) Segment() iter.Seq[int] {
    template := r.SegmentTemplate
@@ -184,76 +205,17 @@ func (m *Mpd) Representation() iter.Seq[Representation] {
 }
 
 type Mpd struct {
-   BaseUrl                   *url.Url  `xml:"BaseURL"`
+   BaseUrl                   *Url  `xml:"BaseURL"`
    MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
    Period                    []Period
 }
 
 type Period struct {
    AdaptationSet []AdaptationSet
-   BaseUrl       *url.Url  `xml:"BaseURL"`
+   BaseUrl       *Url  `xml:"BaseURL"`
    Duration      *Duration `xml:"duration,attr"`
    Id            string    `xml:"id,attr"`
    mpd           *Mpd
-}
-
-type Representation struct {
-   SegmentList       *segment.List
-   SegmentTemplate   *SegmentTemplate
-   Bandwidth         int      `xml:"bandwidth,attr"`
-   BaseUrl           *url.Url `xml:"BaseURL"`
-   Codecs            *string  `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            *int64  `xml:"height,attr"`
-   Id                string  `xml:"id,attr"`
-   MimeType          *string `xml:"mimeType,attr"`
-   SegmentBase       *SegmentBase
-   Width             *int64 `xml:"width,attr"`
-   adaptation_set    *AdaptationSet
-}
-
-func (p *Period) set(media *Mpd) {
-   p.mpd = media
-   if v := p.mpd.BaseUrl; v != nil {
-      if p.BaseUrl == nil {
-         p.BaseUrl = url.New()
-      }
-      p.BaseUrl.Url = v.Url.ResolveReference(p.BaseUrl.Url)
-   }
-   if p.Duration == nil {
-      p.Duration = p.mpd.MediaPresentationDuration
-   }
-}
-
-func (r *Representation) set(adapt *AdaptationSet) {
-   r.adaptation_set = adapt
-   if v := r.adaptation_set.period.BaseUrl; v != nil {
-      if r.BaseUrl == nil {
-         r.BaseUrl = url.New()
-      }
-      r.BaseUrl.Url = v.Url.ResolveReference(r.BaseUrl.Url)
-   }
-   if r.Codecs == nil {
-      r.Codecs = r.adaptation_set.Codecs
-   }
-   if len(r.ContentProtection) == 0 {
-      r.ContentProtection = r.adaptation_set.ContentProtection
-   }
-   if r.Height == nil {
-      r.Height = r.adaptation_set.Height
-   }
-   if r.MimeType == nil {
-      r.MimeType = r.adaptation_set.MimeType
-   }
-   if r.SegmentTemplate == nil {
-      r.SegmentTemplate = r.adaptation_set.SegmentTemplate
-   }
-   if r.SegmentTemplate != nil {
-      r.SegmentTemplate.set()
-   }
-   if r.Width == nil {
-      r.Width = r.adaptation_set.Width
-   }
 }
 
 func (r *Representation) String() string {
@@ -315,5 +277,49 @@ func (r *Representation) Representation() iter.Seq[Representation] {
             }
          }
       }
+   }
+}
+
+func (p *Period) set(media *Mpd) {
+   p.mpd = media
+   if v := p.mpd.BaseUrl; v != nil {
+      if p.BaseUrl == nil {
+         p.BaseUrl = &Url{&url.URL{}}
+      }
+      p.BaseUrl.Url = v.Url.ResolveReference(p.BaseUrl.Url)
+   }
+   if p.Duration == nil {
+      p.Duration = p.mpd.MediaPresentationDuration
+   }
+}
+
+func (r *Representation) set(adapt *AdaptationSet) {
+   r.adaptation_set = adapt
+   if v := r.adaptation_set.period.BaseUrl; v != nil {
+      if r.BaseUrl == nil {
+         r.BaseUrl = &Url{&url.URL{}}
+      }
+      r.BaseUrl.Url = v.Url.ResolveReference(r.BaseUrl.Url)
+   }
+   if r.Codecs == nil {
+      r.Codecs = r.adaptation_set.Codecs
+   }
+   if len(r.ContentProtection) == 0 {
+      r.ContentProtection = r.adaptation_set.ContentProtection
+   }
+   if r.Height == nil {
+      r.Height = r.adaptation_set.Height
+   }
+   if r.MimeType == nil {
+      r.MimeType = r.adaptation_set.MimeType
+   }
+   if r.SegmentTemplate == nil {
+      r.SegmentTemplate = r.adaptation_set.SegmentTemplate
+   }
+   if r.SegmentTemplate != nil {
+      r.SegmentTemplate.set()
+   }
+   if r.Width == nil {
+      r.Width = r.adaptation_set.Width
    }
 }
