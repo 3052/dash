@@ -2,77 +2,15 @@ package dash
 
 import (
    "41.neocities.org/dash/segment"
+   "41.neocities.org/dash/url"
    "encoding/base64"
    "encoding/xml"
    "iter"
    "math"
-   "net/url"
    "strconv"
    "strings"
    "time"
 )
-
-func (r *Representation) String() string {
-   var b []byte
-   if r.Width != nil {
-      b = append(b, "width = "...)
-      b = strconv.AppendInt(b, *r.Width, 10)
-   }
-   if r.Height != nil {
-      if b != nil {
-         b = append(b, '\n')
-      }
-      b = append(b, "height = "...)
-      b = strconv.AppendInt(b, *r.Height, 10)
-   }
-   if b != nil {
-      b = append(b, '\n')
-   }
-   b = append(b, "bandwidth = "...)
-   b = strconv.AppendInt(b, int64(r.Bandwidth), 10)
-   if r.Codecs != nil {
-      b = append(b, "\ncodecs = "...)
-      b = append(b, *r.Codecs...)
-   }
-   b = append(b, "\nmimeType = "...)
-   b = append(b, *r.MimeType...)
-   if role := r.adaptation_set.Role; role != nil {
-      b = append(b, "\nrole = "...)
-      b = append(b, role.Value...)
-   }
-   if lang := r.adaptation_set.Lang; lang != "" {
-      b = append(b, "\nlang = "...)
-      b = append(b, lang...)
-   }
-   if id := r.adaptation_set.period.Id; id != "" {
-      b = append(b, "\nperiod = "...)
-      b = append(b, id...)
-   }
-   b = append(b, "\nid = "...)
-   b = append(b, r.Id...)
-   return string(b)
-}
-
-func (r *Representation) Representation() iter.Seq[Representation] {
-   return func(yield func(Representation) bool) {
-      for _, p := range r.adaptation_set.period.mpd.Period {
-         for _, adapt := range p.AdaptationSet {
-            for _, represent := range adapt.Representation {
-               if represent.Id == r.Id {
-                  if adapt.period == nil {
-                     p.set(r.adaptation_set.period.mpd)
-                     adapt.set(&p)
-                  }
-                  represent.set(&adapt)
-                  if !yield(represent) {
-                     return
-                  }
-               }
-            }
-         }
-      }
-   }
-}
 
 func (r *Representation) Segment() iter.Seq[int] {
    template := r.SegmentTemplate
@@ -245,14 +183,26 @@ func (m *Mpd) Representation() iter.Seq[Representation] {
    }
 }
 
-///
+type Mpd struct {
+   BaseUrl                   *url.Url  `xml:"BaseURL"`
+   MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
+   Period                    []Period
+}
+
+type Period struct {
+   AdaptationSet []AdaptationSet
+   BaseUrl       *url.Url  `xml:"BaseURL"`
+   Duration      *Duration `xml:"duration,attr"`
+   Id            string    `xml:"id,attr"`
+   mpd           *Mpd
+}
 
 type Representation struct {
    SegmentList       *segment.List
    SegmentTemplate   *SegmentTemplate
-   Bandwidth         int     `xml:"bandwidth,attr"`
-   BaseUrl           *Url    `xml:"BaseURL"`
-   Codecs            *string `xml:"codecs,attr"`
+   Bandwidth         int      `xml:"bandwidth,attr"`
+   BaseUrl           *url.Url `xml:"BaseURL"`
+   Codecs            *string  `xml:"codecs,attr"`
    ContentProtection []ContentProtection
    Height            *int64  `xml:"height,attr"`
    Id                string  `xml:"id,attr"`
@@ -262,11 +212,24 @@ type Representation struct {
    adaptation_set    *AdaptationSet
 }
 
+func (p *Period) set(media *Mpd) {
+   p.mpd = media
+   if v := p.mpd.BaseUrl; v != nil {
+      if p.BaseUrl == nil {
+         p.BaseUrl = url.New()
+      }
+      p.BaseUrl.Url = v.Url.ResolveReference(p.BaseUrl.Url)
+   }
+   if p.Duration == nil {
+      p.Duration = p.mpd.MediaPresentationDuration
+   }
+}
+
 func (r *Representation) set(adapt *AdaptationSet) {
    r.adaptation_set = adapt
    if v := r.adaptation_set.period.BaseUrl; v != nil {
       if r.BaseUrl == nil {
-         r.BaseUrl = &Url{&url.URL{}}
+         r.BaseUrl = url.New()
       }
       r.BaseUrl.Url = v.Url.ResolveReference(r.BaseUrl.Url)
    }
@@ -292,47 +255,64 @@ func (r *Representation) set(adapt *AdaptationSet) {
       r.Width = r.adaptation_set.Width
    }
 }
-
-type Period struct {
-   AdaptationSet []AdaptationSet
-   BaseUrl       *Url      `xml:"BaseURL"`
-   Duration      *Duration `xml:"duration,attr"`
-   Id            string    `xml:"id,attr"`
-   mpd           *Mpd
-}
-
-func (p *Period) set(media *Mpd) {
-   p.mpd = media
-   if v := p.mpd.BaseUrl; v != nil {
-      if p.BaseUrl == nil {
-         p.BaseUrl = &Url{&url.URL{}}
+func (r *Representation) String() string {
+   var b []byte
+   if r.Width != nil {
+      b = append(b, "width = "...)
+      b = strconv.AppendInt(b, *r.Width, 10)
+   }
+   if r.Height != nil {
+      if b != nil {
+         b = append(b, '\n')
       }
-      p.BaseUrl.Url = v.Url.ResolveReference(p.BaseUrl.Url)
+      b = append(b, "height = "...)
+      b = strconv.AppendInt(b, *r.Height, 10)
    }
-   if p.Duration == nil {
-      p.Duration = p.mpd.MediaPresentationDuration
+   if b != nil {
+      b = append(b, '\n')
    }
+   b = append(b, "bandwidth = "...)
+   b = strconv.AppendInt(b, int64(r.Bandwidth), 10)
+   if r.Codecs != nil {
+      b = append(b, "\ncodecs = "...)
+      b = append(b, *r.Codecs...)
+   }
+   b = append(b, "\nmimeType = "...)
+   b = append(b, *r.MimeType...)
+   if role := r.adaptation_set.Role; role != nil {
+      b = append(b, "\nrole = "...)
+      b = append(b, role.Value...)
+   }
+   if lang := r.adaptation_set.Lang; lang != "" {
+      b = append(b, "\nlang = "...)
+      b = append(b, lang...)
+   }
+   if id := r.adaptation_set.period.Id; id != "" {
+      b = append(b, "\nperiod = "...)
+      b = append(b, id...)
+   }
+   b = append(b, "\nid = "...)
+   b = append(b, r.Id...)
+   return string(b)
 }
 
-func (b *Url) UnmarshalText(data []byte) error {
-   if b.Url == nil {
-      b.Url = &url.URL{}
-      return b.Url.UnmarshalBinary(data)
+func (r *Representation) Representation() iter.Seq[Representation] {
+   return func(yield func(Representation) bool) {
+      for _, p := range r.adaptation_set.period.mpd.Period {
+         for _, adapt := range p.AdaptationSet {
+            for _, represent := range adapt.Representation {
+               if represent.Id == r.Id {
+                  if adapt.period == nil {
+                     p.set(r.adaptation_set.period.mpd)
+                     adapt.set(&p)
+                  }
+                  represent.set(&adapt)
+                  if !yield(represent) {
+                     return
+                  }
+               }
+            }
+         }
+      }
    }
-   var err error
-   b.Url, err = b.Url.Parse(string(data))
-   if err != nil {
-      return err
-   }
-   return nil
-}
-
-type Url struct {
-   Url *url.URL
-}
-
-type Mpd struct {
-   BaseUrl                   *Url      `xml:"BaseURL"`
-   MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
 }

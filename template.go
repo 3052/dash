@@ -7,19 +7,32 @@ import (
 )
 
 type SegmentTemplate struct {
-   Media          Media           `xml:"media,attr"`
-   Initialization *Initialization `xml:"initialization,attr"`
-   Duration       float64         `xml:"duration,attr"`
+   StartNumber            *int    `xml:"startNumber,attr"`
    // This can be any frequency but typically is the media clock frequency of
    // one of the media streams (or a positive integer multiple thereof).
    Timescale              *uint64 `xml:"timescale,attr"`
-   StartNumber            *int    `xml:"startNumber,attr"`
+   Media          Media           `xml:"media,attr"`
+   Initialization *Initialization `xml:"initialization,attr"`
+   Duration       float64         `xml:"duration,attr"`
    PresentationTimeOffset int     `xml:"presentationTimeOffset,attr"`
    SegmentTimeline        *struct {
       S []struct {
          D int `xml:"d,attr"` // duration
          R int `xml:"r,attr"` // repeat
       }
+   }
+}
+
+func (s *SegmentTemplate) set() {
+   // dashif.org/Guidelines-TimingModel#addressing-simple
+   if s.StartNumber == nil {
+      value := 1
+      s.StartNumber = &value
+   }
+   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
+   if s.Timescale == nil {
+      var value uint64 = 1
+      s.Timescale = &value
    }
 }
 
@@ -82,15 +95,3 @@ func (m *Media) UnmarshalText(data []byte) error {
    return nil
 }
 
-func (s *SegmentTemplate) set() {
-   // dashif.org/Guidelines-TimingModel#addressing-simple
-   if s.StartNumber == nil {
-      value := 1
-      s.StartNumber = &value
-   }
-   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
-   if s.Timescale == nil {
-      var value uint64 = 1
-      s.Timescale = &value
-   }
-}

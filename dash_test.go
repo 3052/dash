@@ -1,10 +1,29 @@
 package dash
 
 import (
-   "net/url"
+   "41.neocities.org/dash/url"
    "os"
    "testing"
 )
+
+func TestUrl(t *testing.T) {
+   data, err := os.ReadFile("testdata/criterion.mpd")
+   if err != nil {
+      t.Fatal(err)
+   }
+   var media Mpd
+   media.BaseUrl, err = url.Parse("/0/1/2/3/4/5/6/7/8/9/10")
+   if err != nil {
+      t.Fatal(err)
+   }
+   err = media.Unmarshal(data)
+   if err != nil {
+      t.Fatal(err)
+   }
+   if media.BaseUrl.UnmarshalText([]byte{'\n'}) == nil {
+      t.Fatal("BaseUrl.UnmarshalText")
+   }
+}
 
 func TestRepresentation(t *testing.T) {
    t.Run("itv", func(t *testing.T) {
@@ -153,22 +172,4 @@ func TestSchemeIdUri(t *testing.T) {
       }
    }
    t.Fatal("SchemeIdUri")
-}
-
-func TestUrl(t *testing.T) {
-   data, err := os.ReadFile("testdata/criterion.mpd")
-   if err != nil {
-      t.Fatal(err)
-   }
-   var media Mpd
-   media.BaseUrl = &Url{&url.URL{
-      Path: "/0/1/2/3/4/5/6/7/8/9/10",
-   }}
-   err = media.Unmarshal(data)
-   if err != nil {
-      t.Fatal(err)
-   }
-   if media.BaseUrl.UnmarshalText([]byte{'\n'}) == nil {
-      t.Fatal("BaseUrl.UnmarshalText")
-   }
 }
