@@ -255,6 +255,7 @@ func (r *Representation) set(adapt *AdaptationSet) {
       r.Width = r.adaptation_set.Width
    }
 }
+
 func (r *Representation) String() string {
    var b []byte
    if r.Width != nil {
