@@ -12,6 +12,22 @@ import (
    "time"
 )
 
+func (u ListUrl) Url(r *Representation) (*url.URL, error) {
+   if r.BaseUrl != nil {
+      return r.BaseUrl.Url.Parse(u.S)
+   }
+   return url.Parse(u.S)
+}
+
+func (u *ListUrl) UnmarshalText(data []byte) error {
+   u.S = string(data)
+   return nil
+}
+
+type ListUrl struct {
+   S string
+}
+
 func replace(s *string, from, to string) {
    *s = strings.Replace(*s, from, to, 1)
 }
@@ -74,22 +90,6 @@ func (i *Initialization) UnmarshalText(data []byte) error {
 
 type Initialization struct {
    S string
-}
-
-func (u *ListUrl) UnmarshalText(data []byte) error {
-   u.S = string(data)
-   return nil
-}
-
-type ListUrl struct {
-   S string
-}
-
-func (u ListUrl) Url(r *Representation) (*url.URL, error) {
-   if r.BaseUrl != nil {
-      return r.BaseUrl.Url.Parse(u.S)
-   }
-   return url.Parse(u.S)
 }
 
 func (m Media) time() bool {
@@ -159,7 +159,7 @@ func (m *Mpd) Representation() iter.Seq[Representation] {
 }
 
 type Mpd struct {
-   BaseUrl                   *Url  `xml:"BaseURL"`
+   BaseUrl                   *Url      `xml:"BaseURL"`
    MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
    Period                    []Period
 }
@@ -173,7 +173,7 @@ func (p *Period) segment_count(template *SegmentTemplate) float64 {
 
 type Period struct {
    AdaptationSet []AdaptationSet
-   BaseUrl       *Url  `xml:"BaseURL"`
+   BaseUrl       *Url      `xml:"BaseURL"`
    Duration      *Duration `xml:"duration,attr"`
    Id            string    `xml:"id,attr"`
    mpd           *Mpd
@@ -244,22 +244,15 @@ func (s SchemeIdUri) Widevine() bool {
 
 type SchemeIdUri string
 
-type SegmentBase struct {
-   Initialization struct {
-      Range Range `xml:"range,attr"`
-   }
-   IndexRange Range `xml:"indexRange,attr"`
-}
-
 type SegmentTemplate struct {
-   StartNumber            *int    `xml:"startNumber,attr"`
+   StartNumber *int `xml:"startNumber,attr"`
    // This can be any frequency but typically is the media clock frequency of
    // one of the media streams (or a positive integer multiple thereof).
-   Timescale              *uint64 `xml:"timescale,attr"`
-   Media          Media           `xml:"media,attr"`
-   Initialization *Initialization `xml:"initialization,attr"`
-   Duration       float64         `xml:"duration,attr"`
-   PresentationTimeOffset int     `xml:"presentationTimeOffset,attr"`
+   Timescale              *uint64         `xml:"timescale,attr"`
+   Media                  Media           `xml:"media,attr"`
+   Initialization         *Initialization `xml:"initialization,attr"`
+   Duration               float64         `xml:"duration,attr"`
+   PresentationTimeOffset int             `xml:"presentationTimeOffset,attr"`
    SegmentTimeline        *struct {
       S []struct {
          D int `xml:"d,attr"` // duration

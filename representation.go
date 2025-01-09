@@ -6,6 +6,33 @@ import (
    "strconv"
 )
 
+type Representation struct {
+   Bandwidth         int     `xml:"bandwidth,attr"`
+   BaseUrl           *Url    `xml:"BaseURL"`
+   Codecs            *string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            *int64  `xml:"height,attr"`
+   Id                string  `xml:"id,attr"`
+   MimeType          *string `xml:"mimeType,attr"`
+   SegmentBase       *struct {
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+      IndexRange Range `xml:"indexRange,attr"`
+   }
+   SegmentList *struct {
+      Initialization struct {
+         SourceUrl ListUrl `xml:"sourceURL,attr"`
+      }
+      SegmentUrl []struct {
+         Media ListUrl `xml:"media,attr"`
+      } `xml:"SegmentURL"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width           *int64 `xml:"width,attr"`
+   adaptation_set  *AdaptationSet
+}
+
 func (r *Representation) Segment() iter.Seq[int] {
    template := r.SegmentTemplate
    var address int
@@ -130,27 +157,5 @@ func (r *Representation) set(adapt *AdaptationSet) {
    }
    if r.Width == nil {
       r.Width = r.adaptation_set.Width
-   }
-}
-
-type Representation struct {
-   SegmentTemplate   *SegmentTemplate
-   Bandwidth         int      `xml:"bandwidth,attr"`
-   BaseUrl           *Url `xml:"BaseURL"`
-   Codecs            *string  `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            *int64  `xml:"height,attr"`
-   Id                string  `xml:"id,attr"`
-   MimeType          *string `xml:"mimeType,attr"`
-   SegmentBase       *SegmentBase
-   Width             *int64 `xml:"width,attr"`
-   adaptation_set    *AdaptationSet
-   SegmentList       *struct {
-      Initialization struct {
-         SourceUrl ListUrl `xml:"sourceURL,attr"`
-      }
-      SegmentUrl []struct {
-         Media ListUrl `xml:"media,attr"`
-      }
    }
 }
