@@ -6,6 +6,27 @@ import (
    "strconv"
 )
 
+func (r *Representation) Representation() iter.Seq[Representation] {
+   return func(yield func(Representation) bool) {
+      for _, p := range r.adaptation_set.period.mpd.Period {
+         for _, adapt := range p.AdaptationSet {
+            for _, represent := range adapt.Representation {
+               if represent.Id == r.Id {
+                  if adapt.period == nil {
+                     p.set(r.adaptation_set.period.mpd)
+                     adapt.set(&p)
+                  }
+                  represent.set(&adapt)
+                  if !yield(represent) {
+                     return
+                  }
+               }
+            }
+         }
+      }
+   }
+}
+
 type Representation struct {
    Bandwidth         int     `xml:"bandwidth,attr"`
    BaseUrl           *Url    `xml:"BaseURL"`
@@ -106,27 +127,6 @@ func (r *Representation) String() string {
    b = append(b, "\nid = "...)
    b = append(b, r.Id...)
    return string(b)
-}
-
-func (r *Representation) Representation() iter.Seq[Representation] {
-   return func(yield func(Representation) bool) {
-      for _, p := range r.adaptation_set.period.mpd.Period {
-         for _, adapt := range p.AdaptationSet {
-            for _, represent := range adapt.Representation {
-               if represent.Id == r.Id {
-                  if adapt.period == nil {
-                     p.set(r.adaptation_set.period.mpd)
-                     adapt.set(&p)
-                  }
-                  represent.set(&adapt)
-                  if !yield(represent) {
-                     return
-                  }
-               }
-            }
-         }
-      }
-   }
 }
 
 func (r *Representation) set(adapt *AdaptationSet) {
