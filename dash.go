@@ -207,22 +207,64 @@ func (p *Pssh) UnmarshalText(data []byte) error {
    return nil
 }
 
-///
+func (a *AdaptationSet) set(period0 *Period) {
+   a.period = period0
+}
 
-func (a *AdaptationSet) set(p *Period) {
-   a.period = p
+func (p *Period) set(media *Mpd) {
+   p.mpd = media
+   if base := p.mpd.BaseUrl; base != nil {
+      if p.BaseUrl == nil {
+         p.BaseUrl = &Url{&url.URL{}}
+      }
+      p.BaseUrl.Url = base.Url.ResolveReference(p.BaseUrl.Url)
+   }
+   if p.Duration == nil {
+      p.Duration = p.mpd.MediaPresentationDuration
+   }
+}
+
+func (m *Mpd) Representation() iter.Seq[Representation] {
+   id := map[string]struct{}{}
+   return func(yield func(Representation) bool) {
+      for _, period0 := range m.Period {
+         for _, adapt := range period0.AdaptationSet {
+            for _, represent := range adapt.Representation {
+               _, ok := id[represent.Id]
+               if !ok {
+                  if adapt.period == nil {
+                     period0.set(m)
+                     adapt.set(&period0)
+                  }
+                  represent.set(&adapt)
+                  if !yield(represent) {
+                     return
+                  }
+                  id[represent.Id] = struct{}{}
+               }
+            }
+         }
+      }
+   }
+}
+
+func (u ListUrl) Url(r *Representation) (*url.URL, error) {
+   if r.BaseUrl != nil {
+      return r.BaseUrl.Url.Parse(u.S)
+   }
+   return url.Parse(u.S)
 }
 
 func (i Initialization) Url(r *Representation) (*url.URL, error) {
    replace(&i.S, "$RepresentationID$", r.Id)
-   u, err := url.Parse(i.S)
+   url0, err := url.Parse(i.S)
    if err != nil {
       return nil, err
    }
    if r.BaseUrl != nil {
-      u = r.BaseUrl.Url.ResolveReference(u)
+      url0 = r.BaseUrl.Url.ResolveReference(url0)
    }
-   return u, nil
+   return url0, nil
 }
 
 func (m Media) Url(r *Representation, i int) (*url.URL, error) {
@@ -240,56 +282,12 @@ func (m Media) Url(r *Representation, i int) (*url.URL, error) {
       replace(&m.S, "$Number%08d$", fmt.Sprintf("%08d", i))
       replace(&m.S, "$Number%09d$", fmt.Sprintf("%09d", i))
    }
-   u, err := url.Parse(m.S)
+   url0, err := url.Parse(m.S)
    if err != nil {
       return nil, err
    }
    if r.BaseUrl != nil {
-      u = r.BaseUrl.Url.ResolveReference(u)
+      url0 = r.BaseUrl.Url.ResolveReference(url0)
    }
-   return u, nil
-}
-
-func (m *Mpd) Representation() iter.Seq[Representation] {
-   id := map[string]struct{}{}
-   return func(yield func(Representation) bool) {
-      for _, p := range m.Period {
-         for _, adapt := range p.AdaptationSet {
-            for _, represent := range adapt.Representation {
-               _, ok := id[represent.Id]
-               if !ok {
-                  if adapt.period == nil {
-                     p.set(m)
-                     adapt.set(&p)
-                  }
-                  represent.set(&adapt)
-                  if !yield(represent) {
-                     return
-                  }
-                  id[represent.Id] = struct{}{}
-               }
-            }
-         }
-      }
-   }
-}
-
-func (p *Period) set(media *Mpd) {
-   p.mpd = media
-   if v := p.mpd.BaseUrl; v != nil {
-      if p.BaseUrl == nil {
-         p.BaseUrl = &Url{&url.URL{}}
-      }
-      p.BaseUrl.Url = v.Url.ResolveReference(p.BaseUrl.Url)
-   }
-   if p.Duration == nil {
-      p.Duration = p.mpd.MediaPresentationDuration
-   }
-}
-
-func (u ListUrl) Url(r *Representation) (*url.URL, error) {
-   if r.BaseUrl != nil {
-      return r.BaseUrl.Url.Parse(u.S)
-   }
-   return url.Parse(u.S)
+   return url0, nil
 }
