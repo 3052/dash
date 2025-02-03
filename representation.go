@@ -108,17 +108,15 @@ func (r *Representation) Segment() iter.Seq[int] {
    }
 }
 
-///
-
 func (r *Representation) Representation() iter.Seq[Representation] {
    return func(yield func(Representation) bool) {
-      for _, p := range r.adaptation_set.period.mpd.Period {
-         for _, adapt := range p.AdaptationSet {
+      for _, period0 := range r.adaptation_set.period.mpd.Period {
+         for _, adapt := range period0.AdaptationSet {
             for _, represent := range adapt.Representation {
                if represent.Id == r.Id {
                   if adapt.period == nil {
-                     p.set(r.adaptation_set.period.mpd)
-                     adapt.set(&p)
+                     period0.set(r.adaptation_set.period.mpd)
+                     adapt.set(&period0)
                   }
                   represent.set(&adapt)
                   if !yield(represent) {
@@ -133,11 +131,11 @@ func (r *Representation) Representation() iter.Seq[Representation] {
 
 func (r *Representation) set(adapt *AdaptationSet) {
    r.adaptation_set = adapt
-   if v := r.adaptation_set.period.BaseUrl; v != nil {
+   if base := r.adaptation_set.period.BaseUrl; base != nil {
       if r.BaseUrl == nil {
          r.BaseUrl = &Url{&url.URL{}}
       }
-      r.BaseUrl.Url = v.Url.ResolveReference(r.BaseUrl.Url)
+      r.BaseUrl.Url = base.Url.ResolveReference(r.BaseUrl.Url)
    }
    if r.Codecs == nil {
       r.Codecs = r.adaptation_set.Codecs
