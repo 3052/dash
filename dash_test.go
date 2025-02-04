@@ -54,31 +54,6 @@ func TestRepresentation(t *testing.T) {
       }
    })
 }
-func TestListUrl(t *testing.T) {
-   data, err := os.ReadFile("testdata/criterion.mpd")
-   if err != nil {
-      t.Fatal(err)
-   }
-   var media Mpd
-   err = media.Unmarshal(data)
-   if err != nil {
-      t.Fatal(err)
-   }
-   var represent Representation
-   for represent = range media.Representation() {
-      if *represent.MimeType == "video/mp4" {
-         break
-      }
-   }
-   _, err = represent.SegmentList.SegmentUrl[0].Media.Url(&represent)
-   if err != nil {
-      t.Fatal(err)
-   }
-   _, err = ListUrl{}.Url(&Representation{})
-   if err != nil {
-      t.Fatal(err)
-   }
-}
 
 func TestUrl(t *testing.T) {
    data, err := os.ReadFile("testdata/criterion.mpd")

@@ -11,6 +11,100 @@ import (
    "time"
 )
 
+func (m Media) time() bool {
+   return strings.Contains(string(m), "$Time$")
+}
+
+func (r *Representation) Segment() iter.Seq[int] {
+   template := r.SegmentTemplate
+   var address int
+   if template.Media.time() {
+      address = template.PresentationTimeOffset
+   } else {
+      address = *template.StartNumber
+   }
+   return func(yield func(int) bool) {
+      if template.SegmentTimeline != nil {
+         for _, segment := range template.SegmentTimeline.S {
+            for range 1 + segment.R {
+               if !yield(address) {
+                  return
+               }
+               if template.Media.time() {
+                  address += segment.D
+               } else {
+                  address++
+               }
+            }
+         }
+      } else {
+         segment_count := r.adaptation_set.period.segment_count(template)
+         for range int64(segment_count) {
+            if !yield(address) {
+               return
+            }
+            address++
+         }
+      }
+   }
+}
+
+type SegmentTemplate struct {
+   StartNumber *int `xml:"startNumber,attr"`
+   // This can be any frequency but typically is the media clock frequency of
+   // one of the media streams (or a positive integer multiple thereof).
+   Timescale              *uint64         `xml:"timescale,attr"`
+   Media                  Media           `xml:"media,attr"`
+   Initialization         Initialization `xml:"initialization,attr"`
+   Duration               float64         `xml:"duration,attr"`
+   PresentationTimeOffset int             `xml:"presentationTimeOffset,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D int `xml:"d,attr"` // duration
+         R int `xml:"r,attr"` // repeat
+      }
+   }
+}
+
+func (i Initialization) Url(r *Representation) (*url.URL, error) {
+   raw := replace(string(i), "$RepresentationID$", r.Id)
+   url0, err := url.Parse(raw)
+   if err != nil {
+      return nil, err
+   }
+   if r.BaseUrl != nil {
+      url0 = r.BaseUrl.Url.ResolveReference(url0)
+   }
+   return url0, nil
+}
+
+type Media string
+
+func (m Media) Url(r *Representation, index int) (*url.URL, error) {
+   raw := replace(string(m), "$RepresentationID$", r.Id)
+   if m.time() {
+      raw = replace(raw, "$Time$", fmt.Sprint(index))
+   } else {
+      raw = replace(raw, "$Number$", fmt.Sprint(index))
+      raw = replace(raw, "$Number%02d$", fmt.Sprintf("%02d", index))
+      raw = replace(raw, "$Number%03d$", fmt.Sprintf("%02d", index))
+      raw = replace(raw, "$Number%04d$", fmt.Sprintf("%02d", index))
+      raw = replace(raw, "$Number%05d$", fmt.Sprintf("%02d", index))
+      raw = replace(raw, "$Number%06d$", fmt.Sprintf("%02d", index))
+      raw = replace(raw, "$Number%07d$", fmt.Sprintf("%02d", index))
+      raw = replace(raw, "$Number%08d$", fmt.Sprintf("%02d", index))
+      raw = replace(raw, "$Number%09d$", fmt.Sprintf("%02d", index))
+   }
+   url0, err := url.Parse(raw)
+   if err != nil {
+      return nil, err
+   }
+   if r.BaseUrl != nil {
+      url0 = r.BaseUrl.Url.ResolveReference(url0)
+   }
+   return url0, nil
+}
+
 func (m *Mpd) Unmarshal(data []byte) error {
    return xml.Unmarshal(data, m)
 }
@@ -51,13 +145,6 @@ func (m *Mpd) Representation() iter.Seq[Representation] {
          }
       }
    }
-}
-
-func (u ListUrl) Url(r *Representation) (*url.URL, error) {
-   if r.BaseUrl != nil {
-      return r.BaseUrl.Url.Parse(u.S)
-   }
-   return url.Parse(u.S)
 }
 
 type ContentProtection struct {
@@ -153,6 +240,8 @@ func (r *Representation) Representation() iter.Seq[Representation] {
       }
    }
 }
+
+///
 
 func (r *Representation) set(adapt *AdaptationSet) {
    r.adaptation_set = adapt
@@ -288,15 +377,6 @@ func (p *Period) segment_count(template *SegmentTemplate) float64 {
    )
 }
 
-func (u *ListUrl) UnmarshalText(data []byte) error {
-   u.S = string(data)
-   return nil
-}
-
-type ListUrl struct {
-   S string
-}
-
 func (a *AdaptationSet) set(period0 *Period) {
    a.period = period0
 }
@@ -320,96 +400,11 @@ func (p *Period) set(mpd0 *Mpd) {
    }
 }
 
-func (m Media) time() bool {
-   return strings.Contains(string(m), "$Time$")
-}
+type ListUrl string
 
-func (r *Representation) Segment() iter.Seq[int] {
-   template := r.SegmentTemplate
-   var address int
-   if template.Media.time() {
-      address = template.PresentationTimeOffset
-   } else {
-      address = *template.StartNumber
-   }
-   return func(yield func(int) bool) {
-      if template.SegmentTimeline != nil {
-         for _, segment := range template.SegmentTimeline.S {
-            for range 1 + segment.R {
-               if !yield(address) {
-                  return
-               }
-               if template.Media.time() {
-                  address += segment.D
-               } else {
-                  address++
-               }
-            }
-         }
-      } else {
-         segment_count := r.adaptation_set.period.segment_count(template)
-         for range int64(segment_count) {
-            if !yield(address) {
-               return
-            }
-            address++
-         }
-      }
-   }
-}
-
-type SegmentTemplate struct {
-   StartNumber *int `xml:"startNumber,attr"`
-   // This can be any frequency but typically is the media clock frequency of
-   // one of the media streams (or a positive integer multiple thereof).
-   Timescale              *uint64         `xml:"timescale,attr"`
-   Media                  Media           `xml:"media,attr"`
-   Initialization         Initialization `xml:"initialization,attr"`
-   Duration               float64         `xml:"duration,attr"`
-   PresentationTimeOffset int             `xml:"presentationTimeOffset,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D int `xml:"d,attr"` // duration
-         R int `xml:"r,attr"` // repeat
-      }
-   }
-}
-
-func (i Initialization) Url(r *Representation) (*url.URL, error) {
-   raw := replace(string(i), "$RepresentationID$", r.Id)
-   url0, err := url.Parse(raw)
-   if err != nil {
-      return nil, err
-   }
+func (u ListUrl) Url(r *Representation) (*url.URL, error) {
    if r.BaseUrl != nil {
-      url0 = r.BaseUrl.Url.ResolveReference(url0)
+      return r.BaseUrl.Url.Parse(string(u))
    }
-   return url0, nil
-}
-
-type Media string
-
-func (m Media) Url(r *Representation, index int) (*url.URL, error) {
-   raw := replace(string(m), "$RepresentationID$", r.Id)
-   if m.time() {
-      raw = replace(raw, "$Time$", fmt.Sprint(index))
-   } else {
-      raw = replace(raw, "$Number$", fmt.Sprint(index))
-      raw = replace(raw, "$Number%02d$", fmt.Sprintf("%02d", index))
-      raw = replace(raw, "$Number%03d$", fmt.Sprintf("%02d", index))
-      raw = replace(raw, "$Number%04d$", fmt.Sprintf("%02d", index))
-      raw = replace(raw, "$Number%05d$", fmt.Sprintf("%02d", index))
-      raw = replace(raw, "$Number%06d$", fmt.Sprintf("%02d", index))
-      raw = replace(raw, "$Number%07d$", fmt.Sprintf("%02d", index))
-      raw = replace(raw, "$Number%08d$", fmt.Sprintf("%02d", index))
-      raw = replace(raw, "$Number%09d$", fmt.Sprintf("%02d", index))
-   }
-   url0, err := url.Parse(raw)
-   if err != nil {
-      return nil, err
-   }
-   if r.BaseUrl != nil {
-      url0 = r.BaseUrl.Url.ResolveReference(url0)
-   }
-   return url0, nil
+   return url.Parse(string(u))
 }
