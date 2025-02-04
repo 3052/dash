@@ -172,13 +172,6 @@ func TestPeriod(t *testing.T) {
    }
 }
 
-func TestPssh(t *testing.T) {
-   var p Pssh
-   if p.UnmarshalText([]byte{0}) == nil {
-      t.Fatal("Pssh.UnmarshalText")
-   }
-}
-
 func TestRange(t *testing.T) {
    for _, test := range range_tests {
       var r Range

@@ -73,13 +73,13 @@ type SegmentTemplate struct {
 func (s *SegmentTemplate) set() {
    // dashif.org/Guidelines-TimingModel#addressing-simple
    if s.StartNumber == nil {
-      value := 1
-      s.StartNumber = &value
+      start := 1
+      s.StartNumber = &start
    }
    // dashif.org/Guidelines-TimingModel#timing-sampletimeline
    if s.Timescale == nil {
-      var value uint64 = 1
-      s.Timescale = &value
+      var scale uint64 = 1
+      s.Timescale = &scale
    }
 }
 
@@ -118,11 +118,6 @@ type AdaptationSet struct {
    SegmentTemplate *SegmentTemplate
    Width           *int64 `xml:"width,attr"`
    period          *Period
-}
-
-type ContentProtection struct {
-   Pssh        Pssh        `xml:"pssh"`
-   SchemeIdUri SchemeIdUri `xml:"schemeIdUri,attr"`
 }
 
 func (d *Duration) UnmarshalText(data []byte) error {
@@ -194,17 +189,6 @@ func (u *ListUrl) UnmarshalText(data []byte) error {
 
 type ListUrl struct {
    S string
-}
-
-type Pssh []byte
-
-func (p *Pssh) UnmarshalText(data []byte) error {
-   var err error
-   *p, err = base64.StdEncoding.AppendDecode(nil, data)
-   if err != nil {
-      return err
-   }
-   return nil
 }
 
 func (a *AdaptationSet) set(period0 *Period) {
@@ -290,4 +274,9 @@ func (m Media) Url(r *Representation, i int) (*url.URL, error) {
       url0 = r.BaseUrl.Url.ResolveReference(url0)
    }
    return url0, nil
+}
+
+type ContentProtection struct {
+   Pssh        string      `xml:"pssh"`
+   SchemeIdUri SchemeIdUri `xml:"schemeIdUri,attr"`
 }
