@@ -11,6 +11,37 @@ import (
    "time"
 )
 
+type Initialization string
+
+func replace(s, old, new0 string) string {
+   return strings.Replace(s, old, new0, 1)
+}
+
+func (u ListUrl) Url(r *Representation) (*url.URL, error) {
+   url0, err := url.Parse(string(u))
+   if err != nil {
+      return nil, err
+   }
+   if r.BaseUrl != nil {
+      url0 = r.BaseUrl.Url.ResolveReference(url0)
+   }
+   return url0, nil
+}
+
+func (i Initialization) Url(r *Representation) (*url.URL, error) {
+   raw := replace(string(i), "$RepresentationID$", r.Id)
+   url0, err := url.Parse(raw)
+   if err != nil {
+      return nil, err
+   }
+   if r.BaseUrl != nil {
+      url0 = r.BaseUrl.Url.ResolveReference(url0)
+   }
+   return url0, nil
+}
+
+type ListUrl string
+
 func (m Media) time() bool {
    return strings.Contains(string(m), "$Time$")
 }
@@ -64,18 +95,6 @@ type SegmentTemplate struct {
          R int `xml:"r,attr"` // repeat
       }
    }
-}
-
-func (i Initialization) Url(r *Representation) (*url.URL, error) {
-   raw := replace(string(i), "$RepresentationID$", r.Id)
-   url0, err := url.Parse(raw)
-   if err != nil {
-      return nil, err
-   }
-   if r.BaseUrl != nil {
-      url0 = r.BaseUrl.Url.ResolveReference(url0)
-   }
-   return url0, nil
 }
 
 type Media string
@@ -241,7 +260,68 @@ func (r *Representation) Representation() iter.Seq[Representation] {
    }
 }
 
-///
+func (r *Range) UnmarshalText(data []byte) error {
+   before, after, _ := strings.Cut(string(data), "-")
+   var err error
+   if before != "" {
+      (*r)[0], err = strconv.ParseUint(before, 10, 64)
+      if err != nil {
+         return err
+      }
+   }
+   if before != "" {
+      if after == "" {
+         return nil
+      }
+   }
+   (*r)[1], err = strconv.ParseUint(after, 10, 64)
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
+// SegmentIndexBox uses:
+// unsigned int(32) subsegment_duration;
+// but range values can exceed 32 bits
+type Range [2]uint64
+
+type AdaptationSet struct {
+   Codecs            *string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            *int64  `xml:"height,attr"`
+   Lang              string  `xml:"lang,attr"`
+   MimeType          *string `xml:"mimeType,attr"`
+   Representation    []Representation
+   Role              *struct {
+      Value string `xml:"value,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width           *int64 `xml:"width,attr"`
+   period          *Period
+}
+
+func (d *Duration) UnmarshalText(data []byte) error {
+   var err error
+   d.D, err = time.ParseDuration(strings.ToLower(
+      strings.TrimPrefix(string(data), "PT"),
+   ))
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
+type Duration struct {
+   D time.Duration
+}
+
+// dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
+func (p *Period) segment_count(template *SegmentTemplate) float64 {
+   return math.Ceil(
+      p.Duration.D.Seconds() * float64(*template.Timescale) / template.Duration,
+   )
+}
 
 func (r *Representation) set(adapt *AdaptationSet) {
    r.adaptation_set = adapt
@@ -274,32 +354,6 @@ func (r *Representation) set(adapt *AdaptationSet) {
    }
 }
 
-func (r *Range) UnmarshalText(data []byte) error {
-   before, after, _ := strings.Cut(string(data), "-")
-   var err error
-   if before != "" {
-      (*r)[0], err = strconv.ParseUint(before, 10, 64)
-      if err != nil {
-         return err
-      }
-   }
-   if before != "" {
-      if after == "" {
-         return nil
-      }
-   }
-   (*r)[1], err = strconv.ParseUint(after, 10, 64)
-   if err != nil {
-      return err
-   }
-   return nil
-}
-
-// SegmentIndexBox uses:
-// unsigned int(32) subsegment_duration;
-// but range values can exceed 32 bits
-type Range [2]uint64
-
 func (s *SegmentTemplate) set() {
    // dashif.org/Guidelines-TimingModel#addressing-simple
    if s.StartNumber == nil {
@@ -312,6 +366,34 @@ func (s *SegmentTemplate) set() {
       s.Timescale = &scale
    }
 }
+
+func (a *AdaptationSet) set(period0 *Period) {
+   a.period = period0
+}
+
+func (p *Period) set(mpd0 *Mpd) {
+   p.mpd = mpd0
+   if base := p.mpd.BaseUrl; base != nil {
+      if p.BaseUrl == nil {
+         p.BaseUrl = &Url{&url.URL{}}
+      }
+      p.BaseUrl.Url = base.Url.ResolveReference(p.BaseUrl.Url)
+   }
+   if p.Duration == nil {
+      p.Duration = p.mpd.MediaPresentationDuration
+   }
+}
+
+func (r Range) String() string {
+   data := strconv.AppendUint(nil, r[0], 10)
+   data = append(data, '-')
+   if r[1] != 0 {
+      data = strconv.AppendUint(data, r[1], 10)
+   }
+   return string(data)
+}
+
+///
 
 type Url struct {
    Url *url.URL
@@ -329,82 +411,4 @@ func (u *Url) UnmarshalText(data []byte) error {
       return err
    }
    return nil
-}
-
-type AdaptationSet struct {
-   Codecs            *string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            *int64  `xml:"height,attr"`
-   Lang              string  `xml:"lang,attr"`
-   MimeType          *string `xml:"mimeType,attr"`
-   Representation    []Representation
-   Role              *struct {
-      Value string `xml:"value,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-   Width           *int64 `xml:"width,attr"`
-   period          *Period
-}
-
-func (d *Duration) UnmarshalText(data []byte) error {
-   var err error
-   d.D, err = time.ParseDuration(strings.ToLower(
-      strings.TrimPrefix(string(data), "PT"),
-   ))
-   if err != nil {
-      return err
-   }
-   return nil
-}
-
-type Duration struct {
-   D time.Duration
-}
-
-func (r Range) MarshalText() ([]byte, error) {
-   data := strconv.AppendUint(nil, r[0], 10)
-   data = append(data, '-')
-   if r[1] != 0 {
-      data = strconv.AppendUint(data, r[1], 10)
-   }
-   return data, nil
-}
-
-// dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
-func (p *Period) segment_count(template *SegmentTemplate) float64 {
-   return math.Ceil(
-      p.Duration.D.Seconds() * float64(*template.Timescale) / template.Duration,
-   )
-}
-
-func (a *AdaptationSet) set(period0 *Period) {
-   a.period = period0
-}
-
-type Initialization string
-
-func replace(s, old, new0 string) string {
-   return strings.Replace(s, old, new0, 1)
-}
-
-func (p *Period) set(mpd0 *Mpd) {
-   p.mpd = mpd0
-   if base := p.mpd.BaseUrl; base != nil {
-      if p.BaseUrl == nil {
-         p.BaseUrl = &Url{&url.URL{}}
-      }
-      p.BaseUrl.Url = base.Url.ResolveReference(p.BaseUrl.Url)
-   }
-   if p.Duration == nil {
-      p.Duration = p.mpd.MediaPresentationDuration
-   }
-}
-
-type ListUrl string
-
-func (u ListUrl) Url(r *Representation) (*url.URL, error) {
-   if r.BaseUrl != nil {
-      return r.BaseUrl.Url.Parse(string(u))
-   }
-   return url.Parse(string(u))
 }

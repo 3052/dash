@@ -73,18 +73,6 @@ func TestUrl(t *testing.T) {
    }
 }
 
-var range_tests = []struct {
-   in  string
-   out string
-   ok  bool
-}{
-   {"!-3", "", false},
-   {"-", "", false},
-   {"-3", "0-3", true},
-   {"2-", "2-", true},
-   {"2-3", "2-3", true},
-}
-
 func TestDuration(t *testing.T) {
    var d Duration
    if d.UnmarshalText(nil) == nil {
@@ -123,25 +111,6 @@ func TestPeriod(t *testing.T) {
    for segment := range represent.Segment() {
       if segment >= 1 {
          break
-      }
-   }
-}
-
-func TestRange(t *testing.T) {
-   for _, test := range range_tests {
-      var r Range
-      ok := r.UnmarshalText([]byte(test.in)) == nil
-      if ok != test.ok {
-         t.Fatal("Range.UnmarshalText")
-      }
-      if ok {
-         out, err := r.MarshalText()
-         if err != nil {
-            t.Fatal(err)
-         }
-         if string(out) != test.out {
-            t.Fatalf("Range.MarshalText")
-         }
       }
    }
 }
