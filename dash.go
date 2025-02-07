@@ -100,47 +100,6 @@ func (m *Mpd) Representation() iter.Seq[Representation] {
    }
 }
 
-func (r *Representation) String() string {
-   var b []byte
-   if r.Width != nil {
-      b = append(b, "width = "...)
-      b = strconv.AppendInt(b, *r.Width, 10)
-   }
-   if r.Height != nil {
-      if b != nil {
-         b = append(b, '\n')
-      }
-      b = append(b, "height = "...)
-      b = strconv.AppendInt(b, *r.Height, 10)
-   }
-   if b != nil {
-      b = append(b, '\n')
-   }
-   b = append(b, "bandwidth = "...)
-   b = strconv.AppendInt(b, int64(r.Bandwidth), 10)
-   if r.Codecs != nil {
-      b = append(b, "\ncodecs = "...)
-      b = append(b, *r.Codecs...)
-   }
-   b = append(b, "\nmimeType = "...)
-   b = append(b, *r.MimeType...)
-   if role := r.adaptation_set.Role; role != nil {
-      b = append(b, "\nrole = "...)
-      b = append(b, role.Value...)
-   }
-   if lang := r.adaptation_set.Lang; lang != "" {
-      b = append(b, "\nlang = "...)
-      b = append(b, lang...)
-   }
-   if id := r.adaptation_set.period.Id; id != "" {
-      b = append(b, "\nperiod = "...)
-      b = append(b, id...)
-   }
-   b = append(b, "\nid = "...)
-   b = append(b, r.Id...)
-   return string(b)
-}
-
 func (r *Representation) Representation() iter.Seq[Representation] {
    return func(yield func(Representation) bool) {
       for _, period0 := range r.adaptation_set.period.mpd.Period {
@@ -367,10 +326,53 @@ type Representation struct {
    adaptation_set  *AdaptationSet
 }
 
+func (r *Representation) String() string {
+   var b []byte
+   if r.Width != nil {
+      b = append(b, "width = "...)
+      b = strconv.AppendInt(b, *r.Width, 10)
+   }
+   if r.Height != nil {
+      if b != nil {
+         b = append(b, '\n')
+      }
+      b = append(b, "height = "...)
+      b = strconv.AppendInt(b, *r.Height, 10)
+   }
+   if b != nil {
+      b = append(b, '\n')
+   }
+   b = append(b, "bandwidth = "...)
+   b = strconv.AppendInt(b, int64(r.Bandwidth), 10)
+   if r.Codecs != nil {
+      b = append(b, "\ncodecs = "...)
+      b = append(b, *r.Codecs...)
+   }
+   b = append(b, "\nmimeType = "...)
+   b = append(b, *r.MimeType...)
+   if role := r.adaptation_set.Role; role != nil {
+      b = append(b, "\nrole = "...)
+      b = append(b, role.Value...)
+   }
+   if lang := r.adaptation_set.Lang; lang != "" {
+      b = append(b, "\nlang = "...)
+      b = append(b, lang...)
+   }
+   if id := r.adaptation_set.period.Id; id != "" {
+      b = append(b, "\nperiod = "...)
+      b = append(b, id...)
+   }
+   b = append(b, "\nid = "...)
+   b = append(b, r.Id...)
+   return string(b)
+}
+
+///
+
 type AdaptationSet struct {
-   Codecs            string `xml:"codecs,attr"`
+   Codecs            *string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
-   Height            int64  `xml:"height,attr"`
+   Height            *int64  `xml:"height,attr"`
    Lang              string  `xml:"lang,attr"`
    MimeType          string `xml:"mimeType,attr"`
    Representation    []Representation
@@ -378,7 +380,7 @@ type AdaptationSet struct {
       Value string `xml:"value,attr"`
    }
    SegmentTemplate *SegmentTemplate
-   Width           int64 `xml:"width,attr"`
+   Width           *int64 `xml:"width,attr"`
    period          *Period
 }
 
@@ -391,13 +393,13 @@ func (r *Representation) set(adapt *AdaptationSet) {
       r.BaseUrl[0] = base.ResolveReference(r.BaseUrl[0])
    }
    if r.Codecs == nil {
-      r.Codecs = &r.adaptation_set.Codecs
+      r.Codecs = r.adaptation_set.Codecs
    }
    if len(r.ContentProtection) == 0 {
       r.ContentProtection = r.adaptation_set.ContentProtection
    }
    if r.Height == nil {
-      r.Height = &r.adaptation_set.Height
+      r.Height = r.adaptation_set.Height
    }
    if r.MimeType == nil {
       r.MimeType = &r.adaptation_set.MimeType
@@ -409,6 +411,6 @@ func (r *Representation) set(adapt *AdaptationSet) {
       r.SegmentTemplate.set()
    }
    if r.Width == nil {
-      r.Width = &r.adaptation_set.Width
+      r.Width = r.adaptation_set.Width
    }
 }
