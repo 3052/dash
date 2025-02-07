@@ -188,43 +188,8 @@ func (r *Range) UnmarshalText(data []byte) error {
 // but range values can exceed 32 bits
 type Range [2]uint64
 
-func (d *Duration) UnmarshalText(data []byte) error {
-   var err error
-   d.D, err = time.ParseDuration(strings.ToLower(
-      strings.TrimPrefix(string(data), "PT"),
-   ))
-   if err != nil {
-      return err
-   }
-   return nil
-}
-
 func (r *Representation) GetAdaptationSet() *AdaptationSet {
    return r.adaptation_set
-}
-
-// dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
-func (p *Period) segment_count(template *SegmentTemplate) float64 {
-   return math.Ceil(
-      p.Duration.D.Seconds() * float64(*template.Timescale) / template.Duration,
-   )
-}
-
-func (s *SegmentTemplate) set() {
-   // dashif.org/Guidelines-TimingModel#addressing-simple
-   if s.StartNumber == nil {
-      start := 1
-      s.StartNumber = &start
-   }
-   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
-   if s.Timescale == nil {
-      var scale uint64 = 1
-      s.Timescale = &scale
-   }
-}
-
-func (a *AdaptationSet) set(period0 *Period) {
-   a.period = period0
 }
 
 type SegmentTemplate struct {
@@ -244,69 +209,9 @@ type SegmentTemplate struct {
    }
 }
 
-type AdaptationSet struct {
-   Codecs            *string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            *int64  `xml:"height,attr"`
-   Lang              string  `xml:"lang,attr"`
-   MimeType          *string `xml:"mimeType,attr"`
-   Representation    []Representation
-   Role              *struct {
-      Value string `xml:"value,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-   Width           *int64 `xml:"width,attr"`
-   period          *Period
-}
-
 type ContentProtection struct {
    Pssh        string `xml:"pssh"`
    SchemeIdUri string `xml:"schemeIdUri,attr"`
-}
-
-type Duration struct {
-   D time.Duration
-}
-
-type Mpd struct {
-   BaseUrl                   Url      `xml:"BaseURL"`
-   MediaPresentationDuration *Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
-}
-
-type Period struct {
-   AdaptationSet []AdaptationSet
-   BaseUrl       Url      `xml:"BaseURL"`
-   Duration      *Duration `xml:"duration,attr"`
-   Id            string    `xml:"id,attr"`
-   mpd           *Mpd
-}
-
-type Representation struct {
-   Bandwidth         int     `xml:"bandwidth,attr"`
-   BaseUrl           Url    `xml:"BaseURL"`
-   Codecs            *string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            *int64  `xml:"height,attr"`
-   Id                string  `xml:"id,attr"`
-   MimeType          *string `xml:"mimeType,attr"`
-   SegmentBase       *struct {
-      Initialization struct {
-         Range Range `xml:"range,attr"`
-      }
-      IndexRange Range `xml:"indexRange,attr"`
-   }
-   SegmentList *struct {
-      Initialization struct {
-         SourceUrl ListUrl `xml:"sourceURL,attr"`
-      }
-      SegmentUrl []struct {
-         Media ListUrl `xml:"media,attr"`
-      } `xml:"SegmentURL"`
-   }
-   SegmentTemplate *SegmentTemplate
-   Width           *int64 `xml:"width,attr"`
-   adaptation_set  *AdaptationSet
 }
 
 func (u *Url) UnmarshalText(data []byte) error {
@@ -362,12 +267,65 @@ func (m Media) Url(r *Representation, index int) (*url.URL, error) {
    return url0, nil
 }
 
+type Url [1]*url.URL
+
+func (a *AdaptationSet) set(period0 *Period) {
+   a.period = period0
+}
+
 func (m *Mpd) Set(url0 *url.URL) {
    if m.BaseUrl[0] == nil {
       m.BaseUrl[0] = &url.URL{}
    }
    m.BaseUrl[0] = url0.ResolveReference(m.BaseUrl[0])
 }
+
+func (s *SegmentTemplate) set() {
+   // dashif.org/Guidelines-TimingModel#addressing-simple
+   if s.StartNumber == nil {
+      start := 1
+      s.StartNumber = &start
+   }
+   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
+   if s.Timescale == nil {
+      var scale uint64 = 1
+      s.Timescale = &scale
+   }
+}
+
+func (d *Duration) UnmarshalText(data []byte) error {
+   var err error
+   (*d)[0], err = time.ParseDuration(strings.ToLower(
+      strings.TrimPrefix(string(data), "PT"),
+   ))
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
+// dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
+func (p *Period) segment_count(template *SegmentTemplate) float64 {
+   return math.Ceil(
+      p.Duration[0].Seconds() * float64(*template.Timescale) / template.Duration,
+   )
+}
+
+type Mpd struct {
+   BaseUrl                   Url      `xml:"BaseURL"`
+   MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
+   Period                    []Period
+}
+
+type Period struct {
+   AdaptationSet []AdaptationSet
+   BaseUrl       Url      `xml:"BaseURL"`
+   Duration      *Duration `xml:"duration,attr"`
+   Id            string    `xml:"id,attr"`
+   mpd           *Mpd
+}
+
+type Duration [1]time.Duration
 
 func (p *Period) set(mpd0 *Mpd) {
    p.mpd = mpd0
@@ -378,11 +336,51 @@ func (p *Period) set(mpd0 *Mpd) {
       p.BaseUrl[0] = base.ResolveReference(p.BaseUrl[0])
    }
    if p.Duration == nil {
-      p.Duration = p.mpd.MediaPresentationDuration
+      p.Duration = &p.mpd.MediaPresentationDuration
    }
 }
 
-type Url [1]*url.URL
+type Representation struct {
+   Bandwidth         int     `xml:"bandwidth,attr"`
+   BaseUrl           Url    `xml:"BaseURL"`
+   Codecs            *string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            *int64  `xml:"height,attr"`
+   Id                string  `xml:"id,attr"`
+   MimeType          *string `xml:"mimeType,attr"`
+   SegmentBase       *struct {
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+      IndexRange Range `xml:"indexRange,attr"`
+   }
+   SegmentList *struct {
+      Initialization struct {
+         SourceUrl ListUrl `xml:"sourceURL,attr"`
+      }
+      SegmentUrl []struct {
+         Media ListUrl `xml:"media,attr"`
+      } `xml:"SegmentURL"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width           *int64 `xml:"width,attr"`
+   adaptation_set  *AdaptationSet
+}
+
+type AdaptationSet struct {
+   Codecs            string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            int64  `xml:"height,attr"`
+   Lang              string  `xml:"lang,attr"`
+   MimeType          string `xml:"mimeType,attr"`
+   Representation    []Representation
+   Role              *struct {
+      Value string `xml:"value,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width           int64 `xml:"width,attr"`
+   period          *Period
+}
 
 func (r *Representation) set(adapt *AdaptationSet) {
    r.adaptation_set = adapt
@@ -393,16 +391,16 @@ func (r *Representation) set(adapt *AdaptationSet) {
       r.BaseUrl[0] = base.ResolveReference(r.BaseUrl[0])
    }
    if r.Codecs == nil {
-      r.Codecs = r.adaptation_set.Codecs
+      r.Codecs = &r.adaptation_set.Codecs
    }
    if len(r.ContentProtection) == 0 {
       r.ContentProtection = r.adaptation_set.ContentProtection
    }
    if r.Height == nil {
-      r.Height = r.adaptation_set.Height
+      r.Height = &r.adaptation_set.Height
    }
    if r.MimeType == nil {
-      r.MimeType = r.adaptation_set.MimeType
+      r.MimeType = &r.adaptation_set.MimeType
    }
    if r.SegmentTemplate == nil {
       r.SegmentTemplate = r.adaptation_set.SegmentTemplate
@@ -411,6 +409,6 @@ func (r *Representation) set(adapt *AdaptationSet) {
       r.SegmentTemplate.set()
    }
    if r.Width == nil {
-      r.Width = r.adaptation_set.Width
+      r.Width = &r.adaptation_set.Width
    }
 }
