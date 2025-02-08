@@ -11,6 +11,21 @@ import (
    "time"
 )
 
+type AdaptationSet struct {
+   ContentProtection []ContentProtection
+   Representation    []Representation
+   period          *Period
+   Lang              string  `xml:"lang,attr"`
+   MimeType          string `xml:"mimeType,attr"`
+   Width           *int64 `xml:"width,attr"`
+   Height            *int64  `xml:"height,attr"`
+   Codecs            *string `xml:"codecs,attr"`
+   SegmentTemplate *SegmentTemplate
+   Role              *struct {
+      Value string `xml:"value,attr"`
+   }
+}
+
 func (r Range) String() string {
    data := strconv.AppendUint(nil, r[0], 10)
    data = append(data, '-')
@@ -365,23 +380,6 @@ func (r *Representation) String() string {
    b = append(b, "\nid = "...)
    b = append(b, r.Id...)
    return string(b)
-}
-
-///
-
-type AdaptationSet struct {
-   Codecs            *string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            *int64  `xml:"height,attr"`
-   Lang              string  `xml:"lang,attr"`
-   MimeType          string `xml:"mimeType,attr"`
-   Representation    []Representation
-   Role              *struct {
-      Value string `xml:"value,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-   Width           *int64 `xml:"width,attr"`
-   period          *Period
 }
 
 func (r *Representation) set(adapt *AdaptationSet) {
