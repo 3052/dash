@@ -13,17 +13,18 @@ import (
 
 type AdaptationSet struct {
    ContentProtection []ContentProtection
-   Representation    []Representation
-   period          *Period
-   Lang              string  `xml:"lang,attr"`
+   Lang              string `xml:"lang,attr"`
    MimeType          string `xml:"mimeType,attr"`
-   Width           *int64 `xml:"width,attr"`
-   Height            *int64  `xml:"height,attr"`
-   Codecs            *string `xml:"codecs,attr"`
-   SegmentTemplate *SegmentTemplate
+   Representation    []Representation
    Role              *struct {
       Value string `xml:"value,attr"`
    }
+   SegmentTemplate *SegmentTemplate
+   period          *Period
+   // pointers for Representation.String
+   Codecs *string `xml:"codecs,attr"`
+   Height *int64  `xml:"height,attr"`
+   Width  *int64  `xml:"width,attr"`
 }
 
 func (r Range) String() string {
@@ -170,11 +171,11 @@ type SegmentTemplate struct {
    StartNumber *int `xml:"startNumber,attr"`
    // This can be any frequency but typically is the media clock frequency of
    // one of the media streams (or a positive integer multiple thereof).
-   Timescale              *uint64         `xml:"timescale,attr"`
-   Media                  Media           `xml:"media,attr"`
+   Timescale              *uint64        `xml:"timescale,attr"`
+   Media                  Media          `xml:"media,attr"`
    Initialization         Initialization `xml:"initialization,attr"`
-   Duration               float64         `xml:"duration,attr"`
-   PresentationTimeOffset int             `xml:"presentationTimeOffset,attr"`
+   Duration               float64        `xml:"duration,attr"`
+   PresentationTimeOffset int            `xml:"presentationTimeOffset,attr"`
    SegmentTimeline        *struct {
       S []struct {
          D int `xml:"d,attr"` // duration
@@ -293,7 +294,7 @@ type Mpd struct {
 
 type Period struct {
    AdaptationSet []AdaptationSet
-   BaseUrl       Url      `xml:"BaseURL"`
+   BaseUrl       Url       `xml:"BaseURL"`
    Duration      *Duration `xml:"duration,attr"`
    Id            string    `xml:"id,attr"`
    mpd           *Mpd
@@ -316,7 +317,7 @@ func (p *Period) set(mpd0 *Mpd) {
 
 type Representation struct {
    Bandwidth         int     `xml:"bandwidth,attr"`
-   BaseUrl           Url    `xml:"BaseURL"`
+   BaseUrl           Url     `xml:"BaseURL"`
    Codecs            *string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
    Height            *int64  `xml:"height,attr"`
