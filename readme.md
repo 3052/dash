@@ -21,7 +21,7 @@ go tool cover -html ignore/coverage.txt -o ignore/coverage.html
 
 <dl>
    <dt>email</dt>
-   <dd>spen@protonmail.com</dd>
+   <dd>10317@proton.me</dd>
    <dt>Discord username</dt>
    <dd>10308</dd>
 </dl>
