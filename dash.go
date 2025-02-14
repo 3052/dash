@@ -38,8 +38,8 @@ func (r Range) String() string {
 
 type Initialization string
 
-func replace(s, old, new0 string) string {
-   return strings.Replace(s, old, new0, 1)
+func replace(s, old, new1 string) string {
+   return strings.Replace(s, old, new1, 1)
 }
 
 type ListUrl string
@@ -95,14 +95,14 @@ func (a *AdaptationSet) GetPeriod() *Period {
 func (m *Mpd) Representation() iter.Seq[Representation] {
    id := map[string]struct{}{}
    return func(yield func(Representation) bool) {
-      for _, period0 := range m.Period {
-         for _, adapt := range period0.AdaptationSet {
+      for _, period1 := range m.Period {
+         for _, adapt := range period1.AdaptationSet {
             for _, represent := range adapt.Representation {
                _, ok := id[represent.Id]
                if !ok {
                   if adapt.period == nil {
-                     period0.set(m)
-                     adapt.set(&period0)
+                     period1.set(m)
+                     adapt.set(&period1)
                   }
                   represent.set(&adapt)
                   if !yield(represent) {
@@ -118,13 +118,13 @@ func (m *Mpd) Representation() iter.Seq[Representation] {
 
 func (r *Representation) Representation() iter.Seq[Representation] {
    return func(yield func(Representation) bool) {
-      for _, period0 := range r.adaptation_set.period.mpd.Period {
-         for _, adapt := range period0.AdaptationSet {
+      for _, period1 := range r.adaptation_set.period.mpd.Period {
+         for _, adapt := range period1.AdaptationSet {
             for _, represent := range adapt.Representation {
                if represent.Id == r.Id {
                   if adapt.period == nil {
-                     period0.set(r.adaptation_set.period.mpd)
-                     adapt.set(&period0)
+                     period1.set(r.adaptation_set.period.mpd)
+                     adapt.set(&period1)
                   }
                   represent.set(&adapt)
                   if !yield(represent) {
@@ -195,26 +195,26 @@ func (u *Url) UnmarshalText(data []byte) error {
 }
 
 func (u ListUrl) Url(r *Representation) (*url.URL, error) {
-   url0, err := url.Parse(string(u))
+   url1, err := url.Parse(string(u))
    if err != nil {
       return nil, err
    }
    if r.BaseUrl[0] != nil {
-      url0 = r.BaseUrl[0].ResolveReference(url0)
+      url1 = r.BaseUrl[0].ResolveReference(url1)
    }
-   return url0, nil
+   return url1, nil
 }
 
 func (i Initialization) Url(r *Representation) (*url.URL, error) {
    raw := replace(string(i), "$RepresentationID$", r.Id)
-   url0, err := url.Parse(raw)
+   url1, err := url.Parse(raw)
    if err != nil {
       return nil, err
    }
    if r.BaseUrl[0] != nil {
-      url0 = r.BaseUrl[0].ResolveReference(url0)
+      url1 = r.BaseUrl[0].ResolveReference(url1)
    }
-   return url0, nil
+   return url1, nil
 }
 
 func (m Media) Url(r *Representation, index int) (*url.URL, error) {
@@ -232,27 +232,27 @@ func (m Media) Url(r *Representation, index int) (*url.URL, error) {
       raw = replace(raw, "$Number%08d$", fmt.Sprintf("%02d", index))
       raw = replace(raw, "$Number%09d$", fmt.Sprintf("%02d", index))
    }
-   url0, err := url.Parse(raw)
+   url1, err := url.Parse(raw)
    if err != nil {
       return nil, err
    }
    if r.BaseUrl[0] != nil {
-      url0 = r.BaseUrl[0].ResolveReference(url0)
+      url1 = r.BaseUrl[0].ResolveReference(url1)
    }
-   return url0, nil
+   return url1, nil
 }
 
 type Url [1]*url.URL
 
-func (a *AdaptationSet) set(period0 *Period) {
-   a.period = period0
+func (a *AdaptationSet) set(period1 *Period) {
+   a.period = period1
 }
 
-func (m *Mpd) Set(url0 *url.URL) {
+func (m *Mpd) Set(url1 *url.URL) {
    if m.BaseUrl[0] == nil {
       m.BaseUrl[0] = &url.URL{}
    }
-   m.BaseUrl[0] = url0.ResolveReference(m.BaseUrl[0])
+   m.BaseUrl[0] = url1.ResolveReference(m.BaseUrl[0])
 }
 
 func (s *SegmentTemplate) set() {
@@ -302,8 +302,8 @@ type Period struct {
 
 type Duration [1]time.Duration
 
-func (p *Period) set(mpd0 *Mpd) {
-   p.mpd = mpd0
+func (p *Period) set(mpd1 *Mpd) {
+   p.mpd = mpd1
    if base := p.mpd.BaseUrl[0]; base != nil {
       if p.BaseUrl[0] == nil {
          p.BaseUrl[0] = &url.URL{}
