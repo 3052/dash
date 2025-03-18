@@ -11,6 +11,10 @@ import (
    "time"
 )
 
+func (a *AdaptationSet) set(period1 *Period) {
+   a.period = period1
+}
+
 func (m Media) Url(r *Representation, index int) (*url.URL, error) {
    raw := replace(string(m), "$RepresentationID$", r.Id)
    if m.time() {
@@ -37,10 +41,6 @@ func (m Media) Url(r *Representation, index int) (*url.URL, error) {
 }
 
 type Url [1]*url.URL
-
-func (a *AdaptationSet) set(period1 *Period) {
-   a.period = period1
-}
 
 func (m *Mpd) Set(url1 *url.URL) {
    if m.BaseUrl[0] == nil {
