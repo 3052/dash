@@ -40,14 +40,16 @@ func (m Media) Url(r *Representation, index int) (*url.URL, error) {
    return url1, nil
 }
 
-type Url [1]*url.URL
-
 func (m *Mpd) Set(url1 *url.URL) {
    if m.BaseUrl[0] == nil {
       m.BaseUrl[0] = &url.URL{}
    }
    m.BaseUrl[0] = url1.ResolveReference(m.BaseUrl[0])
 }
+
+type Url [1]*url.URL
+
+///
 
 func (s *SegmentTemplate) set() {
    // dashif.org/Guidelines-TimingModel#addressing-simple
