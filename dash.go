@@ -47,10 +47,6 @@ func (m *Mpd) Set(url1 *url.URL) {
    m.BaseUrl[0] = url1.ResolveReference(m.BaseUrl[0])
 }
 
-type Url [1]*url.URL
-
-///
-
 func (s *SegmentTemplate) set() {
    // dashif.org/Guidelines-TimingModel#addressing-simple
    if s.StartNumber == nil {
@@ -63,6 +59,10 @@ func (s *SegmentTemplate) set() {
       s.Timescale = &scale
    }
 }
+
+type Url [1]*url.URL
+
+///
 
 func (d *Duration) UnmarshalText(data []byte) error {
    var err error
