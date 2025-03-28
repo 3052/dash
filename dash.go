@@ -15,6 +15,17 @@ func (a *AdaptationSet) set(period1 *Period) {
    a.period = period1
 }
 
+func (d *Duration) UnmarshalText(data []byte) error {
+   var err error
+   (*d)[0], err = time.ParseDuration(strings.ToLower(
+      strings.TrimPrefix(string(data), "PT"),
+   ))
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
 func (m Media) Url(r *Representation, index int) (*url.URL, error) {
    raw := replace(string(m), "$RepresentationID$", r.Id)
    if m.time() {
@@ -63,17 +74,6 @@ func (s *SegmentTemplate) set() {
 type Url [1]*url.URL
 
 ///
-
-func (d *Duration) UnmarshalText(data []byte) error {
-   var err error
-   (*d)[0], err = time.ParseDuration(strings.ToLower(
-      strings.TrimPrefix(string(data), "PT"),
-   ))
-   if err != nil {
-      return err
-   }
-   return nil
-}
 
 // dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
 func (p *Period) segment_count(template *SegmentTemplate) float64 {
