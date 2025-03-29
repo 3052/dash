@@ -48,17 +48,6 @@ type ContentProtection struct {
 
 type Duration [1]time.Duration
 
-func (d *Duration) UnmarshalText(data []byte) error {
-   var err error
-   (*d)[0], err = time.ParseDuration(strings.ToLower(
-      strings.TrimPrefix(string(data), "PT"),
-   ))
-   if err != nil {
-      return err
-   }
-   return nil
-}
-
 func (m *Mpd) Set(url2 *url.URL) {
    if m.BaseUrl[0] == nil {
       m.BaseUrl[0] = &url.URL{}
@@ -310,6 +299,45 @@ func (r *Representation) Media(data string, index int) (*url.URL, error) {
    return url2, nil
 }
 
+func (d *Duration) UnmarshalText(data []byte) error {
+   var err error
+   (*d)[0], err = time.ParseDuration(strings.ToLower(
+      strings.TrimPrefix(string(data), "PT"),
+   ))
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
+// ISO/IEC 23009-1
+// 5.3.9.2.2 Semantics
+type SegmentTemplate struct {
+   Duration               uint64 `xml:"duration,attr"`
+   Initialization         string `xml:"initialization,attr"`
+   Media                  string `xml:"media,attr"`
+   PresentationTimeOffset int    `xml:"presentationTimeOffset,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D int `xml:"d,attr"` // duration
+         R int `xml:"r,attr"` // repeat
+      }
+   }
+   StartNumber *int `xml:"startNumber,attr"`
+   // This can be any frequency but typically is the media clock frequency of
+   // one of the media streams (or a positive integer multiple thereof).
+   Timescale *uint64 `xml:"timescale,attr"`
+}
+
+// dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
+// SegmentCount = Ceil((AsSeconds(Period@duration)) /
+// (SegmentTemplate@duration / SegmentTemplate@timescale))
+// this is used with SegmentTemplate where SegmentTimeline is missing
+func (p *Period) segment_count(template *SegmentTemplate) float64 {
+   return math.Ceil(p.Duration[0].Seconds() /
+   (float64(template.Duration) / float64(*template.Timescale)))
+}
+
 // SegmentTemplate
 func (r *Representation) Segment() iter.Seq[int] {
    template := r.SegmentTemplate
@@ -343,28 +371,4 @@ func (r *Representation) Segment() iter.Seq[int] {
          }
       }
    }
-}
-
-type SegmentTemplate struct {
-   StartNumber *int `xml:"startNumber,attr"`
-   // This can be any frequency but typically is the media clock frequency of
-   // one of the media streams (or a positive integer multiple thereof).
-   Timescale              *uint64 `xml:"timescale,attr"`
-   Media                  string  `xml:"media,attr"`
-   Initialization         string  `xml:"initialization,attr"`
-   Duration               float64 `xml:"duration,attr"`
-   PresentationTimeOffset int     `xml:"presentationTimeOffset,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D int `xml:"d,attr"` // duration
-         R int `xml:"r,attr"` // repeat
-      }
-   }
-}
-
-// dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
-func (p *Period) segment_count(template *SegmentTemplate) float64 {
-   return math.Ceil(
-      p.Duration[0].Seconds() * float64(*template.Timescale) / template.Duration,
-   )
 }
