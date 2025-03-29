@@ -5,7 +5,7 @@
 >
 > [Miranda July](//youtube.com/watch?v=7dMGWporaFE&t=142s)
 
-- ISO/IEC 23009-1:2022 
+- ISO/IEC 23009-1:2022
 - ISO/IEC 23009-1:2019
 
 - <https://wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP>
@@ -14,8 +14,8 @@
 ## test
 
 ~~~
-go test -coverprofile ignore/coverage.txt
-go tool cover -html ignore/coverage.txt -o ignore/coverage.html
+go test -coverprofile testdata/cover.txt
+go tool cover -html testdata/cover.txt -o testdata/cover.html
 ~~~
 
 ## contact

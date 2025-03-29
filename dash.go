@@ -41,21 +41,23 @@ func (m Media) Url(r *Representation, index int) (*url.URL, error) {
       raw = replace(raw, "$Number%08d$", fmt.Sprintf("%08d", index))
       raw = replace(raw, "$Number%09d$", fmt.Sprintf("%09d", index))
    }
-   url1, err := url.Parse(raw)
+   url2, err := url.Parse(raw)
    if err != nil {
       return nil, err
    }
    if r.BaseUrl[0] != nil {
-      url1 = r.BaseUrl[0].ResolveReference(url1)
+      url2 = r.BaseUrl[0].ResolveReference(url2)
    }
-   return url1, nil
+   return url2, nil
 }
 
-func (m *Mpd) Set(url1 *url.URL) {
+///
+
+func (m *Mpd) Set(url2 *url.URL) {
    if m.BaseUrl[0] == nil {
       m.BaseUrl[0] = &url.URL{}
    }
-   m.BaseUrl[0] = url1.ResolveReference(m.BaseUrl[0])
+   m.BaseUrl[0] = url2.ResolveReference(m.BaseUrl[0])
 }
 
 func (s *SegmentTemplate) set() {
@@ -72,8 +74,6 @@ func (s *SegmentTemplate) set() {
 }
 
 type Url [1]*url.URL
-
-///
 
 // dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
 func (p *Period) segment_count(template *SegmentTemplate) float64 {
@@ -393,24 +393,24 @@ func (u *Url) UnmarshalText(data []byte) error {
 }
 
 func (u ListUrl) Url(r *Representation) (*url.URL, error) {
-   url1, err := url.Parse(string(u))
+   url2, err := url.Parse(string(u))
    if err != nil {
       return nil, err
    }
    if r.BaseUrl[0] != nil {
-      url1 = r.BaseUrl[0].ResolveReference(url1)
+      url2 = r.BaseUrl[0].ResolveReference(url2)
    }
-   return url1, nil
+   return url2, nil
 }
 
 func (i Initialization) Url(r *Representation) (*url.URL, error) {
    raw := replace(string(i), "$RepresentationID$", r.Id)
-   url1, err := url.Parse(raw)
+   url2, err := url.Parse(raw)
    if err != nil {
       return nil, err
    }
    if r.BaseUrl[0] != nil {
-      url1 = r.BaseUrl[0].ResolveReference(url1)
+      url2 = r.BaseUrl[0].ResolveReference(url2)
    }
-   return url1, nil
+   return url2, nil
 }
