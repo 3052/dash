@@ -11,40 +11,14 @@ import (
    "time"
 )
 
-type SegmentTemplate struct {
-   StartNumber *int `xml:"startNumber,attr"`
-   // This can be any frequency but typically is the media clock frequency of
-   // one of the media streams (or a positive integer multiple thereof).
-   Timescale              *uint64 `xml:"timescale,attr"`
-   Media                  string  `xml:"media,attr"`
-   Initialization         string  `xml:"initialization,attr"`
-   Duration               float64 `xml:"duration,attr"`
-   PresentationTimeOffset int     `xml:"presentationTimeOffset,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D int `xml:"d,attr"` // duration
-         R int `xml:"r,attr"` // repeat
-      }
-   }
+func replace(s, old, new1 string) string {
+   return strings.Replace(s, old, new1, 1)
 }
 
-type ContentProtection struct {
-   Pssh        string `xml:"pssh"`
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-}
-
-type Mpd struct {
-   BaseUrl                   Url      `xml:"BaseURL"`
-   MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
-}
-
-type Period struct {
-   AdaptationSet []AdaptationSet
-   BaseUrl       Url       `xml:"BaseURL"`
-   Duration      *Duration `xml:"duration,attr"`
-   Id            string    `xml:"id,attr"`
-   mpd           *Mpd
+// SegmentTemplate, SegmentUrl
+// dashif.org/Guidelines-TimingModel#addressing-explicit
+func using_time(data string) bool {
+   return strings.Contains(data, "$Time$")
 }
 
 type AdaptationSet struct {
@@ -63,6 +37,15 @@ type AdaptationSet struct {
    Width  *int64  `xml:"width,attr"`
 }
 
+func (a *AdaptationSet) set(period1 *Period) {
+   a.period = period1
+}
+
+type ContentProtection struct {
+   Pssh        string `xml:"pssh"`
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
+}
+
 type Duration [1]time.Duration
 
 func (d *Duration) UnmarshalText(data []byte) error {
@@ -76,12 +59,6 @@ func (d *Duration) UnmarshalText(data []byte) error {
    return nil
 }
 
-type Url [1]*url.URL
-
-func (a *AdaptationSet) set(period1 *Period) {
-   a.period = period1
-}
-
 func (m *Mpd) Set(url2 *url.URL) {
    if m.BaseUrl[0] == nil {
       m.BaseUrl[0] = &url.URL{}
@@ -89,24 +66,16 @@ func (m *Mpd) Set(url2 *url.URL) {
    m.BaseUrl[0] = url2.ResolveReference(m.BaseUrl[0])
 }
 
-func (s *SegmentTemplate) set() {
-   // dashif.org/Guidelines-TimingModel#addressing-simple
-   if s.StartNumber == nil {
-      start := 1
-      s.StartNumber = &start
-   }
-   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
-   if s.Timescale == nil {
-      var scale uint64 = 1
-      s.Timescale = &scale
-   }
+func (m *Mpd) Unmarshal(data []byte) error {
+   return xml.Unmarshal(data, m)
 }
 
-// dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
-func (p *Period) segment_count(template *SegmentTemplate) float64 {
-   return math.Ceil(
-      p.Duration[0].Seconds() * float64(*template.Timescale) / template.Duration,
-   )
+type Period struct {
+   AdaptationSet []AdaptationSet
+   BaseUrl       Url       `xml:"BaseURL"`
+   Duration      *Duration `xml:"duration,attr"`
+   Id            string    `xml:"id,attr"`
+   mpd           *Mpd
 }
 
 func (p *Period) set(mpd1 *Mpd) {
@@ -194,21 +163,9 @@ func (r *Representation) set(adapt *AdaptationSet) {
    }
 }
 
-func replace(s, old, new1 string) string {
-   return strings.Replace(s, old, new1, 1)
-}
-
-func (m *Mpd) Unmarshal(data []byte) error {
-   return xml.Unmarshal(data, m)
-}
-
-func (a *AdaptationSet) GetPeriod() *Period {
-   return a.period
-}
-
 func (m *Mpd) Representation() iter.Seq[Representation] {
-   id := map[string]struct{}{}
    return func(yield func(Representation) bool) {
+      id := map[string]struct{}{}
       for _, period1 := range m.Period {
          for _, adapt := range period1.AdaptationSet {
             for _, represent := range adapt.Representation {
@@ -230,6 +187,12 @@ func (m *Mpd) Representation() iter.Seq[Representation] {
    }
 }
 
+type Mpd struct {
+   BaseUrl                   Url      `xml:"BaseURL"`
+   MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
+   Period                    []Period
+}
+
 func (r *Representation) Representation() iter.Seq[Representation] {
    return func(yield func(Representation) bool) {
       for _, period1 := range r.adaptation_set.period.mpd.Period {
@@ -249,15 +212,6 @@ func (r *Representation) Representation() iter.Seq[Representation] {
          }
       }
    }
-}
-
-func (r *Representation) GetAdaptationSet() *AdaptationSet {
-   return r.adaptation_set
-}
-
-func (u *Url) UnmarshalText(data []byte) error {
-   (*u)[0] = &url.URL{}
-   return u[0].UnmarshalBinary(data)
 }
 
 func (r *Representation) Initialization(data string) (*url.URL, error) {
@@ -283,10 +237,51 @@ func (r *Representation) ListUrl(data string) (*url.URL, error) {
    return url2, nil
 }
 
-// SegmentTemplate, SegmentUrl
-// dashif.org/Guidelines-TimingModel#addressing-explicit
-func using_time(data string) bool {
-   return strings.Contains(data, "$Time$")
+type Representation struct {
+   Bandwidth         int     `xml:"bandwidth,attr"`
+   BaseUrl           Url     `xml:"BaseURL"`
+   Codecs            *string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            *int64  `xml:"height,attr"`
+   Id                string  `xml:"id,attr"`
+   MimeType          *string `xml:"mimeType,attr"`
+   SegmentBase       *struct {
+      Initialization struct {
+         Range string `xml:"range,attr"`
+      }
+      IndexRange string `xml:"indexRange,attr"`
+   }
+   SegmentList *struct {
+      Initialization struct {
+         SourceUrl string `xml:"sourceURL,attr"`
+      }
+      SegmentUrl []struct {
+         Media string `xml:"media,attr"`
+      } `xml:"SegmentURL"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width           *int64 `xml:"width,attr"`
+   adaptation_set  *AdaptationSet
+}
+
+func (u *Url) UnmarshalText(data []byte) error {
+   (*u)[0] = &url.URL{}
+   return u[0].UnmarshalBinary(data)
+}
+
+type Url [1]*url.URL
+
+func (s *SegmentTemplate) set() {
+   // dashif.org/Guidelines-TimingModel#addressing-simple
+   if s.StartNumber == nil {
+      start := 1
+      s.StartNumber = &start
+   }
+   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
+   if s.Timescale == nil {
+      var scale uint64 = 1
+      s.Timescale = &scale
+   }
 }
 
 // SegmentTemplate, SegmentUrl
@@ -350,29 +345,26 @@ func (r *Representation) Segment() iter.Seq[int] {
    }
 }
 
-type Representation struct {
-   Bandwidth         int     `xml:"bandwidth,attr"`
-   BaseUrl           Url     `xml:"BaseURL"`
-   Codecs            *string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            *int64  `xml:"height,attr"`
-   Id                string  `xml:"id,attr"`
-   MimeType          *string `xml:"mimeType,attr"`
-   SegmentBase       *struct {
-      Initialization struct {
-         Range string `xml:"range,attr"`
+type SegmentTemplate struct {
+   StartNumber *int `xml:"startNumber,attr"`
+   // This can be any frequency but typically is the media clock frequency of
+   // one of the media streams (or a positive integer multiple thereof).
+   Timescale              *uint64 `xml:"timescale,attr"`
+   Media                  string  `xml:"media,attr"`
+   Initialization         string  `xml:"initialization,attr"`
+   Duration               float64 `xml:"duration,attr"`
+   PresentationTimeOffset int     `xml:"presentationTimeOffset,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D int `xml:"d,attr"` // duration
+         R int `xml:"r,attr"` // repeat
       }
-      IndexRange string `xml:"indexRange,attr"`
    }
-   SegmentList *struct {
-      Initialization struct {
-         SourceUrl string `xml:"sourceURL,attr"`
-      }
-      SegmentUrl []struct {
-         Media string `xml:"media,attr"`
-      } `xml:"SegmentURL"`
-   }
-   SegmentTemplate *SegmentTemplate
-   Width           *int64 `xml:"width,attr"`
-   adaptation_set  *AdaptationSet
+}
+
+// dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
+func (p *Period) segment_count(template *SegmentTemplate) float64 {
+   return math.Ceil(
+      p.Duration[0].Seconds() * float64(*template.Timescale) / template.Duration,
+   )
 }
