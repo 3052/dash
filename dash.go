@@ -11,21 +11,27 @@ import (
    "time"
 )
 
-type ListUrl string
-
-type Media string
-
-// SegmentIndexBox uses:
-// unsigned int(32) subsegment_duration;
-// but range values can exceed 32 bits
-type Range [2]uint64
+type SegmentTemplate struct {
+   StartNumber *int `xml:"startNumber,attr"`
+   // This can be any frequency but typically is the media clock frequency of
+   // one of the media streams (or a positive integer multiple thereof).
+   Timescale              *uint64 `xml:"timescale,attr"`
+   Media                  string  `xml:"media,attr"`
+   Initialization         string  `xml:"initialization,attr"`
+   Duration               float64 `xml:"duration,attr"`
+   PresentationTimeOffset int     `xml:"presentationTimeOffset,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D int `xml:"d,attr"` // duration
+         R int `xml:"r,attr"` // repeat
+      }
+   }
+}
 
 type ContentProtection struct {
    Pssh        string `xml:"pssh"`
    SchemeIdUri string `xml:"schemeIdUri,attr"`
 }
-
-type Url [1]*url.URL
 
 type Mpd struct {
    BaseUrl                   Url      `xml:"BaseURL"`
@@ -40,8 +46,6 @@ type Period struct {
    Id            string    `xml:"id,attr"`
    mpd           *Mpd
 }
-
-type Duration [1]time.Duration
 
 type AdaptationSet struct {
    ContentProtection []ContentProtection
@@ -59,9 +63,7 @@ type AdaptationSet struct {
    Width  *int64  `xml:"width,attr"`
 }
 
-func (a *AdaptationSet) set(period1 *Period) {
-   a.period = period1
-}
+type Duration [1]time.Duration
 
 func (d *Duration) UnmarshalText(data []byte) error {
    var err error
@@ -74,29 +76,10 @@ func (d *Duration) UnmarshalText(data []byte) error {
    return nil
 }
 
-func (m Media) Url(r *Representation, index int) (*url.URL, error) {
-   data := replace(string(m), "$RepresentationID$", r.Id)
-   if m.time() {
-      data = replace(data, "$Time$", fmt.Sprint(index))
-   } else {
-      data = replace(data, "$Number$", fmt.Sprint(index))
-      data = replace(data, "$Number%02d$", fmt.Sprintf("%02d", index))
-      data = replace(data, "$Number%03d$", fmt.Sprintf("%03d", index))
-      data = replace(data, "$Number%04d$", fmt.Sprintf("%04d", index))
-      data = replace(data, "$Number%05d$", fmt.Sprintf("%05d", index))
-      data = replace(data, "$Number%06d$", fmt.Sprintf("%06d", index))
-      data = replace(data, "$Number%07d$", fmt.Sprintf("%07d", index))
-      data = replace(data, "$Number%08d$", fmt.Sprintf("%08d", index))
-      data = replace(data, "$Number%09d$", fmt.Sprintf("%09d", index))
-   }
-   url2, err := url.Parse(data)
-   if err != nil {
-      return nil, err
-   }
-   if r.BaseUrl[0] != nil {
-      url2 = r.BaseUrl[0].ResolveReference(url2)
-   }
-   return url2, nil
+type Url [1]*url.URL
+
+func (a *AdaptationSet) set(period1 *Period) {
+   a.period = period1
 }
 
 func (m *Mpd) Set(url2 *url.URL) {
@@ -211,55 +194,8 @@ func (r *Representation) set(adapt *AdaptationSet) {
    }
 }
 
-func (r Range) String() string {
-   data := strconv.AppendUint(nil, r[0], 10)
-   data = append(data, '-')
-   if r[1] != 0 {
-      data = strconv.AppendUint(data, r[1], 10)
-   }
-   return string(data)
-}
-
 func replace(s, old, new1 string) string {
    return strings.Replace(s, old, new1, 1)
-}
-
-func (m Media) time() bool {
-   return strings.Contains(string(m), "$Time$")
-}
-
-func (r *Representation) Segment() iter.Seq[int] {
-   template := r.SegmentTemplate
-   var address int
-   if template.Media.time() {
-      address = template.PresentationTimeOffset
-   } else {
-      address = *template.StartNumber
-   }
-   return func(yield func(int) bool) {
-      if template.SegmentTimeline != nil {
-         for _, segment := range template.SegmentTimeline.S {
-            for range 1 + segment.R {
-               if !yield(address) {
-                  return
-               }
-               if template.Media.time() {
-                  address += segment.D
-               } else {
-                  address++
-               }
-            }
-         }
-      } else {
-         segment_count := r.adaptation_set.period.segment_count(template)
-         for range int64(segment_count) {
-            if !yield(address) {
-               return
-            }
-            address++
-         }
-      }
-   }
 }
 
 func (m *Mpd) Unmarshal(data []byte) error {
@@ -315,27 +251,6 @@ func (r *Representation) Representation() iter.Seq[Representation] {
    }
 }
 
-func (r *Range) UnmarshalText(data []byte) error {
-   before, after, _ := strings.Cut(string(data), "-")
-   var err error
-   if before != "" {
-      (*r)[0], err = strconv.ParseUint(before, 10, 64)
-      if err != nil {
-         return err
-      }
-   }
-   if before != "" {
-      if after == "" {
-         return nil
-      }
-   }
-   (*r)[1], err = strconv.ParseUint(after, 10, 64)
-   if err != nil {
-      return err
-   }
-   return nil
-}
-
 func (r *Representation) GetAdaptationSet() *AdaptationSet {
    return r.adaptation_set
 }
@@ -345,8 +260,9 @@ func (u *Url) UnmarshalText(data []byte) error {
    return u[0].UnmarshalBinary(data)
 }
 
-func (u ListUrl) Url(r *Representation) (*url.URL, error) {
-   url2, err := url.Parse(string(u))
+func (r *Representation) Initialization(data string) (*url.URL, error) {
+   data = replace(data, "$RepresentationID$", r.Id)
+   url2, err := url.Parse(data)
    if err != nil {
       return nil, err
    }
@@ -354,6 +270,84 @@ func (u ListUrl) Url(r *Representation) (*url.URL, error) {
       url2 = r.BaseUrl[0].ResolveReference(url2)
    }
    return url2, nil
+}
+
+func (r *Representation) ListUrl(data string) (*url.URL, error) {
+   url2, err := url.Parse(data)
+   if err != nil {
+      return nil, err
+   }
+   if r.BaseUrl[0] != nil {
+      url2 = r.BaseUrl[0].ResolveReference(url2)
+   }
+   return url2, nil
+}
+
+// SegmentTemplate, SegmentUrl
+// dashif.org/Guidelines-TimingModel#addressing-explicit
+func using_time(data string) bool {
+   return strings.Contains(data, "$Time$")
+}
+
+// SegmentTemplate, SegmentUrl
+func (r *Representation) Media(data string, index int) (*url.URL, error) {
+   data = replace(data, "$RepresentationID$", r.Id)
+   if using_time(data) {
+      data = replace(data, "$Time$", fmt.Sprint(index))
+   } else {
+      data = replace(data, "$Number$", fmt.Sprint(index))
+      data = replace(data, "$Number%02d$", fmt.Sprintf("%02d", index))
+      data = replace(data, "$Number%03d$", fmt.Sprintf("%03d", index))
+      data = replace(data, "$Number%04d$", fmt.Sprintf("%04d", index))
+      data = replace(data, "$Number%05d$", fmt.Sprintf("%05d", index))
+      data = replace(data, "$Number%06d$", fmt.Sprintf("%06d", index))
+      data = replace(data, "$Number%07d$", fmt.Sprintf("%07d", index))
+      data = replace(data, "$Number%08d$", fmt.Sprintf("%08d", index))
+      data = replace(data, "$Number%09d$", fmt.Sprintf("%09d", index))
+   }
+   url2, err := url.Parse(data)
+   if err != nil {
+      return nil, err
+   }
+   if r.BaseUrl[0] != nil {
+      url2 = r.BaseUrl[0].ResolveReference(url2)
+   }
+   return url2, nil
+}
+
+// SegmentTemplate
+func (r *Representation) Segment() iter.Seq[int] {
+   template := r.SegmentTemplate
+   var address int
+   if using_time(template.Media) {
+      address = template.PresentationTimeOffset
+   } else {
+      address = *template.StartNumber
+   }
+   return func(yield func(int) bool) {
+      if template.SegmentTimeline != nil {
+         for _, segment := range template.SegmentTimeline.S {
+            for range 1 + segment.R {
+               if !yield(address) {
+                  return
+               }
+               if using_time(template.Media) {
+                  address += segment.D
+               } else {
+                  address++
+               }
+            }
+         }
+      } else {
+         segment_count := r.adaptation_set.period.segment_count(template)
+         for range int64(segment_count) {
+            if !yield(address) {
+               return
+            }
+            address++
+         }
+      }
+   }
 }
 
 type Representation struct {
@@ -366,47 +360,19 @@ type Representation struct {
    MimeType          *string `xml:"mimeType,attr"`
    SegmentBase       *struct {
       Initialization struct {
-         Range Range `xml:"range,attr"`
+         Range string `xml:"range,attr"`
       }
-      IndexRange Range `xml:"indexRange,attr"`
+      IndexRange string `xml:"indexRange,attr"`
    }
    SegmentList *struct {
       Initialization struct {
-         SourceUrl ListUrl `xml:"sourceURL,attr"`
+         SourceUrl string `xml:"sourceURL,attr"`
       }
       SegmentUrl []struct {
-         Media ListUrl `xml:"media,attr"`
+         Media string `xml:"media,attr"`
       } `xml:"SegmentURL"`
    }
    SegmentTemplate *SegmentTemplate
    Width           *int64 `xml:"width,attr"`
    adaptation_set  *AdaptationSet
-}
-
-func (r *Representation) Initialization(data string) (*url.URL, error) {
-   url2, err := url.Parse(replace(data, "$RepresentationID$", r.Id))
-   if err != nil {
-      return nil, err
-   }
-   if r.BaseUrl[0] != nil {
-      url2 = r.BaseUrl[0].ResolveReference(url2)
-   }
-   return url2, nil
-}
-
-type SegmentTemplate struct {
-   StartNumber *int `xml:"startNumber,attr"`
-   // This can be any frequency but typically is the media clock frequency of
-   // one of the media streams (or a positive integer multiple thereof).
-   Timescale              *uint64 `xml:"timescale,attr"`
-   Media                  Media   `xml:"media,attr"`
-   Initialization         string  `xml:"initialization,attr"`
-   Duration               float64 `xml:"duration,attr"`
-   PresentationTimeOffset int     `xml:"presentationTimeOffset,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D int `xml:"d,attr"` // duration
-         R int `xml:"r,attr"` // repeat
-      }
-   }
 }
