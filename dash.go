@@ -11,6 +11,54 @@ import (
    "time"
 )
 
+type ListUrl string
+
+type Media string
+
+// SegmentIndexBox uses:
+// unsigned int(32) subsegment_duration;
+// but range values can exceed 32 bits
+type Range [2]uint64
+
+type ContentProtection struct {
+   Pssh        string `xml:"pssh"`
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
+}
+
+type Url [1]*url.URL
+
+type Mpd struct {
+   BaseUrl                   Url      `xml:"BaseURL"`
+   MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
+   Period                    []Period
+}
+
+type Period struct {
+   AdaptationSet []AdaptationSet
+   BaseUrl       Url       `xml:"BaseURL"`
+   Duration      *Duration `xml:"duration,attr"`
+   Id            string    `xml:"id,attr"`
+   mpd           *Mpd
+}
+
+type Duration [1]time.Duration
+
+type AdaptationSet struct {
+   ContentProtection []ContentProtection
+   Lang              string `xml:"lang,attr"`
+   MimeType          string `xml:"mimeType,attr"`
+   Representation    []Representation
+   Role              *struct {
+      Value string `xml:"value,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   period          *Period
+   // pointers for Representation.String
+   Codecs *string `xml:"codecs,attr"`
+   Height *int64  `xml:"height,attr"`
+   Width  *int64  `xml:"width,attr"`
+}
+
 func (a *AdaptationSet) set(period1 *Period) {
    a.period = period1
 }
@@ -27,21 +75,21 @@ func (d *Duration) UnmarshalText(data []byte) error {
 }
 
 func (m Media) Url(r *Representation, index int) (*url.URL, error) {
-   raw := replace(string(m), "$RepresentationID$", r.Id)
+   data := replace(string(m), "$RepresentationID$", r.Id)
    if m.time() {
-      raw = replace(raw, "$Time$", fmt.Sprint(index))
+      data = replace(data, "$Time$", fmt.Sprint(index))
    } else {
-      raw = replace(raw, "$Number$", fmt.Sprint(index))
-      raw = replace(raw, "$Number%02d$", fmt.Sprintf("%02d", index))
-      raw = replace(raw, "$Number%03d$", fmt.Sprintf("%03d", index))
-      raw = replace(raw, "$Number%04d$", fmt.Sprintf("%04d", index))
-      raw = replace(raw, "$Number%05d$", fmt.Sprintf("%05d", index))
-      raw = replace(raw, "$Number%06d$", fmt.Sprintf("%06d", index))
-      raw = replace(raw, "$Number%07d$", fmt.Sprintf("%07d", index))
-      raw = replace(raw, "$Number%08d$", fmt.Sprintf("%08d", index))
-      raw = replace(raw, "$Number%09d$", fmt.Sprintf("%09d", index))
+      data = replace(data, "$Number$", fmt.Sprint(index))
+      data = replace(data, "$Number%02d$", fmt.Sprintf("%02d", index))
+      data = replace(data, "$Number%03d$", fmt.Sprintf("%03d", index))
+      data = replace(data, "$Number%04d$", fmt.Sprintf("%04d", index))
+      data = replace(data, "$Number%05d$", fmt.Sprintf("%05d", index))
+      data = replace(data, "$Number%06d$", fmt.Sprintf("%06d", index))
+      data = replace(data, "$Number%07d$", fmt.Sprintf("%07d", index))
+      data = replace(data, "$Number%08d$", fmt.Sprintf("%08d", index))
+      data = replace(data, "$Number%09d$", fmt.Sprintf("%09d", index))
    }
-   url2, err := url.Parse(raw)
+   url2, err := url.Parse(data)
    if err != nil {
       return nil, err
    }
@@ -50,8 +98,6 @@ func (m Media) Url(r *Representation, index int) (*url.URL, error) {
    }
    return url2, nil
 }
-
-///
 
 func (m *Mpd) Set(url2 *url.URL) {
    if m.BaseUrl[0] == nil {
@@ -73,30 +119,12 @@ func (s *SegmentTemplate) set() {
    }
 }
 
-type Url [1]*url.URL
-
 // dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
 func (p *Period) segment_count(template *SegmentTemplate) float64 {
    return math.Ceil(
       p.Duration[0].Seconds() * float64(*template.Timescale) / template.Duration,
    )
 }
-
-type Mpd struct {
-   BaseUrl                   Url      `xml:"BaseURL"`
-   MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
-}
-
-type Period struct {
-   AdaptationSet []AdaptationSet
-   BaseUrl       Url       `xml:"BaseURL"`
-   Duration      *Duration `xml:"duration,attr"`
-   Id            string    `xml:"id,attr"`
-   mpd           *Mpd
-}
-
-type Duration [1]time.Duration
 
 func (p *Period) set(mpd1 *Mpd) {
    p.mpd = mpd1
@@ -109,33 +137,6 @@ func (p *Period) set(mpd1 *Mpd) {
    if p.Duration == nil {
       p.Duration = &p.mpd.MediaPresentationDuration
    }
-}
-
-type Representation struct {
-   Bandwidth         int     `xml:"bandwidth,attr"`
-   BaseUrl           Url     `xml:"BaseURL"`
-   Codecs            *string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Height            *int64  `xml:"height,attr"`
-   Id                string  `xml:"id,attr"`
-   MimeType          *string `xml:"mimeType,attr"`
-   SegmentBase       *struct {
-      Initialization struct {
-         Range Range `xml:"range,attr"`
-      }
-      IndexRange Range `xml:"indexRange,attr"`
-   }
-   SegmentList *struct {
-      Initialization struct {
-         SourceUrl ListUrl `xml:"sourceURL,attr"`
-      }
-      SegmentUrl []struct {
-         Media ListUrl `xml:"media,attr"`
-      } `xml:"SegmentURL"`
-   }
-   SegmentTemplate *SegmentTemplate
-   Width           *int64 `xml:"width,attr"`
-   adaptation_set  *AdaptationSet
 }
 
 func (r *Representation) String() string {
@@ -209,21 +210,6 @@ func (r *Representation) set(adapt *AdaptationSet) {
       r.Width = r.adaptation_set.Width
    }
 }
-type AdaptationSet struct {
-   ContentProtection []ContentProtection
-   Lang              string `xml:"lang,attr"`
-   MimeType          string `xml:"mimeType,attr"`
-   Representation    []Representation
-   Role              *struct {
-      Value string `xml:"value,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-   period          *Period
-   // pointers for Representation.String
-   Codecs *string `xml:"codecs,attr"`
-   Height *int64  `xml:"height,attr"`
-   Width  *int64  `xml:"width,attr"`
-}
 
 func (r Range) String() string {
    data := strconv.AppendUint(nil, r[0], 10)
@@ -234,13 +220,9 @@ func (r Range) String() string {
    return string(data)
 }
 
-type Initialization string
-
 func replace(s, old, new1 string) string {
    return strings.Replace(s, old, new1, 1)
 }
-
-type ListUrl string
 
 func (m Media) time() bool {
    return strings.Contains(string(m), "$Time$")
@@ -279,8 +261,6 @@ func (r *Representation) Segment() iter.Seq[int] {
       }
    }
 }
-
-type Media string
 
 func (m *Mpd) Unmarshal(data []byte) error {
    return xml.Unmarshal(data, m)
@@ -356,35 +336,8 @@ func (r *Range) UnmarshalText(data []byte) error {
    return nil
 }
 
-// SegmentIndexBox uses:
-// unsigned int(32) subsegment_duration;
-// but range values can exceed 32 bits
-type Range [2]uint64
-
 func (r *Representation) GetAdaptationSet() *AdaptationSet {
    return r.adaptation_set
-}
-
-type SegmentTemplate struct {
-   StartNumber *int `xml:"startNumber,attr"`
-   // This can be any frequency but typically is the media clock frequency of
-   // one of the media streams (or a positive integer multiple thereof).
-   Timescale              *uint64        `xml:"timescale,attr"`
-   Media                  Media          `xml:"media,attr"`
-   Initialization         Initialization `xml:"initialization,attr"`
-   Duration               float64        `xml:"duration,attr"`
-   PresentationTimeOffset int            `xml:"presentationTimeOffset,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D int `xml:"d,attr"` // duration
-         R int `xml:"r,attr"` // repeat
-      }
-   }
-}
-
-type ContentProtection struct {
-   Pssh        string `xml:"pssh"`
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
 }
 
 func (u *Url) UnmarshalText(data []byte) error {
@@ -403,9 +356,35 @@ func (u ListUrl) Url(r *Representation) (*url.URL, error) {
    return url2, nil
 }
 
-func (i Initialization) Url(r *Representation) (*url.URL, error) {
-   raw := replace(string(i), "$RepresentationID$", r.Id)
-   url2, err := url.Parse(raw)
+type Representation struct {
+   Bandwidth         int     `xml:"bandwidth,attr"`
+   BaseUrl           Url     `xml:"BaseURL"`
+   Codecs            *string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Height            *int64  `xml:"height,attr"`
+   Id                string  `xml:"id,attr"`
+   MimeType          *string `xml:"mimeType,attr"`
+   SegmentBase       *struct {
+      Initialization struct {
+         Range Range `xml:"range,attr"`
+      }
+      IndexRange Range `xml:"indexRange,attr"`
+   }
+   SegmentList *struct {
+      Initialization struct {
+         SourceUrl ListUrl `xml:"sourceURL,attr"`
+      }
+      SegmentUrl []struct {
+         Media ListUrl `xml:"media,attr"`
+      } `xml:"SegmentURL"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width           *int64 `xml:"width,attr"`
+   adaptation_set  *AdaptationSet
+}
+
+func (r *Representation) Initialization(data string) (*url.URL, error) {
+   url2, err := url.Parse(replace(data, "$RepresentationID$", r.Id))
    if err != nil {
       return nil, err
    }
@@ -413,4 +392,21 @@ func (i Initialization) Url(r *Representation) (*url.URL, error) {
       url2 = r.BaseUrl[0].ResolveReference(url2)
    }
    return url2, nil
+}
+
+type SegmentTemplate struct {
+   StartNumber *int `xml:"startNumber,attr"`
+   // This can be any frequency but typically is the media clock frequency of
+   // one of the media streams (or a positive integer multiple thereof).
+   Timescale              *uint64 `xml:"timescale,attr"`
+   Media                  Media   `xml:"media,attr"`
+   Initialization         string  `xml:"initialization,attr"`
+   Duration               float64 `xml:"duration,attr"`
+   PresentationTimeOffset int     `xml:"presentationTimeOffset,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D int `xml:"d,attr"` // duration
+         R int `xml:"r,attr"` // repeat
+      }
+   }
 }
