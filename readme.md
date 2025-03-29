@@ -5,7 +5,8 @@
 >
 > [Miranda July](//youtube.com/watch?v=7dMGWporaFE&t=142s)
 
-ISO/IEC 23009-1
+- ISO/IEC 23009-1:2022 
+- ISO/IEC 23009-1:2019
 
 - <https://wikipedia.org/wiki/Dynamic_Adaptive_Streaming_over_HTTP>
 - https://standards.iso.org/ittf/PubliclyAvailableStandards
