@@ -10,6 +10,151 @@ import (
    "time"
 )
 
+func (r *Range) Set(data string) error {
+   _, err := fmt.Sscanf(data, "%v-%v", &r[0], &r[1])
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
+func (r *Range) String() string {
+   return fmt.Sprint(r[0], "-", r[1])
+}
+
+type Range [2]uint64
+
+func (d *Duration) UnmarshalText(data []byte) error {
+   var err error
+   d[0], err = time.ParseDuration(strings.ToLower(
+      strings.TrimPrefix(string(data), "PT"),
+   ))
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
+type Duration [1]time.Duration
+
+func (u *Url) UnmarshalText(data []byte) error {
+   u[0] = &url.URL{}
+   return u[0].UnmarshalBinary(data)
+}
+
+type Url [1]*url.URL
+
+type Representation struct {
+   Bandwidth         int     `xml:"bandwidth,attr"`
+   BaseUrl           Url     `xml:"BaseURL"`
+   Codecs            *string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Id                string  `xml:"id,attr"`
+   MimeType          *string `xml:"mimeType,attr"`
+   Width             *int    `xml:"width,attr"`
+   Height            *int    `xml:"height,attr"`
+   adaptation_set    *AdaptationSet
+   SegmentTemplate   *SegmentTemplate
+   SegmentList       *SegmentList
+   SegmentBase       *struct {
+      Initialization struct {
+         Range string `xml:"range,attr"`
+      }
+      IndexRange string `xml:"indexRange,attr"`
+   }
+}
+
+func (a *AdaptationSet) set(period1 *Period) {
+   a.period = period1
+}
+
+func (m *Mpd) Set(url2 *url.URL) {
+   if m.BaseUrl[0] == nil {
+      m.BaseUrl[0] = &url.URL{}
+   }
+   m.BaseUrl[0] = url2.ResolveReference(m.BaseUrl[0])
+}
+
+func (p *Period) set(mpd1 *Mpd) {
+   p.mpd = mpd1
+   if base := p.mpd.BaseUrl[0]; base != nil {
+      if p.BaseUrl[0] == nil {
+         p.BaseUrl[0] = &url.URL{}
+      }
+      p.BaseUrl[0] = base.ResolveReference(p.BaseUrl[0])
+   }
+   if p.Duration == nil {
+      p.Duration = &p.mpd.MediaPresentationDuration
+   }
+}
+
+func (s *SegmentTemplate) set() {
+   // dashif.org/Guidelines-TimingModel#addressing-simple
+   if s.StartNumber == nil {
+      start := 1
+      s.StartNumber = &start
+   }
+   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
+   if s.Timescale == nil {
+      scale := 1
+      s.Timescale = &scale
+   }
+}
+
+type SegmentList struct {
+   Initialization struct {
+      SourceUrl Url `xml:"sourceURL,attr"`
+   }
+   SegmentUrl []*struct {
+      Media Url `xml:"media,attr"`
+   } `xml:"SegmentURL"`
+}
+
+func (s *SegmentList) set(url2 *url.URL) {
+   s.Initialization.SourceUrl[0] = url2.ResolveReference(
+      s.Initialization.SourceUrl[0],
+   )
+   for _, segment := range s.SegmentUrl {
+      segment.Media[0] = url2.ResolveReference(segment.Media[0])
+   }
+}
+
+func (r *Representation) set(adapt *AdaptationSet) {
+   r.adaptation_set = adapt
+   if base := r.adaptation_set.period.BaseUrl[0]; base != nil {
+      if r.BaseUrl[0] == nil {
+         r.BaseUrl[0] = &url.URL{}
+      }
+      r.BaseUrl[0] = base.ResolveReference(r.BaseUrl[0])
+   }
+   if r.Codecs == nil {
+      r.Codecs = r.adaptation_set.Codecs
+   }
+   if len(r.ContentProtection) == 0 {
+      r.ContentProtection = r.adaptation_set.ContentProtection
+   }
+   if r.Height == nil {
+      r.Height = r.adaptation_set.Height
+   }
+   if r.MimeType == nil {
+      r.MimeType = &r.adaptation_set.MimeType
+   }
+   if r.SegmentList != nil {
+      if r.BaseUrl[0] != nil {
+         r.SegmentList.set(r.BaseUrl[0])
+      }
+   }
+   if r.SegmentTemplate == nil {
+      r.SegmentTemplate = r.adaptation_set.SegmentTemplate
+   }
+   if r.SegmentTemplate != nil {
+      r.SegmentTemplate.set()
+   }
+   if r.Width == nil {
+      r.Width = r.adaptation_set.Width
+   }
+}
+
 func (r *Representation) String() string {
    var b []byte
    if r.Width != nil {
@@ -35,26 +180,6 @@ func (r *Representation) String() string {
    b = fmt.Append(b, "id = ", r.Id)
    return string(b)
 }
-
-func (u *Url) UnmarshalText(data []byte) error {
-   (*u)[0] = &url.URL{}
-   return u[0].UnmarshalBinary(data)
-}
-
-type Url [1]*url.URL
-
-func (d *Duration) UnmarshalText(data []byte) error {
-   var err error
-   (*d)[0], err = time.ParseDuration(strings.ToLower(
-      strings.TrimPrefix(string(data), "PT"),
-   ))
-   if err != nil {
-      return err
-   }
-   return nil
-}
-
-type Duration [1]time.Duration
 
 func replace(s, old, new1 string) string {
    return strings.Replace(s, old, new1, 1)
@@ -183,46 +308,7 @@ func (m Media) time_address() bool {
    return strings.Contains(string(m), "$Time$")
 }
 
-// SegmentTemplate
-func (m Media) Url(r *Representation, address int) (*url.URL, error) {
-   data := replace(string(m), "$RepresentationID$", r.Id)
-   if m.time_address() {
-      data = replace(data, "$Time$", fmt.Sprint(address))
-   } else {
-      data = replace(data, "$Number$", fmt.Sprint(address))
-      data = replace(data, "$Number%02d$", fmt.Sprintf("%02d", address))
-      data = replace(data, "$Number%03d$", fmt.Sprintf("%03d", address))
-      data = replace(data, "$Number%04d$", fmt.Sprintf("%04d", address))
-      data = replace(data, "$Number%05d$", fmt.Sprintf("%05d", address))
-      data = replace(data, "$Number%06d$", fmt.Sprintf("%06d", address))
-      data = replace(data, "$Number%07d$", fmt.Sprintf("%07d", address))
-      data = replace(data, "$Number%08d$", fmt.Sprintf("%08d", address))
-      data = replace(data, "$Number%09d$", fmt.Sprintf("%09d", address))
-   }
-   url2, err := url.Parse(data)
-   if err != nil {
-      return nil, err
-   }
-   if r.BaseUrl[0] != nil {
-      url2 = r.BaseUrl[0].ResolveReference(url2)
-   }
-   return url2, nil
-}
-
 type Initialization string
-
-// SegmentTemplate
-func (i Initialization) Url(r *Representation) (*url.URL, error) {
-   data := replace(string(i), "$RepresentationID$", r.Id)
-   url2, err := url.Parse(data)
-   if err != nil {
-      return nil, err
-   }
-   if r.BaseUrl[0] != nil {
-      url2 = r.BaseUrl[0].ResolveReference(url2)
-   }
-   return url2, nil
-}
 
 type Period struct {
    AdaptationSet []AdaptationSet
@@ -266,105 +352,39 @@ type SegmentTemplate struct {
    Timescale *int `xml:"timescale,attr"`
 }
 
-type Representation struct {
-   Bandwidth         int     `xml:"bandwidth,attr"`
-   BaseUrl           Url     `xml:"BaseURL"`
-   Codecs            *string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Id                string  `xml:"id,attr"`
-   MimeType          *string `xml:"mimeType,attr"`
-   SegmentBase       *struct {
-      Initialization struct {
-         Range string `xml:"range,attr"`
-      }
-      IndexRange string `xml:"indexRange,attr"`
+func (i Initialization) Url(r *Representation) (*url.URL, error) {
+   data := replace(string(i), "$RepresentationID$", r.Id)
+   url2, err := url.Parse(data)
+   if err != nil {
+      return nil, err
    }
-   Width           *int `xml:"width,attr"`
-   Height          *int `xml:"height,attr"`
-   SegmentTemplate *SegmentTemplate
-   SegmentList     *SegmentList
-   adaptation_set  *AdaptationSet
-}
-
-type SegmentList struct {
-   Initialization struct {
-      SourceUrl Url `xml:"sourceURL,attr"`
-   }
-   SegmentUrl []struct {
-      Media Url `xml:"media,attr"`
-   } `xml:"SegmentURL"`
-}
-
-func (a *AdaptationSet) set(period1 *Period) {
-   a.period = period1
-}
-
-func (m *Mpd) Set(url2 *url.URL) {
-   if m.BaseUrl[0] == nil {
-      m.BaseUrl[0] = &url.URL{}
-   }
-   m.BaseUrl[0] = url2.ResolveReference(m.BaseUrl[0])
-}
-
-func (p *Period) set(mpd1 *Mpd) {
-   p.mpd = mpd1
-   if base := p.mpd.BaseUrl[0]; base != nil {
-      if p.BaseUrl[0] == nil {
-         p.BaseUrl[0] = &url.URL{}
-      }
-      p.BaseUrl[0] = base.ResolveReference(p.BaseUrl[0])
-   }
-   if p.Duration == nil {
-      p.Duration = &p.mpd.MediaPresentationDuration
-   }
-}
-
-func (r *Representation) set(adapt *AdaptationSet) {
-   r.adaptation_set = adapt
-   if base := r.adaptation_set.period.BaseUrl[0]; base != nil {
-      if r.BaseUrl[0] == nil {
-         r.BaseUrl[0] = &url.URL{}
-      }
-      r.BaseUrl[0] = base.ResolveReference(r.BaseUrl[0])
-   }
-   if r.Codecs == nil {
-      r.Codecs = r.adaptation_set.Codecs
-   }
-   if len(r.ContentProtection) == 0 {
-      r.ContentProtection = r.adaptation_set.ContentProtection
-   }
-   if r.Height == nil {
-      r.Height = r.adaptation_set.Height
-   }
-   if r.MimeType == nil {
-      r.MimeType = &r.adaptation_set.MimeType
-   }
-   if r.SegmentTemplate == nil {
-      r.SegmentTemplate = r.adaptation_set.SegmentTemplate
-   }
-   if r.SegmentTemplate != nil {
-      r.SegmentTemplate.set()
-   }
-   if r.Width == nil {
-      r.Width = r.adaptation_set.Width
-   }
-}
-
-func (s *SegmentTemplate) set() {
-   // dashif.org/Guidelines-TimingModel#addressing-simple
-   if s.StartNumber == nil {
-      start := 1
-      s.StartNumber = &start
-   }
-   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
-   if s.Timescale == nil {
-      scale := 1
-      s.Timescale = &scale
-   }
-}
-
-func (s *SegmentList) set() {
    if r.BaseUrl[0] != nil {
       url2 = r.BaseUrl[0].ResolveReference(url2)
    }
+   return url2, nil
+}
+
+func (m Media) Url(r *Representation, address int) (*url.URL, error) {
+   data := replace(string(m), "$RepresentationID$", r.Id)
+   if m.time_address() {
+      data = replace(data, "$Time$", fmt.Sprint(address))
+   } else {
+      data = replace(data, "$Number$", fmt.Sprint(address))
+      data = replace(data, "$Number%02d$", fmt.Sprintf("%02d", address))
+      data = replace(data, "$Number%03d$", fmt.Sprintf("%03d", address))
+      data = replace(data, "$Number%04d$", fmt.Sprintf("%04d", address))
+      data = replace(data, "$Number%05d$", fmt.Sprintf("%05d", address))
+      data = replace(data, "$Number%06d$", fmt.Sprintf("%06d", address))
+      data = replace(data, "$Number%07d$", fmt.Sprintf("%07d", address))
+      data = replace(data, "$Number%08d$", fmt.Sprintf("%08d", address))
+      data = replace(data, "$Number%09d$", fmt.Sprintf("%09d", address))
+   }
+   url2, err := url.Parse(data)
+   if err != nil {
+      return nil, err
+   }
+   if r.BaseUrl[0] != nil {
+      url2 = r.BaseUrl[0].ResolveReference(url2)
+   }
+   return url2, nil
 }
