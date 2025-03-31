@@ -5,18 +5,19 @@ import (
    "io"
    "log"
    "net/http"
+   "path"
    "strings"
 )
 
-const mp4 = "https://vod-lf-oneapp2-prd.akamaized.net/prod/nbc/J39/rhk/9000405641/1743322955758-hqIHK/cmaf/mpeg_cenc_2sec/7830k_1080_cmaf/_237142984_1.mp4"
+const address = "https://cdimage.debian.org/debian-cd/current-live/amd64/iso-hybrid/"
 
 const homepage = `
 <ul>
    <li>
-      <a href="/get/alfa">alfa</a>
+      <a href="/get/debian-live-12.10.0-amd64-standard.iso">debian-live-12.10.0-amd64-standard.iso</a> (1.4G)
    </li>
    <li>
-      <a href="/get/bravo">bravo</a>
+      <a href="/get/debian-live-12.10.0-amd64-lxde.iso">debian-live-12.10.0-amd64-lxde.iso</a> (3.0G)
    </li>
 </ul>
 `
@@ -27,7 +28,7 @@ func handler(rw http.ResponseWriter, req *http.Request) {
       rw.Header().Set("content-type", "text/html")
       fmt.Fprint(rw, homepage)
    case strings.HasPrefix(req.URL.Path, "/get/"):
-      resp, err := http.Get(mp4)
+      resp, err := http.Get(address + path.Base(req.URL.Path))
       if err != nil {
          fmt.Fprint(rw, err)
          return
