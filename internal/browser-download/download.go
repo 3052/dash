@@ -2,22 +2,21 @@ package main
 
 import (
    "fmt"
-   "io"
    "log"
    "net/http"
-   "path"
    "strings"
+   "time"
 )
-
-const address = "https://cdimage.debian.org/debian-cd/current-live/amd64/iso-hybrid/"
 
 const homepage = `
 <ul>
    <li>
-      <a href="/get/debian-live-12.10.0-amd64-standard.iso">debian-live-12.10.0-amd64-standard.iso</a> (1.4G)
+      <a href="/get/cdimage.debian.org/debian-cd/current-live/amd64/iso-hybrid/debian-live-12.10.0-amd64-standard.iso"
+      >debian-live-12.10.0-amd64-standard.iso</a>
    </li>
    <li>
-      <a href="/get/debian-live-12.10.0-amd64-lxde.iso">debian-live-12.10.0-amd64-lxde.iso</a> (3.0G)
+      <a target="_blank" href="/get/dl.google.com/go/go1.24.1.windows-amd64.zip"
+      >go1.24.1.windows-amd64.zip</a>
    </li>
 </ul>
 `
@@ -28,16 +27,14 @@ func handler(rw http.ResponseWriter, req *http.Request) {
       rw.Header().Set("content-type", "text/html")
       fmt.Fprint(rw, homepage)
    case strings.HasPrefix(req.URL.Path, "/get/"):
-      resp, err := http.Get(address + path.Base(req.URL.Path))
-      if err != nil {
-         fmt.Fprint(rw, err)
-         return
-      }
-      defer resp.Body.Close()
-      _, err = io.Copy(rw, resp.Body)
-      if err != nil {
-         fmt.Fprint(rw, err)
-         return
+      log.SetOutput(rw)
+      flush, ok := rw.(http.Flusher)
+      for range 9 {
+         log.Print("hello world")
+         if ok {
+            flush.Flush()
+         }
+         time.Sleep(time.Second)
       }
    }
 }
