@@ -9,28 +9,39 @@ import (
 )
 
 const homepage = `
-<ul>
-   <li>
-      <a href="/get/cdimage.debian.org/debian-cd/current-live/amd64/iso-hybrid/debian-live-12.10.0-amd64-standard.iso"
-      >debian-live-12.10.0-amd64-standard.iso</a>
-   </li>
-   <li>
-      <a target="_blank" href="/get/dl.google.com/go/go1.24.1.windows-amd64.zip"
-      >go1.24.1.windows-amd64.zip</a>
-   </li>
-</ul>
+<a target="_blank" href="/get/alfa">alfa</a>
+`
+
+const log_page = `
+<script>
+'use strict';
+
+const observer = new MutationObserver(() => {
+   window.scrollTop = window.scrollHeight;
+});
+
+observer.observe(window, {
+  childList: true,
+  subtree: true
+});
+
+</script>
 `
 
 func handler(rw http.ResponseWriter, req *http.Request) {
+   rw.Header().Set("content-type", "text/html")
    switch {
    case req.URL.Path == "/":
-      rw.Header().Set("content-type", "text/html")
       fmt.Fprint(rw, homepage)
    case strings.HasPrefix(req.URL.Path, "/get/"):
-      log.SetOutput(rw)
+      logger := log.New(rw, "", log.Ltime)
       flush, ok := rw.(http.Flusher)
+      logger.Print(log_page)
+      if ok {
+         flush.Flush()
+      }
       for range 9 {
-         log.Print("hello world")
+         logger.Print("hello world")
          if ok {
             flush.Flush()
          }
