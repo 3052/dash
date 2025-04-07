@@ -1,4 +1,2 @@
-41.neocities.org/dash v1.27.4 h1:z8Ij/MjaF+mqdKGS3wfi4UsznkCNGt/PkEC8biBEd3c=
-41.neocities.org/dash v1.27.4/go.mod h1:BoiwRQ49/m0Jyf98s8nO15CjAkBiKlAs27ljIMhBIJA=
-github.com/rodrigocfd/windigo v0.1.0 h1:hFowlIijR77z5sfn9oYd6RCmvSX+P7RuW/Oz8jRe2RE=
-github.com/rodrigocfd/windigo v0.1.0/go.mod h1:3zHhLYU08CkrMx5cdPlmC1HObT8fSldWtfS8cnSRzYo=
+github.com/tadvi/winc v0.0.0-20210907234902-33fdab6e7e58 h1:h0tZ6ToFW9PUGt+145I77PGTeWa75hfJBs1kw9CgMZg=
+github.com/tadvi/winc v0.0.0-20210907234902-33fdab6e7e58/go.mod h1:tNBZi4sduF/C3bQE2wGTIccmErQ4A9M9QkPsICVg+oE=
