@@ -10,6 +10,19 @@ import (
    "time"
 )
 
+func (d *Duration) UnmarshalText(data []byte) error {
+   var err error
+   d[0], err = time.ParseDuration(strings.ToLower(
+      strings.TrimPrefix(string(data), "PT"),
+   ))
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
+type Duration [1]time.Duration
+
 func (r *Range) Set(data string) error {
    _, err := fmt.Sscanf(data, "%v-%v", &r[0], &r[1])
    if err != nil {
@@ -24,18 +37,7 @@ func (r *Range) String() string {
 
 type Range [2]uint64
 
-func (d *Duration) UnmarshalText(data []byte) error {
-   var err error
-   d[0], err = time.ParseDuration(strings.ToLower(
-      strings.TrimPrefix(string(data), "PT"),
-   ))
-   if err != nil {
-      return err
-   }
-   return nil
-}
-
-type Duration [1]time.Duration
+///
 
 func (u *Url) UnmarshalText(data []byte) error {
    u[0] = &url.URL{}
