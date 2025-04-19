@@ -37,15 +37,6 @@ func (r *Range) String() string {
 
 type Range [2]uint64
 
-func (u *Url) UnmarshalText(data []byte) error {
-   u[0] = &url.URL{}
-   return u[0].UnmarshalBinary(data)
-}
-
-type Url [1]*url.URL
-
-///
-
 type Representation struct {
    Bandwidth         int     `xml:"bandwidth,attr"`
    BaseUrl           Url     `xml:"BaseURL"`
@@ -65,6 +56,15 @@ type Representation struct {
       IndexRange string `xml:"indexRange,attr"`
    }
 }
+
+func (u *Url) UnmarshalText(data []byte) error {
+   u[0] = &url.URL{}
+   return u[0].UnmarshalBinary(data)
+}
+
+type Url [1]*url.URL
+
+///
 
 func (a *AdaptationSet) set(period1 *Period) {
    a.period = period1
