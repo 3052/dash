@@ -10,6 +10,10 @@ import (
    "time"
 )
 
+func (a *AdaptationSet) set(period1 *Period) {
+   a.period = period1
+}
+
 func (d *Duration) UnmarshalText(data []byte) error {
    var err error
    d[0], err = time.ParseDuration(strings.ToLower(
@@ -65,10 +69,6 @@ func (u *Url) UnmarshalText(data []byte) error {
 type Url [1]*url.URL
 
 ///
-
-func (a *AdaptationSet) set(period1 *Period) {
-   a.period = period1
-}
 
 func (m *Mpd) Set(url2 *url.URL) {
    if m.BaseUrl[0] == nil {
