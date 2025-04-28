@@ -27,6 +27,13 @@ func (d *Duration) UnmarshalText(data []byte) error {
 
 type Duration [1]time.Duration
 
+func (m *Mpd) Set(url2 *url.URL) {
+   if m.BaseUrl[0] == nil {
+      m.BaseUrl[0] = &url.URL{}
+   }
+   m.BaseUrl[0] = url2.ResolveReference(m.BaseUrl[0])
+}
+
 func (r *Range) Set(data string) error {
    _, err := fmt.Sscanf(data, "%v-%v", &r[0], &r[1])
    if err != nil {
@@ -69,13 +76,6 @@ func (u *Url) UnmarshalText(data []byte) error {
 type Url [1]*url.URL
 
 ///
-
-func (m *Mpd) Set(url2 *url.URL) {
-   if m.BaseUrl[0] == nil {
-      m.BaseUrl[0] = &url.URL{}
-   }
-   m.BaseUrl[0] = url2.ResolveReference(m.BaseUrl[0])
-}
 
 func (p *Period) set(mpd1 *Mpd) {
    p.mpd = mpd1
