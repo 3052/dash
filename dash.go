@@ -81,15 +81,6 @@ type Representation struct {
    }
 }
 
-func (u *Url) UnmarshalText(data []byte) error {
-   u[0] = &url.URL{}
-   return u[0].UnmarshalBinary(data)
-}
-
-type Url [1]*url.URL
-
-///
-
 func (s *SegmentTemplate) set() {
    // dashif.org/Guidelines-TimingModel#addressing-simple
    if s.StartNumber == nil {
@@ -102,6 +93,15 @@ func (s *SegmentTemplate) set() {
       s.Timescale = &scale
    }
 }
+
+func (u *Url) UnmarshalText(data []byte) error {
+   u[0] = &url.URL{}
+   return u[0].UnmarshalBinary(data)
+}
+
+type Url [1]*url.URL
+
+///
 
 type SegmentList struct {
    Initialization struct {
