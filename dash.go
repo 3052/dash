@@ -81,6 +81,24 @@ type Representation struct {
    }
 }
 
+type SegmentList struct {
+   Initialization struct {
+      SourceUrl Url `xml:"sourceURL,attr"`
+   }
+   SegmentUrl []*struct {
+      Media Url `xml:"media,attr"`
+   } `xml:"SegmentURL"`
+}
+
+func (s *SegmentList) set(url2 *url.URL) {
+   s.Initialization.SourceUrl[0] = url2.ResolveReference(
+      s.Initialization.SourceUrl[0],
+   )
+   for _, segment := range s.SegmentUrl {
+      segment.Media[0] = url2.ResolveReference(segment.Media[0])
+   }
+}
+
 func (s *SegmentTemplate) set() {
    // dashif.org/Guidelines-TimingModel#addressing-simple
    if s.StartNumber == nil {
@@ -102,24 +120,6 @@ func (u *Url) UnmarshalText(data []byte) error {
 type Url [1]*url.URL
 
 ///
-
-type SegmentList struct {
-   Initialization struct {
-      SourceUrl Url `xml:"sourceURL,attr"`
-   }
-   SegmentUrl []*struct {
-      Media Url `xml:"media,attr"`
-   } `xml:"SegmentURL"`
-}
-
-func (s *SegmentList) set(url2 *url.URL) {
-   s.Initialization.SourceUrl[0] = url2.ResolveReference(
-      s.Initialization.SourceUrl[0],
-   )
-   for _, segment := range s.SegmentUrl {
-      segment.Media[0] = url2.ResolveReference(segment.Media[0])
-   }
-}
 
 func (r *Representation) set(adapt *AdaptationSet) {
    r.adaptation_set = adapt
