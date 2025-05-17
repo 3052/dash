@@ -10,6 +10,10 @@ import (
    "time"
 )
 
+func replace(s, old, new1 string) string {
+   return strings.Replace(s, old, new1, 1)
+}
+
 func (a *AdaptationSet) set(period1 *Period) {
    a.period = period1
 }
@@ -182,10 +186,6 @@ func (u *Url) UnmarshalText(data []byte) error {
 type Url [1]*url.URL
 
 ///
-
-func replace(s, old, new1 string) string {
-   return strings.Replace(s, old, new1, 1)
-}
 
 type ContentProtection struct {
    Pssh        string `xml:"pssh"`
