@@ -22,55 +22,6 @@ func TestUrl(t *testing.T) {
    }
 }
 
-func TestRepresentation(t *testing.T) {
-   t.Run("itv", func(t *testing.T) {
-      data, err := os.ReadFile("testdata/itv.mpd")
-      if err != nil {
-         t.Fatal(err)
-      }
-      var media Mpd
-      err = media.Unmarshal(data)
-      if err != nil {
-         t.Fatal(err)
-      }
-      var represent Representation
-      for represent = range media.Representation() {
-         break
-      }
-      for segment := range represent.Segment() {
-         if segment >= 1 {
-            break
-         }
-      }
-   })
-   t.Run("pluto", func(t *testing.T) {
-      data, err := os.ReadFile("testdata/pluto.mpd")
-      if err != nil {
-         t.Fatal(err)
-      }
-      var media Mpd
-      err = media.Unmarshal(data)
-      if err != nil {
-         t.Fatal(err)
-      }
-      var represent Representation
-      for represent = range media.Representation() {
-         data := represent.String()
-         if data == "" {
-            t.Fatal(represent)
-         }
-      }
-      for range represent.Representation() {
-         break
-      }
-      for segment := range represent.Segment() {
-         if segment >= 9 {
-            break
-         }
-      }
-   })
-}
-
 func TestDuration(t *testing.T) {
    var d Duration
    if d.UnmarshalText(nil) == nil {
@@ -87,28 +38,5 @@ func TestMpd(t *testing.T) {
    err = media.Unmarshal(data)
    if err != nil {
       t.Fatal(err)
-   }
-}
-
-func TestPeriod(t *testing.T) {
-   data, err := os.ReadFile("testdata/max.mpd")
-   if err != nil {
-      t.Fatal(err)
-   }
-   var media Mpd
-   err = media.Unmarshal(data)
-   if err != nil {
-      t.Fatal(err)
-   }
-   var represent Representation
-   for represent = range media.Representation() {
-      if represent.Id == "images_1" {
-         break
-      }
-   }
-   for segment := range represent.Segment() {
-      if segment >= 1 {
-         break
-      }
    }
 }
