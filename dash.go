@@ -101,52 +101,6 @@ func (r *Representation) set(adapt *AdaptationSet) {
    }
 }
 
-func (r *Representation) String() string {
-   var b []byte
-   if r.Width != nil {
-      b = fmt.Appendln(b, "width =", *r.Width)
-   }
-   if r.Height != nil {
-      b = fmt.Appendln(b, "height =", *r.Height)
-   }
-   b = fmt.Appendln(b, "bandwidth =", r.Bandwidth)
-   if r.Codecs != nil {
-      b = fmt.Appendln(b, "codecs =", *r.Codecs)
-   }
-   b = fmt.Appendln(b, "mimeType =", *r.MimeType)
-   if role := r.adaptation_set.Role; role != nil {
-      b = fmt.Appendln(b, "role =", role.Value)
-   }
-   if lang := r.adaptation_set.Lang; lang != "" {
-      b = fmt.Appendln(b, "lang =", lang)
-   }
-   if id := r.adaptation_set.period.Id; id != "" {
-      b = fmt.Appendln(b, "period =", id)
-   }
-   b = fmt.Append(b, "id = ", r.Id)
-   return string(b)
-}
-
-type Representation struct {
-   Bandwidth         int     `xml:"bandwidth,attr"`
-   BaseUrl           Url     `xml:"BaseURL"`
-   Codecs            *string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Id                string  `xml:"id,attr"`
-   MimeType          *string `xml:"mimeType,attr"`
-   Width             *int    `xml:"width,attr"`
-   Height            *int    `xml:"height,attr"`
-   adaptation_set    *AdaptationSet
-   SegmentTemplate   *SegmentTemplate
-   SegmentList       *SegmentList
-   SegmentBase       *struct {
-      Initialization struct {
-         Range string `xml:"range,attr"`
-      }
-      IndexRange string `xml:"indexRange,attr"`
-   }
-}
-
 type SegmentList struct {
    Initialization struct {
       SourceUrl Url `xml:"sourceURL,attr"`
@@ -388,5 +342,53 @@ func (r *Representation) Representation() iter.Seq[*Representation] {
             }
          }
       }
+   }
+}
+
+///
+
+func (r *Representation) String() string {
+   var b []byte
+   if r.Width != nil {
+      b = fmt.Appendln(b, "width =", *r.Width)
+   }
+   if r.Height != nil {
+      b = fmt.Appendln(b, "height =", *r.Height)
+   }
+   b = fmt.Appendln(b, "bandwidth =", r.Bandwidth)
+   if r.Codecs != nil {
+      b = fmt.Appendln(b, "codecs =", *r.Codecs)
+   }
+   b = fmt.Appendln(b, "mimeType =", *r.MimeType)
+   if role := r.adaptation_set.Role; role != nil {
+      b = fmt.Appendln(b, "role =", role.Value)
+   }
+   if lang := r.adaptation_set.Lang; lang != "" {
+      b = fmt.Appendln(b, "lang =", lang)
+   }
+   if id := r.adaptation_set.period.Id; id != "" {
+      b = fmt.Appendln(b, "period =", id)
+   }
+   b = fmt.Append(b, "id = ", r.Id)
+   return string(b)
+}
+
+type Representation struct {
+   Bandwidth         int64   `xml:"bandwidth,attr"`
+   BaseUrl           Url     `xml:"BaseURL"`
+   Codecs            *string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Id                string  `xml:"id,attr"`
+   MimeType          *string `xml:"mimeType,attr"`
+   Width             *int    `xml:"width,attr"`
+   Height            *int    `xml:"height,attr"`
+   adaptation_set    *AdaptationSet
+   SegmentTemplate   *SegmentTemplate
+   SegmentList       *SegmentList
+   SegmentBase       *struct {
+      Initialization struct {
+         Range string `xml:"range,attr"`
+      }
+      IndexRange string `xml:"indexRange,attr"`
    }
 }
