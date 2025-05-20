@@ -10,6 +10,20 @@ import (
    "time"
 )
 
+func (r *Range) Set(data string) error {
+   _, err := fmt.Sscanf(data, "%v-%v", &r[0], &r[1])
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
+func (r *Range) String() string {
+   return fmt.Sprint(r[0], "-", r[1])
+}
+
+type Range [2]uint64
+
 func replace(s, old, new1 string) string {
    return strings.Replace(s, old, new1, 1)
 }
@@ -27,6 +41,11 @@ func (d *Duration) UnmarshalText(data []byte) error {
       return err
    }
    return nil
+}
+
+type ContentProtection struct {
+   Pssh        string `xml:"pssh"`
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
 }
 
 type Duration [1]time.Duration
@@ -50,20 +69,6 @@ func (p *Period) set(mpd1 *Mpd) {
       p.Duration = &p.mpd.MediaPresentationDuration
    }
 }
-
-func (r *Range) Set(data string) error {
-   _, err := fmt.Sscanf(data, "%v-%v", &r[0], &r[1])
-   if err != nil {
-      return err
-   }
-   return nil
-}
-
-func (r *Range) String() string {
-   return fmt.Sprint(r[0], "-", r[1])
-}
-
-type Range [2]uint64
 
 func (r *Representation) set(adapt *AdaptationSet) {
    r.adaptation_set = adapt
@@ -140,11 +145,6 @@ func (u *Url) UnmarshalText(data []byte) error {
 type Url [1]*url.URL
 
 ///
-
-type ContentProtection struct {
-   Pssh        string `xml:"pssh"`
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-}
 
 func (m *Mpd) Unmarshal(data []byte) error {
    return xml.Unmarshal(data, m)
@@ -374,7 +374,7 @@ func (r *Representation) String() string {
 }
 
 type Representation struct {
-   Bandwidth         int64   `xml:"bandwidth,attr"`
+   Bandwidth         int     `xml:"bandwidth,attr"`
    BaseUrl           Url     `xml:"BaseURL"`
    Codecs            *string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
