@@ -10,6 +10,10 @@ import (
    "time"
 )
 
+func replace(s, old, new1 string) string {
+   return strings.Replace(s, old, new1, 1)
+}
+
 func (r *Range) Set(data string) error {
    _, err := fmt.Sscanf(data, "%v-%v", &r[0], &r[1])
    if err != nil {
@@ -24,9 +28,7 @@ func (r *Range) String() string {
 
 type Range [2]uint64
 
-func replace(s, old, new1 string) string {
-   return strings.Replace(s, old, new1, 1)
-}
+///
 
 func (a *AdaptationSet) set(period1 *Period) {
    a.period = period1
