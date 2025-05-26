@@ -10,6 +10,10 @@ import (
    "time"
 )
 
+func replace(s, old, new1 string) string {
+   return strings.Replace(s, old, new1, 1)
+}
+
 func (r *Representation) String() string {
    b := fmt.Appendln(nil, "bandwidth =", r.Bandwidth)
    if r.Width != nil {
@@ -35,9 +39,7 @@ func (r *Representation) String() string {
    return string(b)
 }
 
-func replace(s, old, new1 string) string {
-   return strings.Replace(s, old, new1, 1)
-}
+///
 
 func (a *AdaptationSet) set(period1 *Period) {
    a.period = period1
