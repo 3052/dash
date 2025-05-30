@@ -18,6 +18,11 @@ func (a *AdaptationSet) set(period1 *Period) {
    a.period = period1
 }
 
+type ContentProtection struct {
+   Pssh        string `xml:"pssh"`
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
+}
+
 func (d *Duration) UnmarshalText(data []byte) error {
    var err error
    d[0], err = time.ParseDuration(strings.ToLower(
@@ -29,10 +34,7 @@ func (d *Duration) UnmarshalText(data []byte) error {
    return nil
 }
 
-type ContentProtection struct {
-   Pssh        string `xml:"pssh"`
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-}
+///
 
 type Duration [1]time.Duration
 
