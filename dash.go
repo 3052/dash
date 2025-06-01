@@ -34,9 +34,17 @@ func (d *Duration) UnmarshalText(data []byte) error {
    return nil
 }
 
-///
-
 type Duration [1]time.Duration
+
+func (m *Mpd) Unmarshal(data []byte) error {
+   return xml.Unmarshal(data, m)
+}
+
+type Mpd struct {
+   BaseUrl                   Url      `xml:"BaseURL"`
+   MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
+   Period                    []Period
+}
 
 func (m *Mpd) Set(url2 *url.URL) {
    if m.BaseUrl[0] == nil {
@@ -125,15 +133,7 @@ func (s *SegmentTemplate) set() {
    }
 }
 
-func (m *Mpd) Unmarshal(data []byte) error {
-   return xml.Unmarshal(data, m)
-}
-
-type Mpd struct {
-   BaseUrl                   Url      `xml:"BaseURL"`
-   MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
-}
+///
 
 func (u *Url) UnmarshalText(data []byte) error {
    u[0] = &url.URL{}
