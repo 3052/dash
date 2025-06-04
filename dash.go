@@ -66,6 +66,47 @@ func (p *Period) set(mpd1 *Mpd) {
    }
 }
 
+// SegmentTemplate
+func (r *Representation) Segment() iter.Seq[int] {
+   template := r.SegmentTemplate
+   var address int
+   if template.Media.time_address() {
+      address = template.PresentationTimeOffset
+   } else {
+      address = *template.StartNumber
+   }
+   return func(yield func(int) bool) {
+      if template.EndNumber >= 1 {
+         for address <= template.EndNumber {
+            if !yield(address) {
+               return
+            }
+            address++
+         }
+      } else if template.SegmentTimeline != nil {
+         for _, segment := range template.SegmentTimeline.S {
+            for range 1 + segment.R {
+               if !yield(address) {
+                  return
+               }
+               if template.Media.time_address() {
+                  address += segment.D
+               } else {
+                  address++
+               }
+            }
+         }
+      } else {
+         for range r.adaptation_set.period.segment_count(template) {
+            if !yield(address) {
+               return
+            }
+            address++
+         }
+      }
+   }
+}
+
 func (r *Representation) set(adapt *AdaptationSet) {
    r.adaptation_set = adapt
    if base := r.adaptation_set.period.BaseUrl[0]; base != nil {
@@ -133,8 +174,6 @@ func (s *SegmentTemplate) set() {
    }
 }
 
-///
-
 func (u *Url) UnmarshalText(data []byte) error {
    u[0] = &url.URL{}
    return u[0].UnmarshalBinary(data)
@@ -142,46 +181,7 @@ func (u *Url) UnmarshalText(data []byte) error {
 
 type Url [1]*url.URL
 
-// SegmentTemplate
-func (r *Representation) Segment() iter.Seq[int] {
-   template := r.SegmentTemplate
-   var address int
-   if template.Media.time_address() {
-      address = template.PresentationTimeOffset
-   } else {
-      address = *template.StartNumber
-   }
-   return func(yield func(int) bool) {
-      if template.EndNumber >= 1 {
-         for address <= template.EndNumber {
-            if !yield(address) {
-               return
-            }
-            address++
-         }
-      } else if template.SegmentTimeline != nil {
-         for _, segment := range template.SegmentTimeline.S {
-            for range 1 + segment.R {
-               if !yield(address) {
-                  return
-               }
-               if template.Media.time_address() {
-                  address += segment.D
-               } else {
-                  address++
-               }
-            }
-         }
-      } else {
-         for range r.adaptation_set.period.segment_count(template) {
-            if !yield(address) {
-               return
-            }
-            address++
-         }
-      }
-   }
-}
+///
 
 // dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
 // SegmentCount = Ceil((AsSeconds(Period@duration)) /
