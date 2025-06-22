@@ -231,22 +231,22 @@ func (m Media) time_address() bool {
 
 type Initialization string
 
-func (i Initialization) Url(r *Representation) (*url.URL, error) {
-   data := replace(string(i), "$RepresentationID$", r.Id)
+func (i Initialization) Url(represent *Representation) (*url.URL, error) {
+   data := replace(string(i), "$RepresentationID$", represent.Id)
    url2, err := url.Parse(data)
    if err != nil {
       return nil, err
    }
-   if r.BaseUrl[0] != nil {
-      url2 = r.BaseUrl[0].ResolveReference(url2)
+   if represent.BaseUrl[0] != nil {
+      url2 = represent.BaseUrl[0].ResolveReference(url2)
    }
    return url2, nil
 }
 
 type Media string
 
-func (m Media) Url(r *Representation, address int) (*url.URL, error) {
-   data := replace(string(m), "$RepresentationID$", r.Id)
+func (m Media) Url(represent *Representation, address int) (*url.URL, error) {
+   data := replace(string(m), "$RepresentationID$", represent.Id)
    if m.time_address() {
       data = replace(data, "$Time$", fmt.Sprint(address))
    } else {
@@ -264,8 +264,8 @@ func (m Media) Url(r *Representation, address int) (*url.URL, error) {
    if err != nil {
       return nil, err
    }
-   if r.BaseUrl[0] != nil {
-      url2 = r.BaseUrl[0].ResolveReference(url2)
+   if represent.BaseUrl[0] != nil {
+      url2 = represent.BaseUrl[0].ResolveReference(url2)
    }
    return url2, nil
 }
