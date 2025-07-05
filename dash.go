@@ -1,7 +1,6 @@
 package dash
 
 import (
-   "encoding/xml"
    "fmt"
    "iter"
    "math"
@@ -9,6 +8,24 @@ import (
    "strings"
    "time"
 )
+
+type Mpd struct {
+   BaseUrl                   Url      `xml:"BaseURL"`
+   MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
+   Period                    []Period
+}
+
+type Url [1]*url.URL
+
+type Duration [1]time.Duration
+
+type Period struct {
+   BaseUrl       Url       `xml:"BaseURL"`
+   Id            string    `xml:"id,attr"`
+   Duration      *Duration `xml:"duration,attr"`
+   AdaptationSet []AdaptationSet
+   mpd           *Mpd
+}
 
 type Representation struct {
    Bandwidth         int     `xml:"bandwidth,attr"`
@@ -57,31 +74,6 @@ func (a *AdaptationSet) GetRole() string {
    return ""
 }
 
-func (r *Representation) String() string {
-   b := fmt.Appendln(nil, "bandwidth =", r.Bandwidth)
-   if r.Width != nil {
-      b = fmt.Appendln(b, "width =", *r.Width)
-   }
-   if r.Height != nil {
-      b = fmt.Appendln(b, "height =", *r.Height)
-   }
-   if r.Codecs != nil {
-      b = fmt.Appendln(b, "codecs =", *r.Codecs)
-   }
-   b = fmt.Appendln(b, "mimeType =", *r.MimeType)
-   if role := r.adaptation_set.Role; role != nil {
-      b = fmt.Appendln(b, "role =", role.Value)
-   }
-   if lang := r.adaptation_set.Lang; lang != "" {
-      b = fmt.Appendln(b, "lang =", lang)
-   }
-   if id := r.adaptation_set.period.Id; id != "" {
-      b = fmt.Appendln(b, "period =", id)
-   }
-   b = fmt.Append(b, "id = ", r.Id)
-   return string(b)
-}
-
 type ContentProtection struct {
    Pssh        string `xml:"pssh"`
    SchemeIdUri string `xml:"schemeIdUri,attr"`
@@ -89,18 +81,6 @@ type ContentProtection struct {
 
 func replace(s, old, newNew string) string {
    return strings.Replace(s, old, newNew, 1)
-}
-
-type Duration [1]time.Duration
-
-func (m *Mpd) Unmarshal(data []byte) error {
-   return xml.Unmarshal(data, m)
-}
-
-type Mpd struct {
-   BaseUrl                   Url      `xml:"BaseURL"`
-   MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
 }
 
 func (d *Duration) UnmarshalText(data []byte) error {
@@ -112,14 +92,6 @@ func (d *Duration) UnmarshalText(data []byte) error {
       return err
    }
    return nil
-}
-
-type Period struct {
-   AdaptationSet []AdaptationSet
-   BaseUrl       Url       `xml:"BaseURL"`
-   Duration      *Duration `xml:"duration,attr"`
-   Id            string    `xml:"id,attr"`
-   mpd           *Mpd
 }
 
 // SegmentTemplate
@@ -238,8 +210,6 @@ func (s *SegmentTemplate) set() {
       s.Timescale = &scale
    }
 }
-
-type Url [1]*url.URL
 
 // SegmentTemplate
 // dashif.org/Guidelines-TimingModel#addressing-explicit
