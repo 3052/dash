@@ -1,5 +1,11 @@
 package dash
 
+// 18.3. Explicit addressing (SegmentTemplate with SegmentTimeline)
+// dashif.org/Guidelines-TimingModel#addressing-explicit
+
+// 18.4. Simple addressing (SegmentTemplate without SegmentTimeline)
+// dashif.org/Guidelines-TimingModel#addressing-simple
+
 func (*Mpd) Stream() []Stream {
    return nil
 }
