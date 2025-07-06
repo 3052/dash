@@ -1,10 +1,21 @@
 package dash
 
+func (*Mpd) Stream() []Stream {
+   return nil
+}
+
+type Mpd struct {
+   BaseUrl                   string `xml:"BaseURL"`
+   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
+   Period                    []Period
+}
+
 // stream represents a simplified view of a media stream's characteristics,
 // combining information typically found across Period, AdaptationSet, and
 // Representation types in a DASH MPD.
 type Stream struct {
    Bandwidth int
+   Segment []string
 }
 
 type Representation struct {
@@ -22,12 +33,6 @@ type Representation struct {
       IndexRange string `xml:"indexRange,attr"`
    }
    BaseUrl string `xml:"BaseURL"`
-}
-
-type Mpd struct {
-   BaseUrl                   string `xml:"BaseURL"`
-   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
 }
 
 type Period struct {

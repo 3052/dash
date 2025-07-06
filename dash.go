@@ -95,51 +95,6 @@ func (m Media) Url(represent *Representation, address int) (*url.URL, error) {
    return urlVar, nil
 }
 
-func (m *Mpd) Representation() iter.Seq[*Representation] {
-   return func(yield func(*Representation) bool) {
-      id := map[string]struct{}{}
-      for _, periodVar := range m.Period {
-         for _, adapt := range periodVar.AdaptationSet {
-            for _, represent := range adapt.Representation {
-               _, ok := id[represent.Id]
-               if !ok {
-                  if adapt.period == nil {
-                     periodVar.set(m)
-                     adapt.set(&periodVar)
-                  }
-                  represent.set(&adapt)
-                  if !yield(&represent) {
-                     return
-                  }
-                  id[represent.Id] = struct{}{}
-               }
-            }
-         }
-      }
-   }
-}
-
-func (r *Representation) Representation() iter.Seq[*Representation] {
-   return func(yield func(*Representation) bool) {
-      for _, periodVar := range r.adaptation_set.period.mpd.Period {
-         for _, adapt := range periodVar.AdaptationSet {
-            for _, represent := range adapt.Representation {
-               if represent.Id == r.Id {
-                  if adapt.period == nil {
-                     periodVar.set(r.adaptation_set.period.mpd)
-                     adapt.set(&periodVar)
-                  }
-                  represent.set(&adapt)
-                  if !yield(&represent) {
-                     return
-                  }
-               }
-            }
-         }
-      }
-   }
-}
-
 // dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
 // SegmentCount = Ceil((AsSeconds(Period@duration)) /
 // (SegmentTemplate@duration / SegmentTemplate@timescale))
@@ -163,111 +118,6 @@ func (p *Period) set(mpdVar *Mpd) {
    }
    if p.Duration == nil {
       p.Duration = &p.mpd.MediaPresentationDuration
-   }
-}
-func (d *Duration) UnmarshalText(data []byte) error {
-   var err error
-   d[0], err = time.ParseDuration(strings.ToLower(
-      strings.TrimPrefix(string(data), "PT"),
-   ))
-   if err != nil {
-      return err
-   }
-   return nil
-}
-
-type Duration [1]time.Duration
-
-type Mpd struct {
-   BaseUrl                   Url      `xml:"BaseURL"`
-   MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
-}
-
-type Url [1]*url.URL
-
-type Period struct {
-   BaseUrl       Url       `xml:"BaseURL"`
-   Id            string    `xml:"id,attr"`
-   Duration      *Duration `xml:"duration,attr"`
-   AdaptationSet []AdaptationSet
-   mpd           *Mpd
-}
-
-func (r *Representation) GetAdaptationSet() *AdaptationSet {
-   return r.adaptation_set
-}
-
-type AdaptationSet struct {
-   ContentProtection []ContentProtection
-   Lang              string `xml:"lang,attr"`
-   MimeType          string `xml:"mimeType,attr"`
-   Representation    []Representation
-   Role              *struct {
-      Value string `xml:"value,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-   period          *Period
-   // pointers for Representation.String
-   Codecs *string `xml:"codecs,attr"`
-   Height *int    `xml:"height,attr"`
-   Width  *int    `xml:"width,attr"`
-}
-
-func (a *AdaptationSet) GetRole() string {
-   if a.Role != nil {
-      return a.Role.Value
-   }
-   return ""
-}
-
-type ContentProtection struct {
-   Pssh        string `xml:"pssh"`
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-}
-
-func replace(s, old, newVar string) string {
-   return strings.Replace(s, old, newVar, 1)
-}
-
-// SegmentTemplate
-func (r *Representation) Segment() iter.Seq[int] {
-   template := r.SegmentTemplate
-   var address int
-   if template.Media.time_address() {
-      address = template.PresentationTimeOffset
-   } else {
-      address = *template.StartNumber
-   }
-   return func(yield func(int) bool) {
-      if template.EndNumber >= 1 {
-         for address <= template.EndNumber {
-            if !yield(address) {
-               return
-            }
-            address++
-         }
-      } else if template.SegmentTimeline != nil {
-         for _, segment := range template.SegmentTimeline.S {
-            for range 1 + segment.R {
-               if !yield(address) {
-                  return
-               }
-               if template.Media.time_address() {
-                  address += segment.D
-               } else {
-                  address++
-               }
-            }
-         }
-      } else {
-         for range r.adaptation_set.period.segment_count(template) {
-            if !yield(address) {
-               return
-            }
-            address++
-         }
-      }
    }
 }
 
@@ -335,14 +185,16 @@ type SegmentTemplate struct {
 }
 
 type Representation struct {
+   SegmentTemplate   *SegmentTemplate
+   SegmentList       *SegmentList
    SegmentBase       *struct {
       Initialization struct {
          Range string `xml:"range,attr"`
       }
       IndexRange string `xml:"indexRange,attr"`
    }
-   Bandwidth         int     `xml:"bandwidth,attr"`
    BaseUrl           Url     `xml:"BaseURL"`
+   Bandwidth         int     `xml:"bandwidth,attr"`
    Codecs            *string `xml:"codecs,attr"`
    ContentProtection []ContentProtection
    Id                string  `xml:"id,attr"`
@@ -350,6 +202,157 @@ type Representation struct {
    Width             *int    `xml:"width,attr"`
    Height            *int    `xml:"height,attr"`
    adaptation_set    *AdaptationSet
-   SegmentTemplate   *SegmentTemplate
-   SegmentList       *SegmentList
+}
+
+func (d *Duration) UnmarshalText(data []byte) error {
+   var err error
+   d[0], err = time.ParseDuration(strings.ToLower(
+      strings.TrimPrefix(string(data), "PT"),
+   ))
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
+type Duration [1]time.Duration
+
+type Mpd struct {
+   BaseUrl                   Url      `xml:"BaseURL"`
+   MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
+   Period                    []Period
+}
+
+type Url [1]*url.URL
+
+type Period struct {
+   BaseUrl       Url       `xml:"BaseURL"`
+   Id            string    `xml:"id,attr"`
+   Duration      *Duration `xml:"duration,attr"`
+   AdaptationSet []AdaptationSet
+   mpd           *Mpd
+}
+
+func (r *Representation) GetAdaptationSet() *AdaptationSet {
+   return r.adaptation_set
+}
+
+type AdaptationSet struct {
+   ContentProtection []ContentProtection
+   Lang              string `xml:"lang,attr"`
+   MimeType          string `xml:"mimeType,attr"`
+   Representation    []Representation
+   Role              *struct {
+      Value string `xml:"value,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   period          *Period
+   // pointers for Representation.String
+   Codecs *string `xml:"codecs,attr"`
+   Height *int    `xml:"height,attr"`
+   Width  *int    `xml:"width,attr"`
+}
+
+func (a *AdaptationSet) GetRole() string {
+   if a.Role != nil {
+      return a.Role.Value
+   }
+   return ""
+}
+
+type ContentProtection struct {
+   Pssh        string `xml:"pssh"`
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
+}
+
+func replace(s, old, newVar string) string {
+   return strings.Replace(s, old, newVar, 1)
+}
+
+///
+
+func (m *Mpd) Representation() iter.Seq[*Representation] {
+   return func(yield func(*Representation) bool) {
+      id := map[string]struct{}{}
+      for _, periodVar := range m.Period {
+         for _, adapt := range periodVar.AdaptationSet {
+            for _, represent := range adapt.Representation {
+               _, ok := id[represent.Id]
+               if !ok {
+                  if adapt.period == nil {
+                     periodVar.set(m)
+                     adapt.set(&periodVar)
+                  }
+                  represent.set(&adapt)
+                  if !yield(&represent) {
+                     return
+                  }
+                  id[represent.Id] = struct{}{}
+               }
+            }
+         }
+      }
+   }
+}
+
+func (r *Representation) Representation() iter.Seq[*Representation] {
+   return func(yield func(*Representation) bool) {
+      for _, periodVar := range r.adaptation_set.period.mpd.Period {
+         for _, adapt := range periodVar.AdaptationSet {
+            for _, represent := range adapt.Representation {
+               if represent.Id == r.Id {
+                  if adapt.period == nil {
+                     periodVar.set(r.adaptation_set.period.mpd)
+                     adapt.set(&periodVar)
+                  }
+                  represent.set(&adapt)
+                  if !yield(&represent) {
+                     return
+                  }
+               }
+            }
+         }
+      }
+   }
+}
+
+// SegmentTemplate
+func (r *Representation) Segment() iter.Seq[int] {
+   template := r.SegmentTemplate
+   var address int
+   if template.Media.time_address() {
+      address = template.PresentationTimeOffset
+   } else {
+      address = *template.StartNumber
+   }
+   return func(yield func(int) bool) {
+      if template.EndNumber >= 1 {
+         for address <= template.EndNumber {
+            if !yield(address) {
+               return
+            }
+            address++
+         }
+      } else if template.SegmentTimeline != nil {
+         for _, segment := range template.SegmentTimeline.S {
+            for range 1 + segment.R {
+               if !yield(address) {
+                  return
+               }
+               if template.Media.time_address() {
+                  address += segment.D
+               } else {
+                  address++
+               }
+            }
+         }
+      } else {
+         for range r.adaptation_set.period.segment_count(template) {
+            if !yield(address) {
+               return
+            }
+            address++
+         }
+      }
+   }
 }
