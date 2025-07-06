@@ -20,6 +20,8 @@ func (d *Duration) UnmarshalText(data []byte) error {
    return nil
 }
 
+type Duration [1]time.Duration
+
 type Mpd struct {
    BaseUrl                   Url      `xml:"BaseURL"`
    MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
@@ -28,7 +30,7 @@ type Mpd struct {
 
 type Url [1]*url.URL
 
-type Duration [1]time.Duration
+///
 
 type Period struct {
    BaseUrl       Url       `xml:"BaseURL"`
@@ -90,8 +92,8 @@ type ContentProtection struct {
    SchemeIdUri string `xml:"schemeIdUri,attr"`
 }
 
-func replace(s, old, newNew string) string {
-   return strings.Replace(s, old, newNew, 1)
+func replace(s, old, newVar string) string {
+   return strings.Replace(s, old, newVar, 1)
 }
 
 // SegmentTemplate
@@ -227,36 +229,36 @@ func (u *Url) UnmarshalText(data []byte) error {
    return u[0].UnmarshalBinary(data)
 }
 
-func (a *AdaptationSet) set(newPeriod *Period) {
-   a.period = newPeriod
+func (a *AdaptationSet) set(periodVar *Period) {
+   a.period = periodVar
 }
 
-func (m *Mpd) Set(newUrl *url.URL) {
+func (m *Mpd) Set(urlVar *url.URL) {
    if m.BaseUrl[0] == nil {
       m.BaseUrl[0] = &url.URL{}
    }
-   m.BaseUrl[0] = newUrl.ResolveReference(m.BaseUrl[0])
+   m.BaseUrl[0] = urlVar.ResolveReference(m.BaseUrl[0])
 }
 
-func (s *SegmentList) set(newUrl *url.URL) {
-   s.Initialization.SourceUrl[0] = newUrl.ResolveReference(
+func (s *SegmentList) set(urlVar *url.URL) {
+   s.Initialization.SourceUrl[0] = urlVar.ResolveReference(
       s.Initialization.SourceUrl[0],
    )
    for _, segment := range s.SegmentUrl {
-      segment.Media[0] = newUrl.ResolveReference(segment.Media[0])
+      segment.Media[0] = urlVar.ResolveReference(segment.Media[0])
    }
 }
 
 func (i Initialization) Url(represent *Representation) (*url.URL, error) {
    data := replace(string(i), "$RepresentationID$", represent.Id)
-   newUrl, err := url.Parse(data)
+   urlVar, err := url.Parse(data)
    if err != nil {
       return nil, err
    }
    if represent.BaseUrl[0] != nil {
-      newUrl = represent.BaseUrl[0].ResolveReference(newUrl)
+      urlVar = represent.BaseUrl[0].ResolveReference(urlVar)
    }
-   return newUrl, nil
+   return urlVar, nil
 }
 
 func (m Media) Url(represent *Representation, address int) (*url.URL, error) {
@@ -274,27 +276,27 @@ func (m Media) Url(represent *Representation, address int) (*url.URL, error) {
       data = replace(data, "$Number%08d$", fmt.Sprintf("%08d", address))
       data = replace(data, "$Number%09d$", fmt.Sprintf("%09d", address))
    }
-   newUrl, err := url.Parse(data)
+   urlVar, err := url.Parse(data)
    if err != nil {
       return nil, err
    }
    if represent.BaseUrl[0] != nil {
-      newUrl = represent.BaseUrl[0].ResolveReference(newUrl)
+      urlVar = represent.BaseUrl[0].ResolveReference(urlVar)
    }
-   return newUrl, nil
+   return urlVar, nil
 }
 
 func (m *Mpd) Representation() iter.Seq[*Representation] {
    return func(yield func(*Representation) bool) {
       id := map[string]struct{}{}
-      for _, newPeriod := range m.Period {
-         for _, adapt := range newPeriod.AdaptationSet {
+      for _, periodVar := range m.Period {
+         for _, adapt := range periodVar.AdaptationSet {
             for _, represent := range adapt.Representation {
                _, ok := id[represent.Id]
                if !ok {
                   if adapt.period == nil {
-                     newPeriod.set(m)
-                     adapt.set(&newPeriod)
+                     periodVar.set(m)
+                     adapt.set(&periodVar)
                   }
                   represent.set(&adapt)
                   if !yield(&represent) {
@@ -310,13 +312,13 @@ func (m *Mpd) Representation() iter.Seq[*Representation] {
 
 func (r *Representation) Representation() iter.Seq[*Representation] {
    return func(yield func(*Representation) bool) {
-      for _, newPeriod := range r.adaptation_set.period.mpd.Period {
-         for _, adapt := range newPeriod.AdaptationSet {
+      for _, periodVar := range r.adaptation_set.period.mpd.Period {
+         for _, adapt := range periodVar.AdaptationSet {
             for _, represent := range adapt.Representation {
                if represent.Id == r.Id {
                   if adapt.period == nil {
-                     newPeriod.set(r.adaptation_set.period.mpd)
-                     adapt.set(&newPeriod)
+                     periodVar.set(r.adaptation_set.period.mpd)
+                     adapt.set(&periodVar)
                   }
                   represent.set(&adapt)
                   if !yield(&represent) {
@@ -338,12 +340,12 @@ func (p *Period) segment_count(template *SegmentTemplate) int64 {
    // kanopy
    // max
    // paramount
-   newDuration := float64(template.Duration) / float64(*template.Timescale)
-   return int64(math.Ceil(p.Duration[0].Seconds() / newDuration))
+   durationVar := float64(template.Duration) / float64(*template.Timescale)
+   return int64(math.Ceil(p.Duration[0].Seconds() / durationVar))
 }
 
-func (p *Period) set(newMpd *Mpd) {
-   p.mpd = newMpd
+func (p *Period) set(mpdVar *Mpd) {
+   p.mpd = mpdVar
    if base := p.mpd.BaseUrl[0]; base != nil {
       if p.BaseUrl[0] == nil {
          p.BaseUrl[0] = &url.URL{}

@@ -1,94 +1,34 @@
 package dash
 
-import (
-   "net/url"
-   "strings"
-   "time"
-)
-
-func (d *Duration) UnmarshalText(data []byte) error {
-   var err error
-   d[0], err = time.ParseDuration(strings.ToLower(
-      strings.TrimPrefix(string(data), "PT"),
-   ))
-   if err != nil {
-      return err
-   }
-   return nil
-}
-
 type Mpd struct {
-   BaseUrl                   Url      `xml:"BaseURL"`
-   MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
+   BaseUrl                   string      `xml:"BaseURL"`
+   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
    Period                    []Period
 }
 
-type Url [1]*url.URL
-
-type Duration [1]time.Duration
-
 type Period struct {
-   BaseUrl       Url       `xml:"BaseURL"`
-   Id            string    `xml:"id,attr"`
-   Duration      *Duration `xml:"duration,attr"`
-   
    AdaptationSet []AdaptationSet
+   BaseUrl       string       `xml:"BaseURL"`
+   Duration      string `xml:"duration,attr"`
+   Id            string    `xml:"id,attr"`
 }
 
 type AdaptationSet struct {
+   Codecs *string `xml:"codecs,attr"`
+   Height *int    `xml:"height,attr"`
    Lang              string `xml:"lang,attr"`
    MimeType          string `xml:"mimeType,attr"`
+   Representation    []Representation
    Role              *struct {
       Value string `xml:"value,attr"`
    }
-   Codecs *string `xml:"codecs,attr"`
-   Height *int    `xml:"height,attr"`
-   Width  *int    `xml:"width,attr"`
-   ContentProtection []ContentProtection
-   Representation    []Representation
    SegmentTemplate *SegmentTemplate
-}
-
-type ContentProtection struct {
-   Pssh        string `xml:"pssh"`
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-}
-
-type Initialization string
-
-type Media string
-
-type SegmentTemplate struct {
-   EndNumber              int            `xml:"endNumber,attr"`
-   Initialization         Initialization `xml:"initialization,attr"`
-   Media                  Media          `xml:"media,attr"`
-   PresentationTimeOffset int            `xml:"presentationTimeOffset,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D int `xml:"d,attr"` // duration
-         R int `xml:"r,attr"` // repeat
-      }
-   }
-   StartNumber *int `xml:"startNumber,attr"`
-   Duration    int  `xml:"duration,attr"`
-   // This can be any frequency but typically is the media clock frequency of
-   // one of the media streams (or a positive integer multiple thereof).
-   Timescale *int `xml:"timescale,attr"`
-}
-
-type SegmentList struct {
-   Initialization struct {
-      SourceUrl Url `xml:"sourceURL,attr"`
-   }
-   SegmentUrl []*struct {
-      Media Url `xml:"media,attr"`
-   } `xml:"SegmentURL"`
+   Width  *int    `xml:"width,attr"`
 }
 
 type Representation struct {
    Bandwidth         int     `xml:"bandwidth,attr"`
    Codecs            *string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
    Id                string  `xml:"id,attr"`
    MimeType          *string `xml:"mimeType,attr"`
    Width             *int    `xml:"width,attr"`
@@ -100,6 +40,23 @@ type Representation struct {
       }
       IndexRange string `xml:"indexRange,attr"`
    }
-   BaseUrl           Url     `xml:"BaseURL"`
-   SegmentList       *SegmentList
+   BaseUrl           string     `xml:"BaseURL"`
+}
+
+type SegmentTemplate struct {
+   Duration    int  `xml:"duration,attr"`
+   EndNumber              int            `xml:"endNumber,attr"`
+   Initialization         string `xml:"initialization,attr"`
+   Media                  string          `xml:"media,attr"`
+   PresentationTimeOffset int            `xml:"presentationTimeOffset,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D int `xml:"d,attr"` // duration
+         R int `xml:"r,attr"` // repeat
+      }
+   }
+   StartNumber *int `xml:"startNumber,attr"`
+   // This can be any frequency but typically is the media clock frequency of
+   // one of the media streams (or a positive integer multiple thereof).
+   Timescale *int `xml:"timescale,attr"`
 }

@@ -2,6 +2,7 @@ package dash
 
 import (
    "encoding/xml"
+   "fmt"
    "os"
    "testing"
 )
@@ -11,9 +12,10 @@ func Test(t *testing.T) {
    if err != nil {
       t.Fatal(err)
    }
-   var newMpd Mpd
-   err = xml.Unmarshal(data, &newMpd)
+   var mpdVar Mpd
+   err = xml.Unmarshal(data, &mpdVar)
    if err != nil {
       t.Fatal(err)
    }
+   fmt.Printf("%+v\n", mpdVar)
 }
