@@ -9,6 +9,17 @@ import (
    "time"
 )
 
+func (d *Duration) UnmarshalText(data []byte) error {
+   var err error
+   d[0], err = time.ParseDuration(strings.ToLower(
+      strings.TrimPrefix(string(data), "PT"),
+   ))
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
 type Mpd struct {
    BaseUrl                   Url      `xml:"BaseURL"`
    MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
@@ -81,17 +92,6 @@ type ContentProtection struct {
 
 func replace(s, old, newNew string) string {
    return strings.Replace(s, old, newNew, 1)
-}
-
-func (d *Duration) UnmarshalText(data []byte) error {
-   var err error
-   d[0], err = time.ParseDuration(strings.ToLower(
-      strings.TrimPrefix(string(data), "PT"),
-   ))
-   if err != nil {
-      return err
-   }
-   return nil
 }
 
 // SegmentTemplate

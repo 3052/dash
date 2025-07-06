@@ -2,8 +2,20 @@ package dash
 
 import (
    "net/url"
+   "strings"
    "time"
 )
+
+func (d *Duration) UnmarshalText(data []byte) error {
+   var err error
+   d[0], err = time.ParseDuration(strings.ToLower(
+      strings.TrimPrefix(string(data), "PT"),
+   ))
+   if err != nil {
+      return err
+   }
+   return nil
+}
 
 type Mpd struct {
    BaseUrl                   Url      `xml:"BaseURL"`
