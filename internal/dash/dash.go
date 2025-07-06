@@ -3,7 +3,7 @@ package dash
 // stream represents a simplified view of a media stream's characteristics,
 // combining information typically found across Period, AdaptationSet, and
 // Representation types in a DASH MPD.
-type stream struct {
+type Stream struct {
    Bandwidth int
 }
 
