@@ -6,14 +6,6 @@ import (
    "time"
 )
 
-// Media represents the media attribute string.
-func (m Media) time_address() bool {
-   return strings.Contains(string(m), "$Time$")
-}
-
-// Media represents the media attribute string.
-type Media string
-
 type Duration [1]time.Duration
 
 func (s *SegmentTemplate) Segment(periodVar *Period) []int {
@@ -21,7 +13,7 @@ func (s *SegmentTemplate) Segment(periodVar *Period) []int {
       return s.byEndNumber()
    }
    if s.SegmentTimeline != nil {
-      if s.Media.time_address() {
+      if strings.Contains(s.Media, "$Time$") {
          return s.byTimelineTimeAddress()
       }
       return s.byTimelineNumberAddress()
@@ -145,7 +137,7 @@ type SegmentTemplate struct {
    Duration               int    `xml:"duration,attr"`
    EndNumber              int    `xml:"endNumber,attr"`
    Initialization         string `xml:"initialization,attr"`
-   Media                  Media  `xml:"media,attr"`
+   Media                  string  `xml:"media,attr"`
    PresentationTimeOffset int    `xml:"presentationTimeOffset,attr"`
    SegmentTimeline        *struct {
       S []struct {
