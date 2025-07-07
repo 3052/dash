@@ -9,6 +9,19 @@ import (
    "time"
 )
 
+func (s *SegmentTemplate) set() {
+   // dashif.org/Guidelines-TimingModel#addressing-simple
+   if s.StartNumber == nil {
+      start := 1
+      s.StartNumber = &start
+   }
+   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
+   if s.Timescale == nil {
+      scale := 1
+      s.Timescale = &scale
+   }
+}
+
 type SegmentTemplate struct {
    EndNumber              int            `xml:"endNumber,attr"`
    Initialization         Initialization `xml:"initialization,attr"`
@@ -66,18 +79,6 @@ func (s *SegmentTemplate) Segment(periodVar *Period) iter.Seq[int] {
    }
 }
 
-func (s *SegmentTemplate) set() {
-   // dashif.org/Guidelines-TimingModel#addressing-simple
-   if s.StartNumber == nil {
-      start := 1
-      s.StartNumber = &start
-   }
-   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
-   if s.Timescale == nil {
-      scale := 1
-      s.Timescale = &scale
-   }
-}
 // dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
 // SegmentCount = Ceil((AsSeconds(Period@duration)) /
 // (SegmentTemplate@duration / SegmentTemplate@timescale))
