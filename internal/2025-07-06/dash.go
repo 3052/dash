@@ -1,29 +1,9 @@
-package dash
-
-import (
-   "math"
-   "strings"
-   "time"
-)
-
-type Representation struct {
-   Bandwidth       int     `xml:"bandwidth,attr"`
-   Codecs          *string `xml:"codecs,attr"`
-   Id              string  `xml:"id,attr"`
-   MimeType        *string `xml:"mimeType,attr"`
-   Width           *int    `xml:"width,attr"`
-   Height          *int    `xml:"height,attr"`
-   BaseUrl         string  `xml:"BaseURL"`
-   SegmentTemplate *SegmentTemplate
-   SegmentList     *SegmentList
-   SegmentBase     *SegmentBase
-}
-
-type SegmentBase struct {
-   Initialization struct {
-      Range string `xml:"range,attr"`
+func (s *SegmentTemplate) segments(periodVar *Period) []string {
+   var segment []string
+   for _, number := range s.numbers(periodVar) {
+      segment = append(segment, strconv.Itoa(number))
    }
-   IndexRange string `xml:"indexRange,attr"`
+   return segment
 }
 
 type SegmentTemplate struct {
@@ -70,6 +50,14 @@ type AdaptationSet struct {
    }
    SegmentTemplate *SegmentTemplate
    Width           *int `xml:"width,attr"`
+}
+
+// stream represents a simplified view of a media stream's characteristics,
+// combining information typically found across Period, AdaptationSet, and
+// Representation types in a DASH MPD.
+type Stream struct {
+   Bandwidth int
+   Segment   []string
 }
 
 // with current data this always uses number addressing
@@ -127,6 +115,10 @@ func (s *SegmentTemplate) byTimelineTime() []int {
    return numbers
 }
 
+func (*SegmentBase) segments() []string {
+   return nil
+}
+
 type SegmentList struct {
    Initialization struct {
       SourceUrl string `xml:"sourceURL,attr"`
@@ -136,7 +128,30 @@ type SegmentList struct {
    } `xml:"SegmentURL"`
 }
 
-func (s *SegmentTemplate) Numbers(periodVar *Period) []int {
+func (s *SegmentList) segments() []string {
+   var segments []string
+   for _, segment := range s.SegmentUrl {
+      segments = append(segments, segment.Media)
+   }
+   return segments
+}
+
+func (r *Representation) Segments(
+   adapt *AdaptationSet, periodVar *Period,
+) []string {
+   if r.SegmentBase != nil {
+      return r.SegmentBase.segments()
+   }
+   if r.SegmentList != nil {
+      return r.SegmentList.segments()
+   }
+   if r.SegmentTemplate != nil {
+      return r.SegmentTemplate.segments(periodVar)
+   }
+   return adapt.SegmentTemplate.segments(periodVar)
+}
+
+func (s *SegmentTemplate) numbers(periodVar *Period) []int {
    if s.EndNumber >= 1 {
       return s.byEndNumber()
    }
