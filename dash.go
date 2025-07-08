@@ -290,18 +290,16 @@ type Period struct {
    mpd           *Mpd
 }
 
-///
-
 type AdaptationSet struct {
+   SegmentTemplate   *SegmentTemplate
+   Representation    []Representation
    ContentProtection []ContentProtection
    Lang              string `xml:"lang,attr"`
    MimeType          string `xml:"mimeType,attr"`
-   Representation    []Representation
    Role              *struct {
       Value string `xml:"value,attr"`
    }
-   SegmentTemplate *SegmentTemplate
-   period          *Period
+   period *Period
    // pointers for Representation.String
    Codecs *string `xml:"codecs,attr"`
    Height *int    `xml:"height,attr"`
@@ -336,9 +334,9 @@ type SegmentList struct {
 }
 
 type Representation struct {
-   SegmentTemplate   *SegmentTemplate
-   SegmentList       *SegmentList
-   SegmentBase       *struct {
+   SegmentTemplate *SegmentTemplate
+   SegmentList     *SegmentList
+   SegmentBase     *struct {
       Initialization struct {
          Range string `xml:"range,attr"`
       }

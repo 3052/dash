@@ -1,14 +1,71 @@
 package dash
 
 import (
-   "iter"
    "math"
    "strings"
    "time"
 )
 
-func (m *Mpd) Stream() []Stream {
-   return nil
+type Representation struct {
+   Bandwidth       int     `xml:"bandwidth,attr"`
+   Codecs          *string `xml:"codecs,attr"`
+   Id              string  `xml:"id,attr"`
+   MimeType        *string `xml:"mimeType,attr"`
+   Width           *int    `xml:"width,attr"`
+   Height          *int    `xml:"height,attr"`
+   BaseUrl         string  `xml:"BaseURL"`
+   SegmentTemplate *SegmentTemplate
+   SegmentList     *SegmentList
+   SegmentBase     *SegmentBase
+}
+
+type SegmentBase struct {
+   Initialization struct {
+      Range string `xml:"range,attr"`
+   }
+   IndexRange string `xml:"indexRange,attr"`
+}
+
+type SegmentList struct {
+   Initialization struct {
+      SourceUrl string `xml:"sourceURL,attr"`
+   }
+   SegmentUrl []*struct {
+      Media string `xml:"media,attr"`
+   } `xml:"SegmentURL"`
+}
+
+type SegmentTemplate struct {
+   Duration               int    `xml:"duration,attr"`
+   EndNumber              int    `xml:"endNumber,attr"`
+   Initialization         string `xml:"initialization,attr"`
+   Media                  string `xml:"media,attr"`
+   PresentationTimeOffset int    `xml:"presentationTimeOffset,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D int `xml:"d,attr"` // duration
+         R int `xml:"r,attr"` // repeat
+      }
+   }
+   StartNumber *int `xml:"startNumber,attr"`
+   // This can be any frequency but typically is the media clock frequency of
+   // one of the media streams (or a positive integer multiple thereof).
+   Timescale *int `xml:"timescale,attr"`
+}
+
+type Duration [1]time.Duration
+
+type Mpd struct {
+   BaseUrl                   string `xml:"BaseURL"`
+   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
+   Period                    []Period
+}
+
+type Period struct {
+   AdaptationSet []AdaptationSet
+   BaseUrl       string   `xml:"BaseURL"`
+   Duration      Duration `xml:"duration,attr"`
+   Id            string   `xml:"id,attr"`
 }
 
 type AdaptationSet struct {
@@ -24,66 +81,40 @@ type AdaptationSet struct {
    Width           *int `xml:"width,attr"`
 }
 
-type Representation struct {
-   Bandwidth       int     `xml:"bandwidth,attr"`
-   Codecs          *string `xml:"codecs,attr"`
-   Id              string  `xml:"id,attr"`
-   MimeType        *string `xml:"mimeType,attr"`
-   Width           *int    `xml:"width,attr"`
-   Height          *int    `xml:"height,attr"`
-   SegmentTemplate *SegmentTemplate
-   SegmentBase     *struct {
-      Initialization struct {
-         Range string `xml:"range,attr"`
-      }
-      IndexRange string `xml:"indexRange,attr"`
-   }
-   BaseUrl string `xml:"BaseURL"`
+// stream represents a simplified view of a media stream's characteristics,
+// combining information typically found across Period, AdaptationSet, and
+// Representation types in a DASH MPD.
+type Stream struct {
+   Bandwidth int
+   Segment   []string
 }
 
 // with current data this always uses number addressing
-func (s *SegmentTemplate) byEndNumber() iter.Seq[int] {
-   return func(yield func(int) bool) {
-      number := *s.StartNumber
-      for number <= s.EndNumber {
-         if !yield(number) {
-            return
-         }
+func (s *SegmentTemplate) byEndNumber() []int {
+   var numbers []int
+   number := *s.StartNumber
+   for number <= s.EndNumber {
+      numbers = append(numbers, number)
+      number++
+   }
+   return numbers
+}
+
+func (s *SegmentTemplate) byTimelineNumber() []int {
+   var numbers []int
+   number := *s.StartNumber
+   for _, segment := range s.SegmentTimeline.S {
+      for range 1 + segment.R {
+         numbers = append(numbers, number)
          number++
       }
    }
-}
-
-func (s *SegmentTemplate) byTimelineNumber() iter.Seq[int] {
-   return func(yield func(int) bool) {
-      number := *s.StartNumber
-      for _, segment := range s.SegmentTimeline.S {
-         for range 1 + segment.R {
-            if !yield(number) {
-               return
-            }
-            number++
-         }
-      }
-   }
-}
-
-func (s *SegmentTemplate) byTimelineTime() iter.Seq[int] {
-   return func(yield func(int) bool) {
-      number := s.PresentationTimeOffset
-      for _, segment := range s.SegmentTimeline.S {
-         for range 1 + segment.R {
-            if !yield(number) {
-               return
-            }
-            number += segment.D
-         }
-      }
-   }
+   return numbers
 }
 
 // with current data this always uses number addressing
-func (s *SegmentTemplate) byPeriod(periodVar *Period) iter.Seq[int] {
+func (s *SegmentTemplate) byPeriod(periodVar *Period) []int {
+   var numbers []int
    // dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
    // SegmentCount = Ceil(
    //    AsSeconds(Period@duration) /
@@ -93,46 +124,27 @@ func (s *SegmentTemplate) byPeriod(periodVar *Period) iter.Seq[int] {
       periodVar.Duration[0].Seconds() /
          (float64(s.Duration) / float64(*s.Timescale)),
    ))
-   return func(yield func(int) bool) {
-      number := *s.StartNumber
-      for range segmentCount {
-         if !yield(number) {
-            return
-         }
-         number++
+   number := *s.StartNumber
+   for range segmentCount {
+      numbers = append(numbers, number)
+      number++
+   }
+   return numbers
+}
+
+func (s *SegmentTemplate) byTimelineTime() []int {
+   var numbers []int
+   number := s.PresentationTimeOffset
+   for _, segment := range s.SegmentTimeline.S {
+      for range 1 + segment.R {
+         numbers = append(numbers, number)
+         number += segment.D
       }
    }
+   return numbers
 }
 
-type Duration [1]time.Duration
-
-type SegmentTemplate struct {
-   Duration               int    `xml:"duration,attr"`
-   EndNumber              int    `xml:"endNumber,attr"`
-   Initialization         string `xml:"initialization,attr"`
-   Media                  string  `xml:"media,attr"`
-   PresentationTimeOffset int    `xml:"presentationTimeOffset,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D int `xml:"d,attr"` // duration
-         R int `xml:"r,attr"` // repeat
-      }
-   }
-   StartNumber *int `xml:"startNumber,attr"`
-   // This can be any frequency but typically is the media clock frequency of
-   // one of the media streams (or a positive integer multiple thereof).
-   Timescale *int `xml:"timescale,attr"`
-}
-
-// stream represents a simplified view of a media stream's characteristics,
-// combining information typically found across Period, AdaptationSet, and
-// Representation types in a DASH MPD.
-type Stream struct {
-   Bandwidth int
-   Segment   []string
-}
-
-func (s *SegmentTemplate) Segments(periodVar *Period) iter.Seq[int] {
+func (s *SegmentTemplate) Numbers(periodVar *Period) []int {
    if s.EndNumber >= 1 {
       return s.byEndNumber()
    }
@@ -145,16 +157,27 @@ func (s *SegmentTemplate) Segments(periodVar *Period) iter.Seq[int] {
    return s.byPeriod(periodVar)
 }
 
-type Mpd struct {
-   BaseUrl                   string `xml:"BaseURL"`
-   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
+func (r *Representation) Segments(adapt *AdaptationSet) []string {
+   if r.SegmentBase != nil {
+      return r.SegmentBase.segments()
+   }
+   if r.SegmentList != nil {
+      return r.SegmentList.segments()
+   }
+   if r.SegmentTemplate != nil {
+      return r.SegmentTemplate.segments()
+   }
+   return adapt.SegmentTemplate.segments()
 }
 
-type Period struct {
-   AdaptationSet []AdaptationSet
-   BaseUrl       string   `xml:"BaseURL"`
-   Duration      Duration `xml:"duration,attr"`
-   Id            string   `xml:"id,attr"`
+func (*SegmentBase) segments() []string {
+   return nil
 }
 
+func (*SegmentList) segments() []string {
+   return nil
+}
+
+func (*SegmentTemplate) segments() []string {
+   return nil
+}
