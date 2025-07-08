@@ -7,6 +7,19 @@ import (
    "time"
 )
 
+type AdaptationSet struct {
+   Codecs         string `xml:"codecs,attr"`
+   Height         uint   `xml:"height,attr"`
+   Lang           string `xml:"lang,attr"`
+   MimeType       string `xml:"mimeType,attr"`
+   Representation []Representation
+   Role           *struct {
+      Value string `xml:"value,attr"`
+   }
+   SegmentTemplate *SegmentTemplate
+   Width           uint `xml:"width,attr"`
+}
+
 type SegmentBase struct {
    Initialization struct {
       Range string `xml:"range,attr"`
@@ -27,19 +40,6 @@ type Period struct {
    BaseUrl       string   `xml:"BaseURL"`
    Duration      Duration `xml:"duration,attr"`
    Id            string   `xml:"id,attr"`
-}
-
-type Representation struct {
-   Codecs          string `xml:"codecs,attr"`
-   Id              string `xml:"id,attr"`
-   MimeType        string `xml:"mimeType,attr"`
-   BaseUrl         string `xml:"BaseURL"`
-   Bandwidth       uint   `xml:"bandwidth,attr"`
-   Width           uint   `xml:"width,attr"`
-   Height          uint   `xml:"height,attr"`
-   SegmentTemplate *SegmentTemplate
-   SegmentList     *SegmentList
-   SegmentBase     *SegmentBase
 }
 
 type SegmentList struct {
@@ -67,19 +67,6 @@ type SegmentTemplate struct {
    Timescale   *uint `xml:"timescale,attr"`
 }
 
-type AdaptationSet struct {
-   Codecs         string `xml:"codecs,attr"`
-   Height         uint   `xml:"height,attr"`
-   Lang           string `xml:"lang,attr"`
-   MimeType       string `xml:"mimeType,attr"`
-   Representation []Representation
-   Role           *struct {
-      Value string `xml:"value,attr"`
-   }
-   SegmentTemplate *SegmentTemplate
-   Width           uint `xml:"width,attr"`
-}
-
 func (*SegmentBase) segments() []string {
    return nil
 }
@@ -90,6 +77,19 @@ func (s *SegmentList) segments() []string {
       segments = append(segments, segment.Media)
    }
    return segments
+}
+
+type Representation struct {
+   Codecs          string `xml:"codecs,attr"`
+   Id              string `xml:"id,attr"`
+   MimeType        string `xml:"mimeType,attr"`
+   BaseUrl         string `xml:"BaseURL"`
+   Bandwidth       uint   `xml:"bandwidth,attr"`
+   Width           uint   `xml:"width,attr"`
+   Height          uint   `xml:"height,attr"`
+   SegmentTemplate *SegmentTemplate
+   SegmentList     *SegmentList
+   SegmentBase     *SegmentBase
 }
 
 func (r *Representation) Segments(
@@ -107,50 +107,52 @@ func (r *Representation) Segments(
    return adapt.SegmentTemplate.segments(periodVar)
 }
 
-type segmentParameter struct {
-   number           uint
-   RepresentationId string
-   time             uint
-}
-
 ///
 
-func (s *SegmentTemplate) byEndNumber() []segmentParameter {
-   var segment []segmentParameter
+// 1. iterate Mpd.Period
+// 2. iterate Period.AdaptationSet
+// 3. iterate AdaptationSet.Representation
+// 4. if Representation.SegmentBase
+// 5. if Representation.SegmentList
+// 6. if Representation.SegmentTemplate
+// 7. if AdaptationSet.SegmentTemplate
+
+func (s *SegmentTemplate) byEndNumber() []uint {
+   var segment []uint
    number := *s.StartNumber
    for number <= s.EndNumber {
-      segment = append(segment, segmentParameter{number: number})
+      segment = append(segment, number)
       number++
    }
    return segment
 }
 
-func (s *SegmentTemplate) byTimelineNumber() []segmentParameter {
-   var segments []segmentParameter
+func (s *SegmentTemplate) byTimelineNumber() []uint {
+   var segments []uint
    number := *s.StartNumber
    for _, segment := range s.SegmentTimeline.S {
       for range 1 + segment.R {
-         segments = append(segments, segmentParameter{number: number})
+         segments = append(segments, number)
          number++
       }
    }
    return segments
 }
 
-func (s *SegmentTemplate) byTimelineTime() []segmentParameter {
-   var segments []segmentParameter
+func (s *SegmentTemplate) byTimelineTime() []uint {
+   var segments []uint
    number := s.PresentationTimeOffset
    for _, segment := range s.SegmentTimeline.S {
       for range 1 + segment.R {
-         segments = append(segments, segmentParameter{time: number})
+         segments = append(segments, number)
          number += segment.D
       }
    }
    return segments
 }
 
-func (s *SegmentTemplate) byPeriod(periodVar *Period) []segmentParameter {
-   var segment []segmentParameter
+func (s *SegmentTemplate) byPeriod(periodVar *Period) []uint {
+   var segment []uint
    // dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
    // SegmentCount = Ceil(
    //    AsSeconds(Period@duration) /
@@ -162,13 +164,13 @@ func (s *SegmentTemplate) byPeriod(periodVar *Period) []segmentParameter {
    ))
    number := *s.StartNumber
    for range segmentCount {
-      segment = append(segment, segmentParameter{number: number})
+      segment = append(segment, number)
       number++
    }
    return segment
 }
 
-func (s *SegmentTemplate) segmentParameter(periodVar *Period) []segmentParameter {
+func (s *SegmentTemplate) numberTime(periodVar *Period) []uint {
    if s.EndNumber >= 1 {
       return s.byEndNumber()
    }
@@ -183,7 +185,7 @@ func (s *SegmentTemplate) segmentParameter(periodVar *Period) []segmentParameter
 
 func (s *SegmentTemplate) segments(periodVar *Period) []string {
    var segments []string
-   for _, segment := range s.segmentParameter(periodVar) {
+   for _, segment := range s.numberTime(periodVar) {
       log.Print(segment)
    }
    return segments
