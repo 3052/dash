@@ -2,18 +2,9 @@ package dash
 
 import (
    "math"
-   "strconv"
    "strings"
    "time"
 )
-
-func (s *SegmentTemplate) segments(periodVar *Period) []string {
-   var segment []string
-   for _, number := range s.numbers(periodVar) {
-      segment = append(segment, strconv.Itoa(number))
-   }
-   return segment
-}
 
 type Representation struct {
    Bandwidth       int     `xml:"bandwidth,attr"`
@@ -81,14 +72,6 @@ type AdaptationSet struct {
    Width           *int `xml:"width,attr"`
 }
 
-// stream represents a simplified view of a media stream's characteristics,
-// combining information typically found across Period, AdaptationSet, and
-// Representation types in a DASH MPD.
-type Stream struct {
-   Bandwidth int
-   Segment   []string
-}
-
 // with current data this always uses number addressing
 func (s *SegmentTemplate) byEndNumber() []int {
    var numbers []int
@@ -144,10 +127,6 @@ func (s *SegmentTemplate) byTimelineTime() []int {
    return numbers
 }
 
-func (*SegmentBase) segments() []string {
-   return nil
-}
-
 type SegmentList struct {
    Initialization struct {
       SourceUrl string `xml:"sourceURL,attr"`
@@ -157,30 +136,7 @@ type SegmentList struct {
    } `xml:"SegmentURL"`
 }
 
-func (s *SegmentList) segments() []string {
-   var segments []string
-   for _, segment := range s.SegmentUrl {
-      segments = append(segments, segment.Media)
-   }
-   return segments
-}
-
-func (r *Representation) Segments(
-   adapt *AdaptationSet, periodVar *Period,
-) []string {
-   if r.SegmentBase != nil {
-      return r.SegmentBase.segments()
-   }
-   if r.SegmentList != nil {
-      return r.SegmentList.segments()
-   }
-   if r.SegmentTemplate != nil {
-      return r.SegmentTemplate.segments(periodVar)
-   }
-   return adapt.SegmentTemplate.segments(periodVar)
-}
-
-func (s *SegmentTemplate) numbers(periodVar *Period) []int {
+func (s *SegmentTemplate) Numbers(periodVar *Period) []int {
    if s.EndNumber >= 1 {
       return s.byEndNumber()
    }
