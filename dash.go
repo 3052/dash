@@ -170,47 +170,6 @@ func (m *Mpd) Set(urlVar *url.URL) {
    m.BaseUrl[0] = urlVar.ResolveReference(m.BaseUrl[0])
 }
 
-///
-
-func (s *SegmentTemplate) Segment(periodVar *Period) iter.Seq[int] {
-   var address int
-   if s.Media.time_address() {
-      address = s.PresentationTimeOffset
-   } else {
-      address = *s.StartNumber
-   }
-   return func(yield func(int) bool) {
-      if s.EndNumber >= 1 {
-         for address <= s.EndNumber {
-            if !yield(address) {
-               return
-            }
-            address++
-         }
-      } else if s.SegmentTimeline != nil {
-         for _, segment := range s.SegmentTimeline.S {
-            for range 1 + segment.R {
-               if !yield(address) {
-                  return
-               }
-               if s.Media.time_address() {
-                  address += segment.D
-               } else {
-                  address++
-               }
-            }
-         }
-      } else {
-         for range periodVar.segment_count(s) {
-            if !yield(address) {
-               return
-            }
-            address++
-         }
-      }
-   }
-}
-
 func (i Initialization) Url(represent *Representation) (*url.URL, error) {
    data := replace(string(i), "$RepresentationID$", represent.Id)
    urlVar, err := url.Parse(data)
@@ -222,6 +181,78 @@ func (i Initialization) Url(represent *Representation) (*url.URL, error) {
    }
    return urlVar, nil
 }
+
+func (s *SegmentTemplate) set() {
+   // dashif.org/Guidelines-TimingModel#addressing-simple
+   if s.StartNumber == nil {
+      start := 1
+      s.StartNumber = &start
+   }
+   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
+   if s.Timescale == nil {
+      scale := 1
+      s.Timescale = &scale
+   }
+}
+
+func (p *Period) set(mpdVar *Mpd) {
+   p.mpd = mpdVar
+   if base := p.mpd.BaseUrl[0]; base != nil {
+      if p.BaseUrl[0] == nil {
+         p.BaseUrl[0] = &url.URL{}
+      }
+      p.BaseUrl[0] = base.ResolveReference(p.BaseUrl[0])
+   }
+   if p.Duration == nil {
+      p.Duration = &p.mpd.MediaPresentationDuration
+   }
+}
+
+func (m *Mpd) Representation() iter.Seq[*Representation] {
+   return func(yield func(*Representation) bool) {
+      id := map[string]struct{}{}
+      for _, periodVar := range m.Period {
+         for _, adapt := range periodVar.AdaptationSet {
+            for _, represent := range adapt.Representation {
+               if _, ok := id[represent.Id]; !ok {
+                  if adapt.period == nil {
+                     periodVar.set(m)
+                     adapt.set(&periodVar)
+                  }
+                  represent.set(&adapt)
+                  if !yield(&represent) {
+                     return
+                  }
+                  id[represent.Id] = struct{}{}
+               }
+            }
+         }
+      }
+   }
+}
+
+func (r *Representation) Representation() iter.Seq[*Representation] {
+   return func(yield func(*Representation) bool) {
+      for _, periodVar := range r.adaptation_set.period.mpd.Period {
+         for _, adapt := range periodVar.AdaptationSet {
+            for _, represent := range adapt.Representation {
+               if represent.Id == r.Id {
+                  if adapt.period == nil {
+                     periodVar.set(r.adaptation_set.period.mpd)
+                     adapt.set(&periodVar)
+                  }
+                  represent.set(&adapt)
+                  if !yield(&represent) {
+                     return
+                  }
+               }
+            }
+         }
+      }
+   }
+}
+
+///
 
 func (m Media) Url(represent *Representation, address int) (*url.URL, error) {
    data := replace(string(m), "$RepresentationID$", represent.Id)
@@ -284,73 +315,41 @@ func (r *Representation) set(adapt *AdaptationSet) {
    }
 }
 
-func (m *Mpd) Representation() iter.Seq[*Representation] {
-   return func(yield func(*Representation) bool) {
-      id := map[string]struct{}{}
-      for _, periodVar := range m.Period {
-         for _, adapt := range periodVar.AdaptationSet {
-            for _, represent := range adapt.Representation {
-               _, ok := id[represent.Id]
-               if !ok {
-                  if adapt.period == nil {
-                     periodVar.set(m)
-                     adapt.set(&periodVar)
-                  }
-                  represent.set(&adapt)
-                  if !yield(&represent) {
-                     return
-                  }
-                  id[represent.Id] = struct{}{}
+func (s *SegmentTemplate) Segment(periodVar *Period) iter.Seq[int] {
+   var address int
+   if s.Media.time_address() {
+      address = s.PresentationTimeOffset
+   } else {
+      address = *s.StartNumber
+   }
+   return func(yield func(int) bool) {
+      if s.EndNumber >= 1 {
+         for address <= s.EndNumber {
+            if !yield(address) {
+               return
+            }
+            address++
+         }
+      } else if s.SegmentTimeline != nil {
+         for _, segment := range s.SegmentTimeline.S {
+            for range 1 + segment.R {
+               if !yield(address) {
+                  return
+               }
+               if s.Media.time_address() {
+                  address += segment.D
+               } else {
+                  address++
                }
             }
          }
-      }
-   }
-}
-
-func (r *Representation) Representation() iter.Seq[*Representation] {
-   return func(yield func(*Representation) bool) {
-      for _, periodVar := range r.adaptation_set.period.mpd.Period {
-         for _, adapt := range periodVar.AdaptationSet {
-            for _, represent := range adapt.Representation {
-               if represent.Id == r.Id {
-                  if adapt.period == nil {
-                     periodVar.set(r.adaptation_set.period.mpd)
-                     adapt.set(&periodVar)
-                  }
-                  represent.set(&adapt)
-                  if !yield(&represent) {
-                     return
-                  }
-               }
+      } else {
+         for range periodVar.segment_count(s) {
+            if !yield(address) {
+               return
             }
+            address++
          }
       }
-   }
-}
-
-func (p *Period) set(mpdVar *Mpd) {
-   p.mpd = mpdVar
-   if base := p.mpd.BaseUrl[0]; base != nil {
-      if p.BaseUrl[0] == nil {
-         p.BaseUrl[0] = &url.URL{}
-      }
-      p.BaseUrl[0] = base.ResolveReference(p.BaseUrl[0])
-   }
-   if p.Duration == nil {
-      p.Duration = &p.mpd.MediaPresentationDuration
-   }
-}
-
-func (s *SegmentTemplate) set() {
-   // dashif.org/Guidelines-TimingModel#addressing-simple
-   if s.StartNumber == nil {
-      start := 1
-      s.StartNumber = &start
-   }
-   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
-   if s.Timescale == nil {
-      scale := 1
-      s.Timescale = &scale
    }
 }
