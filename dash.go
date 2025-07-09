@@ -9,6 +9,169 @@ import (
    "time"
 )
 
+func (s *SegmentList) set(urlVar *url.URL) {
+   s.Initialization.SourceUrl[0] = urlVar.ResolveReference(
+      s.Initialization.SourceUrl[0],
+   )
+   for _, segment := range s.SegmentUrl {
+      segment.Media[0] = urlVar.ResolveReference(segment.Media[0])
+   }
+}
+
+// SegmentTemplate
+// dashif.org/Guidelines-TimingModel#addressing-explicit
+// dashif.org/Guidelines-TimingModel#addressing-simple
+func (m Media) time_address() bool {
+   return strings.Contains(string(m), "$Time$")
+}
+
+func (a *AdaptationSet) set(periodVar *Period) {
+   a.period = periodVar
+}
+
+type Duration [1]time.Duration
+
+type Url [1]*url.URL
+
+func (r *Representation) GetAdaptationSet() *AdaptationSet {
+   return r.adaptation_set
+}
+
+type ContentProtection struct {
+   Pssh        string `xml:"pssh"`
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
+}
+
+func replace(s, old, newVar string) string {
+   return strings.Replace(s, old, newVar, 1)
+}
+
+type Period struct {
+   BaseUrl       Url       `xml:"BaseURL"`
+   Id            string    `xml:"id,attr"`
+   Duration      *Duration `xml:"duration,attr"`
+   AdaptationSet []AdaptationSet
+   mpd           *Mpd
+}
+
+type AdaptationSet struct {
+   SegmentTemplate   *SegmentTemplate
+   Representation    []Representation
+   ContentProtection []ContentProtection
+   Lang              string `xml:"lang,attr"`
+   MimeType          string `xml:"mimeType,attr"`
+   Role              *struct {
+      Value string `xml:"value,attr"`
+   }
+   period *Period
+   // pointers for Representation.String
+   Codecs *string `xml:"codecs,attr"`
+   Height *int    `xml:"height,attr"`
+   Width  *int    `xml:"width,attr"`
+}
+
+type SegmentTemplate struct {
+   EndNumber              int            `xml:"endNumber,attr"`
+   Initialization         Initialization `xml:"initialization,attr"`
+   Media                  Media          `xml:"media,attr"`
+   PresentationTimeOffset int            `xml:"presentationTimeOffset,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D int `xml:"d,attr"` // duration
+         R int `xml:"r,attr"` // repeat
+      }
+   }
+   StartNumber *int `xml:"startNumber,attr"`
+   Duration    int  `xml:"duration,attr"`
+   // This can be any frequency but typically is the media clock frequency of
+   // one of the media streams (or a positive integer multiple thereof).
+   Timescale *int `xml:"timescale,attr"`
+}
+
+type SegmentList struct {
+   Initialization struct {
+      SourceUrl Url `xml:"sourceURL,attr"`
+   }
+   SegmentUrl []*struct {
+      Media Url `xml:"media,attr"`
+   } `xml:"SegmentURL"`
+}
+
+type Representation struct {
+   SegmentTemplate *SegmentTemplate
+   SegmentList     *SegmentList
+   SegmentBase     *struct {
+      Initialization struct {
+         Range string `xml:"range,attr"`
+      }
+      IndexRange string `xml:"indexRange,attr"`
+   }
+   BaseUrl           Url     `xml:"BaseURL"`
+   Bandwidth         int     `xml:"bandwidth,attr"`
+   Codecs            *string `xml:"codecs,attr"`
+   ContentProtection []ContentProtection
+   Id                string  `xml:"id,attr"`
+   MimeType          *string `xml:"mimeType,attr"`
+   Width             *int    `xml:"width,attr"`
+   Height            *int    `xml:"height,attr"`
+   adaptation_set    *AdaptationSet
+}
+
+type Mpd struct {
+   BaseUrl                   Url      `xml:"BaseURL"`
+   MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
+   Period                    []Period
+}
+
+// dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
+// SegmentCount = Ceil((AsSeconds(Period@duration)) /
+// (SegmentTemplate@duration / SegmentTemplate@timescale))
+func (p *Period) segment_count(template *SegmentTemplate) int64 {
+   // amc
+   // draken
+   // kanopy
+   // max
+   // paramount
+   durationVar := float64(template.Duration) / float64(*template.Timescale)
+   return int64(math.Ceil(p.Duration[0].Seconds() / durationVar))
+}
+
+type Initialization string
+
+type Media string
+
+func (u *Url) UnmarshalText(data []byte) error {
+   u[0] = &url.URL{}
+   return u[0].UnmarshalBinary(data)
+}
+
+func (d *Duration) UnmarshalText(data []byte) error {
+   var err error
+   d[0], err = time.ParseDuration(strings.ToLower(
+      strings.TrimPrefix(string(data), "PT"),
+   ))
+   if err != nil {
+      return err
+   }
+   return nil
+}
+
+func (a *AdaptationSet) GetRole() string {
+   if a.Role != nil {
+      return a.Role.Value
+   }
+   return ""
+}
+
+func (m *Mpd) Set(urlVar *url.URL) {
+   if m.BaseUrl[0] == nil {
+      m.BaseUrl[0] = &url.URL{}
+   }
+   m.BaseUrl[0] = urlVar.ResolveReference(m.BaseUrl[0])
+}
+
+///
+
 func (s *SegmentTemplate) Segment(periodVar *Period) iter.Seq[int] {
    var address int
    if s.Media.time_address() {
@@ -45,42 +208,6 @@ func (s *SegmentTemplate) Segment(periodVar *Period) iter.Seq[int] {
             address++
          }
       }
-   }
-}
-
-// SegmentTemplate
-// dashif.org/Guidelines-TimingModel#addressing-explicit
-// dashif.org/Guidelines-TimingModel#addressing-simple
-func (m Media) time_address() bool {
-   return strings.Contains(string(m), "$Time$")
-}
-
-type Initialization string
-
-type Media string
-
-func (u *Url) UnmarshalText(data []byte) error {
-   u[0] = &url.URL{}
-   return u[0].UnmarshalBinary(data)
-}
-
-func (a *AdaptationSet) set(periodVar *Period) {
-   a.period = periodVar
-}
-
-func (m *Mpd) Set(urlVar *url.URL) {
-   if m.BaseUrl[0] == nil {
-      m.BaseUrl[0] = &url.URL{}
-   }
-   m.BaseUrl[0] = urlVar.ResolveReference(m.BaseUrl[0])
-}
-
-func (s *SegmentList) set(urlVar *url.URL) {
-   s.Initialization.SourceUrl[0] = urlVar.ResolveReference(
-      s.Initialization.SourceUrl[0],
-   )
-   for _, segment := range s.SegmentUrl {
-      segment.Media[0] = urlVar.ResolveReference(segment.Media[0])
    }
 }
 
@@ -157,41 +284,6 @@ func (r *Representation) set(adapt *AdaptationSet) {
    }
 }
 
-func (d *Duration) UnmarshalText(data []byte) error {
-   var err error
-   d[0], err = time.ParseDuration(strings.ToLower(
-      strings.TrimPrefix(string(data), "PT"),
-   ))
-   if err != nil {
-      return err
-   }
-   return nil
-}
-
-type Duration [1]time.Duration
-
-type Url [1]*url.URL
-
-func (r *Representation) GetAdaptationSet() *AdaptationSet {
-   return r.adaptation_set
-}
-
-func (a *AdaptationSet) GetRole() string {
-   if a.Role != nil {
-      return a.Role.Value
-   }
-   return ""
-}
-
-type ContentProtection struct {
-   Pssh        string `xml:"pssh"`
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-}
-
-func replace(s, old, newVar string) string {
-   return strings.Replace(s, old, newVar, 1)
-}
-
 func (m *Mpd) Representation() iter.Seq[*Representation] {
    return func(yield func(*Representation) bool) {
       id := map[string]struct{}{}
@@ -237,82 +329,6 @@ func (r *Representation) Representation() iter.Seq[*Representation] {
    }
 }
 
-type Period struct {
-   BaseUrl       Url       `xml:"BaseURL"`
-   Id            string    `xml:"id,attr"`
-   Duration      *Duration `xml:"duration,attr"`
-   AdaptationSet []AdaptationSet
-   mpd           *Mpd
-}
-
-type AdaptationSet struct {
-   SegmentTemplate   *SegmentTemplate
-   Representation    []Representation
-   ContentProtection []ContentProtection
-   Lang              string `xml:"lang,attr"`
-   MimeType          string `xml:"mimeType,attr"`
-   Role              *struct {
-      Value string `xml:"value,attr"`
-   }
-   period *Period
-   // pointers for Representation.String
-   Codecs *string `xml:"codecs,attr"`
-   Height *int    `xml:"height,attr"`
-   Width  *int    `xml:"width,attr"`
-}
-
-type SegmentTemplate struct {
-   EndNumber              int            `xml:"endNumber,attr"`
-   Initialization         Initialization `xml:"initialization,attr"`
-   Media                  Media          `xml:"media,attr"`
-   PresentationTimeOffset int            `xml:"presentationTimeOffset,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D int `xml:"d,attr"` // duration
-         R int `xml:"r,attr"` // repeat
-      }
-   }
-   StartNumber *int `xml:"startNumber,attr"`
-   Duration    int  `xml:"duration,attr"`
-   // This can be any frequency but typically is the media clock frequency of
-   // one of the media streams (or a positive integer multiple thereof).
-   Timescale *int `xml:"timescale,attr"`
-}
-
-type SegmentList struct {
-   Initialization struct {
-      SourceUrl Url `xml:"sourceURL,attr"`
-   }
-   SegmentUrl []*struct {
-      Media Url `xml:"media,attr"`
-   } `xml:"SegmentURL"`
-}
-
-type Representation struct {
-   SegmentTemplate *SegmentTemplate
-   SegmentList     *SegmentList
-   SegmentBase     *struct {
-      Initialization struct {
-         Range string `xml:"range,attr"`
-      }
-      IndexRange string `xml:"indexRange,attr"`
-   }
-   BaseUrl           Url     `xml:"BaseURL"`
-   Bandwidth         int     `xml:"bandwidth,attr"`
-   Codecs            *string `xml:"codecs,attr"`
-   ContentProtection []ContentProtection
-   Id                string  `xml:"id,attr"`
-   MimeType          *string `xml:"mimeType,attr"`
-   Width             *int    `xml:"width,attr"`
-   Height            *int    `xml:"height,attr"`
-   adaptation_set    *AdaptationSet
-}
-type Mpd struct {
-   BaseUrl                   Url      `xml:"BaseURL"`
-   MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
-}
-
 func (p *Period) set(mpdVar *Mpd) {
    p.mpd = mpdVar
    if base := p.mpd.BaseUrl[0]; base != nil {
@@ -324,19 +340,6 @@ func (p *Period) set(mpdVar *Mpd) {
    if p.Duration == nil {
       p.Duration = &p.mpd.MediaPresentationDuration
    }
-}
-
-// dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
-// SegmentCount = Ceil((AsSeconds(Period@duration)) /
-// (SegmentTemplate@duration / SegmentTemplate@timescale))
-func (p *Period) segment_count(template *SegmentTemplate) int64 {
-   // amc
-   // draken
-   // kanopy
-   // max
-   // paramount
-   durationVar := float64(template.Duration) / float64(*template.Timescale)
-   return int64(math.Ceil(p.Duration[0].Seconds() / durationVar))
 }
 
 func (s *SegmentTemplate) set() {
