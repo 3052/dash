@@ -7,6 +7,34 @@ import (
    "time"
 )
 
+func (s *SegmentTemplate) numberTime(periodVar *Period) []uint {
+   if s.EndNumber >= 1 {
+      return s.byEndNumber()
+   }
+   if s.SegmentTimeline != nil {
+      if strings.Contains(s.Media, "$Time$") {
+         return s.byTimelineTime()
+      }
+      return s.byTimelineNumber()
+   }
+   return s.byPeriod(periodVar) // duration
+}
+
+func (r *Representation) Segments(
+   adapt *AdaptationSet, periodVar *Period,
+) []string {
+   if r.SegmentBase != nil {
+      return r.SegmentBase.segments()
+   }
+   if r.SegmentList != nil {
+      return r.SegmentList.segments()
+   }
+   if r.SegmentTemplate != nil {
+      return r.SegmentTemplate.segments(periodVar)
+   }
+   return adapt.SegmentTemplate.segments(periodVar)
+}
+
 type Duration [1]time.Duration
 
 type Mpd struct {
@@ -41,8 +69,6 @@ type SegmentList struct {
    } `xml:"SegmentURL"`
 }
 
-///
-
 type SegmentTemplate struct {
    Duration               uint   `xml:"duration,attr"`
    EndNumber              uint   `xml:"endNumber,attr"`
@@ -58,34 +84,6 @@ type SegmentTimeline struct {
       D uint `xml:"d,attr"` // duration
       R uint `xml:"r,attr"` // repeat
    }
-}
-
-func (s *SegmentTemplate) numberTime(periodVar *Period) []uint {
-   if s.EndNumber >= 1 {
-      return s.byEndNumber()
-   }
-   if s.SegmentTimeline != nil {
-      if strings.Contains(s.Media, "$Time$") {
-         return s.byTimelineTime()
-      }
-      return s.byTimelineNumber()
-   }
-   return s.byPeriod(periodVar) // duration
-}
-
-func (r *Representation) Segments(
-   adapt *AdaptationSet, periodVar *Period,
-) []string {
-   if r.SegmentBase != nil {
-      return r.SegmentBase.segments()
-   }
-   if r.SegmentList != nil {
-      return r.SegmentList.segments()
-   }
-   if r.SegmentTemplate != nil {
-      return r.SegmentTemplate.segments(periodVar)
-   }
-   return adapt.SegmentTemplate.segments(periodVar)
 }
 
 func (*SegmentBase) segments() []string {
