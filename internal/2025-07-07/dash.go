@@ -17,7 +17,26 @@ func (s *SegmentTemplate) numberTime(periodVar *Period) []uint {
       }
       return s.byTimelineNumber()
    }
-   return s.byPeriod(periodVar) // duration
+   return s.byPeriod(periodVar) // SegmentTemplate.duration
+}
+
+func (s *SegmentTemplate) byPeriod(periodVar *Period) []uint {
+   var segment []uint
+   // dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
+   // SegmentCount = Ceil(
+   //    AsSeconds(Period@duration) /
+   //    (SegmentTemplate@duration / SegmentTemplate@timescale)
+   // )
+   segmentCount := int64(math.Ceil(
+      periodVar.Duration[0].Seconds() /
+         (float64(s.Duration) / float64(*s.Timescale)),
+   ))
+   number := *s.StartNumber
+   for range segmentCount {
+      segment = append(segment, number)
+      number++
+   }
+   return segment
 }
 
 func (r *Representation) Segments(
@@ -88,25 +107,6 @@ type SegmentTimeline struct {
 
 func (*SegmentBase) segments() []string {
    return nil
-}
-
-func (s *SegmentTemplate) byPeriod(periodVar *Period) []uint {
-   var segment []uint
-   // dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
-   // SegmentCount = Ceil(
-   //    AsSeconds(Period@duration) /
-   //    (SegmentTemplate@duration / SegmentTemplate@timescale)
-   // )
-   segmentCount := int64(math.Ceil(
-      periodVar.Duration[0].Seconds() /
-         (float64(s.Duration) / float64(*s.Timescale)),
-   ))
-   number := *s.StartNumber
-   for range segmentCount {
-      segment = append(segment, number)
-      number++
-   }
-   return segment
 }
 
 func (s *SegmentList) segments() []string {
