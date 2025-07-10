@@ -9,6 +9,14 @@ import (
    "time"
 )
 
+type Period struct {
+   BaseUrl       Url       `xml:"BaseURL"`
+   Id            string    `xml:"id,attr"`
+   Duration      *Duration `xml:"duration,attr"`
+   AdaptationSet []AdaptationSet
+   mpd           *Mpd
+}
+
 func (s *SegmentList) set(urlVar *url.URL) {
    s.Initialization.SourceUrl[0] = urlVar.ResolveReference(
       s.Initialization.SourceUrl[0],
@@ -44,14 +52,6 @@ type ContentProtection struct {
 
 func replace(s, old, newVar string) string {
    return strings.Replace(s, old, newVar, 1)
-}
-
-type Period struct {
-   BaseUrl       Url       `xml:"BaseURL"`
-   Id            string    `xml:"id,attr"`
-   Duration      *Duration `xml:"duration,attr"`
-   AdaptationSet []AdaptationSet
-   mpd           *Mpd
 }
 
 type AdaptationSet struct {

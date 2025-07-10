@@ -1,11 +1,11 @@
 package dash
 
-var states = []struct{
-   state string
+var states = []struct {
+   state   string
    example []string
 }{
    {
-      state: "Period.duration != nil",
+      state: `Period.duration != ""`,
       example: []string{
          "canal.mpd",
          "criterion.mpd",
@@ -14,7 +14,7 @@ var states = []struct{
       },
    },
    {
-      state: "Period.duration == nil",
+      state: `Period.duration == ""`,
       example: []string{
          "rakuten.mpd",
       },
