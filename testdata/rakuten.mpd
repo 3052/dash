@@ -1,2 +1,64 @@
 <?xml version='1.0' encoding='utf-8'?>
-<MPD xmlns:cenc="urn:mpeg:cenc:2013" xmlns:mspr="urn:microsoft:playready" xmlns="urn:mpeg:dash:schema:mpd:2011" mediaPresentationDuration="PT47M48.000S" minBufferTime="PT2.00S" profiles="urn:mpeg:dash:profile:isoff-on-demand:2011" type="static"><BaseURL>https://prod-avod-pmd-cdn77.cdn.rakuten.tv/3/1/8/318f7ece69afcfe3e96de31be6b77272-mc-0-164-0-0_DS2BB/</BaseURL><Period><AdaptationSet maxHeight="1080" maxWidth="1920" mimeType="video/mp4" minHeight="252" minWidth="448" par="16:9" sar="1:1" segmentAlignment="true" startWithSAP="1"><ContentProtection cenc:default_KID="318f7ece-69af-cfe3-e96d-e31be6b77272" schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc"/><ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"><cenc:pssh>AAAAcHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAAFAIARIQMY9+zmmvz+PpbeMb5rdychoFd3Vha2kiLTMxOGY3ZWNlNjlhZmNmZTNlOTZkZTMxYmU2Yjc3MjcyLW1jLTAtMTY0LTAtMEjj3JWbBg==</cenc:pssh></ContentProtection><Representation bandwidth="364978" codecs="avc1.640015" frameRate="25" height="252" id="video-avc1-1" scanType="progressive" width="448"><BaseURL>video-avc1-1.ismv?streaming_id=630ed6ed-1137-473c-8858-23ba59d12675&amp;st_country=CZ,AT,DE,PL,SK&amp;st_valid=1752245624&amp;secure=swQaR7HCsyJoJ92WjU5NBQ==,1752267224</BaseURL><SegmentBase indexRange="1522-18761"><Initialization range="0-1521"/></SegmentBase></Representation><Representation bandwidth="768097" codecs="avc1.64001E" frameRate="25" height="432" id="video-avc1-2" scanType="progressive" width="768"><BaseURL>video-avc1-2.ismv?streaming_id=630ed6ed-1137-473c-8858-23ba59d12675&amp;st_country=CZ,AT,DE,PL,SK&amp;st_valid=1752245624&amp;secure=air9OwVQjOTiWhVo0nmA4Q==,1752267224</BaseURL><SegmentBase indexRange="1523-18762"><Initialization range="0-1522"/></SegmentBase></Representation><Representation bandwidth="1201245" codecs="avc1.64001F" frameRate="25" height="540" id="video-avc1-3" scanType="progressive" width="960"><BaseURL>video-avc1-3.ismv?streaming_id=630ed6ed-1137-473c-8858-23ba59d12675&amp;st_country=CZ,AT,DE,PL,SK&amp;st_valid=1752245624&amp;secure=7Q9zqUIAD1SI9AQkeArJlw==,1752267224</BaseURL><SegmentBase indexRange="1524-18763"><Initialization range="0-1523"/></SegmentBase></Representation><Representation bandwidth="1925601" codecs="avc1.64001F" frameRate="25" height="540" id="video-avc1-4" scanType="progressive" width="960"><BaseURL>video-avc1-4.ismv?streaming_id=630ed6ed-1137-473c-8858-23ba59d12675&amp;st_country=CZ,AT,DE,PL,SK&amp;st_valid=1752245624&amp;secure=68sm_cRFlDzyd3-7_bIvmg==,1752267224</BaseURL><SegmentBase indexRange="1524-18763"><Initialization range="0-1523"/></SegmentBase></Representation><Representation bandwidth="3081102" codecs="avc1.64001F" frameRate="25" height="720" id="video-avc1-5" scanType="progressive" width="1280"><BaseURL>video-avc1-5.ismv?streaming_id=630ed6ed-1137-473c-8858-23ba59d12675&amp;st_country=CZ,AT,DE,PL,SK&amp;st_valid=1752245624&amp;secure=gIzq5dXSXuheNjRcplZ2rw==,1752267224</BaseURL><SegmentBase indexRange="1522-18761"><Initialization range="0-1521"/></SegmentBase></Representation><Representation bandwidth="4827402" codecs="avc1.640028" frameRate="25" height="1080" id="video-avc1-6" scanType="progressive" width="1920"><BaseURL>video-avc1-6.ismv?streaming_id=630ed6ed-1137-473c-8858-23ba59d12675&amp;st_country=CZ,AT,DE,PL,SK&amp;st_valid=1752245624&amp;secure=PcDPRLtVJ_-tDsEPMD5Hzg==,1752267224</BaseURL><SegmentBase indexRange="1524-18763"><Initialization range="0-1523"/></SegmentBase></Representation></AdaptationSet><AdaptationSet lang="spa" mimeType="audio/mp4" segmentAlignment="true" startWithSAP="1"><ContentProtection cenc:default_KID="318f7ece-69af-cfe3-e96d-e31be6b77272" schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc"/><ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"><cenc:pssh>AAAAcHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAAFAIARIQMY9+zmmvz+PpbeMb5rdychoFd3Vha2kiLTMxOGY3ZWNlNjlhZmNmZTNlOTZkZTMxYmU2Yjc3MjcyLW1jLTAtMTY0LTAtMEjj3JWbBg==</cenc:pssh></ContentProtection><Representation audioSamplingRate="48000" bandwidth="201776" codecs="mp4a.40.2" id="audio-spa-mp4a-1"><AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/><BaseURL>audio-spa-mp4a-1.isma?streaming_id=630ed6ed-1137-473c-8858-23ba59d12675&amp;st_country=CZ,AT,DE,PL,SK&amp;st_valid=1752245624&amp;secure=MsGCZba5NnjSviOuZPWEkA==,1752267224</BaseURL><SegmentBase indexRange="1392-18643"><Initialization range="0-1391"/></SegmentBase></Representation></AdaptationSet></Period></MPD>
+<MPD
+   xmlns:cenc="urn:mpeg:cenc:2013"
+   xmlns:mspr="urn:microsoft:playready"
+   xmlns="urn:mpeg:dash:schema:mpd:2011" mediaPresentationDuration="PT47M48.000S" minBufferTime="PT2.00S" profiles="urn:mpeg:dash:profile:isoff-on-demand:2011" type="static">
+   <BaseURL>https://prod-avod-pmd-cdn77.cdn.rakuten.tv/3/1/8/318f7ece69afcfe3e96de31be6b77272-mc-0-164-0-0_DS2BB/</BaseURL>
+   <Period>
+      <AdaptationSet maxHeight="1080" maxWidth="1920" mimeType="video/mp4" minHeight="252" minWidth="448" par="16:9" sar="1:1" segmentAlignment="true" startWithSAP="1">
+         <ContentProtection cenc:default_KID="318f7ece-69af-cfe3-e96d-e31be6b77272" schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc"/>
+         <ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed">
+            <cenc:pssh>AAAAcHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAAFAIARIQMY9+zmmvz+PpbeMb5rdychoFd3Vha2kiLTMxOGY3ZWNlNjlhZmNmZTNlOTZkZTMxYmU2Yjc3MjcyLW1jLTAtMTY0LTAtMEjj3JWbBg==</cenc:pssh>
+         </ContentProtection>
+         <Representation bandwidth="364978" codecs="avc1.640015" frameRate="25" height="252" id="video-avc1-1" scanType="progressive" width="448">
+            <BaseURL>video-avc1-1.ismv?streaming_id=630ed6ed-1137-473c-8858-23ba59d12675&amp;st_country=CZ,AT,DE,PL,SK&amp;st_valid=1752245624&amp;secure=swQaR7HCsyJoJ92WjU5NBQ==,1752267224</BaseURL>
+            <SegmentBase indexRange="1522-18761">
+               <Initialization range="0-1521"/>
+            </SegmentBase>
+         </Representation>
+         <Representation bandwidth="768097" codecs="avc1.64001E" frameRate="25" height="432" id="video-avc1-2" scanType="progressive" width="768">
+            <BaseURL>video-avc1-2.ismv?streaming_id=630ed6ed-1137-473c-8858-23ba59d12675&amp;st_country=CZ,AT,DE,PL,SK&amp;st_valid=1752245624&amp;secure=air9OwVQjOTiWhVo0nmA4Q==,1752267224</BaseURL>
+            <SegmentBase indexRange="1523-18762">
+               <Initialization range="0-1522"/>
+            </SegmentBase>
+         </Representation>
+         <Representation bandwidth="1201245" codecs="avc1.64001F" frameRate="25" height="540" id="video-avc1-3" scanType="progressive" width="960">
+            <BaseURL>video-avc1-3.ismv?streaming_id=630ed6ed-1137-473c-8858-23ba59d12675&amp;st_country=CZ,AT,DE,PL,SK&amp;st_valid=1752245624&amp;secure=7Q9zqUIAD1SI9AQkeArJlw==,1752267224</BaseURL>
+            <SegmentBase indexRange="1524-18763">
+               <Initialization range="0-1523"/>
+            </SegmentBase>
+         </Representation>
+         <Representation bandwidth="1925601" codecs="avc1.64001F" frameRate="25" height="540" id="video-avc1-4" scanType="progressive" width="960">
+            <BaseURL>video-avc1-4.ismv?streaming_id=630ed6ed-1137-473c-8858-23ba59d12675&amp;st_country=CZ,AT,DE,PL,SK&amp;st_valid=1752245624&amp;secure=68sm_cRFlDzyd3-7_bIvmg==,1752267224</BaseURL>
+            <SegmentBase indexRange="1524-18763">
+               <Initialization range="0-1523"/>
+            </SegmentBase>
+         </Representation>
+         <Representation bandwidth="3081102" codecs="avc1.64001F" frameRate="25" height="720" id="video-avc1-5" scanType="progressive" width="1280">
+            <BaseURL>video-avc1-5.ismv?streaming_id=630ed6ed-1137-473c-8858-23ba59d12675&amp;st_country=CZ,AT,DE,PL,SK&amp;st_valid=1752245624&amp;secure=gIzq5dXSXuheNjRcplZ2rw==,1752267224</BaseURL>
+            <SegmentBase indexRange="1522-18761">
+               <Initialization range="0-1521"/>
+            </SegmentBase>
+         </Representation>
+         <Representation bandwidth="4827402" codecs="avc1.640028" frameRate="25" height="1080" id="video-avc1-6" scanType="progressive" width="1920">
+            <BaseURL>video-avc1-6.ismv?streaming_id=630ed6ed-1137-473c-8858-23ba59d12675&amp;st_country=CZ,AT,DE,PL,SK&amp;st_valid=1752245624&amp;secure=PcDPRLtVJ_-tDsEPMD5Hzg==,1752267224</BaseURL>
+            <SegmentBase indexRange="1524-18763">
+               <Initialization range="0-1523"/>
+            </SegmentBase>
+         </Representation>
+      </AdaptationSet>
+      <AdaptationSet lang="spa" mimeType="audio/mp4" segmentAlignment="true" startWithSAP="1">
+         <ContentProtection cenc:default_KID="318f7ece-69af-cfe3-e96d-e31be6b77272" schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc"/>
+         <ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed">
+            <cenc:pssh>AAAAcHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAAFAIARIQMY9+zmmvz+PpbeMb5rdychoFd3Vha2kiLTMxOGY3ZWNlNjlhZmNmZTNlOTZkZTMxYmU2Yjc3MjcyLW1jLTAtMTY0LTAtMEjj3JWbBg==</cenc:pssh>
+         </ContentProtection>
+         <Representation audioSamplingRate="48000" bandwidth="201776" codecs="mp4a.40.2" id="audio-spa-mp4a-1">
+            <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+            <BaseURL>audio-spa-mp4a-1.isma?streaming_id=630ed6ed-1137-473c-8858-23ba59d12675&amp;st_country=CZ,AT,DE,PL,SK&amp;st_valid=1752245624&amp;secure=MsGCZba5NnjSviOuZPWEkA==,1752267224</BaseURL>
+            <SegmentBase indexRange="1392-18643">
+               <Initialization range="0-1391"/>
+            </SegmentBase>
+         </Representation>
+      </AdaptationSet>
+   </Period>
+</MPD>

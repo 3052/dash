@@ -13,48 +13,48 @@ import (
 
 // MPD represents the root element of a DASH MPD file.
 type MPD struct {
-   XMLName           xml.Name `xml:"MPD"`
-   BaseURL           string   `xml:"BaseURL"`
-   Periods           []Period `xml:"Period"`
-   MediaPresentationDuration string `xml:"mediaPresentationDuration,attr"` // e.g., PT0H0M30.0S
+   XMLName                   xml.Name `xml:"MPD"`
+   BaseURL                   string   `xml:"BaseURL"`
+   Periods                   []Period `xml:"Period"`
+   MediaPresentationDuration string   `xml:"mediaPresentationDuration,attr"` // e.g., PT0H0M30.0S
 }
 
 // Period represents a Period element within the MPD.
 type Period struct {
-   XMLName        xml.Name         `xml:"Period"`
+   XMLName        xml.Name        `xml:"Period"`
    AdaptationSets []AdaptationSet `xml:"AdaptationSet"`
-   Duration       string           `xml:"duration,attr"` // e.g., PT0H0M10.0S
-   BaseURL        string           `xml:"BaseURL"` // BaseURL can also be at Period level
+   Duration       string          `xml:"duration,attr"` // e.g., PT0H0M10.0S
+   BaseURL        string          `xml:"BaseURL"`       // BaseURL can also be at Period level
 }
 
 // AdaptationSet represents an AdaptationSet element.
 type AdaptationSet struct {
-   XMLName        xml.Name         `xml:"AdaptationSet"`
-   MimeType       string           `xml:"mimeType,attr"`
+   XMLName  xml.Name `xml:"AdaptationSet"`
+   MimeType string   `xml:"mimeType,attr"`
    // SegmentTemplate can be a child of AdaptationSet
    SegmentTemplate *SegmentTemplate `xml:"SegmentTemplate"` // Use pointer as it's optional
    Representations []Representation `xml:"Representation"`
-   BaseURL        string           `xml:"BaseURL"` // BaseURL can also be at AdaptationSet level
+   BaseURL         string           `xml:"BaseURL"` // BaseURL can also be at AdaptationSet level
 }
 
 // Representation represents a Representation element.
 type Representation struct {
-   XMLName        xml.Name        `xml:"Representation"`
-   ID             string          `xml:"id,attr"`
-   Bandwidth      int             `xml:"bandwidth,attr"`
+   XMLName   xml.Name `xml:"Representation"`
+   ID        string   `xml:"id,attr"`
+   Bandwidth int      `xml:"bandwidth,attr"`
    // SegmentTemplate can also be a child of Representation (overrides AdaptationSet's if present)
    SegmentTemplate *SegmentTemplate `xml:"SegmentTemplate"` // Use pointer as it's optional
-   BaseURL        string           `xml:"BaseURL"` // BaseURL can also be at Representation level
+   BaseURL         string           `xml:"BaseURL"`         // BaseURL can also be at Representation level
 }
 
 // SegmentTemplate represents a SegmentTemplate element.
 type SegmentTemplate struct {
-   XMLName        xml.Name `xml:"SegmentTemplate"`
-   Media          string   `xml:"media,attr"`
-   Initialization string   `xml:"initialization,attr"`
-   StartNumber    int      `xml:"startNumber,attr"`
-   Timescale      int      `xml:"timescale,attr"`
-   Duration       int      `xml:"duration,attr"` // Duration of each segment in timescale units
+   XMLName         xml.Name         `xml:"SegmentTemplate"`
+   Media           string           `xml:"media,attr"`
+   Initialization  string           `xml:"initialization,attr"`
+   StartNumber     int              `xml:"startNumber,attr"`
+   Timescale       int              `xml:"timescale,attr"`
+   Duration        int              `xml:"duration,attr"`   // Duration of each segment in timescale units
    SegmentTimeline *SegmentTimeline `xml:"SegmentTimeline"` // Optional, for variable duration segments
 }
 
@@ -71,7 +71,6 @@ type S struct {
    D       int      `xml:"d,attr"` // Duration of the segment
    R       int      `xml:"r,attr"` // Repeat count (optional, default 0 means 1 segment)
 }
-
 
 func main() {
    if len(os.Args) < 2 {
@@ -186,7 +185,7 @@ func main() {
             if currentST.SegmentTimeline != nil && len(currentST.SegmentTimeline.Ss) > 0 {
                // Handle SegmentTimeline (variable duration segments)
                fmt.Printf("Segments for Representation ID: %s (Bandwidth: %d):\n", rep.ID, rep.Bandwidth)
-               
+
                var currentTime int // Time in timescale units
                // If the first S element has a 't' attribute, use it as the starting time.
                // Otherwise, start from 0 for the beginning of the period.
@@ -208,20 +207,20 @@ func main() {
                   if s.R > 0 {
                      runSegments = 1 + s.R
                   }
-                  
+
                   for i := 0; i < runSegments; i++ {
                      mediaURLTemplate := strings.ReplaceAll(currentST.Media, "$RepresentationID$", rep.ID)
                      mediaURLTemplate = strings.ReplaceAll(mediaURLTemplate, "$Bandwidth$", strconv.Itoa(rep.Bandwidth))
-                     
+
                      // Replace $Time$ with current time
                      mediaURLTemplate = strings.ReplaceAll(mediaURLTemplate, "$Time$", strconv.Itoa(currentTime))
-                     
+
                      // Replace $Number$ if it exists (less common with $Time$, but for robustness)
                      mediaURLTemplate = strings.ReplaceAll(mediaURLTemplate, "$Number$", strconv.Itoa(segmentCounter))
 
                      fullSegmentURL := resolveURL(effectiveBaseURL, mediaURLTemplate)
                      fmt.Printf("  Segment (Time: %d, Num: %d): %s\n", currentTime, segmentCounter, fullSegmentURL)
-                     
+
                      currentTime += s.D // Advance time for the next segment in this run
                      segmentCounter++
                   }
@@ -248,7 +247,7 @@ func main() {
                   mediaURL := strings.ReplaceAll(currentST.Media, "$RepresentationID$", rep.ID)
                   mediaURL = strings.ReplaceAll(mediaURL, "$Bandwidth$", strconv.Itoa(rep.Bandwidth))
                   mediaURL = strings.ReplaceAll(mediaURL, "$Number$", strconv.Itoa(segmentNumber))
-                  
+
                   fullSegmentURL := resolveURL(effectiveBaseURL, mediaURL)
                   fmt.Printf("  Segment %d: %s\n", segmentNumber, fullSegmentURL)
                }
@@ -284,7 +283,7 @@ func parseDuration(duration string) float64 {
    if duration == "" {
       return 0
    }
-   
+
    duration = strings.TrimPrefix(duration, "PT")
    var totalSeconds float64
 
