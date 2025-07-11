@@ -7,35 +7,6 @@ import (
    "testing"
 )
 
-func output(name string, arg ...string) (string, error) {
-   command := exec.Command(name, arg...)
-   log.Print(command.Args)
-   data, err := command.Output()
-   if err != nil {
-      return "", err
-   }
-   return string(data), nil
-}
-
-func TestKimi(t *testing.T) {
-   log.SetFlags(log.Ltime)
-   for _, testVar := range kimi_tests {
-      arg := []string{"run", "kimi.go", testVar.name}
-      if testVar.url != "" {
-         arg = append(arg, testVar.url)
-      }
-      data, err := output("go", arg...)
-      if err != nil {
-         t.Fatal(data)
-      }
-      for _, value := range testVar.contains {
-         if !strings.Contains(data, value) {
-            t.Fatal(value)
-         }
-      }
-   }
-}
-
 var kimi_tests = []struct {
    name     string
    url      string
@@ -63,4 +34,30 @@ var kimi_tests = []struct {
          `SegmentTemplate.endNumber == 0 (SegmentTimeline or SegmentCount)`,
       },
    },
+}
+
+func Test(t *testing.T) {
+   log.SetFlags(log.Ltime)
+   for _, testVar := range kimi_tests {
+      arg := []string{"run", ".", testVar.name}
+      data, err := output("go", arg...)
+      if err != nil {
+         t.Fatal(data)
+      }
+      for _, value := range testVar.contains {
+         if !strings.Contains(data, value) {
+            t.Fatal(value)
+         }
+      }
+   }
+}
+
+func output(name string, arg ...string) (string, error) {
+   command := exec.Command(name, arg...)
+   log.Print(command.Args)
+   data, err := command.Output()
+   if err != nil {
+      return "", err
+   }
+   return string(data), nil
 }
