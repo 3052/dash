@@ -1,7 +1,6 @@
 # DASH
 
-- https://gemini.google.com
-- https://kimi.com
+https://gemini.google.com
 
 Go language, I need a script where input is DASH MPD file, which reads the
 file, and outputs the segment URLs

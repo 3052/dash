@@ -7,10 +7,36 @@ import (
    "testing"
 )
 
-//pass
-//https://vod-adaptive-ak.vimeocdn.com/exp=1752284211~acl=%2F15be2d09-cb01-46d4-9948-2667ba2e3907%2F%2A~hmac=6997e9aef9fd359a03a2b49a7a82db955064361a16ed4d875e1d927a62f2ca35/15be2d09-cb01-46d4-9948-2667ba2e3907/v2/texttrack/sub/7433271.vtt?pathsig=8c953e4f~UO056QMhmjVj394TCzXUSJJ4GI4BcpMoXktkwXsYSjw&r=dXMtY2VudHJhbDE%3D
+func output(name string, arg ...string) (string, error) {
+   command := exec.Command(name, arg...)
+   log.Print(command.Args)
+   data, err := command.Output()
+   if err != nil {
+      return "", err
+   }
+   return string(data), nil
+}
 
-var tests = []struct {
+func TestGemini(t *testing.T) {
+   log.SetFlags(log.Ltime)
+   for _, testVar := range gemini_tests {
+      arg := []string{"run", ".", testVar.name}
+      if testVar.url != "" {
+         arg = append(arg, testVar.url)
+      }
+      data, err := output("go", arg...)
+      if err != nil {
+         t.Fatal(data)
+      }
+      for _, value := range testVar.contains {
+         if !strings.Contains(data, value) {
+            t.Fatal(value)
+         }
+      }
+   }
+}
+
+var gemini_tests = []struct {
    name     string
    url      string
    contains map[string]string
@@ -57,33 +83,4 @@ var tests = []struct {
          `SegmentTemplate.endNumber == 0 (SegmentTimeline or SegmentCount)`,
       },
    },
-}
-
-func output(name string, arg ...string) (string, error) {
-   command := exec.Command(name, arg...)
-   log.Print(command.Args)
-   data, err := command.Output()
-   if err != nil {
-      return "", err
-   }
-   return string(data), nil
-}
-
-func Test(t *testing.T) {
-   log.SetFlags(log.Ltime)
-   for _, testVar := range tests {
-      arg := []string{"run", ".", testVar.name}
-      if testVar.url != "" {
-         arg = append(arg, testVar.url)
-      }
-      data, err := output("go", arg...)
-      if err != nil {
-         t.Fatal(data)
-      }
-      for _, value := range testVar.contains {
-         if !strings.Contains(data, value) {
-            t.Fatal(value)
-         }
-      }
-   }
 }
