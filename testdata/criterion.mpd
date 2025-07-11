@@ -6,7 +6,7 @@
             <ContentComponent contentType="text"></ContentComponent>
             <Accessibility schemeIdUri="urn:mpeg:dash:role:2011" value="caption"></Accessibility>
             <Representation id="subs-7433271" bandwidth="256">
-                <BaseURL>texttrack/sub/7433271.vtt?pathsig=8c953e4f~UO056QMhmjVj394TCzXUSJJ4GI4BcpMoXktkwXsYSjw&amp;r=dXMtZWFzdDE%3D</BaseURL>
+                <BaseURL>texttrack/sub/7433271.vtt?pathsig=8c953e4f~UO056QMhmjVj394TCzXUSJJ4GI4BcpMoXktkwXsYSjw&amp;r=dXMtY2VudHJhbDE%3D</BaseURL>
             </Representation>
         </AdaptationSet>
         <AdaptationSet bitstreamSwitching="true">

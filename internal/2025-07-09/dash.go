@@ -56,7 +56,7 @@ var states = []struct {
       },
    },
    {
-      state: "SegmentTemplate.timescale != nil",
+      state: "SegmentTemplate.timescale != nil (ignore)",
       example: []string{
          "canal.mpd",
          "criterion.mpd",
@@ -135,7 +135,7 @@ var states = []struct {
       },
    },
    {
-      state: `Period.duration != ""`,
+      state: `Period.duration != "" (ignore)`,
       example: []string{
          "canal.mpd",
          "criterion.mpd",
@@ -150,18 +150,18 @@ var states = []struct {
       },
    },
    {
-      state: "SegmentTemplate.duration >= 1",
+      state: "SegmentTemplate.duration == 0 (SegmentTimeline or endNumber)",
+      example: []string{
+         "canal.mpd",
+         "rakuten.mpd",
+      },
+   },
+   {
+      state: "SegmentTemplate.duration >= 1 (SegmentCount)",
       example: []string{
          "criterion.mpd",
          "max.mpd",
          "molotov.mpd",
-      },
-   },
-   {
-      state: "SegmentTemplate.duration == 0 (endNumber or SegmentTimeline)",
-      example: []string{
-         "canal.mpd",
-         "rakuten.mpd",
       },
    },
 }

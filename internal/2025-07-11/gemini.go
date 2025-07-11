@@ -6,7 +6,7 @@ import (
    "io"
    "net/url"
    "os"
-   "path/filepath" // Added for filepath.Abs and filepath.Dir
+   "path/filepath"
    "strconv"
    "strings"
 )
@@ -129,14 +129,12 @@ func main() {
       initialEffectiveBaseURL = "file://" + filepath.ToSlash(filepath.Dir(absPath)) + "/"
    }
 
-   effectiveBaseURL := initialEffectiveBaseURL
-
    fmt.Println("--- Extracted Segment URLs ---")
 
    for _, period := range mpd.Periods {
-      // Update effective BaseURL if defined at Period level
+      currentPeriodBaseURL := initialEffectiveBaseURL // Start with the global base for each period
       if period.BaseURL != "" {
-         effectiveBaseURL = resolveURL(effectiveBaseURL, period.BaseURL)
+         currentPeriodBaseURL = resolveURL(currentPeriodBaseURL, period.BaseURL)
       }
 
       periodDurationSeconds := parseDuration(period.Duration)
@@ -145,18 +143,18 @@ func main() {
       }
 
       for _, as := range period.AdaptationSets {
-         // Update effective BaseURL if defined at AdaptationSet level
+         currentAdaptationSetBaseURL := currentPeriodBaseURL // Start with period base for each AdaptationSet
          if as.BaseURL != "" {
-            effectiveBaseURL = resolveURL(effectiveBaseURL, as.BaseURL)
+            currentAdaptationSetBaseURL = resolveURL(currentAdaptationSetBaseURL, as.BaseURL)
          }
 
          // Get the SegmentTemplate defined at the AdaptationSet level
          asSegmentTemplate := as.SegmentTemplate
 
          for _, rep := range as.Representations {
-            // Update effective BaseURL if defined at Representation level
+            currentRepresentationBaseURL := currentAdaptationSetBaseURL // Start with AdaptationSet base for each Representation
             if rep.BaseURL != "" {
-               effectiveBaseURL = resolveURL(effectiveBaseURL, rep.BaseURL)
+               currentRepresentationBaseURL = resolveURL(currentRepresentationBaseURL, rep.BaseURL)
             }
 
             // Determine the effective SegmentTemplate for this Representation.
@@ -168,17 +166,26 @@ func main() {
                currentST = asSegmentTemplate
             }
 
-            // If no SegmentTemplate is found at either level, skip this representation
+            // --- NEW LOGIC FOR DIRECT BaseURL IN REPRESENTATION ---
+            // If Representation has a BaseURL AND no SegmentTemplate is defined (neither directly nor inherited),
+            // then this BaseURL is the direct media URL.
+            if rep.BaseURL != "" && currentST == nil {
+               fullURL := resolveURL(currentRepresentationBaseURL, rep.BaseURL)
+               fmt.Printf("Direct URL (Rep ID: %s): %s\n", rep.ID, fullURL)
+               continue // Move to the next representation
+            }
+            // --- END NEW LOGIC ---
+
+            // If no SegmentTemplate is found (after checking for direct BaseURL), skip this representation
             if currentST == nil {
-               fmt.Printf("Warning: Representation ID %s: No SegmentTemplate found at AdaptationSet or Representation level. Skipping.\n", rep.ID)
+               fmt.Printf("Warning: Representation ID %s: No SegmentTemplate or direct BaseURL found. Skipping.\n", rep.ID)
                continue
             }
 
             // Construct initialization URL specific to this representation
             if currentST.Initialization != "" {
                initURL := strings.ReplaceAll(currentST.Initialization, "$RepresentationID$", rep.ID)
-               // No $Time$ or $Number$ in initialization URL
-               fullInitURL := resolveURL(effectiveBaseURL, initURL)
+               fullInitURL := resolveURL(currentRepresentationBaseURL, initURL)
                fmt.Printf("Initialization URL (Rep ID: %s): %s\n", rep.ID, fullInitURL)
             }
 
@@ -218,7 +225,7 @@ func main() {
                      // Replace $Number$ if it exists (less common with $Time$, but for robustness)
                      mediaURLTemplate = strings.ReplaceAll(mediaURLTemplate, "$Number$", strconv.Itoa(segmentCounter))
 
-                     fullSegmentURL := resolveURL(effectiveBaseURL, mediaURLTemplate)
+                     fullSegmentURL := resolveURL(currentRepresentationBaseURL, mediaURLTemplate)
                      fmt.Printf("  Segment (Time: %d, Num: %d): %s\n", currentTime, segmentCounter, fullSegmentURL)
 
                      currentTime += s.D // Advance time for the next segment in this run
@@ -248,7 +255,7 @@ func main() {
                   mediaURL = strings.ReplaceAll(mediaURL, "$Bandwidth$", strconv.Itoa(rep.Bandwidth))
                   mediaURL = strings.ReplaceAll(mediaURL, "$Number$", strconv.Itoa(segmentNumber))
 
-                  fullSegmentURL := resolveURL(effectiveBaseURL, mediaURL)
+                  fullSegmentURL := resolveURL(currentRepresentationBaseURL, mediaURL)
                   fmt.Printf("  Segment %d: %s\n", segmentNumber, fullSegmentURL)
                }
             }
@@ -257,12 +264,13 @@ func main() {
    }
 }
 
-// resolveURL combines a base URL (which should be absolute) and a relative path to form a full URL.
+// resolveURL combines an absolute base URL and a potentially relative path to form a full URL.
 func resolveURL(base, relative string) string {
    // If the relative path is already an absolute URL (has a scheme), return it directly.
    if strings.Contains(relative, "://") {
       return relative
    }
+
    baseURL, err := url.Parse(base)
    if err != nil {
       fmt.Printf("Warning: Could not parse base URL '%s': %v. Returning relative path.\n", base, err)
@@ -273,8 +281,18 @@ func resolveURL(base, relative string) string {
       fmt.Printf("Warning: Could not parse relative URL '%s': %v. Returning relative path.\n", relative, err)
       return relative
    }
-   // Resolve the reference. net/url.ResolveReference is designed to handle this.
-   return baseURL.ResolveReference(relativeURL).String()
+
+   // Resolve the reference. net/url.ResolveReference handles path segments like ".." and ensures correct slashes.
+   resolved := baseURL.ResolveReference(relativeURL).String()
+
+   // If the base was a file:// URL and the resolved URL still looks like it needs a trailing slash for a directory
+   // (e.g., file:///path/to/dash instead of file:///path/to/dash/) and the original relative path was a directory,
+   // ensure the trailing slash. This is mostly for consistency in directory paths.
+   if strings.HasPrefix(base, "file://") && strings.HasSuffix(base, "/") && !strings.HasSuffix(resolved, "/") && strings.HasSuffix(relative, "/") {
+      resolved += "/"
+   }
+
+   return resolved
 }
 
 // parseDuration parses an ISO 8601 duration string (e.g., PT0H0M30.0S) into seconds.
