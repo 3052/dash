@@ -2,9 +2,14 @@ package dash
 
 import (
    "fmt"
+   "slices"
    "testing"
 )
 
 func Test(t *testing.T) {
-   fmt.Println(len(states))
+   for _, state := range states {
+      if slices.Contains(state.example, "canal.mpd") {
+         fmt.Println(state.state)
+      }
+   }
 }

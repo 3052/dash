@@ -5,21 +5,6 @@ var states = []struct {
    example []string
 }{
    {
-      state: `Period.duration != ""`,
-      example: []string{
-         "canal.mpd",
-         "criterion.mpd",
-         "max.mpd",
-         "molotov.mpd",
-      },
-   },
-   {
-      state: `Period.duration == ""`,
-      example: []string{
-         "rakuten.mpd",
-      },
-   },
-   {
       state: "Representation.SegmentBase != nil",
       example: []string{
          "max.mpd",
@@ -48,40 +33,10 @@ var states = []struct {
       },
    },
    {
-      state: "SegmentTemplate.SegmentTimeline == nil",
+      state: "SegmentTemplate.SegmentTimeline == nil (endNumber or SegmentCount)",
       example: []string{
          "criterion.mpd",
          "molotov.mpd",
-         "rakuten.mpd",
-      },
-   },
-   {
-      state: "SegmentTemplate.duration >= 1",
-      example: []string{
-         "criterion.mpd",
-         "max.mpd",
-         "molotov.mpd",
-      },
-   },
-   {
-      state: "SegmentTemplate.duration == 0",
-      example: []string{
-         "canal.mpd",
-         "rakuten.mpd",
-      },
-   },
-   {
-      state: "SegmentTemplate.endNumber >= 1",
-      example: []string{
-         "molotov.mpd",
-      },
-   },
-   {
-      state: "SegmentTemplate.endNumber == 0",
-      example: []string{
-         "canal.mpd",
-         "criterion.mpd",
-         "max.mpd",
          "rakuten.mpd",
       },
    },
@@ -92,7 +47,7 @@ var states = []struct {
       },
    },
    {
-      state: "SegmentTemplate.startNumber == nil",
+      state: "SegmentTemplate.startNumber == nil (startNumber = 1)",
       example: []string{
          "canal.mpd",
          "criterion.mpd",
@@ -110,8 +65,23 @@ var states = []struct {
       },
    },
    {
-      state: "SegmentTemplate.timescale == nil",
+      state: "SegmentTemplate.timescale == nil (timescale = 1)",
       example: []string{
+         "rakuten.mpd",
+      },
+   },
+   {
+      state: "SegmentTemplate.endNumber >= 1",
+      example: []string{
+         "molotov.mpd",
+      },
+   },
+   {
+      state: "SegmentTemplate.endNumber == 0 (SegmentTimeline or SegmentCount)",
+      example: []string{
+         "canal.mpd",
+         "criterion.mpd",
+         "max.mpd",
          "rakuten.mpd",
       },
    },
@@ -162,6 +132,36 @@ var states = []struct {
       state: `strings.Contains(SegmentTemplate.media, "$Time$")`,
       example: []string{
          "canal.mpd",
+      },
+   },
+   {
+      state: `Period.duration != ""`,
+      example: []string{
+         "canal.mpd",
+         "criterion.mpd",
+         "max.mpd",
+         "molotov.mpd",
+      },
+   },
+   {
+      state: `Period.duration == "" (Period.duration = MPD.mediaPresentationDuration)`,
+      example: []string{
+         "rakuten.mpd",
+      },
+   },
+   {
+      state: "SegmentTemplate.duration >= 1",
+      example: []string{
+         "criterion.mpd",
+         "max.mpd",
+         "molotov.mpd",
+      },
+   },
+   {
+      state: "SegmentTemplate.duration == 0 (endNumber or SegmentTimeline)",
+      example: []string{
+         "canal.mpd",
+         "rakuten.mpd",
       },
    },
 }

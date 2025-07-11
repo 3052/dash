@@ -1,33 +1,66 @@
 package main
 
 import (
-   "os"
+   "log"
    "os/exec"
+   "strings"
    "testing"
 )
 
 var tests = []struct {
    name     string
-   contains string
    url      string
+   contains map[string]string
+   state []string
 }{
    {
       name:     "../../testdata/canal.mpd",
-      contains: "",
       url:      "https://cz-bks400-prod32-live.solocoo.tv:443/bpk-token/1ac@bwrqpnwcgc4vj01ychymvdb50uune2ltbkkz13ba/bpk-vod/playout01/default/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/index.mpd",
+      contains: map[string]string{
+         "audio_eng_1=576000": "https://cz-bks400-prod32-live.solocoo.tv:443/bpk-token/1ac@bwrqpnwcgc4vj01ychymvdb50uune2ltbkkz13ba/bpk-vod/playout01/default/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/dash/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD-audio_eng_1=576000-383904768.dash?serviceid=298f95e1bf91361258c44a2b1f4a2425",
+         "video=3399914": "https://cz-bks400-prod32-live.solocoo.tv:443/bpk-token/1ac@bwrqpnwcgc4vj01ychymvdb50uune2ltbkkz13ba/bpk-vod/playout01/default/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/dash/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD-video=3399914-4798800.dash?serviceid=298f95e1bf91361258c44a2b1f4a2425",
+         "thumbnail": "", // the MPD is actually invalid
+      },
+      state: {
+         `Period.duration != ""`,
+         `SegmentTemplate.duration == 0`,
+         `Representation.SegmentTemplate != nil`,
+         `SegmentTemplate.SegmentTimeline != nil`,
+         `SegmentTemplate.endNumber == 0`,
+         `SegmentTemplate.startNumber == nil`,
+         `SegmentTemplate.timescale != nil`,
+         `URL.IsAbs == false`,
+         `len(MPD.Period) == 1`,
+         `strings.Contains(SegmentTemplate.media, "$Time$")`,
+      },
    },
 }
 
+func output(name string, arg ...string) (string, error) {
+   command := exec.Command(name, arg...)
+   log.Print(command.Args)
+   data, err := command.Output()
+   if err != nil {
+      return "", err
+   }
+   return string(data), nil
+}
+
 func Test(t *testing.T) {
+   log.SetFlags(log.Ltime)
    for _, testVar := range tests {
       arg := []string{"run", ".", testVar.name}
       if testVar.url != "" {
          arg = append(arg, testVar.url)
       }
-      data, err := exec.Command("go", arg...).Output()
+      data, err := output("go", arg...)
       if err != nil {
-         t.Fatal(string(data))
+         t.Fatal(data)
       }
-      os.Stdout.Write(data)
+      for _, value := range testVar.contains {
+         if !strings.Contains(data, value) {
+            t.Fatal(value)
+         }
+      }
    }
 }

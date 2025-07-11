@@ -20,6 +20,16 @@ func (s *SegmentTemplate) numberTime(periodVar *Period) []uint {
    return s.byPeriod(periodVar) // SegmentTemplate.duration
 }
 
+func (s *SegmentTemplate) byEndNumber() []uint {
+   var segment []uint
+   number := *s.StartNumber
+   for number <= s.EndNumber {
+      segment = append(segment, number)
+      number++
+   }
+   return segment
+}
+
 func (s *SegmentTemplate) byPeriod(periodVar *Period) []uint {
    var segment []uint
    // dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
@@ -115,16 +125,6 @@ func (s *SegmentList) segments() []string {
       segments = append(segments, segment.Media)
    }
    return segments
-}
-
-func (s *SegmentTemplate) byEndNumber() []uint {
-   var segment []uint
-   number := *s.StartNumber
-   for number <= s.EndNumber {
-      segment = append(segment, number)
-      number++
-   }
-   return segment
 }
 
 func (s *SegmentTemplate) segments(periodVar *Period) []string {
