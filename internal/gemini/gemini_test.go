@@ -1,85 +1,103 @@
 package main
 
 import (
+   "encoding/json"
    "log"
    "os/exec"
-   "strings"
    "testing"
 )
 
-var gemini_tests = []struct {
-   name     string
-   url      string
-   contains map[string]string
-   state    []string
+const prefix = "file://D:/git/dash/testdata/"
+
+var tests = []struct {
+   name           string
+   url            string
+   representation []representation
 }{
    {
       name: "../../testdata/canal.mpd",
-      url:  "https://cz-bks400-prod27-live.solocoo.tv:443/bpk-token/1ac@5eugcskcq0iik3s4fbwqqineenebvrqu50zpwcba/bpk-vod/playout01/default/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/index.mpd",
-      contains: map[string]string{
-         "audio_eng_1=576000": "https://cz-bks400-prod32-live.solocoo.tv:443/bpk-token/1ac@bwrqpnwcgc4vj01ychymvdb50uune2ltbkkz13ba/bpk-vod/playout01/default/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/dash/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD-audio_eng_1=576000-383904768.dash?serviceid=298f95e1bf91361258c44a2b1f4a2425",
-         "video=3399914":      "https://cz-bks400-prod32-live.solocoo.tv:443/bpk-token/1ac@bwrqpnwcgc4vj01ychymvdb50uune2ltbkkz13ba/bpk-vod/playout01/default/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/dash/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD-video=3399914-4798800.dash?serviceid=298f95e1bf91361258c44a2b1f4a2425",
-         "thumbnail":          "", // the MPD is actually invalid
-      },
-      state: []string{
-         `Period.duration != "" (ignore)`,
-         `Representation.SegmentTemplate != nil`,
-         `SegmentTemplate.SegmentTimeline != nil`,
-         `SegmentTemplate.timescale != nil (ignore)`,
-         `len(MPD.Period) == 1`,
-         `URL.IsAbs == false`,
-         `strings.Contains(SegmentTemplate.media, "$Time$")`,
-         `SegmentTemplate.startNumber == nil (startNumber = 1)`,
-         `SegmentTemplate.duration == 0 (SegmentTimeline or endNumber)`,
-         `SegmentTemplate.endNumber == 0 (SegmentTimeline or SegmentCount)`,
-      },
-   },
-   {
-      name: "../../testdata/criterion.mpd",
-      url:  "https://vod-adaptive-ak.vimeocdn.com/exp=1752284211~acl=%2F15be2d09-cb01-46d4-9948-2667ba2e3907%2F%2A~hmac=6997e9aef9fd359a03a2b49a7a82db955064361a16ed4d875e1d927a62f2ca35/15be2d09-cb01-46d4-9948-2667ba2e3907/v2/playlist/drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/av/primary/sub/7433271-c-en/prot/bWF4X2hlaWdodD0xMDgw/playlist.mpd",
-      contains: map[string]string{
-         "subs-7433271": "",
-         "audio-916e7eef-13ce-4a46-9bda-b2627ec04b4f": "",
-         "video-888d2bc7-75b5-4264-bf57-08e3dc24ecbb": "",
-      },
-      state: []string{
-         `Period.duration != "" (ignore)`,
-         `Representation.SegmentList != nil`,
-         `SegmentTemplate.SegmentTimeline == nil (endNumber or SegmentCount)`,
-         `SegmentTemplate.duration >= 1 (SegmentCount)`,
-         `SegmentTemplate.endNumber == 0 (SegmentTimeline or SegmentCount)`,
-         `SegmentTemplate.startNumber == nil (startNumber = 1)`,
-         `SegmentTemplate.timescale != nil (ignore)`,
-         `URL.IsAbs == false`,
-         `len(MPD.Period) == 1`,
+      url:  "https://cz-bks400-prod31-live.solocoo.tv:443/bpk-token/1ac@xbve3bnlusuhuoq2iaob0kj0dkjifjpix3nnjrca/bpk-vod/playout01/default/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/index.mpd",
+      representation: []representation{
+         {
+            id:     "video=3399914",
+            length: 1 + 1332 + 1,
+            url:    prefix + "dash/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD-video=3399914-4798800.dash?serviceid=298f95e1bf91361258c44a2b1f4a2425",
+         },
+         {
+            id:     "audio_eng_1=576000",
+            length: 1334,
+            url:    prefix + "dash/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD-audio_eng_1=576000-383904768.dash?serviceid=298f95e1bf91361258c44a2b1f4a2425",
+         },
+         {
+            id:     "thumbnail", // the MPD is actually invalid
+            length: 80,
+            url:    prefix + "dash/thumbnail/tile_80.jpeg?serviceid=298f95e1bf91361258c44a2b1f4a2425",
+         },
       },
    },
+   //{
+   //   name: "../../testdata/criterion.mpd",
+   //   url:  "https://vod-adaptive-ak.vimeocdn.com/exp=1752284211~acl=%2F15be2d09-cb01-46d4-9948-2667ba2e3907%2F%2A~hmac=6997e9aef9fd359a03a2b49a7a82db955064361a16ed4d875e1d927a62f2ca35/15be2d09-cb01-46d4-9948-2667ba2e3907/v2/playlist/drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/av/primary/sub/7433271-c-en/prot/bWF4X2hlaWdodD0xMDgw/playlist.mpd",
+   //   representation: []representation{
+   //      {
+   //         id:     "video-888d2bc7-75b5-4264-bf57-08e3dc24ecbb",
+   //         length: 1 + 1114 + 1,
+   //         url:    "/" + "drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/888d2bc7-75b5-4264-bf57-08e3dc24ecbb/segment.mp4?pathsig=8c953e4f~vEyD7FR7NMtgBhRbRGol6tYRL0pVp7AQxjE5pUlKliI&r=dXMtY2VudHJhbDE%3D&sid=1116&st=video",
+   //      },
+   //      {
+   //         id:     "audio-916e7eef-13ce-4a46-9bda-b2627ec04b4f",
+   //         length: 1047 + 69,
+   //         url:    "/" + "drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/916e7eef-13ce-4a46-9bda-b2627ec04b4f/segment.mp4?pathsig=8c953e4f~ta8gBIdEHUUP_p39sTXzQwDgjmCoZMymCeDBI6DL2H4&r=dXMtY2VudHJhbDE%3D&sid=1116&st=audio",
+   //      },
+   //      {
+   //         id:     "subs-7433271",
+   //         length: 1,
+   //         url:    "/" + "texttrack/sub/7433271.vtt?pathsig=8c953e4f~UO056QMhmjVj394TCzXUSJJ4GI4BcpMoXktkwXsYSjw&r=dXMtY2VudHJhbDE%3D",
+   //      },
+   //   },
+   //},
 }
 
-func output(name string, arg ...string) (string, error) {
+func output(name string, arg ...string) ([]byte, error) {
    command := exec.Command(name, arg...)
    log.Print(command.Args)
-   data, err := command.Output()
-   if err != nil {
-      return "", err
-   }
-   return string(data), nil
+   return command.Output()
 }
 
-func TestGemini(t *testing.T) {
+type representation struct {
+   id     string
+   length int
+   url    string
+}
+
+func Test(t *testing.T) {
    log.SetFlags(log.Ltime)
-   for _, testVar := range gemini_tests {
-      arg := []string{"run", ".", testVar.name}
-      if testVar.url != "" {
-         arg = append(arg, testVar.url)
-      }
-      data, err := output("go", arg...)
+   for _, testVar := range tests {
+      data, err := output("go", "run", ".", "-mpd", testVar.name)
       if err != nil {
          t.Fatal(data)
       }
-      for _, value := range testVar.contains {
-         if !strings.Contains(data, value) {
-            t.Fatal(value)
+      var representsB map[string]struct {
+         Urls []string
+      }
+      err = json.Unmarshal(data, &representsB)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, representA := range testVar.representation {
+         representB := representsB[representA.id].Urls
+         if len(representB) != representA.length {
+            t.Fatal(
+               representA.id,
+               "pass", representA.length,
+               "fail", len(representB),
+            )
+         }
+         if representB[len(representB)-1] != representA.url {
+            t.Fatal(
+               "\npass", representA.url,
+               "\nfail", representB[len(representB)-1],
+            )
          }
       }
    }
