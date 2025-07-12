@@ -1,10 +1,8 @@
 # chatBot
 
-## kimi
+## claude
 
-keep reaching limit before getting acceptable solution
-
-https://kimi.com
+https://claude.ai
 
 ## chatGpt
 
