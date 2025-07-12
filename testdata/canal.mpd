@@ -715,8 +715,8 @@
       </ContentProtection>
       <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"/>
       <SegmentTemplate timescale="48000"
-initialization="appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD-$RepresentationID$.dash?serviceid=298f95e1bf91361258c44a2b1f4a2425"
-media="appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD-$RepresentationID$-$Time$.dash?serviceid=298f95e1bf91361258c44a2b1f4a2425">
+         initialization="appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD-$RepresentationID$.dash?serviceid=298f95e1bf91361258c44a2b1f4a2425"
+         media="appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD-$RepresentationID$-$Time$.dash?serviceid=298f95e1bf91361258c44a2b1f4a2425">
         <SegmentTimeline>
           <S t="0" d="288768"/>
           <S d="287232"/>
@@ -2793,9 +2793,7 @@ media="appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD-$Representati
       </Representation>
     </AdaptationSet>
     <AdaptationSet id="5" contentType="image" mimeType="image/jpeg">
-      <SegmentTemplate timescale="1" duration="100"
-         media="$RepresentationID$/tile_$Number$.jpeg?serviceid=298f95e1bf91361258c44a2b1f4a2425"
-         startNumber="1" endNumber="80"/>
+      <SegmentTemplate timescale="1" duration="100" media="$RepresentationID$/tile_$Number$.jpeg?serviceid=298f95e1bf91361258c44a2b1f4a2425" startNumber="1" endNumber="80"/>
       <Representation bandwidth="1000" id="thumbnail" width="3200" height="180">
         <EssentialProperty schemeIdUri="http://dashif.org/guidelines/thumbnail_tile" value="10x1"/>
       </Representation>

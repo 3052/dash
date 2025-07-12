@@ -9,6 +9,44 @@ import (
    "time"
 )
 
+func (s *SegmentTemplate) Segment(periodVar *Period) iter.Seq[int] {
+   var address int
+   if s.Media.time_address() {
+      address = s.PresentationTimeOffset
+   } else {
+      address = *s.StartNumber
+   }
+   return func(yield func(int) bool) {
+      if s.EndNumber >= 1 {
+         for address <= s.EndNumber {
+            if !yield(address) {
+               return
+            }
+            address++
+         }
+      } else if s.SegmentTimeline != nil {
+         for _, segment := range s.SegmentTimeline.S {
+            for range 1 + segment.R {
+               if !yield(address) {
+                  return
+               }
+               if s.Media.time_address() {
+                  address += segment.D
+               } else {
+                  address++
+               }
+            }
+         }
+      } else {
+         for range periodVar.segment_count(s) {
+            if !yield(address) {
+               return
+            }
+            address++
+         }
+      }
+   }
+}
 // dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
 // SegmentCount = Ceil((AsSeconds(Period@duration)) /
 // (SegmentTemplate@duration / SegmentTemplate@timescale))
@@ -310,44 +348,5 @@ func (r *Representation) set(adapt *AdaptationSet) {
    }
    if r.Width == nil {
       r.Width = r.adaptation_set.Width
-   }
-}
-
-func (s *SegmentTemplate) Segment(periodVar *Period) iter.Seq[int] {
-   var address int
-   if s.Media.time_address() {
-      address = s.PresentationTimeOffset
-   } else {
-      address = *s.StartNumber
-   }
-   return func(yield func(int) bool) {
-      if s.EndNumber >= 1 {
-         for address <= s.EndNumber {
-            if !yield(address) {
-               return
-            }
-            address++
-         }
-      } else if s.SegmentTimeline != nil {
-         for _, segment := range s.SegmentTimeline.S {
-            for range 1 + segment.R {
-               if !yield(address) {
-                  return
-               }
-               if s.Media.time_address() {
-                  address += segment.D
-               } else {
-                  address++
-               }
-            }
-         }
-      } else {
-         for range periodVar.segment_count(s) {
-            if !yield(address) {
-               return
-            }
-            address++
-         }
-      }
    }
 }
