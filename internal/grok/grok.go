@@ -5,6 +5,7 @@ import (
    "encoding/xml"
    "fmt"
    "os"
+   "path"
    "strings"
 )
 
@@ -104,11 +105,22 @@ func main() {
             baseURL := mpdBaseURL
             if period.BaseURL != "" {
                baseURL = joinURLs(baseURL, period.BaseURL)
+               fmt.Fprintf(os.Stderr, "      After Period BaseURL: %s\n", baseURL)
             }
             if rep.BaseURL != "" {
                baseURL = joinURLs(baseURL, rep.BaseURL)
+               fmt.Fprintf(os.Stderr, "      After Representation BaseURL: %s\n", baseURL)
+               // Add Representation BaseURL directly if present
+               urls = append(urls, baseURL)
+               fmt.Fprintf(os.Stderr, "      Added Representation BaseURL: %s\n", baseURL)
+               if strings.Contains(baseURL, "..") {
+                  fmt.Fprintf(os.Stderr, "      Warning: Representation BaseURL contains '..': %s\n", baseURL)
+               }
             }
             fmt.Fprintf(os.Stderr, "      Combined BaseURL: %s\n", baseURL)
+            if strings.Contains(baseURL, "..") {
+               fmt.Fprintf(os.Stderr, "      Warning: Combined BaseURL contains '..': %s\n", baseURL)
+            }
 
             // Check for SegmentTemplate at Representation or AdaptationSet level
             segTemplate := rep.SegmentTemplate
@@ -118,19 +130,31 @@ func main() {
 
             if rep.SegmentBase != nil && rep.SegmentBase.Initialization != "" {
                url := strings.ReplaceAll(rep.SegmentBase.Initialization, "$RepresentationID$", rep.ID)
-               urls = append(urls, joinURLs(baseURL, url))
-               fmt.Fprintf(os.Stderr, "      Added SegmentBase URL: %s\n", urls[len(urls)-1])
+               cleanURL := joinURLs(baseURL, url)
+               urls = append(urls, cleanURL)
+               fmt.Fprintf(os.Stderr, "      Added SegmentBase URL: %s\n", cleanURL)
+               if strings.Contains(cleanURL, "..") {
+                  fmt.Fprintf(os.Stderr, "      Warning: SegmentBase URL contains '..': %s\n", cleanURL)
+               }
             }
 
             if rep.SegmentList != nil {
                if rep.SegmentList.Initialization != "" {
                   url := strings.ReplaceAll(rep.SegmentList.Initialization, "$RepresentationID$", rep.ID)
-                  urls = append(urls, joinURLs(baseURL, url))
-                  fmt.Fprintf(os.Stderr, "      Added SegmentList Initialization URL: %s\n", urls[len(urls)-1])
+                  cleanURL := joinURLs(baseURL, url)
+                  urls = append(urls, cleanURL)
+                  fmt.Fprintf(os.Stderr, "      Added SegmentList Initialization URL: %s\n", cleanURL)
+                  if strings.Contains(cleanURL, "..") {
+                     fmt.Fprintf(os.Stderr, "      Warning: SegmentList Initialization URL contains '..': %s\n", cleanURL)
+                  }
                }
                for _, segURL := range rep.SegmentList.SegmentURLs {
-                  urls = append(urls, joinURLs(baseURL, segURL.Media))
-                  fmt.Fprintf(os.Stderr, "      Added SegmentList URL: %s\n", urls[len(urls)-1])
+                  cleanURL := joinURLs(baseURL, segURL.Media)
+                  urls = append(urls, cleanURL)
+                  fmt.Fprintf(os.Stderr, "      Added SegmentList URL: %s\n", cleanURL)
+                  if strings.Contains(cleanURL, "..") {
+                     fmt.Fprintf(os.Stderr, "      Warning: SegmentList URL contains '..': %s\n", cleanURL)
+                  }
                }
             }
 
@@ -141,8 +165,12 @@ func main() {
                mediaTemplate := segTemplate.Media
                if initURL != "" {
                   initURL = strings.ReplaceAll(initURL, "$RepresentationID$", rep.ID)
-                  urls = append(urls, joinURLs(baseURL, initURL))
-                  fmt.Fprintf(os.Stderr, "      Added Initialization URL: %s\n", urls[len(urls)-1])
+                  cleanURL := joinURLs(baseURL, initURL)
+                  urls = append(urls, cleanURL)
+                  fmt.Fprintf(os.Stderr, "      Added Initialization URL: %s\n", cleanURL)
+                  if strings.Contains(cleanURL, "..") {
+                     fmt.Fprintf(os.Stderr, "      Warning: Initialization URL contains '..': %s\n", cleanURL)
+                  }
                }
 
                if mediaTemplate != "" {
@@ -153,21 +181,26 @@ func main() {
                         // Handle $Time$ placeholder
                         currentTime := uint64(0)
                         for k, seg := range segTemplate.SegmentTimeline.Segments {
-                           // Use explicit t if provided, otherwise continue from currentTime
                            if seg.Time != 0 {
                               currentTime = seg.Time
                            }
                            mediaURL := strings.ReplaceAll(mediaTemplate, "$Time$", fmt.Sprintf("%d", currentTime))
-                           urls = append(urls, joinURLs(baseURL, mediaURL))
-                           fmt.Fprintf(os.Stderr, "        Added Time-based URL %d (t=%d, d=%d, r=%d): %s\n", k, currentTime, seg.Duration, seg.Repeat, urls[len(urls)-1])
-                           // Handle repeats
+                           cleanURL := joinURLs(baseURL, mediaURL)
+                           urls = append(urls, cleanURL)
+                           fmt.Fprintf(os.Stderr, "        Added Time-based URL %d (t=%d, d=%d, r=%d): %s\n", k, currentTime, seg.Duration, seg.Repeat, cleanURL)
+                           if strings.Contains(cleanURL, "..") {
+                              fmt.Fprintf(os.Stderr, "        Warning: Time-based URL contains '..': %s\n", cleanURL)
+                           }
                            for j := 0; j < seg.Repeat; j++ {
                               currentTime += seg.Duration
                               mediaURL = strings.ReplaceAll(mediaTemplate, "$Time$", fmt.Sprintf("%d", currentTime))
-                              urls = append(urls, joinURLs(baseURL, mediaURL))
-                              fmt.Fprintf(os.Stderr, "        Added Repeated Time-based URL %d (t=%d): %s\n", j+1, currentTime, urls[len(urls)-1])
+                              cleanURL := joinURLs(baseURL, mediaURL)
+                              urls = append(urls, cleanURL)
+                              fmt.Fprintf(os.Stderr, "        Added Repeated Time-based URL %d (t=%d): %s\n", j+1, currentTime, cleanURL)
+                              if strings.Contains(cleanURL, "..") {
+                                 fmt.Fprintf(os.Stderr, "        Warning: Repeated Time-based URL contains '..': %s\n", cleanURL)
+                              }
                            }
-                           // Update currentTime for next segment
                            currentTime += seg.Duration
                         }
                      } else if strings.Contains(mediaTemplate, "$Number$") {
@@ -175,19 +208,27 @@ func main() {
                         currentNumber := 1
                         for k, seg := range segTemplate.SegmentTimeline.Segments {
                            mediaURL := strings.ReplaceAll(mediaTemplate, "$Number$", fmt.Sprintf("%d", currentNumber))
-                           urls = append(urls, joinURLs(baseURL, mediaURL))
-                           fmt.Fprintf(os.Stderr, "        Added Number-based URL %d (n=%d, r=%d): %s\n", k, currentNumber, seg.Repeat, urls[len(urls)-1])
+                           cleanURL := joinURLs(baseURL, mediaURL)
+                           urls = append(urls, cleanURL)
+                           fmt.Fprintf(os.Stderr, "        Added Number-based URL %d (n=%d, r=%d): %s\n", k, currentNumber, seg.Repeat, cleanURL)
+                           if strings.Contains(cleanURL, "..") {
+                              fmt.Fprintf(os.Stderr, "        Warning: Number-based URL contains '..': %s\n", cleanURL)
+                           }
                            for j := 0; j < seg.Repeat; j++ {
                               currentNumber++
                               mediaURL = strings.ReplaceAll(mediaTemplate, "$Number$", fmt.Sprintf("%d", currentNumber))
-                              urls = append(urls, joinURLs(baseURL, mediaURL))
-                              fmt.Fprintf(os.Stderr, "        Added Repeated Number-based URL %d (n=%d): %s\n", j+1, currentNumber, urls[len(urls)-1])
+                              cleanURL = joinURLs(baseURL, mediaURL)
+                              urls = append(urls, cleanURL)
+                              fmt.Fprintf(os.Stderr, "        Added Repeated Number-based URL %d (n=%d): %s\n", j+1, currentNumber, cleanURL)
+                              if strings.Contains(cleanURL, "..") {
+                                 fmt.Fprintf(os.Stderr, "        Warning: Repeated Number-based URL contains '..': %s\n", cleanURL)
+                              }
                            }
                            currentNumber++
                         }
                      }
                   } else if segTemplate.Duration > 0 && segTemplate.EndNumber > 0 {
-                     // Handle SegmentTemplate without SegmentTimeline (e.g., thumbnails)
+                     // Handle SegmentTemplate without SegmentTimeline
                      start := segTemplate.StartNumber
                      if start == 0 {
                         start = 1 // Default to 1 if not specified
@@ -196,8 +237,12 @@ func main() {
                      fmt.Fprintf(os.Stderr, "      Non-timeline SegmentTemplate: startNumber=%d, endNumber=%d\n", start, end)
                      for i := start; i <= end; i++ {
                         mediaURL := strings.ReplaceAll(mediaTemplate, "$Number$", fmt.Sprintf("%d", i))
-                        urls = append(urls, joinURLs(baseURL, mediaURL))
-                        fmt.Fprintf(os.Stderr, "        Added Thumbnail URL %d: %s\n", i, urls[len(urls)-1])
+                        cleanURL := joinURLs(baseURL, mediaURL)
+                        urls = append(urls, cleanURL)
+                        fmt.Fprintf(os.Stderr, "        Added URL %d: %s\n", i, cleanURL)
+                        if strings.Contains(cleanURL, "..") {
+                           fmt.Fprintf(os.Stderr, "        Warning: Non-timeline URL contains '..': %s\n", cleanURL)
+                        }
                      }
                   } else {
                      fmt.Fprintf(os.Stderr, "      Warning: SegmentTemplate has no SegmentTimeline or valid duration/endNumber\n")
@@ -223,14 +268,61 @@ func main() {
 }
 
 func joinURLs(base, relative string) string {
-   if base == "" {
-      return relative
+   // Split query parameters to preserve them
+   var basePath, baseQuery, relPath, relQuery string
+   if idx := strings.Index(base, "?"); idx != -1 {
+      basePath = base[:idx]
+      baseQuery = base[idx:]
+   } else {
+      basePath = base
    }
-   if relative == "" {
-      return base
+   if idx := strings.Index(relative, "?"); idx != -1 {
+      relPath = relative[:idx]
+      relQuery = relative[idx:]
+   } else {
+      relPath = relative
    }
-   // Ensure forward slashes for URLs
-   base = strings.TrimRight(base, "/")
-   relative = strings.TrimLeft(relative, "/")
-   return base + "/" + relative
+
+   // Ensure forward slashes
+   basePath = strings.ReplaceAll(basePath, "\\", "/")
+   relPath = strings.ReplaceAll(relPath, "\\", "/")
+
+   // Strip excessive parent directories from basePath
+   for strings.HasPrefix(basePath, "../") {
+      basePath = strings.TrimPrefix(basePath, "../")
+   }
+   if basePath == "" || basePath == strings.Repeat("../", 13) {
+      basePath = "/"
+   }
+
+   // Combine paths
+   var combinedPath string
+   if basePath == "" || basePath == "/" {
+      combinedPath = path.Clean("/" + relPath)
+   } else {
+      combinedPath = path.Clean(basePath + "/" + relPath)
+   }
+
+   // Combine query parameters (relative query takes precedence if present)
+   query := baseQuery
+   if relQuery != "" {
+      query = relQuery
+   }
+
+   // Construct final URL
+   cleanURL := combinedPath
+   if query != "" {
+      cleanURL += query
+   }
+
+   // Log for debugging
+   fmt.Fprintf(os.Stderr, "      joinURLs: basePath=%s, baseQuery=%s, relPath=%s, relQuery=%s, combinedPath=%s, cleanURL=%s\n",
+      basePath, baseQuery, relPath, relQuery, combinedPath, cleanURL)
+
+   // Final check for '..'
+   if strings.Contains(cleanURL, "..") {
+      fmt.Fprintf(os.Stderr, "      Warning: Final URL contains '..': %s\n", cleanURL)
+   }
+
+   return cleanURL
 }
