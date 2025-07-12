@@ -2,5 +2,6 @@
 
 https://grok.com
 
-Go language, I need a script where input is DASH MPD file, and out output is
-segment URLs as JSON, grouped by Representation
+Go language, I need a script where user will provide path to DASH MPD file, and
+output is segment URLs as JSON, grouped by Representation. assume MPD URL is
+"http://test.test/test.mpd" to resolve relative URLs

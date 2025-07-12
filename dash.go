@@ -47,6 +47,7 @@ func (s *SegmentTemplate) Segment(periodVar *Period) iter.Seq[int] {
       }
    }
 }
+
 // dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
 // SegmentCount = Ceil((AsSeconds(Period@duration)) /
 // (SegmentTemplate@duration / SegmentTemplate@timescale))
@@ -286,8 +287,8 @@ type SegmentTemplate struct {
    Duration    int  `xml:"duration,attr"`
    // This can be any frequency but typically is the media clock frequency of
    // one of the media streams (or a positive integer multiple thereof).
-   Timescale *int `xml:"timescale,attr"`
-   Media                  Media          `xml:"media,attr"`
+   Timescale *int  `xml:"timescale,attr"`
+   Media     Media `xml:"media,attr"`
 }
 
 func (m Media) Url(represent *Representation, address int) (*url.URL, error) {

@@ -20,7 +20,9 @@
                 <cenc:pssh>AAAANHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABQIARIQ5FdkZadFIT8zbB7xv11RPg==</cenc:pssh>
             </ContentProtection>
             <Representation id="video-916e7eef-13ce-4a46-9bda-b2627ec04b4f" codecs="avc1.64081E" mimeType="video/mp4" width="598" height="360" frameRate="24000/1001" startWithSAP="1" bandwidth="560000">
-                <SegmentTemplate timescale="48000" media="drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/916e7eef-13ce-4a46-9bda-b2627ec04b4f/segment.mp4?pathsig=8c953e4f~ta8gBIdEHUUP_p39sTXzQwDgjmCoZMymCeDBI6DL2H4&amp;r=dXMtY2VudHJhbDE%3D&amp;sid=$Number$&amp;st=video" initialization="drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/916e7eef-13ce-4a46-9bda-b2627ec04b4f/segment.mp4?pathsig=8c953e4f~ta8gBIdEHUUP_p39sTXzQwDgjmCoZMymCeDBI6DL2H4&amp;r=dXMtY2VudHJhbDE%3D&amp;sid=0&amp;st=video">
+                <SegmentTemplate timescale="48000"
+                  media="drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/916e7eef-13ce-4a46-9bda-b2627ec04b4f/segment.mp4?pathsig=8c953e4f~ta8gBIdEHUUP_p39sTXzQwDgjmCoZMymCeDBI6DL2H4&amp;r=dXMtY2VudHJhbDE%3D&amp;sid=$Number$&amp;st=video"
+                  initialization="drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/916e7eef-13ce-4a46-9bda-b2627ec04b4f/segment.mp4?pathsig=8c953e4f~ta8gBIdEHUUP_p39sTXzQwDgjmCoZMymCeDBI6DL2H4&amp;r=dXMtY2VudHJhbDE%3D&amp;sid=0&amp;st=video">
                     <SegmentTimeline>
                         <S t="0" d="288288" r="1113"></S>
                         <S t="321152832" d="214214"></S>
@@ -46,7 +48,9 @@
                 </SegmentTemplate>
             </Representation>
             <Representation id="video-888d2bc7-75b5-4264-bf57-08e3dc24ecbb" codecs="avc1.640828" mimeType="video/mp4" width="1792" height="1080" frameRate="24000/1001" startWithSAP="1" bandwidth="5796000">
-                <SegmentTemplate timescale="48000" media="drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/888d2bc7-75b5-4264-bf57-08e3dc24ecbb/segment.mp4?pathsig=8c953e4f~vEyD7FR7NMtgBhRbRGol6tYRL0pVp7AQxjE5pUlKliI&amp;r=dXMtY2VudHJhbDE%3D&amp;sid=$Number$&amp;st=video" initialization="drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/888d2bc7-75b5-4264-bf57-08e3dc24ecbb/segment.mp4?pathsig=8c953e4f~vEyD7FR7NMtgBhRbRGol6tYRL0pVp7AQxjE5pUlKliI&amp;r=dXMtY2VudHJhbDE%3D&amp;sid=0&amp;st=video">
+                <SegmentTemplate timescale="48000"
+                  media="drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/888d2bc7-75b5-4264-bf57-08e3dc24ecbb/segment.mp4?pathsig=8c953e4f~vEyD7FR7NMtgBhRbRGol6tYRL0pVp7AQxjE5pUlKliI&amp;r=dXMtY2VudHJhbDE%3D&amp;sid=$Number$&amp;st=video"
+                  initialization="drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/888d2bc7-75b5-4264-bf57-08e3dc24ecbb/segment.mp4?pathsig=8c953e4f~vEyD7FR7NMtgBhRbRGol6tYRL0pVp7AQxjE5pUlKliI&amp;r=dXMtY2VudHJhbDE%3D&amp;sid=0&amp;st=video">
                     <SegmentTimeline>
                         <S t="0" d="288288" r="1114"></S>
                         <S t="321441120" d="120120"></S>

@@ -3,7 +3,10 @@ package main
 import (
    "encoding/json"
    "encoding/xml"
+   "flag"
    "fmt"
+   "io"
+   "net/url"
    "os"
    "path"
    "strings"
@@ -11,318 +14,257 @@ import (
 
 type MPD struct {
    XMLName xml.Name `xml:"MPD"`
-   Period  Period   `xml:"Period"`
+   Period  []Period `xml:"Period"`
    BaseURL string   `xml:"BaseURL"`
 }
 
 type Period struct {
-   AdaptationSets []AdaptationSet `xml:"AdaptationSet"`
-   BaseURL        string          `xml:"BaseURL"`
+   AdaptationSet []AdaptationSet `xml:"AdaptationSet"`
+   BaseURL       string          `xml:"BaseURL"`
 }
 
 type AdaptationSet struct {
-   Representations []Representation `xml:"Representation"`
+   Representation  []Representation `xml:"Representation"`
    SegmentTemplate *SegmentTemplate `xml:"SegmentTemplate"`
 }
 
 type Representation struct {
    ID              string           `xml:"id,attr"`
-   SegmentBase     *SegmentBase     `xml:"SegmentBase"`
-   SegmentList     *SegmentList     `xml:"SegmentList"`
    SegmentTemplate *SegmentTemplate `xml:"SegmentTemplate"`
    BaseURL         string           `xml:"BaseURL"`
 }
 
-type SegmentBase struct {
-   Initialization string `xml:"initialization,attr"`
-}
-
-type SegmentList struct {
-   Initialization string       `xml:"initialization,attr"`
-   SegmentURLs    []SegmentURL `xml:"SegmentURL"`
-}
-
-type SegmentURL struct {
-   Media string `xml:"media,attr"`
-}
-
 type SegmentTemplate struct {
-   Initialization  string           `xml:"initialization,attr"`
    Media           string           `xml:"media,attr"`
-   SegmentTimeline *SegmentTimeline `xml:"SegmentTimeline"`
-   Timescale       int              `xml:"timescale,attr"`
+   Initialization  string           `xml:"initialization,attr"`
    Duration        int              `xml:"duration,attr"`
+   Timescale       int              `xml:"timescale,attr"`
    StartNumber     int              `xml:"startNumber,attr"`
-   EndNumber       int              `xml:"endNumber,attr"`
+   SegmentTimeline *SegmentTimeline `xml:"SegmentTimeline"`
 }
 
 type SegmentTimeline struct {
-   Segments []Segment `xml:"S"`
+   S []Segment `xml:"S"`
 }
 
 type Segment struct {
-   Time     uint64 `xml:"t,attr"`
-   Duration uint64 `xml:"d,attr"`
-   Repeat   int    `xml:"r,attr"`
+   T uint64 `xml:"t,attr"` // Start time
+   D uint64 `xml:"d,attr"` // Duration
+   R int    `xml:"r,attr"` // Repeat count
 }
 
 type Output struct {
-   RepresentationURLs map[string][]string `json:"representation_urls"`
+   Representations map[string][]string `json:"representations"`
 }
 
 func main() {
-   if len(os.Args) != 2 {
-      fmt.Fprintln(os.Stderr, "Usage: go run mpd_parser.go <mpd_file>")
+   mpdPath := flag.String("mpd", "", "Path to the MPD file")
+   flag.Parse()
+
+   if *mpdPath == "" {
+      fmt.Fprintln(os.Stderr, "Please provide the path to the MPD file using -mpd flag")
       os.Exit(1)
    }
 
-   mpdFile := os.Args[1]
-   data, err := os.ReadFile(mpdFile)
+   mpdURL := "http://test.test/test.mpd"
+   output, err := parseMPD(*mpdPath, mpdURL)
    if err != nil {
-      fmt.Fprintf(os.Stderr, "Error reading MPD file: %v\n", err)
+      fmt.Fprintf(os.Stderr, "Error: %v\n", err)
       os.Exit(1)
-   }
-
-   var mpd MPD
-   err = xml.Unmarshal(data, &mpd)
-   if err != nil {
-      fmt.Fprintf(os.Stderr, "Error parsing MPD file: %v\n", err)
-      os.Exit(1)
-   }
-
-   output := Output{RepresentationURLs: make(map[string][]string)}
-   mpdBaseURL := mpd.BaseURL
-   fmt.Fprintf(os.Stderr, "MPD BaseURL: %s\n", mpdBaseURL)
-
-   for i, period := range []Period{mpd.Period} {
-      fmt.Fprintf(os.Stderr, "Processing Period %d, BaseURL: %s\n", i, period.BaseURL)
-      for j, adaptationSet := range period.AdaptationSets {
-         fmt.Fprintf(os.Stderr, "  Processing AdaptationSet %d\n", j)
-         for k, rep := range adaptationSet.Representations {
-            fmt.Fprintf(os.Stderr, "    Processing Representation %d: %s\n", k, rep.ID)
-            urls := []string{}
-            // Combine BaseURLs: MPD > Period > Representation
-            baseURL := mpdBaseURL
-            if period.BaseURL != "" {
-               baseURL = joinURLs(baseURL, period.BaseURL)
-               fmt.Fprintf(os.Stderr, "      After Period BaseURL: %s\n", baseURL)
-            }
-            if rep.BaseURL != "" {
-               baseURL = joinURLs(baseURL, rep.BaseURL)
-               fmt.Fprintf(os.Stderr, "      After Representation BaseURL: %s\n", baseURL)
-               // Add Representation BaseURL directly if present
-               urls = append(urls, baseURL)
-               fmt.Fprintf(os.Stderr, "      Added Representation BaseURL: %s\n", baseURL)
-               if strings.Contains(baseURL, "..") {
-                  fmt.Fprintf(os.Stderr, "      Warning: Representation BaseURL contains '..': %s\n", baseURL)
-               }
-            }
-            fmt.Fprintf(os.Stderr, "      Combined BaseURL: %s\n", baseURL)
-            if strings.Contains(baseURL, "..") {
-               fmt.Fprintf(os.Stderr, "      Warning: Combined BaseURL contains '..': %s\n", baseURL)
-            }
-
-            // Check for SegmentTemplate at Representation or AdaptationSet level
-            segTemplate := rep.SegmentTemplate
-            if segTemplate == nil {
-               segTemplate = adaptationSet.SegmentTemplate
-            }
-
-            if rep.SegmentBase != nil && rep.SegmentBase.Initialization != "" {
-               url := strings.ReplaceAll(rep.SegmentBase.Initialization, "$RepresentationID$", rep.ID)
-               cleanURL := joinURLs(baseURL, url)
-               urls = append(urls, cleanURL)
-               fmt.Fprintf(os.Stderr, "      Added SegmentBase URL: %s\n", cleanURL)
-               if strings.Contains(cleanURL, "..") {
-                  fmt.Fprintf(os.Stderr, "      Warning: SegmentBase URL contains '..': %s\n", cleanURL)
-               }
-            }
-
-            if rep.SegmentList != nil {
-               if rep.SegmentList.Initialization != "" {
-                  url := strings.ReplaceAll(rep.SegmentList.Initialization, "$RepresentationID$", rep.ID)
-                  cleanURL := joinURLs(baseURL, url)
-                  urls = append(urls, cleanURL)
-                  fmt.Fprintf(os.Stderr, "      Added SegmentList Initialization URL: %s\n", cleanURL)
-                  if strings.Contains(cleanURL, "..") {
-                     fmt.Fprintf(os.Stderr, "      Warning: SegmentList Initialization URL contains '..': %s\n", cleanURL)
-                  }
-               }
-               for _, segURL := range rep.SegmentList.SegmentURLs {
-                  cleanURL := joinURLs(baseURL, segURL.Media)
-                  urls = append(urls, cleanURL)
-                  fmt.Fprintf(os.Stderr, "      Added SegmentList URL: %s\n", cleanURL)
-                  if strings.Contains(cleanURL, "..") {
-                     fmt.Fprintf(os.Stderr, "      Warning: SegmentList URL contains '..': %s\n", cleanURL)
-                  }
-               }
-            }
-
-            if segTemplate != nil {
-               fmt.Fprintf(os.Stderr, "      SegmentTemplate found: Media=%s, Initialization=%s, Timescale=%d\n", segTemplate.Media, segTemplate.Initialization, segTemplate.Timescale)
-               // Replace $RepresentationID$ in initialization and media templates
-               initURL := segTemplate.Initialization
-               mediaTemplate := segTemplate.Media
-               if initURL != "" {
-                  initURL = strings.ReplaceAll(initURL, "$RepresentationID$", rep.ID)
-                  cleanURL := joinURLs(baseURL, initURL)
-                  urls = append(urls, cleanURL)
-                  fmt.Fprintf(os.Stderr, "      Added Initialization URL: %s\n", cleanURL)
-                  if strings.Contains(cleanURL, "..") {
-                     fmt.Fprintf(os.Stderr, "      Warning: Initialization URL contains '..': %s\n", cleanURL)
-                  }
-               }
-
-               if mediaTemplate != "" {
-                  mediaTemplate = strings.ReplaceAll(mediaTemplate, "$RepresentationID$", rep.ID)
-                  if segTemplate.SegmentTimeline != nil {
-                     fmt.Fprintf(os.Stderr, "      SegmentTimeline found with %d segments\n", len(segTemplate.SegmentTimeline.Segments))
-                     if strings.Contains(mediaTemplate, "$Time$") {
-                        // Handle $Time$ placeholder
-                        currentTime := uint64(0)
-                        for k, seg := range segTemplate.SegmentTimeline.Segments {
-                           if seg.Time != 0 {
-                              currentTime = seg.Time
-                           }
-                           mediaURL := strings.ReplaceAll(mediaTemplate, "$Time$", fmt.Sprintf("%d", currentTime))
-                           cleanURL := joinURLs(baseURL, mediaURL)
-                           urls = append(urls, cleanURL)
-                           fmt.Fprintf(os.Stderr, "        Added Time-based URL %d (t=%d, d=%d, r=%d): %s\n", k, currentTime, seg.Duration, seg.Repeat, cleanURL)
-                           if strings.Contains(cleanURL, "..") {
-                              fmt.Fprintf(os.Stderr, "        Warning: Time-based URL contains '..': %s\n", cleanURL)
-                           }
-                           for j := 0; j < seg.Repeat; j++ {
-                              currentTime += seg.Duration
-                              mediaURL = strings.ReplaceAll(mediaTemplate, "$Time$", fmt.Sprintf("%d", currentTime))
-                              cleanURL := joinURLs(baseURL, mediaURL)
-                              urls = append(urls, cleanURL)
-                              fmt.Fprintf(os.Stderr, "        Added Repeated Time-based URL %d (t=%d): %s\n", j+1, currentTime, cleanURL)
-                              if strings.Contains(cleanURL, "..") {
-                                 fmt.Fprintf(os.Stderr, "        Warning: Repeated Time-based URL contains '..': %s\n", cleanURL)
-                              }
-                           }
-                           currentTime += seg.Duration
-                        }
-                     } else if strings.Contains(mediaTemplate, "$Number$") {
-                        // Handle $Number$ placeholder in SegmentTimeline
-                        currentNumber := 1
-                        for k, seg := range segTemplate.SegmentTimeline.Segments {
-                           mediaURL := strings.ReplaceAll(mediaTemplate, "$Number$", fmt.Sprintf("%d", currentNumber))
-                           cleanURL := joinURLs(baseURL, mediaURL)
-                           urls = append(urls, cleanURL)
-                           fmt.Fprintf(os.Stderr, "        Added Number-based URL %d (n=%d, r=%d): %s\n", k, currentNumber, seg.Repeat, cleanURL)
-                           if strings.Contains(cleanURL, "..") {
-                              fmt.Fprintf(os.Stderr, "        Warning: Number-based URL contains '..': %s\n", cleanURL)
-                           }
-                           for j := 0; j < seg.Repeat; j++ {
-                              currentNumber++
-                              mediaURL = strings.ReplaceAll(mediaTemplate, "$Number$", fmt.Sprintf("%d", currentNumber))
-                              cleanURL = joinURLs(baseURL, mediaURL)
-                              urls = append(urls, cleanURL)
-                              fmt.Fprintf(os.Stderr, "        Added Repeated Number-based URL %d (n=%d): %s\n", j+1, currentNumber, cleanURL)
-                              if strings.Contains(cleanURL, "..") {
-                                 fmt.Fprintf(os.Stderr, "        Warning: Repeated Number-based URL contains '..': %s\n", cleanURL)
-                              }
-                           }
-                           currentNumber++
-                        }
-                     }
-                  } else if segTemplate.Duration > 0 && segTemplate.EndNumber > 0 {
-                     // Handle SegmentTemplate without SegmentTimeline
-                     start := segTemplate.StartNumber
-                     if start == 0 {
-                        start = 1 // Default to 1 if not specified
-                     }
-                     end := segTemplate.EndNumber
-                     fmt.Fprintf(os.Stderr, "      Non-timeline SegmentTemplate: startNumber=%d, endNumber=%d\n", start, end)
-                     for i := start; i <= end; i++ {
-                        mediaURL := strings.ReplaceAll(mediaTemplate, "$Number$", fmt.Sprintf("%d", i))
-                        cleanURL := joinURLs(baseURL, mediaURL)
-                        urls = append(urls, cleanURL)
-                        fmt.Fprintf(os.Stderr, "        Added URL %d: %s\n", i, cleanURL)
-                        if strings.Contains(cleanURL, "..") {
-                           fmt.Fprintf(os.Stderr, "        Warning: Non-timeline URL contains '..': %s\n", cleanURL)
-                        }
-                     }
-                  } else {
-                     fmt.Fprintf(os.Stderr, "      Warning: SegmentTemplate has no SegmentTimeline or valid duration/endNumber\n")
-                  }
-               }
-            } else {
-               fmt.Fprintf(os.Stderr, "      No SegmentTemplate found for representation %s\n", rep.ID)
-            }
-
-            output.RepresentationURLs[rep.ID] = urls
-            fmt.Fprintf(os.Stderr, "      Total URLs for %s: %d\n", rep.ID, len(urls))
-         }
-      }
    }
 
    jsonOutput, err := json.MarshalIndent(output, "", "  ")
    if err != nil {
-      fmt.Fprintf(os.Stderr, "Error generating JSON output: %v\n", err)
+      fmt.Fprintf(os.Stderr, "Error marshaling JSON: %v\n", err)
       os.Exit(1)
    }
 
    fmt.Println(string(jsonOutput))
 }
 
-func joinURLs(base, relative string) string {
-   // Split query parameters to preserve them
-   var basePath, baseQuery, relPath, relQuery string
-   if idx := strings.Index(base, "?"); idx != -1 {
-      basePath = base[:idx]
-      baseQuery = base[idx:]
-   } else {
-      basePath = base
+func parseMPD(mpdPath, mpdURL string) (Output, error) {
+   file, err := os.Open(mpdPath)
+   if err != nil {
+      return Output{}, fmt.Errorf("failed to open MPD file: %w", err)
    }
-   if idx := strings.Index(relative, "?"); idx != -1 {
-      relPath = relative[:idx]
-      relQuery = relative[idx:]
-   } else {
-      relPath = relative
+   defer file.Close()
+
+   data, err := io.ReadAll(file)
+   if err != nil {
+      return Output{}, fmt.Errorf("failed to read MPD file: %w", err)
    }
 
-   // Ensure forward slashes
-   basePath = strings.ReplaceAll(basePath, "\\", "/")
-   relPath = strings.ReplaceAll(relPath, "\\", "/")
-
-   // Strip excessive parent directories from basePath
-   for strings.HasPrefix(basePath, "../") {
-      basePath = strings.TrimPrefix(basePath, "../")
-   }
-   if basePath == "" || basePath == strings.Repeat("../", 13) {
-      basePath = "/"
+   var mpd MPD
+   if err := xml.Unmarshal(data, &mpd); err != nil {
+      return Output{}, fmt.Errorf("failed to parse MPD XML: %w", err)
    }
 
-   // Combine paths
-   var combinedPath string
-   if basePath == "" || basePath == "/" {
-      combinedPath = path.Clean("/" + relPath)
-   } else {
-      combinedPath = path.Clean(basePath + "/" + relPath)
+   fmt.Fprintf(os.Stderr, "Debug: Parsed MPD with %d periods\n", len(mpd.Period))
+
+   baseURL, err := url.Parse(mpdURL)
+   if err != nil {
+      return Output{}, fmt.Errorf("failed to parse MPD URL: %w", err)
+   }
+   if mpd.BaseURL != "" {
+      relativeBase, err := url.Parse(mpd.BaseURL)
+      if err != nil {
+         return Output{}, fmt.Errorf("failed to parse MPD BaseURL: %w", err)
+      }
+      baseURL = baseURL.ResolveReference(relativeBase)
+      fmt.Fprintf(os.Stderr, "Debug: MPD BaseURL: %s\n", baseURL.String())
    }
 
-   // Combine query parameters (relative query takes precedence if present)
-   query := baseQuery
-   if relQuery != "" {
-      query = relQuery
+   output := Output{Representations: make(map[string][]string)}
+   for _, period := range mpd.Period {
+      periodBaseURL := baseURL
+      if period.BaseURL != "" {
+         relativeBase, err := url.Parse(period.BaseURL)
+         if err != nil {
+            fmt.Fprintf(os.Stderr, "Warning: failed to parse Period BaseURL: %v\n", err)
+            continue
+         }
+         periodBaseURL = baseURL.ResolveReference(relativeBase)
+         fmt.Fprintf(os.Stderr, "Debug: Period BaseURL: %s\n", periodBaseURL.String())
+      }
+
+      for _, adaptationSet := range period.AdaptationSet {
+         fmt.Fprintf(os.Stderr, "Debug: Processing AdaptationSet with %d representations\n", len(adaptationSet.Representation))
+         if adaptationSet.SegmentTemplate != nil {
+            fmt.Fprintf(os.Stderr, "Debug: Found SegmentTemplate at AdaptationSet level\n")
+         }
+
+         for _, rep := range adaptationSet.Representation {
+            segmentURLs := []string{}
+            repBaseURL := periodBaseURL
+            if rep.BaseURL != "" && rep.SegmentTemplate == nil {
+               // For representations with BaseURL only (e.g., subtitles), resolve directly against MPD base
+               resolvedURL, err := resolveURL(baseURL, rep.BaseURL)
+               if err != nil {
+                  fmt.Fprintf(os.Stderr, "Warning: failed to resolve BaseURL for %s: %v\n", rep.ID, err)
+                  continue
+               }
+               fmt.Fprintf(os.Stderr, "Debug: Generated BaseURL for %s: %s\n", rep.ID, resolvedURL)
+               segmentURLs = append(segmentURLs, resolvedURL)
+            } else {
+               if rep.BaseURL != "" {
+                  relativeBase, err := url.Parse(rep.BaseURL)
+                  if err != nil {
+                     fmt.Fprintf(os.Stderr, "Warning: failed to parse Representation BaseURL for %s: %v\n", rep.ID, err)
+                     continue
+                  }
+                  repBaseURL = periodBaseURL.ResolveReference(relativeBase)
+                  fmt.Fprintf(os.Stderr, "Debug: Representation %s BaseURL: %s\n", rep.ID, repBaseURL.String())
+               }
+
+               // Use Representation SegmentTemplate if available, else fall back to AdaptationSet
+               segTemplate := rep.SegmentTemplate
+               if segTemplate == nil {
+                  segTemplate = adaptationSet.SegmentTemplate
+               }
+
+               if segTemplate != nil {
+                  fmt.Fprintf(os.Stderr, "Debug: Found SegmentTemplate for %s\n", rep.ID)
+                  // Handle initialization segment
+                  if segTemplate.Initialization != "" {
+                     initTemplate := strings.ReplaceAll(segTemplate.Initialization, "$RepresentationID$", rep.ID)
+                     initURL, err := resolveURL(repBaseURL, initTemplate)
+                     if err != nil {
+                        fmt.Fprintf(os.Stderr, "Warning: failed to resolve initialization URL for %s: %v\n", rep.ID, err)
+                        continue
+                     }
+                     fmt.Fprintf(os.Stderr, "Debug: Generated init URL for %s: %s\n", rep.ID, initURL)
+                     segmentURLs = append(segmentURLs, initURL)
+                  }
+                  // Handle media segments
+                  if segTemplate.Media != "" {
+                     mediaTemplate := strings.ReplaceAll(segTemplate.Media, "$RepresentationID$", rep.ID)
+                     if strings.Contains(mediaTemplate, "$Time$") && segTemplate.SegmentTimeline != nil {
+                        fmt.Fprintf(os.Stderr, "Debug: Processing $Time$ segments for %s\n", rep.ID)
+                        currentTime := uint64(0)
+                        for _, segment := range segTemplate.SegmentTimeline.S {
+                           count := 1
+                           if segment.R > 0 {
+                              count = segment.R + 1
+                           }
+                           for i := 0; i < count; i++ {
+                              mediaURL := strings.ReplaceAll(mediaTemplate, "$Time$", fmt.Sprintf("%d", currentTime))
+                              resolvedURL, err := resolveURL(repBaseURL, mediaURL)
+                              if err != nil {
+                                 fmt.Fprintf(os.Stderr, "Warning: failed to resolve media URL for %s at time %d: %v\n", rep.ID, currentTime, err)
+                                 continue
+                              }
+                              fmt.Fprintf(os.Stderr, "Debug: Generated segment URL for %s: %s\n", rep.ID, resolvedURL)
+                              segmentURLs = append(segmentURLs, resolvedURL)
+                              currentTime += segment.D
+                           }
+                        }
+                     } else if strings.Contains(mediaTemplate, "$Number$") && segTemplate.SegmentTimeline != nil {
+                        fmt.Fprintf(os.Stderr, "Debug: Processing $Number$ segments for %s\n", rep.ID)
+                        // Calculate total segments from SegmentTimeline
+                        totalSegments := 0
+                        for _, segment := range segTemplate.SegmentTimeline.S {
+                           count := 1
+                           if segment.R > 0 {
+                              count = segment.R + 1
+                           }
+                           totalSegments += count
+                        }
+                        startNumber := segTemplate.StartNumber
+                        if startNumber == 0 {
+                           startNumber = 1
+                        }
+                        for i := 0; i < totalSegments; i++ {
+                           mediaURL := strings.ReplaceAll(mediaTemplate, "$Number$", fmt.Sprintf("%d", startNumber+i))
+                           resolvedURL, err := resolveURL(repBaseURL, mediaURL)
+                           if err != nil {
+                              fmt.Fprintf(os.Stderr, "Warning: failed to resolve media URL for %s at number %d: %v\n", rep.ID, startNumber+i, err)
+                              continue
+                           }
+                           fmt.Fprintf(os.Stderr, "Debug: Generated segment URL for %s: %s\n", rep.ID, resolvedURL)
+                           segmentURLs = append(segmentURLs, resolvedURL)
+                        }
+                     } else if strings.Contains(mediaTemplate, "$Number$") {
+                        // Fallback for $Number$ without SegmentTimeline
+                        fmt.Fprintf(os.Stderr, "Debug: Processing $Number$ segments (no SegmentTimeline) for %s\n", rep.ID)
+                        startNumber := segTemplate.StartNumber
+                        if startNumber == 0 {
+                           startNumber = 1
+                        }
+                        endNumber := startNumber + 79 // Fallback for thumbnails
+                        for i := startNumber; i <= endNumber; i++ {
+                           mediaURL := strings.ReplaceAll(mediaTemplate, "$Number$", fmt.Sprintf("%d", i))
+                           resolvedURL, err := resolveURL(repBaseURL, mediaURL)
+                           if err != nil {
+                              fmt.Fprintf(os.Stderr, "Warning: failed to resolve media URL for %s at number %d: %v\n", rep.ID, i, err)
+                              continue
+                           }
+                           fmt.Fprintf(os.Stderr, "Debug: Generated segment URL for %s: %s\n", rep.ID, resolvedURL)
+                           segmentURLs = append(segmentURLs, resolvedURL)
+                        }
+                     } else {
+                        fmt.Fprintf(os.Stderr, "Warning: no $Time$ or $Number$ in media template for %s: %s\n", rep.ID, mediaTemplate)
+                     }
+                  }
+               } else {
+                  fmt.Fprintf(os.Stderr, "Warning: no SegmentTemplate for representation %s\n", rep.ID)
+               }
+            }
+
+            output.Representations[rep.ID] = segmentURLs
+         }
+      }
    }
 
-   // Construct final URL
-   cleanURL := combinedPath
-   if query != "" {
-      cleanURL += query
+   return output, nil
+}
+
+func resolveURL(base *url.URL, ref string) (string, error) {
+   relative, err := url.Parse(ref)
+   if err != nil {
+      return "", fmt.Errorf("failed to parse reference URL %s: %w", ref, err)
    }
-
-   // Log for debugging
-   fmt.Fprintf(os.Stderr, "      joinURLs: basePath=%s, baseQuery=%s, relPath=%s, relQuery=%s, combinedPath=%s, cleanURL=%s\n",
-      basePath, baseQuery, relPath, relQuery, combinedPath, cleanURL)
-
-   // Final check for '..'
-   if strings.Contains(cleanURL, "..") {
-      fmt.Fprintf(os.Stderr, "      Warning: Final URL contains '..': %s\n", cleanURL)
-   }
-
-   return cleanURL
+   resolved := base.ResolveReference(relative)
+   // Normalize the path to avoid duplication
+   resolved.Path = path.Clean(resolved.Path)
+   return resolved.String(), nil
 }
