@@ -7,39 +7,6 @@ import (
    "testing"
 )
 
-func Test(t *testing.T) {
-   log.SetFlags(log.Ltime)
-   for _, testVar := range tests {
-      arg := []string{"run", ".", testVar.name}
-      data, err := output("go", arg...)
-      if err != nil {
-         t.Fatal(data)
-      }
-      var representsB map[string][]struct {
-         Url string
-      }
-      err = json.Unmarshal(data, &representsB)
-      if err != nil {
-         t.Fatal(data)
-      }
-      for _, representA := range testVar.representation {
-         representB := representsB[representA.id]
-         if len(representB) != representA.length {
-            t.Fatal("len(representB) != representA.length")
-         }
-         if representB[len(representB)-1].Url != representA.url {
-            t.Fatal("representB[len(representB)-1].Url != representA.url")
-         }
-      }
-   }
-}
-
-type representation struct {
-   id     string
-   length int
-   url    string
-}
-
 var tests = []struct {
    name           string
    url            string
@@ -59,9 +26,11 @@ var tests = []struct {
             length: 1334,
             url:    "dash/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD-audio_eng_1=576000-383904768.dash?serviceid=298f95e1bf91361258c44a2b1f4a2425",
          },
-         //{
-         //   id: "thumbnail", // the MPD is actually invalid
-         //},
+         {
+            id:     "thumbnail", // the MPD is actually invalid
+            length: 80,
+            url:    "dash/thumbnail/tile_80.jpeg?serviceid=298f95e1bf91361258c44a2b1f4a2425",
+         },
       },
    },
    //{
@@ -79,4 +48,44 @@ func output(name string, arg ...string) ([]byte, error) {
    command := exec.Command(name, arg...)
    log.Print(command.Args)
    return command.Output()
+}
+
+func Test(t *testing.T) {
+   log.SetFlags(log.Ltime)
+   for _, testVar := range tests {
+      arg := []string{"run", ".", testVar.name}
+      data, err := output("go", arg...)
+      if err != nil {
+         t.Fatal(data)
+      }
+      var representsB map[string][]struct {
+         Url string
+      }
+      err = json.Unmarshal(data, &representsB)
+      if err != nil {
+         t.Fatal(data)
+      }
+      for _, representA := range testVar.representation {
+         representB := representsB[representA.id]
+         if len(representB) != representA.length {
+            t.Fatal(
+               representA.id,
+               "pass", representA.length,
+               "fail", len(representB),
+            )
+         }
+         if representB[len(representB)-1].Url != "/testdata/"+representA.url {
+            t.Fatal(
+               representA.url, "\n",
+               representB[len(representB)-1].Url,
+            )
+         }
+      }
+   }
+}
+
+type representation struct {
+   id     string
+   length int
+   url    string
 }

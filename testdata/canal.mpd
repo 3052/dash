@@ -714,7 +714,9 @@
         <cenc:pssh>AAAAXHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAADwIARIQM4p9YAHEqEP5pesDk/SaTxoLc3RyZWFtZ3JvdXAiEBc5NfLEskOo+aXrA5P0mk8qBUFVRElPMgA=</cenc:pssh>
       </ContentProtection>
       <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"/>
-      <SegmentTemplate timescale="48000" initialization="appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD-$RepresentationID$.dash?serviceid=298f95e1bf91361258c44a2b1f4a2425" media="appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD-$RepresentationID$-$Time$.dash?serviceid=298f95e1bf91361258c44a2b1f4a2425">
+      <SegmentTemplate timescale="48000"
+initialization="appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD-$RepresentationID$.dash?serviceid=298f95e1bf91361258c44a2b1f4a2425"
+media="appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD-$RepresentationID$-$Time$.dash?serviceid=298f95e1bf91361258c44a2b1f4a2425">
         <SegmentTimeline>
           <S t="0" d="288768"/>
           <S d="287232"/>
@@ -2791,7 +2793,9 @@
       </Representation>
     </AdaptationSet>
     <AdaptationSet id="5" contentType="image" mimeType="image/jpeg">
-      <SegmentTemplate timescale="1" duration="100" media="$RepresentationID$/tile_$Number$.jpeg?serviceid=298f95e1bf91361258c44a2b1f4a2425" startNumber="1" endNumber="80"/>
+      <SegmentTemplate timescale="1" duration="100"
+         media="$RepresentationID$/tile_$Number$.jpeg?serviceid=298f95e1bf91361258c44a2b1f4a2425"
+         startNumber="1" endNumber="80"/>
       <Representation bandwidth="1000" id="thumbnail" width="3200" height="180">
         <EssentialProperty schemeIdUri="http://dashif.org/guidelines/thumbnail_tile" value="10x1"/>
       </Representation>
