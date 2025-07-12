@@ -12,6 +12,15 @@ var tests = []struct {
    url            string
    representation []representation
 }{
+   //{
+   //   name: "../../testdata/criterion.mpd",
+   //   url:  "https://vod-adaptive-ak.vimeocdn.com/exp=1752284211~acl=%2F15be2d09-cb01-46d4-9948-2667ba2e3907%2F%2A~hmac=6997e9aef9fd359a03a2b49a7a82db955064361a16ed4d875e1d927a62f2ca35/15be2d09-cb01-46d4-9948-2667ba2e3907/v2/playlist/drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/av/primary/sub/7433271-c-en/prot/bWF4X2hlaWdodD0xMDgw/playlist.mpd",
+   //   contains: map[string]string{
+   //      "video-888d2bc7-75b5-4264-bf57-08e3dc24ecbb": "",
+   //      "subs-7433271": "",
+   //      "audio-916e7eef-13ce-4a46-9bda-b2627ec04b4f": "",
+   //   },
+   //},
    {
       name: "../../testdata/canal.mpd",
       url:  "https://cz-bks400-prod31-live.solocoo.tv:443/bpk-token/1ac@xbve3bnlusuhuoq2iaob0kj0dkjifjpix3nnjrca/bpk-vod/playout01/default/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/index.mpd",
@@ -33,15 +42,6 @@ var tests = []struct {
          },
       },
    },
-   //{
-   //   name: "../../testdata/criterion.mpd",
-   //   url:  "https://vod-adaptive-ak.vimeocdn.com/exp=1752284211~acl=%2F15be2d09-cb01-46d4-9948-2667ba2e3907%2F%2A~hmac=6997e9aef9fd359a03a2b49a7a82db955064361a16ed4d875e1d927a62f2ca35/15be2d09-cb01-46d4-9948-2667ba2e3907/v2/playlist/drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/av/primary/sub/7433271-c-en/prot/bWF4X2hlaWdodD0xMDgw/playlist.mpd",
-   //   contains: map[string]string{
-   //      "video-888d2bc7-75b5-4264-bf57-08e3dc24ecbb": "",
-   //      "subs-7433271": "",
-   //      "audio-916e7eef-13ce-4a46-9bda-b2627ec04b4f": "",
-   //   },
-   //},
 }
 
 func output(name string, arg ...string) ([]byte, error) {
