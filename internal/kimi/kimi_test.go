@@ -15,11 +15,11 @@ var kimi_tests = []struct {
 }{
    {
       name: "../../testdata/canal.mpd",
-      url:  "https://cz-bks400-prod32-live.solocoo.tv:443/bpk-token/1ac@bwrqpnwcgc4vj01ychymvdb50uune2ltbkkz13ba/bpk-vod/playout01/default/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/index.mpd",
+      url:  "https://cz-bks400-prod31-live.solocoo.tv:443/bpk-token/1ac@xbve3bnlusuhuoq2iaob0kj0dkjifjpix3nnjrca/bpk-vod/playout01/default/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/index.mpd",
       contains: map[string]string{
-         "audio_eng_1=576000": "https://cz-bks400-prod32-live.solocoo.tv:443/bpk-token/1ac@bwrqpnwcgc4vj01ychymvdb50uune2ltbkkz13ba/bpk-vod/playout01/default/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/dash/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD-audio_eng_1=576000-383904768.dash?serviceid=298f95e1bf91361258c44a2b1f4a2425",
-         "video=3399914":      "https://cz-bks400-prod32-live.solocoo.tv:443/bpk-token/1ac@bwrqpnwcgc4vj01ychymvdb50uune2ltbkkz13ba/bpk-vod/playout01/default/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/dash/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD-video=3399914-4798800.dash?serviceid=298f95e1bf91361258c44a2b1f4a2425",
          "thumbnail":          "", // the MPD is actually invalid
+         "video=3399914":      "dash/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD-video=3399914-4798800.dash?serviceid=298f95e1bf91361258c44a2b1f4a2425",
+         "audio_eng_1=576000": "dash/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD-audio_eng_1=576000-383904768.dash?serviceid=298f95e1bf91361258c44a2b1f4a2425",
       },
       state: []string{
          `Period.duration != "" (ignore)`,
