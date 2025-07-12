@@ -1,6 +1,7 @@
 package main
 
 import (
+   "encoding/json"
    "encoding/xml"
    "fmt"
    "net/url"
@@ -136,6 +137,13 @@ func segmentTimes(st *SegmentTemplate) []int {
    return times[:len(times)-1]
 }
 
+// ---------- JSON output ----------
+type Segment struct {
+   URL    string `json:"url"`
+   Time   int    `json:"time"`
+   Number int    `json:"number"`
+}
+
 func main() {
    if len(os.Args) != 2 {
       fmt.Fprintf(os.Stderr, "usage: %s manifest.mpd\n", os.Args[0])
@@ -155,6 +163,15 @@ func main() {
       os.Exit(1)
    }
 
+   type Segment struct {
+      URL    string `json:"url"`
+      Time   int    `json:"time"`
+      Number int    `json:"number"`
+   }
+
+   // map[representationID][]Segment
+   out := make(map[string][]Segment)
+
    for _, period := range mpd.Periods {
       for _, as := range period.AdaptationSets {
          for _, rep := range as.Representations {
@@ -165,8 +182,9 @@ func main() {
                st = rep.SegmentTemplate
             }
 
-            if st != nil {
+            var segs []Segment
 
+            if st != nil {
                times := segmentTimes(st)
                start := st.StartNumber
                if start == 0 {
@@ -177,21 +195,32 @@ func main() {
                      "RepresentationID": rep.ID,
                      "Bandwidth":        rep.Bandwidth,
                      "Number":           strconv.Itoa(start + idx),
-                     "Time":             strconv.Itoa(t), // <— correct
+                     "Time":             strconv.Itoa(t),
                   }
                   seg := expand(st.Media, vars)
-                  fmt.Println(base + seg)
+                  segs = append(segs, Segment{
+                     URL:    base + seg,
+                     Time:   t,
+                     Number: start + idx,
+                  })
                }
-
+            } else if rep.SegmentList != nil {
+               for idx, su := range rep.SegmentList.SegmentURLs {
+                  segs = append(segs, Segment{
+                     URL:    base + su.Media,
+                     Time:   0,
+                     Number: idx + 1,
+                  })
+               }
             }
-
-            if rep.SegmentList != nil {
-               for _, su := range rep.SegmentList.SegmentURLs {
-                  fmt.Println(base + su.Media)
-               }
-               continue
+            if len(segs) > 0 {
+               out[rep.ID] = segs
             }
          }
       }
    }
+
+   enc := json.NewEncoder(os.Stdout)
+   enc.SetIndent("", "  ")
+   _ = enc.Encode(out)
 }
