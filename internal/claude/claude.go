@@ -4,7 +4,6 @@ import (
    "encoding/json"
    "encoding/xml"
    "fmt"
-   "io/ioutil"
    "net/url"
    "os"
    "strconv"
@@ -19,10 +18,13 @@ type MPD struct {
 
 type Period struct {
    AdaptationSets []AdaptationSet `xml:"AdaptationSet"`
+   BaseURL        string          `xml:"BaseURL"`
 }
 
 type AdaptationSet struct {
    Representations []Representation `xml:"Representation"`
+   Template        SegmentTemplate   `xml:"SegmentTemplate"`
+   BaseURL         string            `xml:"BaseURL"`
 }
 
 type Representation struct {
@@ -41,6 +43,7 @@ type SegmentTemplate struct {
    Media          string `xml:"media,attr"`
    Initialization string `xml:"initialization,attr"`
    StartNumber    int    `xml:"startNumber,attr"`
+   EndNumber      int    `xml:"endNumber,attr"`
    Duration       int    `xml:"duration,attr"`
    Timescale      int    `xml:"timescale,attr"`
    Timeline       SegmentTimeline `xml:"SegmentTimeline"`
@@ -90,7 +93,7 @@ func main() {
    baseURL := "http://test.test/test.mpd"
 
    // Read and parse MPD file
-   data, err := ioutil.ReadFile(mpdPath)
+   data, err := os.ReadFile(mpdPath)
    if err != nil {
       fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
       os.Exit(1)
@@ -107,26 +110,40 @@ func main() {
       Representations: []RepresentationOutput{},
    }
 
+   // Use a map to combine URLs from same representation IDs across multiple periods
+   repMap := make(map[string]*RepresentationOutput)
+
    for _, period := range mpd.Periods {
       for _, adaptationSet := range period.AdaptationSets {
          for _, rep := range adaptationSet.Representations {
-            repOutput := RepresentationOutput{
-               ID:        rep.ID,
-               Bandwidth: rep.Bandwidth,
-               MimeType:  rep.MimeType,
-               Codecs:    rep.Codecs,
-               Width:     rep.Width,
-               Height:    rep.Height,
-               URLs:      []string{},
-            }
-
             // Get segment URLs based on the type of segmentation
-            urls := extractSegmentURLs(rep, baseURL)
-            repOutput.URLs = urls
+            // Pass adaptation set and period for inheritance
+            urls := extractSegmentURLsWithInheritance(rep, adaptationSet, period, baseURL)
 
-            output.Representations = append(output.Representations, repOutput)
+            // Check if we already have this representation ID
+            if existing, exists := repMap[rep.ID]; exists {
+               // Append URLs to existing representation, deduplicating
+               existing.URLs = appendUniqueURLs(existing.URLs, urls)
+            } else {
+               // Create new representation
+               repOutput := RepresentationOutput{
+                  ID:        rep.ID,
+                  Bandwidth: rep.Bandwidth,
+                  MimeType:  rep.MimeType,
+                  Codecs:    rep.Codecs,
+                  Width:     rep.Width,
+                  Height:    rep.Height,
+                  URLs:      urls,
+               }
+               repMap[rep.ID] = &repOutput
+            }
          }
       }
+   }
+
+   // Convert map to slice
+   for _, rep := range repMap {
+      output.Representations = append(output.Representations, *rep)
    }
 
    // Output JSON
@@ -139,33 +156,66 @@ func main() {
    fmt.Println(string(jsonData))
 }
 
-func extractSegmentURLs(rep Representation, baseURL string) []string {
+func appendUniqueURLs(existing []string, newURLs []string) []string {
+   // Create a map for fast lookup of existing URLs
+   urlSet := make(map[string]bool)
+   for _, url := range existing {
+      urlSet[url] = true
+   }
+
+   // Add new URLs that don't already exist
+   for _, url := range newURLs {
+      if !urlSet[url] {
+         existing = append(existing, url)
+         urlSet[url] = true
+      }
+   }
+
+   return existing
+}
+
+func extractSegmentURLsWithInheritance(rep Representation, adaptationSet AdaptationSet, period Period, baseURL string) []string {
    var urls []string
+
+   // Build the effective base URL by combining Period BaseURL with the base URL
+   effectiveBaseURL := baseURL
+   if period.BaseURL != "" {
+      effectiveBaseURL = resolveURL(period.BaseURL, baseURL)
+   }
 
    // Handle BaseURL - this represents a single segment/resource
    if rep.BaseURL != "" {
-      fullURL := resolveURL(rep.BaseURL, baseURL)
+      fullURL := resolveURL(rep.BaseURL, effectiveBaseURL)
       urls = append(urls, fullURL)
       return urls
    }
 
-   // Handle SegmentTemplate
+   // Check for SegmentTemplate at representation level first, then adaptation set level
+   var template SegmentTemplate
    if rep.Template.Media != "" {
-      urls = extractFromTemplate(rep.Template, baseURL)
+      template = rep.Template
+   } else if adaptationSet.Template.Media != "" {
+      template = adaptationSet.Template
+   }
+
+   if template.Media != "" {
+      urls = extractFromTemplateWithRepID(template, effectiveBaseURL, rep.ID)
    } else if len(rep.List.SegmentURLs) > 0 {
       // Handle SegmentList
-      urls = extractFromList(rep.List, baseURL)
+      urls = extractFromList(rep.List, effectiveBaseURL)
    }
 
    return urls
 }
 
-func extractFromTemplate(template SegmentTemplate, baseURL string) []string {
+
+func extractFromTemplateWithRepID(template SegmentTemplate, baseURL string, repID string) []string {
    var urls []string
 
    // Add initialization segment if present
    if template.Initialization != "" {
-      initURL := resolveURL(template.Initialization, baseURL)
+      initURL := strings.Replace(template.Initialization, "$RepresentationID$", repID, -1)
+      initURL = resolveURL(initURL, baseURL)
       urls = append(urls, initURL)
    }
 
@@ -187,22 +237,27 @@ func extractFromTemplate(template SegmentTemplate, baseURL string) []string {
             for i := 0; i < repeat; i++ {
                mediaURL := strings.Replace(template.Media, "$Number$", strconv.Itoa(segmentNumber), -1)
                mediaURL = strings.Replace(mediaURL, "$Time$", strconv.Itoa(s.T), -1)
+               mediaURL = strings.Replace(mediaURL, "$RepresentationID$", repID, -1)
                fullURL := resolveURL(mediaURL, baseURL)
                urls = append(urls, fullURL)
                segmentNumber++
             }
          }
       } else {
-         // Simple template without timeline - generate a few segments as example
+         // Use endNumber if available, otherwise generate a few segments
          startNum := template.StartNumber
          if startNum == 0 {
             startNum = 1
          }
 
-         // Generate 10 segments as example (in real scenario, you'd need duration info)
-         for i := 0; i < 10; i++ {
-            segmentNumber := startNum + i
-            mediaURL := strings.Replace(template.Media, "$Number$", strconv.Itoa(segmentNumber), -1)
+         endNum := template.EndNumber
+         if endNum == 0 {
+            endNum = startNum + 9 // Generate 10 segments as fallback
+         }
+
+         for i := startNum; i <= endNum; i++ {
+            mediaURL := strings.Replace(template.Media, "$Number$", strconv.Itoa(i), -1)
+            mediaURL = strings.Replace(mediaURL, "$RepresentationID$", repID, -1)
             fullURL := resolveURL(mediaURL, baseURL)
             urls = append(urls, fullURL)
          }
@@ -211,6 +266,7 @@ func extractFromTemplate(template SegmentTemplate, baseURL string) []string {
 
    return urls
 }
+
 
 func extractFromList(list SegmentList, baseURL string) []string {
    var urls []string

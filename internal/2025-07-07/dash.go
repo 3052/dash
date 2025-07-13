@@ -7,29 +7,6 @@ import (
    "time"
 )
 
-func (s *SegmentTemplate) numberTime(periodVar *Period) []uint {
-   if s.EndNumber >= 1 {
-      return s.byEndNumber()
-   }
-   if s.SegmentTimeline != nil {
-      if strings.Contains(s.Media, "$Time$") {
-         return s.byTimelineTime()
-      }
-      return s.byTimelineNumber()
-   }
-   return s.byPeriod(periodVar) // SegmentTemplate.duration
-}
-
-func (s *SegmentTemplate) byEndNumber() []uint {
-   var segment []uint
-   number := *s.StartNumber
-   for number <= s.EndNumber {
-      segment = append(segment, number)
-      number++
-   }
-   return segment
-}
-
 func (s *SegmentTemplate) byPeriod(periodVar *Period) []uint {
    var segment []uint
    // dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
@@ -157,4 +134,26 @@ func (s *SegmentTemplate) byTimelineNumber() []uint {
       }
    }
    return segments
+}
+func (s *SegmentTemplate) numberTime(periodVar *Period) []uint {
+   if s.EndNumber >= 1 {
+      return s.byEndNumber()
+   }
+   if s.SegmentTimeline != nil {
+      if strings.Contains(s.Media, "$Time$") {
+         return s.byTimelineTime()
+      }
+      return s.byTimelineNumber()
+   }
+   return s.byPeriod(periodVar) // SegmentTemplate.duration
+}
+
+func (s *SegmentTemplate) byEndNumber() []uint {
+   var segment []uint
+   number := *s.StartNumber
+   for number <= s.EndNumber {
+      segment = append(segment, number)
+      number++
+   }
+   return segment
 }
