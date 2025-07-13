@@ -1620,7 +1620,10 @@
       <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"/>
       <Representation id="7" bandwidth="130993" codecs="mp4a.40.2" mimeType="audio/mp4" audioSamplingRate="48000">
         <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
-        <SegmentTemplate timescale="48000" presentationTimeOffset="102817915" initialization="TPIR_0722_100824_2997DF_1920x1080_178_2CH_PRORESHQ_2CH_en-US_2939373_3_aac_128/init.m4v" media="TPIR_0722_100824_2997DF_1920x1080_178_2CH_PRORESHQ_2CH_en-US_2939373_3_aac_128/seg_$Number$.m4s" startNumber="541">
+        <SegmentTemplate timescale="48000" presentationTimeOffset="102817915"
+         initialization="TPIR_0722_100824_2997DF_1920x1080_178_2CH_PRORESHQ_2CH_en-US_2939373_3_aac_128/init.m4v"
+         media="TPIR_0722_100824_2997DF_1920x1080_178_2CH_PRORESHQ_2CH_en-US_2939373_3_aac_128/seg_$Number$.m4s"
+         startNumber="541">
           <SegmentTimeline>
             <S t="102817792" d="192512" r="1"/>
             <S t="103202816" d="191488"/>
@@ -1660,7 +1663,9 @@
     <AdaptationSet id="3" contentType="text" lang="en-US" segmentAlignment="true">
       <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"/>
       <Representation id="8" bandwidth="1178" codecs="wvtt" mimeType="application/mp4">
-        <SegmentTemplate timescale="1000" presentationTimeOffset="2142039" initialization="TPIR_0722_2997_2CH_DF_1728406422/vtt_init.m4v" media="TPIR_0722_2997_2CH_DF_1728406422/seg_$Number$.m4s" startNumber="541">
+        <SegmentTemplate timescale="1000" presentationTimeOffset="2142039"
+         initialization="TPIR_0722_2997_2CH_DF_1728406422/vtt_init.m4v"
+         media="TPIR_0722_2997_2CH_DF_1728406422/seg_$Number$.m4s" startNumber="541">
           <SegmentTimeline>
             <S t="2142039" d="4000" r="22"/>
           </SegmentTimeline>

@@ -8,10 +8,6 @@ https://claude.ai
 
 https://wikipedia.org/wiki/ChatGPT
 
-## grok
-
-https://wikipedia.org/wiki/Grok_(chatbot)
-
 ## deepSeek
 
 https://wikipedia.org/wiki/DeepSeek

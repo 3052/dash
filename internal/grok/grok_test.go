@@ -22,11 +22,6 @@ var tests = []struct {
             url:    "drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/888d2bc7-75b5-4264-bf57-08e3dc24ecbb/segment.mp4?pathsig=8c953e4f~vEyD7FR7NMtgBhRbRGol6tYRL0pVp7AQxjE5pUlKliI&r=dXMtY2VudHJhbDE%3D&sid=1116&st=video",
          },
          {
-            id:     "audio-916e7eef-13ce-4a46-9bda-b2627ec04b4f",
-            length: 1 + 1047 + 69,
-            url:    "drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/916e7eef-13ce-4a46-9bda-b2627ec04b4f/segment.mp4?pathsig=8c953e4f~ta8gBIdEHUUP_p39sTXzQwDgjmCoZMymCeDBI6DL2H4&r=dXMtY2VudHJhbDE%3D&sid=1116&st=audio",
-         },
-         {
             id:     "subs-7433271",
             length: 1,
             url:    "texttrack/sub/7433271.vtt?pathsig=8c953e4f~UO056QMhmjVj394TCzXUSJJ4GI4BcpMoXktkwXsYSjw&r=dXMtY2VudHJhbDE%3D",
@@ -34,23 +29,39 @@ var tests = []struct {
       },
    },
    {
-      name: "../../testdata/canal.mpd",
-      url:  "https://cz-bks400-prod16-live.solocoo.tv:443/bpk-token/1ac@315gh2fp412qxkiyzybvo5noyt44xzbp31cbtmca/bpk-vod/playout01/default/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD/index.mpd",
+      name: "../../testdata/molotov.mpd",
+      url:  "https://vod-molotov.akamaized.net/output/v2/d8/a1/65/32e3c47902de4911dca77b0ad73e9ac34965a1d8/32e3c47902de4911dca77b0ad73e9ac34965a1d8.ism/fhdready.mpd",
       representation: []representation{
          {
-            id:     "video=3399914",
-            length: 1 + 1 + 1332 + 1,
-            url:    "dash/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD-video=3399914-4798800.dash?serviceid=298f95e1bf91361258c44a2b1f4a2425",
+            id:     "video=4800000",
+            length: 1 + 3555,
+            url:    "dash/32e3c47902de4911dca77b0ad73e9ac34965a1d8-video=4800000-3555.m4s",
          },
          {
-            id:     "audio_eng_1=576000",
-            length: 1 + 1334,
-            url:    "dash/appletvcz_A007300100102_2464C3BF9652075492E7CF48A400F243_HD-audio_eng_1=576000-383904768.dash?serviceid=298f95e1bf91361258c44a2b1f4a2425",
+            id: "3=1000",
+            length: 1 + 3339,
+            url: "dash/32e3c47902de4911dca77b0ad73e9ac34965a1d8-3=1000-3339.m4s",
+         },
+      },
+   },
+   {
+      name: "../../testdata/paramount.mpd",
+      url:  "https://vod-gcs-cedexis.cbsaavideo.com/intl_vms/2024/10/01/2376943683811/2939404_cenc_precon_dash/stream.mpd",
+      representation: []representation{
+         {
+            id: "5",
+            length: 1 + 539 + 1 + 1 + 29 + 1,
+            url: "TPIR_0722_100824_2997DF_1920x1080_178_2CH_PRORESHQ_2CH_2939373_4500/seg_571.m4s",
          },
          {
-            id:     "thumbnail", // the MPD is actually invalid
-            length: 80,
-            url:    "dash/thumbnail/tile_80.jpeg?serviceid=298f95e1bf91361258c44a2b1f4a2425",
+            id: "8",
+            length: 1 + 540 + 1 + 22,
+            url: "TPIR_0722_2997_2CH_DF_1728406422/seg_563.m4s",
+         },
+         {
+            id: "thumb_320x180",
+            length: 11,
+            url: "thumb_320x180/tile_11.jpg",
          },
       },
    },
@@ -67,22 +78,21 @@ type representation struct {
    length int
    url    string
 }
+
 func Test(t *testing.T) {
    log.SetFlags(log.Ltime)
    for _, testVar := range tests {
-      data, err := output("go", "run", ".", "-mpd", testVar.name)
+      data, err := output("go", "run", ".", "-input", testVar.name)
       if err != nil {
          t.Fatal(string(data))
       }
-      var representsB struct {
-         Representations map[string][]string
-      }
+      var representsB map[string][]string
       err = json.Unmarshal(data, &representsB)
       if err != nil {
          t.Fatal(err)
       }
       for _, representA := range testVar.representation {
-         representB := representsB.Representations[representA.id]
+         representB := representsB[representA.id]
          if len(representB) != representA.length {
             t.Fatal(
                representA.id,
