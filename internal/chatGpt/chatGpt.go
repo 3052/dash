@@ -7,7 +7,7 @@ import (
    "math"
    "net/url"
    "os"
-   "path"
+   "regexp"
    "strconv"
    "strings"
    "time"
@@ -38,6 +38,7 @@ type Representation struct {
    ID              string           `xml:"id,attr"`
    BaseURL         string           `xml:"BaseURL"`
    SegmentTemplate *SegmentTemplate `xml:"SegmentTemplate"`
+   SegmentBase     *SegmentBase     `xml:"SegmentBase"`
 }
 
 type SegmentTemplate struct {
@@ -60,25 +61,27 @@ type Segment struct {
    R int   `xml:"r,attr"`
 }
 
+type SegmentBase struct {
+   IndexRange     string          `xml:"indexRange,attr"`
+   Initialization *Initialization `xml:"Initialization"`
+}
+
+type Initialization struct {
+   Range string `xml:"range,attr"`
+}
+
+var numberPattern = regexp.MustCompile(`\$Number(?:%0(\d+)d)?\$`)
+
 func resolveURL(base, rel string) string {
    baseURL, _ := url.Parse(base)
    relURL, _ := url.Parse(rel)
    return baseURL.ResolveReference(relURL).String()
 }
 
-func joinBaseURLs(parts ...string) string {
-   joined := path.Join(parts...)
-   if !strings.Contains(path.Base(joined), ".") {
-      joined += "/"
-   }
-   return joined
-}
-
 func parseDuration(d string) time.Duration {
    if d == "" {
       return 0
    }
-   // Basic ISO8601 PT{seconds}S support
    if strings.HasPrefix(d, "PT") && strings.HasSuffix(d, "S") {
       secStr := strings.TrimSuffix(strings.TrimPrefix(d, "PT"), "S")
       if f, err := strconv.ParseFloat(secStr, 64); err == nil {
@@ -95,6 +98,17 @@ func contains(list []string, item string) bool {
       }
    }
    return false
+}
+
+func replaceNumberPattern(template string, number int) string {
+   return numberPattern.ReplaceAllStringFunc(template, func(match string) string {
+      sub := numberPattern.FindStringSubmatch(match)
+      if len(sub) > 1 && sub[1] != "" {
+         width, _ := strconv.Atoi(sub[1])
+         return fmt.Sprintf("%0*d", width, number)
+      }
+      return strconv.Itoa(number)
+   })
 }
 
 func main() {
@@ -126,19 +140,46 @@ func main() {
       for _, set := range period.Sets {
          for _, rep := range set.Representations {
             repID := rep.ID
-            segmentURLs := result[repID] // accumulate across periods
+            segmentURLs := result[repID]
 
-            fullBase := joinBaseURLs(mpd.BaseURL, period.BaseURL, set.BaseURL, rep.BaseURL)
-            fullBaseURL := resolveURL(baseMPD, fullBase)
+            // Resolve full base URL step-by-step using ResolveReference
+            base := baseMPD
+            if mpd.BaseURL != "" {
+               base = resolveURL(base, mpd.BaseURL)
+            }
+            if period.BaseURL != "" {
+               base = resolveURL(base, period.BaseURL)
+            }
+            if set.BaseURL != "" {
+               base = resolveURL(base, set.BaseURL)
+            }
+            if rep.BaseURL != "" {
+               base = resolveURL(base, rep.BaseURL)
+            }
 
+            // SegmentBase (e.g. rakuten)
+            if rep.SegmentBase != nil && rep.BaseURL != "" {
+               mediaURL := base
+               if !contains(segmentURLs, mediaURL) {
+                  segmentURLs = append(segmentURLs, mediaURL)
+               }
+               if rep.SegmentBase.Initialization != nil {
+                  if !contains(segmentURLs, mediaURL) {
+                     segmentURLs = append(segmentURLs, mediaURL)
+                  }
+               }
+               result[repID] = segmentURLs
+               continue
+            }
+
+            // SegmentTemplate
             st := rep.SegmentTemplate
             if st == nil {
                st = set.SegmentTemplate
             }
-
             if st == nil {
                if rep.BaseURL != "" {
-                  segmentURLs = append(segmentURLs, fullBaseURL)
+                  segmentURLs = append(segmentURLs, base)
                }
                if len(segmentURLs) > 0 {
                   result[repID] = segmentURLs
@@ -146,10 +187,10 @@ func main() {
                continue
             }
 
-            // Deduplicate init segment
+            // Initialization
             if st.Initialization != "" {
                init := strings.ReplaceAll(st.Initialization, "$RepresentationID$", repID)
-               initURL := resolveURL(fullBaseURL, init)
+               initURL := resolveURL(base, init)
                if !contains(segmentURLs, initURL) {
                   segmentURLs = append(segmentURLs, initURL)
                }
@@ -162,15 +203,14 @@ func main() {
                   number = 1
                }
                for _, seg := range st.SegmentTimeline.Segments {
-                  repeat := seg.R
-                  if repeat < 0 {
-                     repeat = 0
+                  count := 1
+                  if seg.R > 0 {
+                     count += seg.R
                   }
-                  count := 1 + repeat
                   for i := 0; i < count; i++ {
                      media := strings.ReplaceAll(st.Media, "$RepresentationID$", repID)
-                     media = strings.ReplaceAll(media, "$Number$", strconv.Itoa(number))
-                     segmentURLs = append(segmentURLs, resolveURL(fullBaseURL, media))
+                     media = replaceNumberPattern(media, number)
+                     segmentURLs = append(segmentURLs, resolveURL(base, media))
                      number++
                   }
                }
@@ -181,8 +221,8 @@ func main() {
                }
                for i := number; i <= st.EndNumber; i++ {
                   media := strings.ReplaceAll(st.Media, "$RepresentationID$", repID)
-                  media = strings.ReplaceAll(media, "$Number$", strconv.Itoa(i))
-                  segmentURLs = append(segmentURLs, resolveURL(fullBaseURL, media))
+                  media = replaceNumberPattern(media, i)
+                  segmentURLs = append(segmentURLs, resolveURL(base, media))
                }
             } else if st.Duration > 0 && periodDuration > 0 {
                timescale := st.Timescale
@@ -198,8 +238,8 @@ func main() {
                for i := 0; i < numSegments; i++ {
                   num := start + i
                   media := strings.ReplaceAll(st.Media, "$RepresentationID$", repID)
-                  media = strings.ReplaceAll(media, "$Number$", strconv.Itoa(num))
-                  segmentURLs = append(segmentURLs, resolveURL(fullBaseURL, media))
+                  media = replaceNumberPattern(media, num)
+                  segmentURLs = append(segmentURLs, resolveURL(base, media))
                }
             }
 
