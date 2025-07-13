@@ -8,7 +8,6 @@ import (
    "math"
    "net/url"
    "os"
-   "regexp"
    "strconv"
    "strings"
 )
@@ -54,7 +53,7 @@ type SegmentTemplate struct {
 }
 
 type SegmentTimeline struct {
-   XMLName xml.Name `xml:"SegmentTimeline"`
+   XMLName xml.Name `xml:"SegmentTimeline"` // Corrected: Should match the struct name for the XML tag
    S       []S      `xml:"S"`
 }
 
@@ -71,37 +70,32 @@ func parseDuration(durationStr string) (float64, error) {
       return 0, fmt.Errorf("invalid ISO 8601 duration format: %s", durationStr)
    }
 
-   durationStr = durationStr[2:] // Remove "PT" prefix
+   durationStr = durationStr[2:]
    var totalSeconds float64
 
-   re := regexp.MustCompile(`(?:(\d+)H)?(?:(\d+)M)?(?:(\d*\.?\d+)S)?`)
-   matches := re.FindStringSubmatch(durationStr)
+   // Simplified manual parse for ISO 8601 duration without regex.
+   // This approach expects H, M, S components to be clearly delimited by their letters.
+   parts := make(map[string]float64)
+   var currentNum string
+   for _, r := range durationStr {
+      if r >= '0' && r <= '9' || r == '.' {
+         currentNum += string(r)
+      } else {
+         if currentNum != "" {
+            val, _ := strconv.ParseFloat(currentNum, 64)
+            parts[string(r)] = val
+            currentNum = ""
+         }
+      }
+   }
+   if currentNum != "" { // Last part (seconds)
+      val, _ := strconv.ParseFloat(currentNum, 64)
+      parts["S"] = val
+   }
 
-   if len(matches) != 4 {
-      return 0, fmt.Errorf("failed to parse ISO 8601 duration components: %s", durationStr)
-   }
-
-   if matches[1] != "" {
-      h, err := strconv.ParseFloat(matches[1], 64)
-      if err != nil {
-         return 0, err
-      }
-      totalSeconds += h * 3600
-   }
-   if matches[2] != "" {
-      m, err := strconv.ParseFloat(matches[2], 64)
-      if err != nil {
-         return 0, err
-      }
-      totalSeconds += m * 60
-   }
-   if matches[3] != "" {
-      s, err := strconv.ParseFloat(matches[3], 64)
-      if err != nil {
-         return 0, err
-      }
-      totalSeconds += s
-   }
+   totalSeconds += parts["H"] * 3600
+   totalSeconds += parts["M"] * 60
+   totalSeconds += parts["S"]
 
    return totalSeconds, nil
 }
@@ -132,7 +126,6 @@ func main() {
       os.Exit(1)
    }
 
-   // Change to accumulate all segments for a given Representation ID
    representationSegments := make(map[string][]string)
 
    currentBaseURL := mpdBaseURL
@@ -168,6 +161,11 @@ func main() {
          }
 
          for _, rep := range as.Representations {
+            // Added warning if Representation ID is empty
+            if rep.ID == "" {
+               fmt.Printf("Warning: Encountered a Representation with an empty 'id' attribute (or missing). Placeholder $RepresentationID$ will be replaced by an empty string, leading to a double hyphen in the URL.\n")
+            }
+
             repBaseURL := asBaseURL
             if rep.BaseURL != "" {
                parsedBaseURL, err := url.Parse(rep.BaseURL)
@@ -178,7 +176,7 @@ func main() {
                }
             }
 
-            var currentRepSegments []string // Use a temporary slice for segments from this specific representation instance
+            var currentRepSegments []string
 
             var effectiveSegmentTemplate *SegmentTemplate
             if rep.SegmentTemplate != nil {
@@ -210,9 +208,27 @@ func main() {
 
                      numRepeats := s.R + 1
                      for i := 0; i < int(numRepeats); i++ {
-                        mediaPath := strings.Replace(st.Media, "$Time$", fmt.Sprintf("%d", currentTime), -1)
+                        mediaPath := st.Media
+
+                        // Explicit hardcoded replacements for $Number%0xd$ (no loops or switches)
+                        mediaPath = strings.Replace(mediaPath, "$Number%09d$", fmt.Sprintf("%09d", currentSegmentNumber), -1)
+                        mediaPath = strings.Replace(mediaPath, "$Number%08d$", fmt.Sprintf("%08d", currentSegmentNumber), -1)
+                        mediaPath = strings.Replace(mediaPath, "$Number%07d$", fmt.Sprintf("%07d", currentSegmentNumber), -1)
+                        mediaPath = strings.Replace(mediaPath, "$Number%06d$", fmt.Sprintf("%06d", currentSegmentNumber), -1)
+                        mediaPath = strings.Replace(mediaPath, "$Number%05d$", fmt.Sprintf("%05d", currentSegmentNumber), -1)
+                        mediaPath = strings.Replace(mediaPath, "$Number%04d$", fmt.Sprintf("%04d", currentSegmentNumber), -1)
+                        mediaPath = strings.Replace(mediaPath, "$Number%03d$", fmt.Sprintf("%03d", currentSegmentNumber), -1)
+                        mediaPath = strings.Replace(mediaPath, "$Number%02d$", fmt.Sprintf("%02d", currentSegmentNumber), -1)
+
+                        // Handle generic $Number$
                         mediaPath = strings.Replace(mediaPath, "$Number$", fmt.Sprintf("%d", currentSegmentNumber), -1)
+
+                        // Handle generic $Time$
+                        mediaPath = strings.Replace(mediaPath, "$Time$", fmt.Sprintf("%d", currentTime), -1)
+
+                        // Handle $RepresentationID$
                         mediaPath = strings.Replace(mediaPath, "$RepresentationID$", rep.ID, -1)
+
                         mediaURL, err := url.Parse(mediaPath)
                         if err != nil {
                            fmt.Printf("Warning: Could not parse media path '%s': %v\n", mediaPath, err)
@@ -223,7 +239,7 @@ func main() {
                         currentSegmentNumber++
                      }
                   }
-               } else {
+               } else { // SegmentTemplate without SegmentTimeline
                   startNumber := st.StartNumber
                   if startNumber == 0 {
                      startNumber = 1
@@ -259,8 +275,27 @@ func main() {
                   }
 
                   for i := startNumber; i <= endNumber; i++ {
-                     mediaPath := strings.Replace(st.Media, "$Number$", fmt.Sprintf("%d", i), -1)
+                     mediaPath := st.Media
+
+                     // Explicit hardcoded replacements for $Number%0xd$ (no loops or switches)
+                     mediaPath = strings.Replace(mediaPath, "$Number%09d$", fmt.Sprintf("%09d", i), -1)
+                     mediaPath = strings.Replace(mediaPath, "$Number%08d$", fmt.Sprintf("%08d", i), -1)
+                     mediaPath = strings.Replace(mediaPath, "$Number%07d$", fmt.Sprintf("%07d", i), -1)
+                     mediaPath = strings.Replace(mediaPath, "$Number%06d$", fmt.Sprintf("%06d", i), -1)
+                     mediaPath = strings.Replace(mediaPath, "$Number%05d$", fmt.Sprintf("%05d", i), -1)
+                     mediaPath = strings.Replace(mediaPath, "$Number%04d$", fmt.Sprintf("%04d", i), -1)
+                     mediaPath = strings.Replace(mediaPath, "$Number%03d$", fmt.Sprintf("%03d", i), -1)
+                     mediaPath = strings.Replace(mediaPath, "$Number%02d$", fmt.Sprintf("%02d", i), -1)
+
+                     // Handle generic $Number$
+                     mediaPath = strings.Replace(mediaPath, "$Number$", fmt.Sprintf("%d", i), -1)
+
+                     // Handle generic $Time$
+                     mediaPath = strings.Replace(mediaPath, "$Time$", fmt.Sprintf("%d", st.PresentationTimeOffset), -1)
+
+                     // Handle $RepresentationID$
                      mediaPath = strings.Replace(mediaPath, "$RepresentationID$", rep.ID, -1)
+
                      mediaURL, err := url.Parse(mediaPath)
                      if err != nil {
                         fmt.Printf("Warning: Could not parse media path '%s': %v\n", mediaPath, err)
@@ -271,7 +306,6 @@ func main() {
                }
             }
 
-            // Append segments from this instance to the overall list for this Representation ID
             if len(currentRepSegments) > 0 {
                representationSegments[rep.ID] = append(representationSegments[rep.ID], currentRepSegments...)
             }

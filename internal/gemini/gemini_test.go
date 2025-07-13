@@ -88,6 +88,42 @@ var tests = []struct {
          },
       },
    },
+   {
+      name: "pluto.txt",
+      representation: []representation{
+         {
+            content_type: type_text,
+            id:           "7",
+            length: func() int {
+               initialization := 0
+               media := 1 + 1153
+               return initialization + media
+            }(),
+            url: prefix + "text/en-cc/01154.m4s",
+         },
+         {
+            content_type: type_video,
+            id:           "5",
+            length: func() int {
+               initialization := 0
+               media := 1 + 1205 + 1
+               return initialization + media
+            }(),
+            url: prefix + "video/1080p-4500/01207.m4s",
+         },
+      },
+   },
+   {
+      name: "rakuten.txt",
+      representation: []representation{
+         {
+            content_type: type_video,
+            id:           "video-avc1-6",
+            length:       1,
+            url:          "https://prod-avod-pmd-cdn77.cdn.rakuten.tv/3/1/8/318f7ece69afcfe3e96de31be6b77272-mc-0-164-0-0_DS2BB/video-avc1-6.ismv?streaming_id=630ed6ed-1137-473c-8858-23ba59d12675&st_country=CZ,AT,DE,PL,SK&st_valid=1752245624&secure=PcDPRLtVJ_-tDsEPMD5Hzg==,1752267224",
+         },
+      },
+   },
 }
 
 const prefix = "http://test.test/"

@@ -9,6 +9,31 @@ import (
    "time"
 )
 
+func (m Media) Url(represent *Representation, address int) (*url.URL, error) {
+   data := replace(string(m), "$RepresentationID$", represent.Id)
+   if m.time_address() {
+      data = replace(data, "$Time$", fmt.Sprint(address))
+   } else {
+      data = replace(data, "$Number$", fmt.Sprint(address))
+      data = replace(data, "$Number%02d$", fmt.Sprintf("%02d", address))
+      data = replace(data, "$Number%03d$", fmt.Sprintf("%03d", address))
+      data = replace(data, "$Number%04d$", fmt.Sprintf("%04d", address))
+      data = replace(data, "$Number%05d$", fmt.Sprintf("%05d", address))
+      data = replace(data, "$Number%06d$", fmt.Sprintf("%06d", address))
+      data = replace(data, "$Number%07d$", fmt.Sprintf("%07d", address))
+      data = replace(data, "$Number%08d$", fmt.Sprintf("%08d", address))
+      data = replace(data, "$Number%09d$", fmt.Sprintf("%09d", address))
+   }
+   urlVar, err := url.Parse(data)
+   if err != nil {
+      return nil, err
+   }
+   if represent.BaseUrl[0] != nil {
+      urlVar = represent.BaseUrl[0].ResolveReference(urlVar)
+   }
+   return urlVar, nil
+}
+
 func (s *SegmentTemplate) Segment(periodVar *Period) iter.Seq[int] {
    var address int
    if s.Media.time_address() {
@@ -289,31 +314,6 @@ type SegmentTemplate struct {
    // one of the media streams (or a positive integer multiple thereof).
    Timescale *int  `xml:"timescale,attr"`
    Media     Media `xml:"media,attr"`
-}
-
-func (m Media) Url(represent *Representation, address int) (*url.URL, error) {
-   data := replace(string(m), "$RepresentationID$", represent.Id)
-   if m.time_address() {
-      data = replace(data, "$Time$", fmt.Sprint(address))
-   } else {
-      data = replace(data, "$Number$", fmt.Sprint(address))
-      data = replace(data, "$Number%02d$", fmt.Sprintf("%02d", address))
-      data = replace(data, "$Number%03d$", fmt.Sprintf("%03d", address))
-      data = replace(data, "$Number%04d$", fmt.Sprintf("%04d", address))
-      data = replace(data, "$Number%05d$", fmt.Sprintf("%05d", address))
-      data = replace(data, "$Number%06d$", fmt.Sprintf("%06d", address))
-      data = replace(data, "$Number%07d$", fmt.Sprintf("%07d", address))
-      data = replace(data, "$Number%08d$", fmt.Sprintf("%08d", address))
-      data = replace(data, "$Number%09d$", fmt.Sprintf("%09d", address))
-   }
-   urlVar, err := url.Parse(data)
-   if err != nil {
-      return nil, err
-   }
-   if represent.BaseUrl[0] != nil {
-      urlVar = represent.BaseUrl[0].ResolveReference(urlVar)
-   }
-   return urlVar, nil
 }
 
 func (r *Representation) set(adapt *AdaptationSet) {
