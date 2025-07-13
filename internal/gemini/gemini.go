@@ -4,7 +4,6 @@ import (
    "encoding/json"
    "encoding/xml"
    "fmt"
-   "io/ioutil"
    "math"
    "net/url"
    "os"
@@ -107,7 +106,7 @@ func main() {
    }
 
    mpdFilePath := os.Args[1]
-   mpdContent, err := ioutil.ReadFile(mpdFilePath)
+   mpdContent, err := os.ReadFile(mpdFilePath)
    if err != nil {
       fmt.Printf("Error reading MPD file: %v\n", err)
       os.Exit(1)
