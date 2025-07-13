@@ -111,6 +111,13 @@ func replaceNumberPattern(template string, number int) string {
    })
 }
 
+func replaceSegmentTemplate(template, repID string, number int, timeVal int64) string {
+   t := strings.ReplaceAll(template, "$RepresentationID$", repID)
+   t = replaceNumberPattern(t, number)
+   t = strings.ReplaceAll(t, "$Time$", strconv.FormatInt(timeVal, 10))
+   return t
+}
+
 func main() {
    if len(os.Args) < 2 {
       fmt.Println("Usage: go run extract.go <path-to-mpd>")
@@ -142,7 +149,7 @@ func main() {
             repID := rep.ID
             segmentURLs := result[repID]
 
-            // Resolve full base URL step-by-step using ResolveReference
+            // Resolve base
             base := baseMPD
             if mpd.BaseURL != "" {
                base = resolveURL(base, mpd.BaseURL)
@@ -157,7 +164,7 @@ func main() {
                base = resolveURL(base, rep.BaseURL)
             }
 
-            // SegmentBase (e.g. rakuten)
+            // SegmentBase
             if rep.SegmentBase != nil && rep.BaseURL != "" {
                mediaURL := base
                if !contains(segmentURLs, mediaURL) {
@@ -189,7 +196,7 @@ func main() {
 
             // Initialization
             if st.Initialization != "" {
-               init := strings.ReplaceAll(st.Initialization, "$RepresentationID$", repID)
+               init := replaceSegmentTemplate(st.Initialization, repID, 0, 0)
                initURL := resolveURL(base, init)
                if !contains(segmentURLs, initURL) {
                   segmentURLs = append(segmentURLs, initURL)
@@ -202,15 +209,20 @@ func main() {
                if number == 0 {
                   number = 1
                }
+               t := int64(0)
                for _, seg := range st.SegmentTimeline.Segments {
-                  count := 1
-                  if seg.R > 0 {
-                     count += seg.R
+                  repeat := seg.R
+                  if repeat < 0 {
+                     repeat = 0
                   }
-                  for i := 0; i < count; i++ {
-                     media := strings.ReplaceAll(st.Media, "$RepresentationID$", repID)
-                     media = replaceNumberPattern(media, number)
+                  startTime := seg.T
+                  if startTime != 0 {
+                     t = startTime
+                  }
+                  for i := 0; i <= repeat; i++ {
+                     media := replaceSegmentTemplate(st.Media, repID, number, t)
                      segmentURLs = append(segmentURLs, resolveURL(base, media))
+                     t += seg.D
                      number++
                   }
                }
@@ -220,8 +232,7 @@ func main() {
                   number = 1
                }
                for i := number; i <= st.EndNumber; i++ {
-                  media := strings.ReplaceAll(st.Media, "$RepresentationID$", repID)
-                  media = replaceNumberPattern(media, i)
+                  media := replaceSegmentTemplate(st.Media, repID, i, 0)
                   segmentURLs = append(segmentURLs, resolveURL(base, media))
                }
             } else if st.Duration > 0 && periodDuration > 0 {
@@ -235,11 +246,12 @@ func main() {
                if start == 0 {
                   start = 1
                }
+               t := int64(0)
                for i := 0; i < numSegments; i++ {
                   num := start + i
-                  media := strings.ReplaceAll(st.Media, "$RepresentationID$", repID)
-                  media = replaceNumberPattern(media, num)
+                  media := replaceSegmentTemplate(st.Media, repID, num, t)
                   segmentURLs = append(segmentURLs, resolveURL(base, media))
+                  t += st.Duration
                }
             }
 
