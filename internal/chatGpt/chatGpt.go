@@ -4,110 +4,140 @@ import (
    "encoding/json"
    "encoding/xml"
    "fmt"
-   "io/ioutil"
    "net/url"
    "os"
+   "strconv"
+   "strings"
 )
 
 type MPD struct {
-   XMLName       xml.Name       `xml:"MPD"`
-   Namespaces    string         `xml:"xmlns,attr"`
-   Period        []Period       `xml:"Period"`
+   XMLName xml.Name `xml:"MPD"`
+   BaseURL string   `xml:"BaseURL"`
+   Period  Period   `xml:"Period"`
 }
 
 type Period struct {
-   AdaptationSet []AdaptationSet `xml:"AdaptationSet"`
+   BaseURL        string          `xml:"BaseURL"`
+   AdaptationSets []AdaptationSet `xml:"AdaptationSet"`
 }
 
 type AdaptationSet struct {
-   Representation []Representation `xml:"Representation"`
+   BaseURL         string           `xml:"BaseURL"`
+   SegmentTemplate *SegmentTemplate `xml:"SegmentTemplate"`
+   Representations []Representation `xml:"Representation"`
+}
+
+type SegmentTemplate struct {
+   Timescale     int              `xml:"timescale,attr"`
+   Duration      int              `xml:"duration,attr"`
+   EndNumber     int              `xml:"endNumber,attr"`
+   Initialization string           `xml:"initialization,attr"`
+   Media         string           `xml:"media,attr"`
+   SegmentTimeline *SegmentTimeline `xml:"SegmentTimeline"`
+}
+
+type SegmentTimeline struct {
+   Segments []Segment `xml:"S"`
+}
+
+type Segment struct {
+   T int64 `xml:"t,attr"`
+   D int64 `xml:"d,attr"`
+   R int   `xml:"r,attr"`
 }
 
 type Representation struct {
-   ID           string   `xml:"id,attr"`
-   BaseURL      string   `xml:"BaseURL"`
-   SegmentList  SegmentList `xml:"SegmentList"`
+   ID              string           `xml:"id,attr"`
+   BaseURL         string           `xml:"BaseURL"`
+   SegmentTemplate *SegmentTemplate `xml:"SegmentTemplate"`
 }
 
-type SegmentList struct {
-   SegmentURL []SegmentURL `xml:"SegmentURL"`
+func resolveURL(base string, rel string) string {
+   baseURL, _ := url.Parse(base)
+   relURL, _ := url.Parse(rel)
+   return baseURL.ResolveReference(relURL).String()
 }
 
-type SegmentURL struct {
-   Media string `xml:"media,attr"`
-}
-
-func resolveURL(base, relative string) string {
-   parsedBase, err := url.Parse(base)
-   if err != nil {
-      fmt.Println("Error parsing base URL:", err)
-      return ""
-   }
-   parsedRelative, err := url.Parse(relative)
-   if err != nil {
-      fmt.Println("Error parsing relative URL:", err)
-      return ""
-   }
-   return parsedBase.ResolveReference(parsedRelative).String()
-}
 
 func main() {
-   // Get file path from command-line argument
    if len(os.Args) < 2 {
-      fmt.Println("Usage: go run main.go <path_to_mpd>")
+      fmt.Println("Usage: go run extract_segments.go <path-to-mpd>")
       return
    }
 
-   mpdFilePath := os.Args[1]
-
-   // Read MPD file
-   data, err := ioutil.ReadFile(mpdFilePath)
+   filePath := os.Args[1]
+   data, err := os.ReadFile(filePath)
    if err != nil {
-      fmt.Println("Error reading MPD file:", err)
-      return
+      panic(err)
    }
 
-   // Parse MPD XML
    var mpd MPD
-   err = xml.Unmarshal(data, &mpd)
-   if err != nil {
-      fmt.Println("Error unmarshaling MPD:", err)
-      return
+   if err := xml.Unmarshal(data, &mpd); err != nil {
+      panic(err)
    }
 
-   // Initialize the output structure
-   output := make(map[string][]string)
+   baseMPD := "http://test.test/test.mpd"
+   rootBase := resolveURL(baseMPD, mpd.BaseURL)
+   result := make(map[string][]string)
 
-   // Base MPD URL
-   baseURL := "http://test.test/test.mpd"
+   for _, as := range mpd.Period.AdaptationSets {
+      asBase := resolveURL(rootBase, as.BaseURL)
+      for _, rep := range as.Representations {
+         fullBase := resolveURL(asBase, rep.BaseURL)
+         repID := rep.ID
+         segmentURLs := []string{}
 
-   // Loop through AdaptationSets and Representations to extract Segment URLs
-   for _, period := range mpd.Period {
-      for _, adaptationSet := range period.AdaptationSet {
-         for _, representation := range adaptationSet.Representation {
-            // Resolve the base URL if needed
-            fullBaseURL := resolveURL(baseURL, representation.BaseURL)
-
-            // Collect Segment URLs for this Representation
-            var segments []string
-            for _, segment := range representation.SegmentList.SegmentURL {
-               segmentURL := resolveURL(fullBaseURL, segment.Media)
-               segments = append(segments, segmentURL)
-            }
-
-            // Store the segments in the output map
-            output[representation.ID] = segments
+         // Prefer SegmentTemplate inside Representation
+         st := rep.SegmentTemplate
+         if st == nil {
+            st = as.SegmentTemplate
          }
+
+         // Case 1: No SegmentTemplate, just a BaseURL (single file)
+         if st == nil {
+            if rep.BaseURL != "" {
+               segmentURLs = append(segmentURLs, resolveURL(asBase, rep.BaseURL))
+            }
+            result[repID] = segmentURLs
+            continue
+         }
+
+         // Initialization segment
+         if st.Initialization != "" {
+            initURL := strings.ReplaceAll(st.Initialization, "$RepresentationID$", repID)
+            segmentURLs = append(segmentURLs, resolveURL(fullBase, initURL))
+         }
+
+         // SegmentTimeline-based segments
+         if st.SegmentTimeline != nil {
+            number := 0
+            for _, seg := range st.SegmentTimeline.Segments {
+               repeat := seg.R
+               if repeat < 0 {
+                  repeat = 0
+               }
+               for i := 0; i <= repeat; i++ {
+                  number++
+                  media := st.Media
+                  media = strings.ReplaceAll(media, "$RepresentationID$", repID)
+                  media = strings.ReplaceAll(media, "$Number$", strconv.Itoa(number))
+                  segmentURLs = append(segmentURLs, resolveURL(fullBase, media))
+               }
+            }
+         } else {
+            // Number-based fallback
+            for i := 1; i <= st.EndNumber; i++ {
+               media := st.Media
+               media = strings.ReplaceAll(media, "$RepresentationID$", repID)
+               media = strings.ReplaceAll(media, "$Number$", strconv.Itoa(i))
+               segmentURLs = append(segmentURLs, resolveURL(fullBase, media))
+            }
+         }
+
+         result[repID] = segmentURLs
       }
    }
 
-   // Convert the output to JSON
-   result, err := json.MarshalIndent(output, "", "  ")
-   if err != nil {
-      fmt.Println("Error marshaling JSON:", err)
-      return
-   }
-
-   // Output the result
-   fmt.Println(string(result))
+   enc, _ := json.MarshalIndent(result, "", "  ")
+   fmt.Println(string(enc))
 }

@@ -4,7 +4,6 @@ import (
    "encoding/json"
    "log"
    "os/exec"
-   "slices"
    "testing"
 )
 
@@ -37,27 +36,18 @@ var tests = []struct {
 
 func Test(t *testing.T) {
    log.SetFlags(log.Ltime)
-   type representation struct {
-      Id   string
-      Urls []string
-   }
    for _, testVar := range tests {
       data, err := output("go", "run", ".", testVar.name)
       if err != nil {
          t.Fatal(string(data))
       }
-      var representsB struct {
-         Representations []*representation
-      }
+      var representsB map[string][]string
       err = json.Unmarshal(data, &representsB)
       if err != nil {
          t.Fatal(err)
       }
       for _, representA := range testVar.representation {
-         index := slices.IndexFunc(representsB.Representations,
-            func(r *representation) bool { return r.Id == representA.id },
-         )
-         representB := representsB.Representations[index].Urls
+         representB := representsB[representA.id]
          if len(representB) != representA.length {
             t.Fatal(
                representA.id,
