@@ -1,6 +1,8 @@
-# DASH
+# Gemini 2.5 Pro
 
 https://gemini.google.com
 
-Go language, I need a script where input is DASH MPD file, and out output is
-segment URLs as JSON, grouped by Representation
+Go language script, input is path to local DASH MPD file, output is segment
+URLs as JSON, grouped by Representation. assume MPD URL is
+"http://test.test/test.mpd" to resolve relative URLs. should work with these
+files
