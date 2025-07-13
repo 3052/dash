@@ -1,0 +1,89 @@
+package main
+
+import (
+   "encoding/json"
+   "log"
+   "os/exec"
+   "slices"
+   "testing"
+)
+
+var tests = []struct {
+   name           string
+   url            string
+   representation []representation
+}{
+   {
+      name: "criterion.txt",
+      url:  "https://vod-adaptive-ak.vimeocdn.com/exp=1752284211~acl=%2F15be2d09-cb01-46d4-9948-2667ba2e3907%2F%2A~hmac=6997e9aef9fd359a03a2b49a7a82db955064361a16ed4d875e1d927a62f2ca35/15be2d09-cb01-46d4-9948-2667ba2e3907/v2/playlist/drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/av/primary/sub/7433271-c-en/prot/bWF4X2hlaWdodD0xMDgw/playlist.mpd",
+      representation: []representation{
+         {
+            id: "video-888d2bc7-75b5-4264-bf57-08e3dc24ecbb",
+            length: func() int {
+               initialization := 1
+               media := 1 + 1114 + 1
+               return initialization + media
+            }(),
+            url: "drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/888d2bc7-75b5-4264-bf57-08e3dc24ecbb/segment.mp4?pathsig=8c953e4f~vEyD7FR7NMtgBhRbRGol6tYRL0pVp7AQxjE5pUlKliI&r=dXMtY2VudHJhbDE%3D&sid=1116&st=video",
+         },
+         {
+            id:     "subs-7433271",
+            length: 1,
+            url:    "texttrack/sub/7433271.vtt?pathsig=8c953e4f~UO056QMhmjVj394TCzXUSJJ4GI4BcpMoXktkwXsYSjw&r=dXMtY2VudHJhbDE%3D",
+         },
+      },
+   },
+}
+
+func Test(t *testing.T) {
+   log.SetFlags(log.Ltime)
+   type representation struct {
+      Id   string
+      Urls []string
+   }
+   for _, testVar := range tests {
+      data, err := output("go", "run", ".", testVar.name)
+      if err != nil {
+         t.Fatal(string(data))
+      }
+      var representsB struct {
+         Representations []*representation
+      }
+      err = json.Unmarshal(data, &representsB)
+      if err != nil {
+         t.Fatal(err)
+      }
+      for _, representA := range testVar.representation {
+         index := slices.IndexFunc(representsB.Representations,
+            func(r *representation) bool { return r.Id == representA.id },
+         )
+         representB := representsB.Representations[index].Urls
+         if len(representB) != representA.length {
+            t.Fatal(
+               representA.id,
+               "pass", representA.length,
+               "fail", len(representB),
+            )
+         }
+         if representB[len(representB)-1] != prefix+representA.url {
+            t.Fatal(
+               "\npass", prefix+representA.url,
+               "\nfail", representB[len(representB)-1],
+            )
+         }
+      }
+   }
+}
+
+type representation struct {
+   id     string
+   length int
+   url    string
+}
+const prefix = "http://test.test/"
+
+func output(name string, arg ...string) ([]byte, error) {
+   command := exec.Command(name, arg...)
+   log.Print(command.Args)
+   return command.Output()
+}

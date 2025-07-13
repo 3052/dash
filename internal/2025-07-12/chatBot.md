@@ -1,9 +1,5 @@
 # chatBot
 
-## chatGpt
-
-https://wikipedia.org/wiki/ChatGPT
-
 ## deepSeek
 
 Length limit reached. Please start a new chat
