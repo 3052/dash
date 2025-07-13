@@ -7,16 +7,12 @@ import (
    "testing"
 )
 
-const prefix = "http://test.test/"
-
 var tests = []struct {
    name           string
-   url            string
    representation []representation
 }{
    {
       name: "criterion.txt",
-      url:  "https://vod-adaptive-ak.vimeocdn.com/exp=1752284211~acl=%2F15be2d09-cb01-46d4-9948-2667ba2e3907%2F%2A~hmac=6997e9aef9fd359a03a2b49a7a82db955064361a16ed4d875e1d927a62f2ca35/15be2d09-cb01-46d4-9948-2667ba2e3907/v2/playlist/drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/av/primary/sub/7433271-c-en/prot/bWF4X2hlaWdodD0xMDgw/playlist.mpd",
       representation: []representation{
          {
             content_type: type_text,
@@ -38,7 +34,6 @@ var tests = []struct {
    },
    {
       name: "molotov.txt",
-      url:  "https://vod-molotov.akamaized.net/output/v2/d8/a1/65/32e3c47902de4911dca77b0ad73e9ac34965a1d8/32e3c47902de4911dca77b0ad73e9ac34965a1d8.ism/fhdready.mpd",
       representation: []representation{
          {
             content_type: type_text,
@@ -64,7 +59,6 @@ var tests = []struct {
    },
    {
       name: "paramount.txt",
-      url:  "https://vod-gcs-cedexis.cbsaavideo.com/intl_vms/2024/10/01/2376943683811/2939404_cenc_precon_dash/stream.mpd",
       representation: []representation{
          {
             content_type: type_image,
@@ -96,7 +90,6 @@ var tests = []struct {
    },
    {
       name: "pluto.txt",
-      url:  "http://silo-hybrik.pluto.tv.s3.amazonaws.com/507_pluto/clip/5a9dd73dfb6f2f17481aff0e_laracrofttombraider/1080pDRM/20250605_154453/dash/0-end/main.mpd",
       representation: []representation{
          {
             content_type: type_text,
@@ -122,7 +115,6 @@ var tests = []struct {
    },
    {
       name: "rakuten.txt",
-      url:  "https://prod-kami.wuaki.tv/v1/delivery/dash/avod/22ab6a73-95f1-4e72-a345-d1cdf3a687b0.mpd",
       representation: []representation{
          {
             content_type: type_video,
@@ -134,7 +126,6 @@ var tests = []struct {
    },
    {
       name: "rtbf.txt",
-      url:  "https://C9851Ec-az-westeurope-fsly.cdn.redbee.live/rtbf/auvio/assets/3355182_6BA97Bb/materials/ois9uWXg5X_6BA97Bb/vod-idx-2.ism/.mpd",
       representation: []representation{
          {
             content_type: type_video,
@@ -211,3 +202,5 @@ type representation struct {
    url          string
    content_type content_type
 }
+
+const prefix = "http://test.test/"

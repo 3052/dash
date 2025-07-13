@@ -7,31 +7,6 @@ import (
    "time"
 )
 
-func (s *SegmentTemplate) byTimelineTime() []uint {
-   var segments []uint
-   number := s.PresentationTimeOffset
-   for _, segment := range s.SegmentTimeline.S {
-      for range 1 + segment.R {
-         segments = append(segments, number)
-         number += segment.D
-      }
-   }
-   return segments
-}
-
-func (s *SegmentTemplate) numberTime(periodVar *Period) []uint {
-   if s.EndNumber >= 1 {
-      return s.byEndNumber()
-   }
-   if s.SegmentTimeline != nil {
-      if strings.Contains(s.Media, "$Time$") {
-         return s.byTimelineTime()
-      }
-      return s.byTimelineNumber()
-   }
-   return s.byPeriod(periodVar) // SegmentTemplate.duration
-}
-
 func (s *SegmentTemplate) byPeriod(periodVar *Period) []uint {
    var segment []uint
    // dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
@@ -157,4 +132,28 @@ func (s *SegmentTemplate) byEndNumber() []uint {
       number++
    }
    return segment
+}
+func (s *SegmentTemplate) byTimelineTime() []uint {
+   var segments []uint
+   number := s.PresentationTimeOffset
+   for _, segment := range s.SegmentTimeline.S {
+      for range 1 + segment.R {
+         segments = append(segments, number)
+         number += segment.D
+      }
+   }
+   return segments
+}
+
+func (s *SegmentTemplate) numberTime(periodVar *Period) []uint {
+   if s.EndNumber >= 1 {
+      return s.byEndNumber()
+   }
+   if s.SegmentTimeline != nil {
+      if strings.Contains(s.Media, "$Time$") {
+         return s.byTimelineTime()
+      }
+      return s.byTimelineNumber()
+   }
+   return s.byPeriod(periodVar) // SegmentTemplate.duration
 }
