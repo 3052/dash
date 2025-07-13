@@ -13,6 +13,59 @@ var tests = []struct {
    representation []representation
 }{
    {
+      name: "paramount.txt",
+      url:  "https://vod-gcs-cedexis.cbsaavideo.com/intl_vms/2024/10/01/2376943683811/2939404_cenc_precon_dash/stream.mpd",
+      representation: []representation{
+         {
+            id:  "5", // avc1.640028
+            url: "TPIR_0722_100824_2997DF_1920x1080_178_2CH_PRORESHQ_2CH_2939373_4500/seg_571.m4s",
+            length: func() int {
+               initialization := 1
+               media := 539 + 1 + 1 + 29 + 1
+               return initialization + media
+            }(),
+         },
+         {
+            id: "8", // wvtt
+            length: func() int {
+               initialization := 1
+               media := 540 + 1 + 22
+               return initialization + media
+            }(),
+            url: "TPIR_0722_2997_2CH_DF_1728406422/seg_563.m4s",
+         },
+         {
+            id:     "thumb_320x180",
+            length: 11,
+            url:    "thumb_320x180/tile_11.jpg",
+         },
+      },
+   },
+   {
+      name: "molotov.txt",
+      url:  "https://vod-molotov.akamaized.net/output/v2/d8/a1/65/32e3c47902de4911dca77b0ad73e9ac34965a1d8/32e3c47902de4911dca77b0ad73e9ac34965a1d8.ism/fhdready.mpd",
+      representation: []representation{
+         {
+            id: "video=4800000",
+            length: func() int {
+               initialization := 1
+               media := 3555
+               return initialization + media
+            }(),
+            url: "dash/32e3c47902de4911dca77b0ad73e9ac34965a1d8-video=4800000-3555.m4s",
+         },
+         {
+            id: "3=1000",
+            length: func() int {
+               initialization := 1
+               media := 3339
+               return initialization + media
+            }(),
+            url: "dash/32e3c47902de4911dca77b0ad73e9ac34965a1d8-3=1000-3339.m4s",
+         },
+      },
+   },
+   {
       name: "criterion.txt",
       url:  "https://vod-adaptive-ak.vimeocdn.com/exp=1752284211~acl=%2F15be2d09-cb01-46d4-9948-2667ba2e3907%2F%2A~hmac=6997e9aef9fd359a03a2b49a7a82db955064361a16ed4d875e1d927a62f2ca35/15be2d09-cb01-46d4-9948-2667ba2e3907/v2/playlist/drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/av/primary/sub/7433271-c-en/prot/bWF4X2hlaWdodD0xMDgw/playlist.mpd",
       representation: []representation{
@@ -70,6 +123,7 @@ type representation struct {
    length int
    url    string
 }
+
 const prefix = "http://test.test/"
 
 func output(name string, arg ...string) ([]byte, error) {
