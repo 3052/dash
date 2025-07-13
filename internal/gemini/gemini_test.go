@@ -9,12 +9,10 @@ import (
 
 var tests = []struct {
    name           string
-   url            string
    representation []representation
 }{
    {
       name: "criterion.txt",
-      url:  "https://vod-adaptive-ak.vimeocdn.com/exp=1752284211~acl=%2F15be2d09-cb01-46d4-9948-2667ba2e3907%2F%2A~hmac=6997e9aef9fd359a03a2b49a7a82db955064361a16ed4d875e1d927a62f2ca35/15be2d09-cb01-46d4-9948-2667ba2e3907/v2/playlist/drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/av/primary/sub/7433271-c-en/prot/bWF4X2hlaWdodD0xMDgw/playlist.mpd",
       representation: []representation{
          {
             content_type: type_text,
@@ -31,6 +29,31 @@ var tests = []struct {
                return initialization + media
             }(),
             url: prefix + "drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/888d2bc7-75b5-4264-bf57-08e3dc24ecbb/segment.mp4?pathsig=8c953e4f~vEyD7FR7NMtgBhRbRGol6tYRL0pVp7AQxjE5pUlKliI&r=dXMtY2VudHJhbDE%3D&sid=1116&st=video",
+         },
+      },
+   },
+   {
+      name: "molotov.txt",
+      representation: []representation{
+         {
+            content_type: type_text,
+            id:           "3=1000",
+            length: func() int {
+               initialization := 1
+               media := 3339
+               return initialization + media
+            }(),
+            url: prefix + "dash/32e3c47902de4911dca77b0ad73e9ac34965a1d8-3=1000-3339.m4s",
+         },
+         {
+            content_type: type_video,
+            id:           "video=4800000",
+            length: func() int {
+               initialization := 1
+               media := 3555
+               return initialization + media
+            }(),
+            url: prefix + "dash/32e3c47902de4911dca77b0ad73e9ac34965a1d8-video=4800000-3555.m4s",
          },
       },
    },
