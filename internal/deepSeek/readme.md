@@ -1,7 +1,6 @@
 # deepSeek
 
 - https://chat.deepseek.com
-- https://deepseek.com
 - https://wikipedia.org/wiki/DeepSeek
 
 Go language script, user will provide path to local DASH MPD file, and output
