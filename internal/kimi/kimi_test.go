@@ -57,6 +57,37 @@ var tests = []struct {
          },
       },
    },
+   {
+      name: "paramount.txt",
+      representation: []representation{
+         {
+            content_type: type_image,
+            id:           "thumb_320x180",
+            length:       11,
+            url:          prefix + "thumb_320x180/tile_11.jpg",
+         },
+         {
+            content_type: type_text,
+            id:           "8",
+            length: func() int {
+               initialization := 1
+               media := 540 + 1 + 22
+               return initialization + media
+            }(),
+            url: prefix + "TPIR_0722_2997_2CH_DF_1728406422/seg_563.m4s",
+         },
+         {
+            content_type: type_video,
+            id:           "5",
+            url:          prefix + "TPIR_0722_100824_2997DF_1920x1080_178_2CH_PRORESHQ_2CH_2939373_4500/seg_571.m4s",
+            length: func() int {
+               initialization := 1
+               media := 539 + 1 + 1 + 29 + 1
+               return initialization + media
+            }(),
+         },
+      },
+   },
 }
 
 func Test(t *testing.T) {

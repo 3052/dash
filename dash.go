@@ -9,6 +9,19 @@ import (
    "time"
 )
 
+func (s *SegmentTemplate) set() {
+   // dashif.org/Guidelines-TimingModel#addressing-simple
+   if s.StartNumber == nil {
+      start := 1
+      s.StartNumber = &start
+   }
+   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
+   if s.Timescale == nil {
+      scale := 1
+      s.Timescale = &scale
+   }
+}
+
 func (m Media) Url(represent *Representation, address int) (*url.URL, error) {
    data := replace(string(m), "$RepresentationID$", represent.Id)
    if m.time_address() {
@@ -84,19 +97,6 @@ func (p *Period) segment_count(template *SegmentTemplate) int64 {
    // paramount
    durationVar := float64(template.Duration) / float64(*template.Timescale)
    return int64(math.Ceil(p.Duration[0].Seconds() / durationVar))
-}
-
-func (s *SegmentTemplate) set() {
-   // dashif.org/Guidelines-TimingModel#addressing-simple
-   if s.StartNumber == nil {
-      start := 1
-      s.StartNumber = &start
-   }
-   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
-   if s.Timescale == nil {
-      scale := 1
-      s.Timescale = &scale
-   }
 }
 
 type Period struct {
