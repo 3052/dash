@@ -12,73 +12,57 @@ var tests = []struct {
    representation []representation
 }{
    {
-      name: "../../testdata/criterion.mpd",
+      name: "criterion.txt",
       representation: []representation{
          {
-            id:     "video-888d2bc7-75b5-4264-bf57-08e3dc24ecbb",
-            length: 1 + 1 + 1114 + 1,
-            url:    "drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/888d2bc7-75b5-4264-bf57-08e3dc24ecbb/segment.mp4?pathsig=8c953e4f~vEyD7FR7NMtgBhRbRGol6tYRL0pVp7AQxjE5pUlKliI&r=dXMtY2VudHJhbDE%3D&sid=1116&st=video",
+            content_type: type_text,
+            id:           "subs-7433271",
+            length:       1,
+            url:          prefix + "texttrack/sub/7433271.vtt?pathsig=8c953e4f~UO056QMhmjVj394TCzXUSJJ4GI4BcpMoXktkwXsYSjw&r=dXMtY2VudHJhbDE%3D",
          },
          {
-            id:     "subs-7433271",
-            length: 1,
-            url:    "texttrack/sub/7433271.vtt?pathsig=8c953e4f~UO056QMhmjVj394TCzXUSJJ4GI4BcpMoXktkwXsYSjw&r=dXMtY2VudHJhbDE%3D",
+            content_type: type_video,
+            id:           "video-888d2bc7-75b5-4264-bf57-08e3dc24ecbb",
+            length: func() int {
+               initialization := 1
+               media := 1 + 1114 + 1
+               return initialization + media
+            }(),
+            url: prefix + "drm/cenc,derived,325579370,e4576465a745213f336c1ef1bf5d513e/remux/avf/888d2bc7-75b5-4264-bf57-08e3dc24ecbb/segment.mp4?pathsig=8c953e4f~vEyD7FR7NMtgBhRbRGol6tYRL0pVp7AQxjE5pUlKliI&r=dXMtY2VudHJhbDE%3D&sid=1116&st=video",
          },
       },
    },
    {
-      name: "../../testdata/molotov.mpd",
+      name: "molotov.txt",
       representation: []representation{
          {
-            id:     "video=4800000",
-            length: 1 + 3555,
-            url:    "dash/32e3c47902de4911dca77b0ad73e9ac34965a1d8-video=4800000-3555.m4s",
+            content_type: type_text,
+            id:           "3=1000",
+            length: func() int {
+               initialization := 1
+               media := 3339
+               return initialization + media
+            }(),
+            url: prefix + "dash/32e3c47902de4911dca77b0ad73e9ac34965a1d8-3=1000-3339.m4s",
          },
          {
-            id: "3=1000",
-            length: 1 + 3339,
-            url: "dash/32e3c47902de4911dca77b0ad73e9ac34965a1d8-3=1000-3339.m4s",
+            content_type: type_video,
+            id:           "video=4800000",
+            length: func() int {
+               initialization := 1
+               media := 3555
+               return initialization + media
+            }(),
+            url: prefix + "dash/32e3c47902de4911dca77b0ad73e9ac34965a1d8-video=4800000-3555.m4s",
          },
       },
    },
-   {
-      name: "../../testdata/paramount.mpd",
-      representation: []representation{
-         {
-            id: "5",
-            length: 1 + 539 + 1 + 1 + 29 + 1,
-            url: "TPIR_0722_100824_2997DF_1920x1080_178_2CH_PRORESHQ_2CH_2939373_4500/seg_571.m4s",
-         },
-         {
-            id: "8",
-            length: 1 + 540 + 1 + 22,
-            url: "TPIR_0722_2997_2CH_DF_1728406422/seg_563.m4s",
-         },
-         {
-            id: "thumb_320x180",
-            length: 11,
-            url: "thumb_320x180/tile_11.jpg",
-         },
-      },
-   },
-}
-
-func output(name string, arg ...string) ([]byte, error) {
-   command := exec.Command(name, arg...)
-   log.Print(command.Args)
-   return command.Output()
-}
-
-type representation struct {
-   id     string
-   length int
-   url    string
 }
 
 func Test(t *testing.T) {
    log.SetFlags(log.Ltime)
    for _, testVar := range tests {
-      data, err := output("go", "run", ".", "-input", testVar.name)
+      data, err := output("go", "run", ".", "-mpd", testVar.name)
       if err != nil {
          t.Fatal(string(data))
       }
@@ -96,14 +80,35 @@ func Test(t *testing.T) {
                "fail", len(representB),
             )
          }
-         if representB[len(representB)-1] != prefix+representA.url {
+         if representB[len(representB)-1] != representA.url {
             t.Fatal(
-               "\npass", prefix+representA.url,
+               "\npass", representA.url,
                "\nfail", representB[len(representB)-1],
             )
          }
       }
    }
+}
+
+func output(name string, arg ...string) ([]byte, error) {
+   command := exec.Command(name, arg...)
+   log.Print(command.Args)
+   return command.Output()
+}
+
+type content_type int
+
+const (
+   type_image content_type = iota
+   type_text
+   type_video
+)
+
+type representation struct {
+   id           string
+   length       int
+   url          string
+   content_type content_type
 }
 
 const prefix = "http://test.test/"
