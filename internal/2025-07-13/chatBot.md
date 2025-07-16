@@ -33,9 +33,3 @@ API is trash:
 - https://wikipedia.org/wiki/DeepSeek
 
 free version will not let me attach the six test files, no paid version
-
-## gemini
-
-https://gemini.google.com
-
-passes all tests, but 13 KB vs 8 KB with chatGpt

@@ -1,7 +1,8 @@
-# chatGpt
+# gemini
 
-- https://chatgpt.com
-- https://wikipedia.org/wiki/ChatGPT
+https://gemini.google.com
+
+passes all tests, but 13 KB vs 8 KB with chatGpt
 
 Go language script, input is path to local DASH MPD file, output is segment
 URLs as JSON, grouped by Representation. assume MPD URL is
