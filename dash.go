@@ -9,6 +9,24 @@ import (
    "time"
 )
 
+type SegmentTemplate struct {
+   EndNumber              int            `xml:"endNumber,attr"`
+   Initialization         Initialization `xml:"initialization,attr"`
+   PresentationTimeOffset int            `xml:"presentationTimeOffset,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D int `xml:"d,attr"` // duration
+         R int `xml:"r,attr"` // repeat
+      }
+   }
+   StartNumber *int `xml:"startNumber,attr"`
+   Duration    int  `xml:"duration,attr"`
+   // This can be any frequency but typically is the media clock frequency of
+   // one of the media streams (or a positive integer multiple thereof).
+   Timescale *int  `xml:"timescale,attr"`
+   Media     Media `xml:"media,attr"`
+}
+
 func (s *SegmentTemplate) set() {
    // dashif.org/Guidelines-TimingModel#addressing-simple
    if s.StartNumber == nil {
@@ -296,24 +314,6 @@ func (r *Representation) Representation() iter.Seq[*Representation] {
          }
       }
    }
-}
-
-type SegmentTemplate struct {
-   EndNumber              int            `xml:"endNumber,attr"`
-   Initialization         Initialization `xml:"initialization,attr"`
-   PresentationTimeOffset int            `xml:"presentationTimeOffset,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D int `xml:"d,attr"` // duration
-         R int `xml:"r,attr"` // repeat
-      }
-   }
-   StartNumber *int `xml:"startNumber,attr"`
-   Duration    int  `xml:"duration,attr"`
-   // This can be any frequency but typically is the media clock frequency of
-   // one of the media streams (or a positive integer multiple thereof).
-   Timescale *int  `xml:"timescale,attr"`
-   Media     Media `xml:"media,attr"`
 }
 
 func (r *Representation) set(adapt *AdaptationSet) {
