@@ -9,6 +9,19 @@ import (
    "time"
 )
 
+func (s *SegmentTemplate) set() {
+   // dashif.org/Guidelines-TimingModel#addressing-simple
+   if s.StartNumber == nil {
+      start := 1
+      s.StartNumber = &start
+   }
+   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
+   if s.Timescale == nil {
+      scale := 1
+      s.Timescale = &scale
+   }
+}
+
 type SegmentTemplate struct {
    EndNumber              int            `xml:"endNumber,attr"`
    Initialization         Initialization `xml:"initialization,attr"`
@@ -25,19 +38,6 @@ type SegmentTemplate struct {
    // one of the media streams (or a positive integer multiple thereof).
    Timescale *int  `xml:"timescale,attr"`
    Media     Media `xml:"media,attr"`
-}
-
-func (s *SegmentTemplate) set() {
-   // dashif.org/Guidelines-TimingModel#addressing-simple
-   if s.StartNumber == nil {
-      start := 1
-      s.StartNumber = &start
-   }
-   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
-   if s.Timescale == nil {
-      scale := 1
-      s.Timescale = &scale
-   }
 }
 
 func (m Media) Url(represent *Representation, address int) (*url.URL, error) {

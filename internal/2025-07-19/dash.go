@@ -1,9 +1,71 @@
 package dash
 
-var states = []struct{
+var States = []struct{
    state string
    example []string
 }{
+   {
+      state: "len(MPD.Period) >= 2",
+      example: []string{
+         // technically Max fits here too, but omit since it uses SegmentBase
+         "paramount.mpd",
+      },
+   },
+   {
+      state: "SegmentTemplate.startNumber == 0",
+      example: []string{
+         "amc.mpd",
+         "draken.mpd",
+         "max.mpd",
+         "nbc.mpd",
+      },
+   },
+   {
+      state: "SegmentTemplate.startNumber == nil",
+      example: []string{
+         "canal.mpd",
+         "cineMember.mpd",
+         "criterion.mpd",
+         "ctv.mpd",
+         "hulu.mpd",
+         "itv.mpd",
+         "molotov.mpd",
+         "mubi.mpd",
+         "rakuten.mpd",
+         "rtbf.mpd",
+         "tubi.mpd",
+      },
+   },
+   {
+      state: "SegmentTemplate.timescale == nil",
+      example: []string{
+         "draken.mpd",
+         "rakuten.mpd",
+      },
+   },
+   {
+      state: "SegmentTemplate.timescale != nil",
+      example: []string{
+         "amc.mpd",
+         "canal.mpd",
+         "cineMember.mpd",
+         "criterion.mpd",
+         "ctv.mpd",
+         "hulu.mpd",
+         "itv.mpd",
+         "kanopy.mpd",
+         "max.mpd",
+         "molotov.mpd",
+         "mubi.mpd",
+         "nbc.mpd",
+         "paramount.mpd",
+         "plex.mpd",
+         "pluto.mpd",
+         "roku.mpd",
+         "rtbf.mpd",
+         "tubi.mpd",
+      },
+   },
    {
       state: "Period.duration != nil",
       example: []string{
@@ -161,66 +223,6 @@ var states = []struct{
       },
    },
    {
-      state: "SegmentTemplate.startNumber != nil",
-      example: []string{
-         "amc.mpd",
-         "draken.mpd",
-         "kanopy.mpd",
-         "max.mpd",
-         "nbc.mpd",
-         "paramount.mpd",
-         "plex.mpd",
-         "pluto.mpd",
-         "roku.mpd",
-      },
-   },
-   {
-      state: "SegmentTemplate.startNumber == nil",
-      example: []string{
-         "canal.mpd",
-         "cineMember.mpd",
-         "criterion.mpd",
-         "ctv.mpd",
-         "hulu.mpd",
-         "itv.mpd",
-         "molotov.mpd",
-         "mubi.mpd",
-         "rakuten.mpd",
-         "rtbf.mpd",
-         "tubi.mpd",
-      },
-   },
-   {
-      state: "SegmentTemplate.timescale != nil",
-      example: []string{
-         "amc.mpd",
-         "canal.mpd",
-         "cineMember.mpd",
-         "criterion.mpd",
-         "ctv.mpd",
-         "hulu.mpd",
-         "itv.mpd",
-         "kanopy.mpd",
-         "max.mpd",
-         "molotov.mpd",
-         "mubi.mpd",
-         "nbc.mpd",
-         "paramount.mpd",
-         "plex.mpd",
-         "pluto.mpd",
-         "roku.mpd",
-         "rtbf.mpd",
-         "tubi.mpd",
-      },
-   },
-   {
-      state: "SegmentTemplate.timescale == nil",
-      example: []string{
-         "draken.mpd",
-         "rakuten.mpd",
-      },
-   },
-   {
       state: "URL.IsAbs",
       example: []string{
          "amc.mpd",
@@ -248,13 +250,6 @@ var states = []struct{
          "pluto.mpd",
          "rtbf.mpd",
          "tubi.mpd",
-      },
-   },
-   {
-      state: "len(MPD.Period) >= 2",
-      example: []string{
-         "max.mpd",
-         "paramount.mpd",
       },
    },
    {
