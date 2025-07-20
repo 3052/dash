@@ -8,3 +8,8 @@ need optimal subset of files that satisfies all states
 - molotov.mpd
 - paramount.mpd
 - rakuten.mpd
+
+added:
+
+- canal.mpd
+- max.mpd
