@@ -5,6 +5,22 @@ var states = []struct {
    example []string
 }{
    {
+      state: "SegmentTemplate.startNumber != nil",
+      example: []string{
+         "paramount.mpd",
+         "pluto.mpd",
+      },
+   },
+   {
+      state: "SegmentTemplate.startNumber == nil",
+      example: []string{
+         "criterion.mpd",
+         "molotov.mpd",
+         "rakuten.mpd",
+         "rtbf.mpd",
+      },
+   },
+   {
       state: "Representation.SegmentList != nil",
       example: []string{
          "criterion.mpd",
@@ -145,22 +161,6 @@ var states = []struct {
          "criterion.mpd",
          "paramount.mpd",
          "pluto.mpd",
-         "rakuten.mpd",
-         "rtbf.mpd",
-      },
-   },
-   {
-      state: "SegmentTemplate.startNumber != nil",
-      example: []string{
-         "paramount.mpd",
-         "pluto.mpd",
-      },
-   },
-   {
-      state: "SegmentTemplate.startNumber == nil",
-      example: []string{
-         "criterion.mpd",
-         "molotov.mpd",
          "rakuten.mpd",
          "rtbf.mpd",
       },
