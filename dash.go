@@ -9,6 +9,14 @@ import (
    "time"
 )
 
+type Period struct {
+   BaseUrl       Url       `xml:"BaseURL"`
+   Id            string    `xml:"id,attr"`
+   Duration      *Duration `xml:"duration,attr"`
+   AdaptationSet []AdaptationSet
+   mpd           *Mpd
+}
+
 type Representation struct {
    SegmentTemplate *SegmentTemplate
    SegmentList     *SegmentList
@@ -29,13 +37,7 @@ type Representation struct {
    adaptation_set    *AdaptationSet
 }
 
-type Period struct {
-   BaseUrl       Url       `xml:"BaseURL"`
-   Id            string    `xml:"id,attr"`
-   Duration      *Duration `xml:"duration,attr"`
-   AdaptationSet []AdaptationSet
-   mpd           *Mpd
-}
+///
 
 type Mpd struct {
    BaseUrl                   Url      `xml:"BaseURL"`
