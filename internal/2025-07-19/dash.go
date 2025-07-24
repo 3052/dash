@@ -5,6 +5,12 @@ var States = []struct{
    example []string
 }{
    {
+      state: "Representation.SegmentList != nil",
+      example: []string{
+         "criterion.mpd",
+      },
+   },
+   {
       state: "len(MPD.Period) >= 2",
       example: []string{
          // technically Max fits here too, but omit since it uses SegmentBase
@@ -103,12 +109,6 @@ var States = []struct{
          "max.mpd",
          "rakuten.mpd",
          "tubi.mpd",
-      },
-   },
-   {
-      state: "Representation.SegmentList != nil",
-      example: []string{
-         "criterion.mpd",
       },
    },
    {
