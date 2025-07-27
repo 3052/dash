@@ -9,6 +9,19 @@ import (
    "time"
 )
 
+// dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
+// SegmentCount = Ceil((AsSeconds(Period@duration)) /
+// (SegmentTemplate@duration / SegmentTemplate@timescale))
+func (p *Period) segment_count(template *SegmentTemplate) int64 {
+   // amc
+   // draken
+   // kanopy
+   // max
+   // paramount
+   durationVar := float64(template.Duration) / float64(*template.Timescale)
+   return int64(math.Ceil(p.Duration[0].Seconds() / durationVar))
+}
+
 type Period struct {
    BaseUrl       Url       `xml:"BaseURL"`
    Id            string    `xml:"id,attr"`
@@ -98,19 +111,6 @@ func (s *SegmentTemplate) Segment(periodVar *Period) iter.Seq[int] {
          }
       }
    }
-}
-
-// dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
-// SegmentCount = Ceil((AsSeconds(Period@duration)) /
-// (SegmentTemplate@duration / SegmentTemplate@timescale))
-func (p *Period) segment_count(template *SegmentTemplate) int64 {
-   // amc
-   // draken
-   // kanopy
-   // max
-   // paramount
-   durationVar := float64(template.Duration) / float64(*template.Timescale)
-   return int64(math.Ceil(p.Duration[0].Seconds() / durationVar))
 }
 
 func (s *SegmentList) set(urlVar *url.URL) {
