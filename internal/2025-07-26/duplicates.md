@@ -14,18 +14,6 @@ https://github.com/emarsden/dash-mpd-cli/issues/161
 
 https://github.com/clitic/vsd/issues/55
 
-25 stars:
-
-https://github.com/Eyevinn/dash-mpd
-
 0 stars:
 
-https://github.com/PianoKeyDreamer/scaling
-
-0 stars:
-
-https://github.com/rp42dev/mpd-video-downloader
-
-0 stars:
-
-https://github.com/tunechr/MPD-downloader
+https://github.com/tunechr/MPD-downloader/issues/1
