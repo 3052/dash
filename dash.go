@@ -9,6 +9,22 @@ import (
    "time"
 )
 
+type AdaptationSet struct {
+   SegmentTemplate   *SegmentTemplate
+   Representation    []Representation
+   ContentProtection []ContentProtection
+   Lang              string `xml:"lang,attr"`
+   MimeType          string `xml:"mimeType,attr"`
+   Role              *struct {
+      Value string `xml:"value,attr"`
+   }
+   period *Period
+   // pointers for Representation.String
+   Codecs *string `xml:"codecs,attr"`
+   Height *int    `xml:"height,attr"`
+   Width  *int    `xml:"width,attr"`
+}
+
 type Mpd struct {
    BaseUrl                   Url      `xml:"BaseURL"`
    MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
@@ -57,22 +73,6 @@ type Representation struct {
 }
 
 ///
-
-type AdaptationSet struct {
-   SegmentTemplate   *SegmentTemplate
-   Representation    []Representation
-   ContentProtection []ContentProtection
-   Lang              string `xml:"lang,attr"`
-   MimeType          string `xml:"mimeType,attr"`
-   Role              *struct {
-      Value string `xml:"value,attr"`
-   }
-   period *Period
-   // pointers for Representation.String
-   Codecs *string `xml:"codecs,attr"`
-   Height *int    `xml:"height,attr"`
-   Width  *int    `xml:"width,attr"`
-}
 
 func (s *SegmentTemplate) Segment(periodVar *Period) iter.Seq[int] {
    var address int
