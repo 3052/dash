@@ -72,7 +72,14 @@ type Representation struct {
    adaptation_set    *AdaptationSet
 }
 
-///
+func (s *SegmentList) set(urlVar *url.URL) {
+   s.Initialization.SourceUrl[0] = urlVar.ResolveReference(
+      s.Initialization.SourceUrl[0],
+   )
+   for _, segment := range s.SegmentUrl {
+      segment.Media[0] = urlVar.ResolveReference(segment.Media[0])
+   }
+}
 
 func (s *SegmentTemplate) Segment(periodVar *Period) iter.Seq[int] {
    var address int
@@ -113,14 +120,7 @@ func (s *SegmentTemplate) Segment(periodVar *Period) iter.Seq[int] {
    }
 }
 
-func (s *SegmentList) set(urlVar *url.URL) {
-   s.Initialization.SourceUrl[0] = urlVar.ResolveReference(
-      s.Initialization.SourceUrl[0],
-   )
-   for _, segment := range s.SegmentUrl {
-      segment.Media[0] = urlVar.ResolveReference(segment.Media[0])
-   }
-}
+///
 
 // SegmentTemplate
 // dashif.org/Guidelines-TimingModel#addressing-explicit
