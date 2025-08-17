@@ -25,6 +25,13 @@ type AdaptationSet struct {
    Width  *int    `xml:"width,attr"`
 }
 
+// SegmentTemplate
+// dashif.org/Guidelines-TimingModel#addressing-explicit
+// dashif.org/Guidelines-TimingModel#addressing-simple
+func (m Media) time_address() bool {
+   return strings.Contains(string(m), "$Time$")
+}
+
 type Mpd struct {
    BaseUrl                   Url      `xml:"BaseURL"`
    MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
@@ -121,13 +128,6 @@ func (s *SegmentTemplate) Segment(periodVar *Period) iter.Seq[int] {
 }
 
 ///
-
-// SegmentTemplate
-// dashif.org/Guidelines-TimingModel#addressing-explicit
-// dashif.org/Guidelines-TimingModel#addressing-simple
-func (m Media) time_address() bool {
-   return strings.Contains(string(m), "$Time$")
-}
 
 func (a *AdaptationSet) set(periodVar *Period) {
    a.period = periodVar
