@@ -9,6 +9,10 @@ import (
    "time"
 )
 
+func (a *AdaptationSet) set(periodVar *Period) {
+   a.period = periodVar
+}
+
 type AdaptationSet struct {
    SegmentTemplate   *SegmentTemplate
    Representation    []Representation
@@ -128,10 +132,6 @@ func (s *SegmentTemplate) Segment(periodVar *Period) iter.Seq[int] {
 }
 
 ///
-
-func (a *AdaptationSet) set(periodVar *Period) {
-   a.period = periodVar
-}
 
 type Duration [1]time.Duration
 
