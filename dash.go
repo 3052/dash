@@ -29,6 +29,8 @@ type AdaptationSet struct {
    Width  *int    `xml:"width,attr"`
 }
 
+type Duration [1]time.Duration
+
 // SegmentTemplate
 // dashif.org/Guidelines-TimingModel#addressing-explicit
 // dashif.org/Guidelines-TimingModel#addressing-simple
@@ -132,8 +134,6 @@ func (s *SegmentTemplate) Segment(periodVar *Period) iter.Seq[int] {
 }
 
 ///
-
-type Duration [1]time.Duration
 
 type Url [1]*url.URL
 
