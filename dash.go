@@ -65,6 +65,10 @@ type Period struct {
    mpd           *Mpd
 }
 
+func (r *Representation) GetAdaptationSet() *AdaptationSet {
+   return r.adaptation_set
+}
+
 type Representation struct {
    SegmentTemplate *SegmentTemplate
    SegmentList     *SegmentList
@@ -133,13 +137,9 @@ func (s *SegmentTemplate) Segment(periodVar *Period) iter.Seq[int] {
    }
 }
 
-///
-
 type Url [1]*url.URL
 
-func (r *Representation) GetAdaptationSet() *AdaptationSet {
-   return r.adaptation_set
-}
+///
 
 type ContentProtection struct {
    Pssh        string `xml:"pssh"`
