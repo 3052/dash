@@ -29,6 +29,11 @@ type AdaptationSet struct {
    Width  *int    `xml:"width,attr"`
 }
 
+type ContentProtection struct {
+   Pssh        string `xml:"pssh"`
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
+}
+
 type Duration [1]time.Duration
 
 // SegmentTemplate
@@ -140,11 +145,6 @@ func (s *SegmentTemplate) Segment(periodVar *Period) iter.Seq[int] {
 type Url [1]*url.URL
 
 ///
-
-type ContentProtection struct {
-   Pssh        string `xml:"pssh"`
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-}
 
 func replace(s, old, newVar string) string {
    return strings.Replace(s, old, newVar, 1)
