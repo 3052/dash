@@ -22,7 +22,7 @@ go tool cover -html testdata/cover.txt -o testdata/cover.html
 
 <dl>
    <dt>email</dt>
-   <dd>367@tuta.io</dd>
+   <dd>27@riseup.net</dd>
    <dt>Discord username</dt>
    <dd>10308</dd>
 </dl>
