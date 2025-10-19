@@ -55,8 +55,8 @@ type Mpd struct {
 func (p *Period) segment_count(template *SegmentTemplate) int64 {
    // amc
    // draken
+   // hbo max
    // kanopy
-   // max
    // paramount
    durationVar := float64(template.Duration) / float64(*template.Timescale)
    return int64(math.Ceil(p.Duration[0].Seconds() / durationVar))

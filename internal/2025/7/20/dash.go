@@ -7,14 +7,14 @@ var States = []struct {
    {
       state: "len(MPD.Period) >= 2",
       example: []string{
-         // technically Max fits here too, but omit since it uses SegmentBase
+         // technically HBO Max fits here too, but omit since it uses SegmentBase
          "paramount.mpd",
       },
    },
    {
       state: "SegmentTemplate.startNumber == 0",
       example: []string{
-         "max.mpd",
+         "hboMax.mpd",
       },
    },
    {
@@ -37,7 +37,7 @@ var States = []struct {
       example: []string{
          "canal.mpd",
          "criterion.mpd",
-         "max.mpd",
+         "hboMax.mpd",
          "molotov.mpd",
          "paramount.mpd",
       },
@@ -47,7 +47,7 @@ var States = []struct {
       example: []string{
          "canal.mpd",
          "criterion.mpd",
-         "max.mpd",
+         "hboMax.mpd",
          "molotov.mpd",
          "paramount.mpd",
       },
@@ -61,7 +61,7 @@ var States = []struct {
    {
       state: "Representation.SegmentBase != nil",
       example: []string{
-         "max.mpd",
+         "hboMax.mpd",
          "rakuten.mpd",
       },
    },
@@ -77,7 +77,7 @@ var States = []struct {
       state: "SegmentTemplate.SegmentTimeline != nil",
       example: []string{
          "canal.mpd",
-         "max.mpd",
+         "hboMax.mpd",
          "paramount.mpd",
       },
    },
@@ -93,7 +93,7 @@ var States = []struct {
       state: "SegmentTemplate.duration >= 1",
       example: []string{
          "criterion.mpd",
-         "max.mpd",
+         "hboMax.mpd",
          "molotov.mpd",
          "paramount.mpd",
       },
@@ -116,7 +116,7 @@ var States = []struct {
       example: []string{
          "canal.mpd",
          "criterion.mpd",
-         "max.mpd",
+         "hboMax.mpd",
          "paramount.mpd",
          "rakuten.mpd",
       },
@@ -132,7 +132,7 @@ var States = []struct {
       example: []string{
          "canal.mpd",
          "criterion.mpd",
-         "max.mpd",
+         "hboMax.mpd",
          "molotov.mpd",
          "paramount.mpd",
       },
@@ -149,7 +149,7 @@ var States = []struct {
    {
       state: `strings.Contains(SegmentTemplate.media, "$Number$")`,
       example: []string{
-         "max.mpd",
+         "hboMax.mpd",
          "molotov.mpd",
          "paramount.mpd",
       },
@@ -157,7 +157,7 @@ var States = []struct {
    {
       state: `strings.Contains(SegmentTemplate.media, "$Number%0")`,
       example: []string{
-         "max.mpd",
+         "hboMax.mpd",
       },
    },
    {
