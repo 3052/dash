@@ -9,6 +9,42 @@ import (
    "time"
 )
 
+func (r *Representation) set(adapt *AdaptationSet) {
+   r.adaptation_set = adapt
+   if base := r.adaptation_set.period.BaseUrl[0]; base != nil {
+      if r.BaseUrl[0] == nil {
+         r.BaseUrl[0] = &url.URL{}
+      }
+      r.BaseUrl[0] = base.ResolveReference(r.BaseUrl[0])
+   }
+   if r.Codecs == nil {
+      r.Codecs = r.adaptation_set.Codecs
+   }
+   if len(r.ContentProtection) == 0 {
+      r.ContentProtection = r.adaptation_set.ContentProtection
+   }
+   if r.Height == nil {
+      r.Height = r.adaptation_set.Height
+   }
+   if r.MimeType == nil {
+      r.MimeType = &r.adaptation_set.MimeType
+   }
+   if r.SegmentList != nil {
+      if r.BaseUrl[0] != nil {
+         r.SegmentList.set(r.BaseUrl[0])
+      }
+   }
+   if r.SegmentTemplate == nil {
+      r.SegmentTemplate = r.adaptation_set.SegmentTemplate
+   }
+   if r.SegmentTemplate != nil {
+      r.SegmentTemplate.set()
+   }
+   if r.Width == nil {
+      r.Width = r.adaptation_set.Width
+   }
+}
+
 func (a *AdaptationSet) set(periodVar *Period) {
    a.period = periodVar
 }
@@ -144,8 +180,6 @@ func (s *SegmentTemplate) Segment(periodVar *Period) iter.Seq[int] {
 
 type Url [1]*url.URL
 
-///
-
 func replace(s, old, newVar string) string {
    return strings.Replace(s, old, newVar, 1)
 }
@@ -262,41 +296,6 @@ func (r *Representation) Representation() iter.Seq[*Representation] {
    }
 }
 
-func (r *Representation) set(adapt *AdaptationSet) {
-   r.adaptation_set = adapt
-   if base := r.adaptation_set.period.BaseUrl[0]; base != nil {
-      if r.BaseUrl[0] == nil {
-         r.BaseUrl[0] = &url.URL{}
-      }
-      r.BaseUrl[0] = base.ResolveReference(r.BaseUrl[0])
-   }
-   if r.Codecs == nil {
-      r.Codecs = r.adaptation_set.Codecs
-   }
-   if len(r.ContentProtection) == 0 {
-      r.ContentProtection = r.adaptation_set.ContentProtection
-   }
-   if r.Height == nil {
-      r.Height = r.adaptation_set.Height
-   }
-   if r.MimeType == nil {
-      r.MimeType = &r.adaptation_set.MimeType
-   }
-   if r.SegmentList != nil {
-      if r.BaseUrl[0] != nil {
-         r.SegmentList.set(r.BaseUrl[0])
-      }
-   }
-   if r.SegmentTemplate == nil {
-      r.SegmentTemplate = r.adaptation_set.SegmentTemplate
-   }
-   if r.SegmentTemplate != nil {
-      r.SegmentTemplate.set()
-   }
-   if r.Width == nil {
-      r.Width = r.adaptation_set.Width
-   }
-}
 func (s *SegmentTemplate) set() {
    // dashif.org/Guidelines-TimingModel#addressing-simple
    if s.StartNumber == nil {
