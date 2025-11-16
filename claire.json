@@ -1,13 +1,7 @@
 {
-   "html": {
-      "output": "../41.neocities.org"
-   },
-   "modules": {
-      "dash": {
-         "archive_ref_prefix": "tags/",
-         "ref": "v1.28.1",
-         "type": "github",
-         "url": "https://github.com/3052/dash"
-      }
-   }
+   "import_path": "41.neocities.org/dash",
+   "input": "D:/github.com/dash",
+   "output": "D:/41.neocities.org/dash",
+   "repository": "https://github.com/3052/dash",
+   "version": "v1.28.1"
 }
