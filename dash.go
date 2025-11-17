@@ -10,8 +10,8 @@ import (
    "time"
 )
 
-func replace(s, old, new1 string) string {
-   return strings.Replace(s, old, new1, 1)
+func replace(s, old, newVar string) string {
+   return strings.Replace(s, old, newVar, 1)
 }
 
 func (a *AdaptationSet) set(period1 *Period) {
