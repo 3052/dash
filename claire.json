@@ -1,6 +1,6 @@
 {
    "import_path": "41.neocities.org/dash",
-   "input": "D:/github.com/dash",
+   "input": ".",
    "output": "D:/41.neocities.org/dash",
    "repository": "https://github.com/3052/dash",
    "version": "v1.28.1"
