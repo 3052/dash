@@ -12,6 +12,7 @@ type MPD struct {
    MediaPresentationDuration string    `xml:"mediaPresentationDuration,attr"`
    Profiles                  string    `xml:"profiles,attr"`
    Periods                   []*Period `xml:"Period"`
+   BaseURL                   string    `xml:"BaseURL,omitempty"`
 }
 
 // QualityOptions returns a map where each key is a unique Representation ID.

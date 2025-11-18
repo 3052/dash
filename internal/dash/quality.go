@@ -1,6 +1,9 @@
 package dash
 
-import "errors"
+import (
+   "errors"
+   "net/url"
+)
 
 // RepresentationContext holds the parent elements that provide the necessary
 // context for a Representation to be fully resolved, especially for generating
@@ -24,16 +27,104 @@ type Quality struct {
    Contexts []*RepresentationContext
 }
 
-// ListMediaSegmentURLs generates the list of media segment URLs for this quality
-// level, but specifically for the given context. The context must be one of the
-// contexts available in the `Contexts` slice.
+// effectiveBaseURL calculates the final, resolved Base URL for a specific context
+// by applying the hierarchy: MPD -> Period -> Representation.
+func (q *Quality) effectiveBaseURL(mpdBaseURL string, ctx *RepresentationContext) (*url.URL, error) {
+   // 1. Start with the MPD-level BaseURL.
+   base, err := url.Parse(mpdBaseURL)
+   if err != nil {
+      return nil, err
+   }
+
+   // 2. Resolve the Period-level BaseURL on top of it.
+   if ctx.Period != nil && ctx.Period.BaseURL != "" {
+      periodBase, err := url.Parse(ctx.Period.BaseURL)
+      if err != nil {
+         return nil, err
+      }
+      base = base.ResolveReference(periodBase)
+   }
+
+   // 3. Resolve the Representation-level BaseURL on top of that.
+   if q.Representation != nil && q.Representation.BaseURL != "" {
+      repBase, err := url.Parse(q.Representation.BaseURL)
+      if err != nil {
+         return nil, err
+      }
+      base = base.ResolveReference(repBase)
+   }
+
+   return base, nil
+}
+
+// AbsoluteInitializationURL returns the fully resolved URL for the initialization segment
+// for a given context.
+func (q *Quality) AbsoluteInitializationURL(mpdBaseURL string, ctx *RepresentationContext) (string, error) {
+   if q == nil || q.Representation == nil {
+      return "", errors.New("quality or representation is nil")
+   }
+
+   tpl := q.Representation.SegmentTemplate
+   if tpl == nil && ctx.AdaptationSet != nil {
+      tpl = ctx.AdaptationSet.SegmentTemplate
+   }
+   if tpl == nil || tpl.Initialization == "" {
+      return "", errors.New("no initialization segment specified")
+   }
+
+   relativeURL := q.Representation.ResolveURL(tpl.Initialization)
+
+   base, err := q.effectiveBaseURL(mpdBaseURL, ctx)
+   if err != nil {
+      return "", err
+   }
+
+   relative, err := url.Parse(relativeURL)
+   if err != nil {
+      return "", err
+   }
+
+   return base.ResolveReference(relative).String(), nil
+}
+
+// AbsoluteMediaSegmentURLs generates the list of fully resolved, absolute URLs
+// for all media segments for a given context.
+func (q *Quality) AbsoluteMediaSegmentURLs(mpdBaseURL string, ctx *RepresentationContext) ([]string, error) {
+   relativeURLs, err := q.ListMediaSegmentURLs(ctx)
+   if err != nil {
+      return nil, err
+   }
+
+   base, err := q.effectiveBaseURL(mpdBaseURL, ctx)
+   if err != nil {
+      return nil, err
+   }
+
+   absoluteURLs := make([]string, len(relativeURLs))
+   for i, relURL := range relativeURLs {
+      relative, err := url.Parse(relURL)
+      if err != nil {
+         return nil, err
+      }
+      absoluteURLs[i] = base.ResolveReference(relative).String()
+   }
+
+   return absoluteURLs, nil
+}
+
+// ListMediaSegmentURLs generates the list of media segment URLs for this specific
+// Quality object, using the context (Period, AdaptationSet) it was created with.
+// This correctly handles cases where multiple Representations with the same ID
+// exist in different Periods (e.g., main content vs. ad breaks).
 func (q *Quality) ListMediaSegmentURLs(ctx *RepresentationContext) ([]string, error) {
    if q == nil || q.Representation == nil {
       return nil, errors.New("quality or representation is nil")
    }
-   if ctx == nil || ctx.Period == nil || ctx.AdaptationSet == nil {
-      return nil, errors.New("context and its elements cannot be nil")
+
+   var asTpl *SegmentTemplate
+   if ctx.AdaptationSet != nil {
+      asTpl = ctx.AdaptationSet.SegmentTemplate
    }
 
-   return q.Representation.ListMediaSegmentURLs(ctx.Period, ctx.AdaptationSet.SegmentTemplate)
+   return q.Representation.ListMediaSegmentURLs(ctx.Period, asTpl)
 }

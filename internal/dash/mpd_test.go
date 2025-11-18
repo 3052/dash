@@ -203,3 +203,59 @@ func TestParse_CencPSSH(t *testing.T) {
       t.Error("expected PSSH to be nil for content protection without the element")
    }
 }
+
+func TestParse_MPDBaseURL(t *testing.T) {
+   // The Go XML parser will assign the LAST value to the string field when multiple exist.
+   xmlData := `
+<MPD>
+    <BaseURL>http://cdn1.example.com/</BaseURL>
+    <BaseURL>http://cdn2.example.com/</BaseURL>
+    <Period />
+</MPD>
+`
+   mpd, err := Parse([]byte(xmlData))
+   if err != nil {
+      t.Fatalf("Parse() failed with error: %v", err)
+   }
+
+   if mpd.BaseURL == "" {
+      t.Fatal("expected BaseURL element to be parsed, but it was empty")
+   }
+
+   // The test must expect the LAST URL parsed.
+   if mpd.BaseURL != "http://cdn2.example.com/" {
+      t.Errorf("expected BaseURL to be 'http://cdn2.example.com/', got '%s'", mpd.BaseURL)
+   }
+}
+
+func TestParse_PeriodBaseURL(t *testing.T) {
+   xmlData := `
+<MPD>
+    <BaseURL>http://cdn.example.com/base/</BaseURL>
+    <Period>
+        <BaseURL>period1/</BaseURL>
+    </Period>
+    <Period>
+        <!-- No BaseURL -->
+    </Period>
+</MPD>
+`
+   mpd, err := Parse([]byte(xmlData))
+   if err != nil {
+      t.Fatalf("Parse() failed with error: %v", err)
+   }
+
+   if len(mpd.Periods) != 2 {
+      t.Fatalf("expected 2 periods, got %d", len(mpd.Periods))
+   }
+
+   p1 := mpd.Periods[0]
+   if p1.BaseURL != "period1/" {
+      t.Errorf("expected period1 BaseURL to be 'period1/', got '%s'", p1.BaseURL)
+   }
+
+   p2 := mpd.Periods[1]
+   if p2.BaseURL != "" {
+      t.Errorf("expected period2 BaseURL to be empty, got '%s'", p2.BaseURL)
+   }
+}

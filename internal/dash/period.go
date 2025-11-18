@@ -9,4 +9,5 @@ type Period struct {
    Start          string           `xml:"start,attr,omitempty"`
    Duration       string           `xml:"duration,attr,omitempty"`
    AdaptationSets []*AdaptationSet `xml:"AdaptationSet"`
+   BaseURL        string           `xml:"BaseURL,omitempty"`
 }
