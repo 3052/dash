@@ -10,46 +10,71 @@ import (
    "time"
 )
 
-func (r *Representation) String() string {
-   b := fmt.Appendln(nil, "bandwidth =", r.Bandwidth)
-   if r.Width != nil {
-      b = fmt.Appendln(b, "width =", *r.Width)
+func (m *Mpd) Set(url2 *url.URL) {
+   if m.BaseUrl[0] == nil {
+      m.BaseUrl[0] = &url.URL{}
    }
-   if r.Height != nil {
-      b = fmt.Appendln(b, "height =", *r.Height)
-   }
-   if r.Codecs != nil {
-      b = fmt.Appendln(b, "codecs =", *r.Codecs)
-   }
-   b = fmt.Appendln(b, "mimeType =", *r.MimeType)
-   if role := r.adaptation_set.Role; role != nil {
-      b = fmt.Appendln(b, "role =", role.Value)
-   }
-   if lang := r.adaptation_set.Lang; lang != "" {
-      b = fmt.Appendln(b, "lang =", lang)
-   }
-   if id := r.adaptation_set.period.Id; id != "" {
-      b = fmt.Appendln(b, "period =", id)
-   }
-   b = fmt.Append(b, "id = ", r.Id)
-   return string(b)
+   m.BaseUrl[0] = url2.ResolveReference(m.BaseUrl[0])
 }
 
-func (r *Representation) GetAdaptationSet() *AdaptationSet {
-   return r.adaptation_set
+func (p *Period) set(mpd1 *Mpd) {
+   p.mpd = mpd1
+   if base := p.mpd.BaseUrl[0]; base != nil {
+      if p.BaseUrl[0] == nil {
+         p.BaseUrl[0] = &url.URL{}
+      }
+      p.BaseUrl[0] = base.ResolveReference(p.BaseUrl[0])
+   }
+   if p.Duration == nil {
+      p.Duration = &p.mpd.MediaPresentationDuration
+   }
 }
 
-type Url [1]*url.URL
-
-func replace(s, old, newVar string) string {
-   return strings.Replace(s, old, newVar, 1)
+func (i Initialization) Url(represent *Representation) (*url.URL, error) {
+   data := replace(string(i), "$RepresentationID$", represent.Id)
+   url2, err := url.Parse(data)
+   if err != nil {
+      return nil, err
+   }
+   if represent.BaseUrl[0] != nil {
+      url2 = represent.BaseUrl[0].ResolveReference(url2)
+   }
+   return url2, nil
 }
 
-func (a *AdaptationSet) set(period1 *Period) {
-   a.period = period1
+func (s *SegmentList) set(url2 *url.URL) {
+   s.Initialization.SourceUrl[0] = url2.ResolveReference(
+      s.Initialization.SourceUrl[0],
+   )
+   for _, segment := range s.SegmentUrl {
+      segment.Media[0] = url2.ResolveReference(segment.Media[0])
+   }
 }
 
-///
+func (m Media) Url(represent *Representation, address int) (*url.URL, error) {
+   data := replace(string(m), "$RepresentationID$", represent.Id)
+   if m.time_address() {
+      data = replace(data, "$Time$", fmt.Sprint(address))
+   } else {
+      data = replace(data, "$Number$", fmt.Sprint(address))
+      data = replace(data, "$Number%02d$", fmt.Sprintf("%02d", address))
+      data = replace(data, "$Number%03d$", fmt.Sprintf("%03d", address))
+      data = replace(data, "$Number%04d$", fmt.Sprintf("%04d", address))
+      data = replace(data, "$Number%05d$", fmt.Sprintf("%05d", address))
+      data = replace(data, "$Number%06d$", fmt.Sprintf("%06d", address))
+      data = replace(data, "$Number%07d$", fmt.Sprintf("%07d", address))
+      data = replace(data, "$Number%08d$", fmt.Sprintf("%08d", address))
+      data = replace(data, "$Number%09d$", fmt.Sprintf("%09d", address))
+   }
+   url2, err := url.Parse(data)
+   if err != nil {
+      return nil, err
+   }
+   if represent.BaseUrl[0] != nil {
+      url2 = represent.BaseUrl[0].ResolveReference(url2)
+   }
+   return url2, nil
+}
 
 func (r *Representation) set(adapt *AdaptationSet) {
    r.adaptation_set = adapt
@@ -92,6 +117,51 @@ type ContentProtection struct {
    SchemeIdUri string `xml:"schemeIdUri,attr"`
 }
 
+func (r *Representation) String() string {
+   b := fmt.Appendln(nil, "bandwidth =", r.Bandwidth)
+   if r.Width != nil {
+      b = fmt.Appendln(b, "width =", *r.Width)
+   }
+   if r.Height != nil {
+      b = fmt.Appendln(b, "height =", *r.Height)
+   }
+   if r.Codecs != nil {
+      b = fmt.Appendln(b, "codecs =", *r.Codecs)
+   }
+   b = fmt.Appendln(b, "mimeType =", *r.MimeType)
+   if role := r.adaptation_set.Role; role != nil {
+      b = fmt.Appendln(b, "role =", role.Value)
+   }
+   if lang := r.adaptation_set.Lang; lang != "" {
+      b = fmt.Appendln(b, "lang =", lang)
+   }
+   if id := r.adaptation_set.period.Id; id != "" {
+      b = fmt.Appendln(b, "period =", id)
+   }
+   b = fmt.Append(b, "id = ", r.Id)
+   return string(b)
+}
+
+func (r *Representation) GetAdaptationSet() *AdaptationSet {
+   return r.adaptation_set
+}
+
+type Url [1]*url.URL
+
+func replace(s, old, newVar string) string {
+   return strings.Replace(s, old, newVar, 1)
+}
+
+func (a *AdaptationSet) set(period1 *Period) {
+   a.period = period1
+}
+
+type Duration [1]time.Duration
+
+func (m *Mpd) Unmarshal(data []byte) error {
+   return xml.Unmarshal(data, m)
+}
+
 func (d *Duration) UnmarshalText(data []byte) error {
    var err error
    d[0], err = time.ParseDuration(strings.ToLower(
@@ -103,38 +173,12 @@ func (d *Duration) UnmarshalText(data []byte) error {
    return nil
 }
 
-type Duration [1]time.Duration
-
-func (m *Mpd) Unmarshal(data []byte) error {
-   return xml.Unmarshal(data, m)
-}
-
-func (m *Mpd) Set(url2 *url.URL) {
-   if m.BaseUrl[0] == nil {
-      m.BaseUrl[0] = &url.URL{}
-   }
-   m.BaseUrl[0] = url2.ResolveReference(m.BaseUrl[0])
-}
-
 type Period struct {
    AdaptationSet []AdaptationSet
    BaseUrl       Url       `xml:"BaseURL"`
    Duration      *Duration `xml:"duration,attr"`
    Id            string    `xml:"id,attr"`
    mpd           *Mpd
-}
-
-func (p *Period) set(mpd1 *Mpd) {
-   p.mpd = mpd1
-   if base := p.mpd.BaseUrl[0]; base != nil {
-      if p.BaseUrl[0] == nil {
-         p.BaseUrl[0] = &url.URL{}
-      }
-      p.BaseUrl[0] = base.ResolveReference(p.BaseUrl[0])
-   }
-   if p.Duration == nil {
-      p.Duration = &p.mpd.MediaPresentationDuration
-   }
 }
 
 type SegmentList struct {
@@ -195,18 +239,6 @@ func (r *Representation) Representation() iter.Seq[*Representation] {
          }
       }
    }
-}
-
-func (i Initialization) Url(represent *Representation) (*url.URL, error) {
-   data := replace(string(i), "$RepresentationID$", represent.Id)
-   url2, err := url.Parse(data)
-   if err != nil {
-      return nil, err
-   }
-   if represent.BaseUrl[0] != nil {
-      url2 = represent.BaseUrl[0].ResolveReference(url2)
-   }
-   return url2, nil
 }
 
 // SegmentTemplate
@@ -321,15 +353,6 @@ type AdaptationSet struct {
    Width  *int    `xml:"width,attr"`
 }
 
-func (s *SegmentList) set(url2 *url.URL) {
-   s.Initialization.SourceUrl[0] = url2.ResolveReference(
-      s.Initialization.SourceUrl[0],
-   )
-   for _, segment := range s.SegmentUrl {
-      segment.Media[0] = url2.ResolveReference(segment.Media[0])
-   }
-}
-
 func (s *SegmentTemplate) set() {
    // dashif.org/Guidelines-TimingModel#addressing-simple
    if s.StartNumber == nil {
@@ -360,29 +383,4 @@ func (a *AdaptationSet) GetRole() string {
 func (u *Url) UnmarshalText(data []byte) error {
    u[0] = &url.URL{}
    return u[0].UnmarshalBinary(data)
-}
-
-func (m Media) Url(represent *Representation, address int) (*url.URL, error) {
-   data := replace(string(m), "$RepresentationID$", represent.Id)
-   if m.time_address() {
-      data = replace(data, "$Time$", fmt.Sprint(address))
-   } else {
-      data = replace(data, "$Number$", fmt.Sprint(address))
-      data = replace(data, "$Number%02d$", fmt.Sprintf("%02d", address))
-      data = replace(data, "$Number%03d$", fmt.Sprintf("%03d", address))
-      data = replace(data, "$Number%04d$", fmt.Sprintf("%04d", address))
-      data = replace(data, "$Number%05d$", fmt.Sprintf("%05d", address))
-      data = replace(data, "$Number%06d$", fmt.Sprintf("%06d", address))
-      data = replace(data, "$Number%07d$", fmt.Sprintf("%07d", address))
-      data = replace(data, "$Number%08d$", fmt.Sprintf("%08d", address))
-      data = replace(data, "$Number%09d$", fmt.Sprintf("%09d", address))
-   }
-   url2, err := url.Parse(data)
-   if err != nil {
-      return nil, err
-   }
-   if represent.BaseUrl[0] != nil {
-      url2 = represent.BaseUrl[0].ResolveReference(url2)
-   }
-   return url2, nil
 }
