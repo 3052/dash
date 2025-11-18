@@ -30,7 +30,6 @@ func TestParse(t *testing.T) {
    foundAdaptationSet := false
    foundContentProtection := false
    foundSegmentList := false
-   var totalRepresentationsWithID int
 
    // Iterate through all periods to check their contents.
    for _, period := range mpd.Periods {
@@ -47,9 +46,6 @@ func TestParse(t *testing.T) {
          }
 
          for _, rep := range as.Representations {
-            if rep.ID != "" {
-               totalRepresentationsWithID++
-            }
             if rep.SegmentList != nil {
                foundSegmentList = true
                if len(rep.SegmentList.SegmentURLs) == 0 {
@@ -73,34 +69,76 @@ func TestParse(t *testing.T) {
    if !foundSegmentList {
       t.Log("Warning: No SegmentList elements found in the provided MPD to test against.")
    }
+}
 
-   // Test the RepresentationsByID method
-   repsByID := mpd.RepresentationsByID()
-   if repsByID == nil {
-      t.Fatal("RepresentationsByID() returned a nil map")
+func TestMPD_QualityOptions(t *testing.T) {
+   repVideo := &Representation{ID: "video-hd", Bandwidth: 2500}
+   repAudioEn := &Representation{ID: "audio-en-stereo", Bandwidth: 128}
+   repAudioEs := &Representation{ID: "audio-es-stereo", Bandwidth: 128}
+
+   // A representation with a colliding ID but different context
+   repAudioEn_period2 := &Representation{ID: "audio-en-stereo", Bandwidth: 192}
+
+   mpd := &MPD{
+      Periods: []*Period{
+         {
+            AdaptationSets: []*AdaptationSet{
+               {ContentType: "video", Representations: []*Representation{repVideo}},
+               {ContentType: "audio", Lang: "en", Representations: []*Representation{repAudioEn}},
+               {ContentType: "audio", Lang: "es", Representations: []*Representation{repAudioEs}},
+            },
+         },
+         {
+            AdaptationSets: []*AdaptationSet{
+               {ContentType: "audio", Lang: "en", Representations: []*Representation{repAudioEn_period2}},
+            },
+         },
+      },
    }
 
-   // Count the total number of representations stored in the map.
-   var mapRepCount int
-   for _, reps := range repsByID {
-      mapRepCount += len(reps)
+   options := mpd.QualityOptions()
+
+   if len(options) != 3 {
+      t.Fatalf("expected 3 unique quality option IDs, but got %d", len(options))
    }
 
-   if totalRepresentationsWithID > 0 && mapRepCount == 0 {
-      t.Error("Representations with IDs were found, but the map is empty")
+   // Test a simple, non-colliding ID
+   videoQuals, ok := options["video-hd"]
+   if !ok {
+      t.Fatal("expected to find key 'video-hd'")
+   }
+   if len(videoQuals) != 1 {
+      t.Fatalf("expected 1 quality for 'video-hd', got %d", len(videoQuals))
+   }
+   if videoQuals[0].ContentType != "video" {
+      t.Errorf("expected content type 'video', got '%s'", videoQuals[0].ContentType)
+   }
+   if videoQuals[0].Bandwidth != 2500 {
+      t.Errorf("incorrect bandwidth for 'video-hd'")
    }
 
-   if totalRepresentationsWithID != mapRepCount {
-      t.Errorf("Mismatch in representation count: found %d with IDs, but map contains %d", totalRepresentationsWithID, mapRepCount)
+   // Test the colliding ID
+   audioEnQuals, ok := options["audio-en-stereo"]
+   if !ok {
+      t.Fatal("expected to find key 'audio-en-stereo'")
+   }
+   if len(audioEnQuals) != 2 {
+      t.Fatalf("expected 2 qualities for 'audio-en-stereo' due to collision, got %d", len(audioEnQuals))
    }
 
-   // Sanity check one of the entries.
-   for id, reps := range repsByID {
-      if len(reps) > 0 {
-         if reps[0].ID != id {
-            t.Errorf("Representation with ID '%s' is stored under the wrong key '%s'", reps[0].ID, id)
-         }
-      }
-      break // just check the first one
+   // Check context of the first one
+   if audioEnQuals[0].Lang != "en" {
+      t.Errorf("expected lang 'en', got '%s'", audioEnQuals[0].Lang)
+   }
+   if audioEnQuals[0].Bandwidth != 128 {
+      t.Errorf("wrong bandwidth for first 'audio-en-stereo'")
+   }
+
+   // Check context of the second one
+   if audioEnQuals[1].Lang != "en" {
+      t.Errorf("expected lang 'en', got '%s'", audioEnQuals[1].Lang)
+   }
+   if audioEnQuals[1].Bandwidth != 192 {
+      t.Errorf("wrong bandwidth for second 'audio-en-stereo'")
    }
 }
