@@ -14,15 +14,15 @@ type MPD struct {
    Periods                   []*Period `xml:"Period"`
 }
 
-// QualityOptions returns a map where each key is a Representation ID. The value
-// is a slice of Quality structs, where each struct contains the Representation
-// itself plus the inherited context (like Lang and ContentType) from its
-// parent AdaptationSet. This handles ID collisions across Periods.
-func (m *MPD) QualityOptions() map[string][]*Quality {
+// QualityOptions returns a map where each key is a unique Representation ID.
+// The value is a single Quality object that contains the shared Representation
+// data and a slice of all the different contexts (Period/AdaptationSet pairs)
+// in which that Representation ID appears.
+func (m *MPD) QualityOptions() map[string]*Quality {
    if m == nil {
       return nil
    }
-   options := make(map[string][]*Quality)
+   options := make(map[string]*Quality)
    for _, p := range m.Periods {
       if p == nil {
          continue
@@ -32,13 +32,24 @@ func (m *MPD) QualityOptions() map[string][]*Quality {
             continue
          }
          for _, r := range as.Representations {
-            if r != nil && r.ID != "" {
-               quality := &Quality{
+            if r == nil || r.ID == "" {
+               continue
+            }
+
+            context := &RepresentationContext{
+               Period:        p,
+               AdaptationSet: as,
+            }
+
+            // If we've seen this ID before, just add the new context.
+            if existingQuality, ok := options[r.ID]; ok {
+               existingQuality.Contexts = append(existingQuality.Contexts, context)
+            } else {
+               // If this is the first time, create the new Quality object.
+               options[r.ID] = &Quality{
                   Representation: r,
-                  Lang:           as.Lang,
-                  ContentType:    as.ContentType,
+                  Contexts:       []*RepresentationContext{context},
                }
-               options[r.ID] = append(options[r.ID], quality)
             }
          }
       }

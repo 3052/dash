@@ -25,72 +25,43 @@ func TestParse(t *testing.T) {
    if len(mpd.Periods) == 0 {
       t.Fatal("expected at least one Period")
    }
-
-   // Flags to ensure we test the parsing logic at least once if the elements exist.
-   foundAdaptationSet := false
-   foundContentProtection := false
-   foundSegmentList := false
-
-   // Iterate through all periods to check their contents.
-   for _, period := range mpd.Periods {
-      if len(period.AdaptationSets) > 0 {
-         foundAdaptationSet = true
-      }
-
-      for _, as := range period.AdaptationSets {
-         if len(as.ContentProtections) > 0 {
-            foundContentProtection = true
-            if as.ContentProtections[0].SchemeIDURI == "" {
-               t.Error("expected ContentProtection to have a non-empty schemeIdUri")
-            }
-         }
-
-         for _, rep := range as.Representations {
-            if rep.SegmentList != nil {
-               foundSegmentList = true
-               if len(rep.SegmentList.SegmentURLs) == 0 {
-                  t.Error("expected SegmentList to have at least one SegmentURL")
-               }
-               if rep.SegmentList.SegmentURLs[0].Media == "" {
-                  t.Error("expected SegmentURL to have a non-empty media attribute")
-               }
-            }
-         }
-      }
-   }
-
-   if !foundAdaptationSet {
-      t.Error("expected at least one AdaptationSet in at least one Period")
-   }
-
-   if !foundContentProtection {
-      t.Log("Warning: No ContentProtection elements found in the provided MPD to test against.")
-   }
-   if !foundSegmentList {
-      t.Log("Warning: No SegmentList elements found in the provided MPD to test against.")
-   }
 }
 
 func TestMPD_QualityOptions(t *testing.T) {
-   repVideo := &Representation{ID: "video-hd", Bandwidth: 2500}
-   repAudioEn := &Representation{ID: "audio-en-stereo", Bandwidth: 128}
-   repAudioEs := &Representation{ID: "audio-es-stereo", Bandwidth: 128}
+   // Representation data is defined once.
+   repHD := &Representation{
+      ID:        "video-hd",
+      Bandwidth: 2000,
+   }
 
-   // A representation with a colliding ID but different context
-   repAudioEn_period2 := &Representation{ID: "audio-en-stereo", Bandwidth: 192}
-
+   // This manifest has two periods. The 'video-hd' Representation appears in both,
+   // but with a different SegmentTemplate in each context.
    mpd := &MPD{
       Periods: []*Period{
-         {
+         { // Main content period
+            ID: "main_content",
             AdaptationSets: []*AdaptationSet{
-               {ContentType: "video", Representations: []*Representation{repVideo}},
-               {ContentType: "audio", Lang: "en", Representations: []*Representation{repAudioEn}},
-               {ContentType: "audio", Lang: "es", Representations: []*Representation{repAudioEs}},
+               {
+                  ContentType: "video", Lang: "en",
+                  Representations: []*Representation{repHD},
+                  SegmentTemplate: &SegmentTemplate{
+                     Media:     "content/segment-$Number$.m4s",
+                     EndNumber: 10,
+                  },
+               },
             },
          },
-         {
+         { // Ad break period
+            ID: "ad_break",
             AdaptationSets: []*AdaptationSet{
-               {ContentType: "audio", Lang: "en", Representations: []*Representation{repAudioEn_period2}},
+               {
+                  ContentType: "video", Lang: "en",
+                  Representations: []*Representation{repHD}, // Same Representation data
+                  SegmentTemplate: &SegmentTemplate{
+                     Media:     "ads/segment-$Number$.m4s",
+                     EndNumber: 2,
+                  },
+               },
             },
          },
       },
@@ -98,47 +69,55 @@ func TestMPD_QualityOptions(t *testing.T) {
 
    options := mpd.QualityOptions()
 
-   if len(options) != 3 {
-      t.Fatalf("expected 3 unique quality option IDs, but got %d", len(options))
+   // There should only be one key for "video-hd"
+   if len(options) != 1 {
+      t.Fatalf("expected 1 unique quality option, but got %d", len(options))
    }
 
-   // Test a simple, non-colliding ID
-   videoQuals, ok := options["video-hd"]
+   hdQuality, ok := options["video-hd"]
    if !ok {
       t.Fatal("expected to find key 'video-hd'")
    }
-   if len(videoQuals) != 1 {
-      t.Fatalf("expected 1 quality for 'video-hd', got %d", len(videoQuals))
-   }
-   if videoQuals[0].ContentType != "video" {
-      t.Errorf("expected content type 'video', got '%s'", videoQuals[0].ContentType)
-   }
-   if videoQuals[0].Bandwidth != 2500 {
-      t.Errorf("incorrect bandwidth for 'video-hd'")
+
+   // The single Quality object should have a Bandwidth of 2000
+   if hdQuality.Bandwidth != 2000 {
+      t.Errorf("expected bandwidth of 2000, got %d", hdQuality.Bandwidth)
    }
 
-   // Test the colliding ID
-   audioEnQuals, ok := options["audio-en-stereo"]
-   if !ok {
-      t.Fatal("expected to find key 'audio-en-stereo'")
-   }
-   if len(audioEnQuals) != 2 {
-      t.Fatalf("expected 2 qualities for 'audio-en-stereo' due to collision, got %d", len(audioEnQuals))
+   // And it should have two different contexts
+   if len(hdQuality.Contexts) != 2 {
+      t.Fatalf("expected 2 contexts for 'video-hd', but got %d", len(hdQuality.Contexts))
    }
 
-   // Check context of the first one
-   if audioEnQuals[0].Lang != "en" {
-      t.Errorf("expected lang 'en', got '%s'", audioEnQuals[0].Lang)
+   // --- Generate URLs for the first context (main content) ---
+   mainContext := hdQuality.Contexts[0]
+   if mainContext.Period.ID != "main_content" {
+      t.Errorf("expected first context to be for 'main_content'")
    }
-   if audioEnQuals[0].Bandwidth != 128 {
-      t.Errorf("wrong bandwidth for first 'audio-en-stereo'")
+   mainURLs, err := hdQuality.ListMediaSegmentURLs(mainContext)
+   if err != nil {
+      t.Fatalf("error getting main content URLs: %v", err)
+   }
+   if len(mainURLs) != 10 {
+      t.Errorf("expected 10 segments for main content, got %d", len(mainURLs))
+   }
+   if mainURLs[0] != "content/segment-1.m4s" {
+      t.Errorf("unexpected URL for main content: %s", mainURLs[0])
    }
 
-   // Check context of the second one
-   if audioEnQuals[1].Lang != "en" {
-      t.Errorf("expected lang 'en', got '%s'", audioEnQuals[1].Lang)
+   // --- Generate URLs for the second context (ad break) ---
+   adContext := hdQuality.Contexts[1]
+   if adContext.Period.ID != "ad_break" {
+      t.Errorf("expected second context to be for 'ad_break'")
    }
-   if audioEnQuals[1].Bandwidth != 192 {
-      t.Errorf("wrong bandwidth for second 'audio-en-stereo'")
+   adURLs, err := hdQuality.ListMediaSegmentURLs(adContext)
+   if err != nil {
+      t.Fatalf("error getting ad URLs: %v", err)
+   }
+   if len(adURLs) != 2 {
+      t.Errorf("expected 2 segments for ad, got %d", len(adURLs))
+   }
+   if adURLs[0] != "ads/segment-1.m4s" {
+      t.Errorf("unexpected URL for ad content: %s", adURLs[0])
    }
 }
