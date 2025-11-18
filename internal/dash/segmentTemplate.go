@@ -8,4 +8,6 @@ type SegmentTemplate struct {
    Timescale      int      `xml:"timescale,attr"`
    Media          string   `xml:"media,attr"`
    Initialization string   `xml:"initialization,attr"`
+   StartNumber    uint     `xml:"startNumber,attr,omitempty"`
+   EndNumber      uint     `xml:"endNumber,attr,omitempty"`
 }
