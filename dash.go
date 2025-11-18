@@ -10,24 +10,25 @@ import (
    "time"
 )
 
+type Duration [1]time.Duration
+
+type Url [1]*url.URL
+
+func (u *Url) UnmarshalText(data []byte) error {
+   u[0] = &url.URL{}
+   return u[0].UnmarshalBinary(data)
+}
+
+type ContentProtection struct {
+   Pssh        string `xml:"pssh"`
+   SchemeIdUri string `xml:"schemeIdUri,attr"`
+}
+
 func (m *Mpd) Set(url2 *url.URL) {
    if m.BaseUrl[0] == nil {
       m.BaseUrl[0] = &url.URL{}
    }
    m.BaseUrl[0] = url2.ResolveReference(m.BaseUrl[0])
-}
-
-func (p *Period) set(mpd1 *Mpd) {
-   p.mpd = mpd1
-   if base := p.mpd.BaseUrl[0]; base != nil {
-      if p.BaseUrl[0] == nil {
-         p.BaseUrl[0] = &url.URL{}
-      }
-      p.BaseUrl[0] = base.ResolveReference(p.BaseUrl[0])
-   }
-   if p.Duration == nil {
-      p.Duration = &p.mpd.MediaPresentationDuration
-   }
 }
 
 func (i Initialization) Url(represent *Representation) (*url.URL, error) {
@@ -48,6 +49,44 @@ func (s *SegmentList) set(url2 *url.URL) {
    )
    for _, segment := range s.SegmentUrl {
       segment.Media[0] = url2.ResolveReference(segment.Media[0])
+   }
+}
+
+type Mpd struct {
+   BaseUrl                   Url      `xml:"BaseURL"`
+   MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
+   Period                    []Period
+}
+
+type Period struct {
+   AdaptationSet []AdaptationSet
+   BaseUrl       Url       `xml:"BaseURL"`
+   Duration      *Duration `xml:"duration,attr"`
+   Id            string    `xml:"id,attr"`
+   mpd           *Mpd
+}
+
+///
+
+type SegmentList struct {
+   Initialization struct {
+      SourceUrl Url `xml:"sourceURL,attr"`
+   }
+   SegmentUrl []*struct {
+      Media Url `xml:"media,attr"`
+   } `xml:"SegmentURL"`
+}
+
+func (p *Period) set(mpd1 *Mpd) {
+   p.mpd = mpd1
+   if base := p.mpd.BaseUrl[0]; base != nil {
+      if p.BaseUrl[0] == nil {
+         p.BaseUrl[0] = &url.URL{}
+      }
+      p.BaseUrl[0] = base.ResolveReference(p.BaseUrl[0])
+   }
+   if p.Duration == nil {
+      p.Duration = &p.mpd.MediaPresentationDuration
    }
 }
 
@@ -112,11 +151,6 @@ func (r *Representation) set(adapt *AdaptationSet) {
    }
 }
 
-type ContentProtection struct {
-   Pssh        string `xml:"pssh"`
-   SchemeIdUri string `xml:"schemeIdUri,attr"`
-}
-
 func (r *Representation) String() string {
    b := fmt.Appendln(nil, "bandwidth =", r.Bandwidth)
    if r.Width != nil {
@@ -146,8 +180,6 @@ func (r *Representation) GetAdaptationSet() *AdaptationSet {
    return r.adaptation_set
 }
 
-type Url [1]*url.URL
-
 func replace(s, old, newVar string) string {
    return strings.Replace(s, old, newVar, 1)
 }
@@ -155,8 +187,6 @@ func replace(s, old, newVar string) string {
 func (a *AdaptationSet) set(period1 *Period) {
    a.period = period1
 }
-
-type Duration [1]time.Duration
 
 func (m *Mpd) Unmarshal(data []byte) error {
    return xml.Unmarshal(data, m)
@@ -171,29 +201,6 @@ func (d *Duration) UnmarshalText(data []byte) error {
       return err
    }
    return nil
-}
-
-type Period struct {
-   AdaptationSet []AdaptationSet
-   BaseUrl       Url       `xml:"BaseURL"`
-   Duration      *Duration `xml:"duration,attr"`
-   Id            string    `xml:"id,attr"`
-   mpd           *Mpd
-}
-
-type SegmentList struct {
-   Initialization struct {
-      SourceUrl Url `xml:"sourceURL,attr"`
-   }
-   SegmentUrl []*struct {
-      Media Url `xml:"media,attr"`
-   } `xml:"SegmentURL"`
-}
-
-type Mpd struct {
-   BaseUrl                   Url      `xml:"BaseURL"`
-   MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
 }
 
 func (m *Mpd) Representation() iter.Seq[*Representation] {
@@ -378,9 +385,4 @@ func (a *AdaptationSet) GetRole() string {
       return a.Role.Value
    }
    return ""
-}
-
-func (u *Url) UnmarshalText(data []byte) error {
-   u[0] = &url.URL{}
-   return u[0].UnmarshalBinary(data)
 }

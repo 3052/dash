@@ -257,3 +257,34 @@ func TestParse_PeriodBaseURL(t *testing.T) {
       t.Errorf("expected period2 BaseURL to be empty, got '%s'", p2.BaseURL)
    }
 }
+
+func TestParse_SegmentListInitialization(t *testing.T) {
+   xmlData := `
+<MPD>
+    <Period>
+        <AdaptationSet>
+            <Representation>
+                <SegmentList>
+                    <Initialization sourceURL="init.mp4"/>
+                </SegmentList>
+            </Representation>
+        </AdaptationSet>
+    </Period>
+</MPD>
+`
+   mpd, err := Parse([]byte(xmlData))
+   if err != nil {
+      t.Fatalf("Parse() failed with error: %v", err)
+   }
+
+   rep := mpd.Periods[0].AdaptationSets[0].Representations[0]
+   if rep.SegmentList == nil {
+      t.Fatal("SegmentList was not parsed")
+   }
+   if rep.SegmentList.Initialization == nil {
+      t.Fatal("SegmentList.Initialization was not parsed")
+   }
+   if rep.SegmentList.Initialization.SourceURL != "init.mp4" {
+      t.Errorf("expected sourceURL 'init.mp4', got '%s'", rep.SegmentList.Initialization.SourceURL)
+   }
+}

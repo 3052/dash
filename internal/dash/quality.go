@@ -65,33 +65,45 @@ func (q *Quality) effectiveBaseURL(ctx *RepresentationContext) (*url.URL, error)
 }
 
 // AbsoluteInitializationURL returns the fully resolved URL for the initialization segment
-// for a given context.
+// for a given context, checking SegmentTemplate first, then SegmentList.
 func (q *Quality) AbsoluteInitializationURL(ctx *RepresentationContext) (string, error) {
    if q == nil || q.Representation == nil {
       return "", errors.New("quality or representation is nil")
    }
 
+   // Priority 1: Check for initialization in a SegmentTemplate
    tpl := q.Representation.SegmentTemplate
    if tpl == nil && ctx.AdaptationSet != nil {
       tpl = ctx.AdaptationSet.SegmentTemplate
    }
-   if tpl == nil || tpl.Initialization == "" {
-      return "", errors.New("no initialization segment specified")
+   if tpl != nil && tpl.Initialization != "" {
+      relativeURL := q.Representation.ResolveURL(tpl.Initialization)
+      base, err := q.effectiveBaseURL(ctx)
+      if err != nil {
+         return "", err
+      }
+      relative, err := url.Parse(relativeURL)
+      if err != nil {
+         return "", err
+      }
+      return base.ResolveReference(relative).String(), nil
    }
 
-   relativeURL := q.Representation.ResolveURL(tpl.Initialization)
-
-   base, err := q.effectiveBaseURL(ctx)
-   if err != nil {
-      return "", err
+   // Priority 2: Check for initialization in a SegmentList
+   if q.Representation.SegmentList != nil && q.Representation.SegmentList.Initialization != nil {
+      relativeURL := q.Representation.SegmentList.Initialization.SourceURL
+      base, err := q.effectiveBaseURL(ctx)
+      if err != nil {
+         return "", err
+      }
+      relative, err := url.Parse(relativeURL)
+      if err != nil {
+         return "", err
+      }
+      return base.ResolveReference(relative).String(), nil
    }
 
-   relative, err := url.Parse(relativeURL)
-   if err != nil {
-      return "", err
-   }
-
-   return base.ResolveReference(relative).String(), nil
+   return "", errors.New("no initialization segment specified in SegmentTemplate or SegmentList")
 }
 
 // AbsoluteMediaSegmentURLs generates the list of fully resolved, absolute URLs
@@ -121,11 +133,22 @@ func (q *Quality) AbsoluteMediaSegmentURLs(ctx *RepresentationContext) ([]string
 
 // ListMediaSegmentURLs generates the list of media segment URLs for this specific
 // Quality object, using the context (Period, AdaptationSet) it was created with.
+// This is used for both SegmentTemplate and SegmentList.
 func (q *Quality) ListMediaSegmentURLs(ctx *RepresentationContext) ([]string, error) {
    if q == nil || q.Representation == nil {
       return nil, errors.New("quality or representation is nil")
    }
 
+   // If SegmentList exists, it takes precedence.
+   if q.Representation.SegmentList != nil {
+      urls := make([]string, len(q.Representation.SegmentList.SegmentURLs))
+      for i, su := range q.Representation.SegmentList.SegmentURLs {
+         urls[i] = su.Media
+      }
+      return urls, nil
+   }
+
+   // Fallback to SegmentTemplate logic.
    var asTpl *SegmentTemplate
    if ctx.AdaptationSet != nil {
       asTpl = ctx.AdaptationSet.SegmentTemplate

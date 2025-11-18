@@ -93,3 +93,57 @@ func TestQuality_URLResolution_WithAbsoluteOverride(t *testing.T) {
       t.Errorf("expected init URL '%s', got '%s'", expectedInitURL, initURL)
    }
 }
+
+func TestQuality_URLResolution_SegmentList(t *testing.T) {
+   rep := &Representation{
+      ID:      "video-hd",
+      BaseURL: "video/",
+      SegmentList: &SegmentList{
+         Initialization: &Initialization{SourceURL: "init.mp4"},
+         SegmentURLs: []*SegmentURL{
+            {Media: "seg1.m4s"},
+            {Media: "seg2.m4s"},
+         },
+      },
+   }
+   period := &Period{
+      ID:      "main_content",
+      BaseURL: "period1/",
+   }
+   mpd := &MPD{
+      BaseURL: "http://cdn.example.com/base/",
+      Periods: []*Period{period},
+   }
+   ctx := &RepresentationContext{
+      Period:        period,
+      AdaptationSet: &AdaptationSet{},
+   }
+   quality := &Quality{
+      Representation: rep,
+      Contexts:       []*RepresentationContext{ctx},
+      parentMPD:      mpd,
+   }
+
+   // Test Initialization URL from SegmentList
+   initURL, err := quality.AbsoluteInitializationURL(ctx)
+   if err != nil {
+      t.Fatalf("AbsoluteInitializationURL() failed: %v", err)
+   }
+   expectedInitURL := "http://cdn.example.com/base/period1/video/init.mp4"
+   if initURL != expectedInitURL {
+      t.Errorf("expected init URL '%s', got '%s'", expectedInitURL, initURL)
+   }
+
+   // Test Media Segment URLs from SegmentList
+   mediaURLs, err := quality.AbsoluteMediaSegmentURLs(ctx)
+   if err != nil {
+      t.Fatalf("AbsoluteMediaSegmentURLs() failed: %v", err)
+   }
+   if len(mediaURLs) != 2 {
+      t.Fatalf("expected 2 media URLs, got %d", len(mediaURLs))
+   }
+   expectedMediaURL := "http://cdn.example.com/base/period1/video/seg1.m4s"
+   if mediaURLs[0] != expectedMediaURL {
+      t.Errorf("expected media URL '%s', got '%s'", expectedMediaURL, mediaURLs[0])
+   }
+}
