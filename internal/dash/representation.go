@@ -22,26 +22,24 @@ type Representation struct {
    SegmentList       *SegmentList     `xml:"SegmentList"`
 }
 
-// ResolveURL takes a template string (from a SegmentTemplate's initialization
-// or media attribute) and replaces the DASH-defined identifiers with values
-// from the Representation. It currently supports $RepresentationID$ and $Bandwidth$.
+// ResolveURL takes a template string and replaces identifiers like
+// $RepresentationID$ and $Bandwidth$ with values from the Representation.
 func (r *Representation) ResolveURL(template string) string {
    if r == nil {
       return template
    }
-
    replacer := strings.NewReplacer(
       "$RepresentationID$", r.ID,
       "$Bandwidth$", strconv.Itoa(r.Bandwidth),
    )
-
    return replacer.Replace(template)
 }
 
-// ListMediaSegmentURLs generates a list of media segment URLs based on a SegmentTemplate.
-// It uses the Representation's own SegmentTemplate if it exists, otherwise it falls back
-// to the one passed in (e.g., from the parent AdaptationSet).
-// The method returns an error if no valid SegmentTemplate with an EndNumber is found.
+// ListMediaSegmentURLs generates a list of media segment URLs.
+// It prioritizes SegmentTimeline if present, otherwise falls back to the
+// Start/EndNumber logic.
+// It uses the Representation's own SegmentTemplate first, then the one passed in
+// (e.g., from the parent AdaptationSet).
 func (r *Representation) ListMediaSegmentURLs(asTpl *SegmentTemplate) ([]string, error) {
    tpl := r.SegmentTemplate
    if tpl == nil {
@@ -49,9 +47,6 @@ func (r *Representation) ListMediaSegmentURLs(asTpl *SegmentTemplate) ([]string,
    }
    if tpl == nil {
       return nil, errors.New("no SegmentTemplate available for the representation")
-   }
-   if tpl.EndNumber == 0 {
-      return nil, errors.New("SegmentTemplate does not contain an endNumber, cannot generate a finite list")
    }
 
    start := tpl.StartNumber
@@ -61,14 +56,32 @@ func (r *Representation) ListMediaSegmentURLs(asTpl *SegmentTemplate) ([]string,
 
    // Pre-resolve the parts of the URL that don't change per segment.
    mediaURL := r.ResolveURL(tpl.Media)
-   urls := make([]string, 0, tpl.EndNumber-start+1)
 
-   for num := start; num <= tpl.EndNumber; num++ {
-      // Note: This only supports the simple $Number$ identifier. A full implementation
-      // would need to parse printf-style format specifiers (e.g., %05d).
-      segmentURL := strings.ReplaceAll(mediaURL, "$Number$", strconv.FormatUint(uint64(num), 10))
-      urls = append(urls, segmentURL)
+   // --- Timeline-based logic ---
+   if tpl.SegmentTimeline != nil {
+      timeline := tpl.SegmentTimeline.GetSegments()
+      urls := make([]string, 0, len(timeline))
+      for i, segment := range timeline { // CORRECTED THIS LINE
+         num := start + uint(i)
+         replacer := strings.NewReplacer(
+            "$Number$", strconv.FormatUint(uint64(num), 10),
+            "$Time$", strconv.FormatUint(segment.StartTime, 10),
+         )
+         segmentURL := replacer.Replace(mediaURL)
+         urls = append(urls, segmentURL)
+      }
+      return urls, nil
    }
 
-   return urls, nil
+   // --- Number-based logic ---
+   if tpl.EndNumber > 0 {
+      urls := make([]string, 0, tpl.EndNumber-start+1)
+      for num := start; num <= tpl.EndNumber; num++ {
+         segmentURL := strings.ReplaceAll(mediaURL, "$Number$", strconv.FormatUint(uint64(num), 10))
+         urls = append(urls, segmentURL)
+      }
+      return urls, nil
+   }
+
+   return nil, errors.New("SegmentTemplate contains neither a SegmentTimeline nor an endNumber")
 }

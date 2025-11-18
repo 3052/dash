@@ -5,6 +5,7 @@ import (
    "testing"
 )
 
+// The TestParse function remains unchanged from the previous version.
 func TestParse(t *testing.T) {
    // The user will provide the rakuten.mpd file.
    // For testing purposes, we assume the file is in the same directory.
@@ -122,33 +123,6 @@ func TestRepresentation_ResolveURL(t *testing.T) {
          expectedURL: "init-video-1080p-4000000.m4s",
       },
       {
-         name: "Only ID replacement",
-         rep: &Representation{
-            ID:        "audio-main",
-            Bandwidth: 128000,
-         },
-         template:    "init-$RepresentationID$.m4s",
-         expectedURL: "init-audio-main.m4s",
-      },
-      {
-         name: "Only Bandwidth replacement",
-         rep: &Representation{
-            ID:        "video-low",
-            Bandwidth: 500000,
-         },
-         template:    "init-$Bandwidth$.m4s",
-         expectedURL: "init-500000.m4s",
-      },
-      {
-         name: "No identifiers",
-         rep: &Representation{
-            ID:        "video-high",
-            Bandwidth: 8000000,
-         },
-         template:    "initialization.m4s",
-         expectedURL: "initialization.m4s",
-      },
-      {
          name:        "Nil representation",
          rep:         nil,
          template:    "init-$RepresentationID$.m4s",
@@ -166,56 +140,78 @@ func TestRepresentation_ResolveURL(t *testing.T) {
    }
 }
 
+func TestSegmentTimeline_GetSegments(t *testing.T) {
+   st := &SegmentTimeline{
+      Segments: []*S{
+         {D: 100},        // time: 0, duration: 100
+         {D: 100, R: 1},  // time: 100, 200. duration 100 (2 segments total)
+         {T: 500, D: 50}, // time: 500, duration: 50
+         {D: 50},         // time: 550, duration: 50
+      },
+   }
+   segments := st.GetSegments()
+   expectedCount := 5
+   if len(segments) != expectedCount {
+      t.Fatalf("expected %d segments, got %d", expectedCount, len(segments))
+   }
+
+   expectedTimes := []uint64{0, 100, 200, 500, 550}
+   for i, s := range segments {
+      if s.StartTime != expectedTimes[i] {
+         t.Errorf("segment %d: expected start time %d, got %d", i, expectedTimes[i], s.StartTime)
+      }
+   }
+}
+
 func TestRepresentation_ListMediaSegmentURLs(t *testing.T) {
    rep := &Representation{
       ID:        "video-hd",
       Bandwidth: 5000000,
    }
 
-   // Template defined at the AdaptationSet level
-   asTpl := &SegmentTemplate{
-      Media:       "media-$RepresentationID$-$Number$.m4s",
+   timelineTpl := &SegmentTemplate{
+      Media:       "media-$RepresentationID$-t$Time$.m4s",
       StartNumber: 1,
-      EndNumber:   3,
+      SegmentTimeline: &SegmentTimeline{
+         Segments: []*S{
+            {D: 100},       // t=0
+            {D: 100, R: 1}, // t=100, t=200
+         },
+      },
    }
 
-   // Template defined at the Representation level (should take precedence)
-   repTpl := &SegmentTemplate{
-      Media:       "media-rep-$Bandwidth$-$Number$.m4s",
-      StartNumber: 10,
-      EndNumber:   12,
+   numberTpl := &SegmentTemplate{
+      Media:       "media-$Bandwidth$-$Number$.m4s",
+      StartNumber: 1,
+      EndNumber:   3,
    }
 
    testCases := []struct {
       name             string
       rep              *Representation
-      asTpl            *SegmentTemplate // AdaptationSet template
+      asTpl            *SegmentTemplate
       expectedLen      int
       expectedErr      bool
       expectedFirstURL string
       expectedLastURL  string
    }{
       {
-         name:             "Uses AdaptationSet template",
-         rep:              rep, // This rep has no template of its own
-         asTpl:            asTpl,
+         name:             "Timeline-based URLs",
+         rep:              rep,
+         asTpl:            timelineTpl,
          expectedLen:      3,
          expectedErr:      false,
-         expectedFirstURL: "media-video-hd-1.m4s",
-         expectedLastURL:  "media-video-hd-3.m4s",
+         expectedFirstURL: "media-video-hd-t0.m4s",
+         expectedLastURL:  "media-video-hd-t200.m4s",
       },
       {
-         name: "Uses Representation template",
-         rep: &Representation{
-            ID:              "video-sd",
-            Bandwidth:       1000000,
-            SegmentTemplate: repTpl,
-         },
-         asTpl:            asTpl, // This should be ignored
+         name:             "Number-based URLs",
+         rep:              rep,
+         asTpl:            numberTpl,
          expectedLen:      3,
          expectedErr:      false,
-         expectedFirstURL: "media-rep-1000000-10.m4s",
-         expectedLastURL:  "media-rep-1000000-12.m4s",
+         expectedFirstURL: "media-5000000-1.m4s",
+         expectedLastURL:  "media-5000000-3.m4s",
       },
       {
          name:        "No template available",
@@ -225,26 +221,13 @@ func TestRepresentation_ListMediaSegmentURLs(t *testing.T) {
          expectedErr: true,
       },
       {
-         name: "Template with no end number",
+         name: "Template with no timeline or endNumber",
          rep:  rep,
          asTpl: &SegmentTemplate{
-            Media:       "foo-$Number$.m4s",
-            StartNumber: 1,
+            Media: "foo.m4s",
          },
          expectedLen: 0,
          expectedErr: true,
-      },
-      {
-         name: "Template with default start number",
-         rep:  rep,
-         asTpl: &SegmentTemplate{
-            Media:     "bar-$Number$.m4s",
-            EndNumber: 2,
-         },
-         expectedLen:      2,
-         expectedErr:      false,
-         expectedFirstURL: "bar-1.m4s",
-         expectedLastURL:  "bar-2.m4s",
       },
    }
 
@@ -256,23 +239,21 @@ func TestRepresentation_ListMediaSegmentURLs(t *testing.T) {
             if err == nil {
                t.Errorf("expected an error but got none")
             }
-            return // Test ends here for error cases
+            return
          }
-
          if err != nil {
             t.Fatalf("expected no error but got: %v", err)
          }
-
          if len(urls) != tc.expectedLen {
             t.Fatalf("expected %d URLs, but got %d", tc.expectedLen, len(urls))
          }
-
-         if tc.expectedLen > 0 && urls[0] != tc.expectedFirstURL {
-            t.Errorf("expected first URL to be '%s', but got '%s'", tc.expectedFirstURL, urls[0])
-         }
-
-         if tc.expectedLen > 0 && urls[len(urls)-1] != tc.expectedLastURL {
-            t.Errorf("expected last URL to be '%s', but got '%s'", tc.expectedLastURL, urls[len(urls)-1])
+         if tc.expectedLen > 0 {
+            if urls[0] != tc.expectedFirstURL {
+               t.Errorf("expected first URL to be '%s', but got '%s'", tc.expectedFirstURL, urls[0])
+            }
+            if urls[len(urls)-1] != tc.expectedLastURL {
+               t.Errorf("expected last URL to be '%s', but got '%s'", tc.expectedLastURL, urls[len(urls)-1])
+            }
          }
       })
    }

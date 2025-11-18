@@ -4,10 +4,11 @@ import "encoding/xml"
 
 // SegmentTemplate represents the SegmentTemplate element.
 type SegmentTemplate struct {
-   XMLName        xml.Name `xml:"SegmentTemplate"`
-   Timescale      int      `xml:"timescale,attr"`
-   Media          string   `xml:"media,attr"`
-   Initialization string   `xml:"initialization,attr"`
-   StartNumber    uint     `xml:"startNumber,attr,omitempty"`
-   EndNumber      uint     `xml:"endNumber,attr,omitempty"`
+   XMLName         xml.Name         `xml:"SegmentTemplate"`
+   Timescale       int              `xml:"timescale,attr"`
+   Media           string           `xml:"media,attr"`
+   Initialization  string           `xml:"initialization,attr"`
+   StartNumber     uint             `xml:"startNumber,attr,omitempty"`
+   EndNumber       uint             `xml:"endNumber,attr,omitempty"`
+   SegmentTimeline *SegmentTimeline `xml:"SegmentTimeline,omitempty"`
 }
