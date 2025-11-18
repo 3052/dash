@@ -152,12 +152,6 @@ func (m *Mpd) Unmarshal(data []byte) error {
    return xml.Unmarshal(data, m)
 }
 
-type Mpd struct {
-   BaseUrl                   Url      `xml:"BaseURL"`
-   MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
-   Period                    []Period
-}
-
 func (m *Mpd) Set(url2 *url.URL) {
    if m.BaseUrl[0] == nil {
       m.BaseUrl[0] = &url.URL{}
@@ -235,8 +229,6 @@ func (r *Representation) set(adapt *AdaptationSet) {
    }
 }
 
-///
-
 type SegmentTemplate struct {
    EndNumber              int            `xml:"endNumber,attr"`
    Initialization         Initialization `xml:"initialization,attr"`
@@ -263,6 +255,59 @@ type SegmentList struct {
       Media Url `xml:"media,attr"`
    } `xml:"SegmentURL"`
 }
+
+type Mpd struct {
+   BaseUrl                   Url      `xml:"BaseURL"`
+   MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
+   Period                    []Period
+}
+
+func (m *Mpd) Representation() iter.Seq[*Representation] {
+   return func(yield func(*Representation) bool) {
+      id := map[string]struct{}{}
+      for _, period1 := range m.Period {
+         for _, adapt := range period1.AdaptationSet {
+            for _, represent := range adapt.Representation {
+               _, ok := id[represent.Id]
+               if !ok {
+                  if adapt.period == nil {
+                     period1.set(m)
+                     adapt.set(&period1)
+                  }
+                  represent.set(&adapt)
+                  if !yield(&represent) {
+                     return
+                  }
+                  id[represent.Id] = struct{}{}
+               }
+            }
+         }
+      }
+   }
+}
+
+func (r *Representation) Representation() iter.Seq[*Representation] {
+   return func(yield func(*Representation) bool) {
+      for _, period1 := range r.adaptation_set.period.mpd.Period {
+         for _, adapt := range period1.AdaptationSet {
+            for _, represent := range adapt.Representation {
+               if represent.Id == r.Id {
+                  if adapt.period == nil {
+                     period1.set(r.adaptation_set.period.mpd)
+                     adapt.set(&period1)
+                  }
+                  represent.set(&adapt)
+                  if !yield(&represent) {
+                     return
+                  }
+               }
+            }
+         }
+      }
+   }
+}
+
+///
 
 // SegmentTemplate
 func (r *Representation) Segment() iter.Seq[int] {
@@ -340,49 +385,4 @@ func (m Media) Url(represent *Representation, address int) (*url.URL, error) {
       url2 = represent.BaseUrl[0].ResolveReference(url2)
    }
    return url2, nil
-}
-
-func (m *Mpd) Representation() iter.Seq[*Representation] {
-   return func(yield func(*Representation) bool) {
-      id := map[string]struct{}{}
-      for _, period1 := range m.Period {
-         for _, adapt := range period1.AdaptationSet {
-            for _, represent := range adapt.Representation {
-               _, ok := id[represent.Id]
-               if !ok {
-                  if adapt.period == nil {
-                     period1.set(m)
-                     adapt.set(&period1)
-                  }
-                  represent.set(&adapt)
-                  if !yield(&represent) {
-                     return
-                  }
-                  id[represent.Id] = struct{}{}
-               }
-            }
-         }
-      }
-   }
-}
-
-func (r *Representation) Representation() iter.Seq[*Representation] {
-   return func(yield func(*Representation) bool) {
-      for _, period1 := range r.adaptation_set.period.mpd.Period {
-         for _, adapt := range period1.AdaptationSet {
-            for _, represent := range adapt.Representation {
-               if represent.Id == r.Id {
-                  if adapt.period == nil {
-                     period1.set(r.adaptation_set.period.mpd)
-                     adapt.set(&period1)
-                  }
-                  represent.set(&adapt)
-                  if !yield(&represent) {
-                     return
-                  }
-               }
-            }
-         }
-      }
-   }
 }
