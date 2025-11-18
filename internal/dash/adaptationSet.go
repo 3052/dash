@@ -13,4 +13,5 @@ type AdaptationSet struct {
    Representations    []*Representation    `xml:"Representation"`
    SegmentTemplate    *SegmentTemplate     `xml:"SegmentTemplate"`
    ContentProtections []*ContentProtection `xml:"ContentProtection"`
+   Roles              []*Role              `xml:"Role"`
 }

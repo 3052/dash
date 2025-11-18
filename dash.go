@@ -39,6 +39,18 @@ func (r *Representation) GetAdaptationSet() *AdaptationSet {
    return r.adaptation_set
 }
 
+type Url [1]*url.URL
+
+func replace(s, old, newVar string) string {
+   return strings.Replace(s, old, newVar, 1)
+}
+
+func (a *AdaptationSet) set(period1 *Period) {
+   a.period = period1
+}
+
+///
+
 func (r *Representation) set(adapt *AdaptationSet) {
    r.adaptation_set = adapt
    if base := r.adaptation_set.period.BaseUrl[0]; base != nil {
@@ -73,16 +85,6 @@ func (r *Representation) set(adapt *AdaptationSet) {
    if r.Width == nil {
       r.Width = r.adaptation_set.Width
    }
-}
-
-type Url [1]*url.URL
-
-func replace(s, old, newVar string) string {
-   return strings.Replace(s, old, newVar, 1)
-}
-
-func (a *AdaptationSet) set(period1 *Period) {
-   a.period = period1
 }
 
 type ContentProtection struct {

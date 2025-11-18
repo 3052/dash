@@ -13,6 +13,7 @@ import (
 type Representation struct {
    XMLName           xml.Name         `xml:"Representation"`
    ID                string           `xml:"id,attr"`
+   MimeType          string           `xml:"mimeType,attr,omitempty"`
    Bandwidth         int              `xml:"bandwidth,attr"`
    Codecs            string           `xml:"codecs,attr"`
    Width             int              `xml:"width,attr,omitempty"`
