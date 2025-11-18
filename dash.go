@@ -10,6 +10,19 @@ import (
    "time"
 )
 
+// dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
+// SegmentCount = Ceil((AsSeconds(Period@duration)) /
+// (SegmentTemplate@duration / SegmentTemplate@timescale))
+func (p *Period) segment_count(template *SegmentTemplate) int64 {
+   // amc
+   // draken
+   // kanopy
+   // max
+   // paramount
+   duration1 := float64(template.Duration) / float64(*template.Timescale)
+   return int64(math.Ceil(p.Duration[0].Seconds() / duration1))
+}
+
 type Media string
 
 // SegmentTemplate
@@ -157,19 +170,6 @@ func (m *Mpd) Set(url2 *url.URL) {
       m.BaseUrl[0] = &url.URL{}
    }
    m.BaseUrl[0] = url2.ResolveReference(m.BaseUrl[0])
-}
-
-// dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
-// SegmentCount = Ceil((AsSeconds(Period@duration)) /
-// (SegmentTemplate@duration / SegmentTemplate@timescale))
-func (p *Period) segment_count(template *SegmentTemplate) int64 {
-   // amc
-   // draken
-   // kanopy
-   // max
-   // paramount
-   duration1 := float64(template.Duration) / float64(*template.Timescale)
-   return int64(math.Ceil(p.Duration[0].Seconds() / duration1))
 }
 
 type Period struct {
@@ -343,8 +343,6 @@ type SegmentTemplate struct {
    // one of the media streams (or a positive integer multiple thereof).
    Timescale *int `xml:"timescale,attr"`
 }
-
-///
 
 // SegmentTemplate
 func (r *Representation) Segment() iter.Seq[int] {

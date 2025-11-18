@@ -3,6 +3,8 @@ package dash
 import (
    "encoding/xml"
    "errors"
+   "fmt"
+   "math"
    "strconv"
    "strings"
 )
@@ -35,12 +37,9 @@ func (r *Representation) ResolveURL(template string) string {
    return replacer.Replace(template)
 }
 
-// ListMediaSegmentURLs generates a list of media segment URLs.
-// It prioritizes SegmentTimeline if present, otherwise falls back to the
-// Start/EndNumber logic.
-// It uses the Representation's own SegmentTemplate first, then the one passed in
-// (e.g., from the parent AdaptationSet).
-func (r *Representation) ListMediaSegmentURLs(asTpl *SegmentTemplate) ([]string, error) {
+// ListMediaSegmentURLs generates a list of media segment URLs. The parent Period is
+// required for manifests that calculate segment count from the Period duration.
+func (r *Representation) ListMediaSegmentURLs(p *Period, asTpl *SegmentTemplate) ([]string, error) {
    tpl := r.SegmentTemplate
    if tpl == nil {
       tpl = asTpl
@@ -53,15 +52,13 @@ func (r *Representation) ListMediaSegmentURLs(asTpl *SegmentTemplate) ([]string,
    if start == 0 {
       start = 1
    }
-
-   // Pre-resolve the parts of the URL that don't change per segment.
    mediaURL := r.ResolveURL(tpl.Media)
 
-   // --- Timeline-based logic ---
+   // --- Timeline-based logic (highest priority) ---
    if tpl.SegmentTimeline != nil {
       timeline := tpl.SegmentTimeline.GetSegments()
       urls := make([]string, 0, len(timeline))
-      for i, segment := range timeline { // CORRECTED THIS LINE
+      for i, segment := range timeline {
          num := start + uint(i)
          replacer := strings.NewReplacer(
             "$Number$", strconv.FormatUint(uint64(num), 10),
@@ -83,5 +80,28 @@ func (r *Representation) ListMediaSegmentURLs(asTpl *SegmentTemplate) ([]string,
       return urls, nil
    }
 
-   return nil, errors.New("SegmentTemplate contains neither a SegmentTimeline nor an endNumber")
+   // --- Duration-based logic (last resort) ---
+   if tpl.Duration > 0 && p != nil && p.Duration != "" {
+      periodDurSec, err := p.AsSeconds()
+      if err != nil {
+         return nil, fmt.Errorf("failed to parse period duration: %w", err)
+      }
+      if tpl.Timescale <= 0 {
+         return nil, errors.New("SegmentTemplate timescale must be positive")
+      }
+      segmentDurSec := float64(tpl.Duration) / float64(tpl.Timescale)
+      if segmentDurSec <= 0 {
+         return nil, errors.New("segment duration must be positive")
+      }
+      count := uint(math.Ceil(periodDurSec / segmentDurSec))
+      urls := make([]string, 0, count)
+      for i := uint(0); i < count; i++ {
+         num := start + i
+         segmentURL := strings.ReplaceAll(mediaURL, "$Number$", strconv.FormatUint(uint64(num), 10))
+         urls = append(urls, segmentURL)
+      }
+      return urls, nil
+   }
+
+   return nil, errors.New("SegmentTemplate lacks sufficient information to generate segment list")
 }
