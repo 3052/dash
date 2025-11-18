@@ -50,6 +50,7 @@ func (m *MPD) QualityOptions() map[string]*Quality {
                options[r.ID] = &Quality{
                   Representation: r,
                   Contexts:       []*RepresentationContext{context},
+                  parentMPD:      m,
                }
             }
          }

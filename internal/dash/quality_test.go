@@ -18,6 +18,11 @@ func TestQuality_URLResolution(t *testing.T) {
       BaseURL: "period1/",
    }
 
+   mpd := &MPD{
+      BaseURL: "http://cdn.example.com/base/",
+      Periods: []*Period{period},
+   }
+
    ctx := &RepresentationContext{
       Period:        period,
       AdaptationSet: &AdaptationSet{},
@@ -26,12 +31,11 @@ func TestQuality_URLResolution(t *testing.T) {
    quality := &Quality{
       Representation: rep,
       Contexts:       []*RepresentationContext{ctx},
+      parentMPD:      mpd,
    }
 
-   mpdBaseURL := "http://cdn.example.com/base/"
-
    // Test Initialization URL
-   initURL, err := quality.AbsoluteInitializationURL(mpdBaseURL, ctx)
+   initURL, err := quality.AbsoluteInitializationURL(ctx)
    if err != nil {
       t.Fatalf("AbsoluteInitializationURL() failed: %v", err)
    }
@@ -41,7 +45,7 @@ func TestQuality_URLResolution(t *testing.T) {
    }
 
    // Test Media Segment URLs
-   mediaURLs, err := quality.AbsoluteMediaSegmentURLs(mpdBaseURL, ctx)
+   mediaURLs, err := quality.AbsoluteMediaSegmentURLs(ctx)
    if err != nil {
       t.Fatalf("AbsoluteMediaSegmentURLs() failed: %v", err)
    }
@@ -66,6 +70,10 @@ func TestQuality_URLResolution_WithAbsoluteOverride(t *testing.T) {
       ID:      "main_content",
       BaseURL: "http://other-cdn.com/special/",
    }
+   mpd := &MPD{
+      BaseURL: "http://cdn.example.com/base/",
+      Periods: []*Period{period},
+   }
    ctx := &RepresentationContext{
       Period:        period,
       AdaptationSet: &AdaptationSet{},
@@ -73,10 +81,10 @@ func TestQuality_URLResolution_WithAbsoluteOverride(t *testing.T) {
    quality := &Quality{
       Representation: rep,
       Contexts:       []*RepresentationContext{ctx},
+      parentMPD:      mpd,
    }
-   mpdBaseURL := "http://cdn.example.com/base/"
 
-   initURL, err := quality.AbsoluteInitializationURL(mpdBaseURL, ctx)
+   initURL, err := quality.AbsoluteInitializationURL(ctx)
    if err != nil {
       t.Fatalf("AbsoluteInitializationURL() failed: %v", err)
    }

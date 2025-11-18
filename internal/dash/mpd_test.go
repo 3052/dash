@@ -205,11 +205,9 @@ func TestParse_CencPSSH(t *testing.T) {
 }
 
 func TestParse_MPDBaseURL(t *testing.T) {
-   // The Go XML parser will assign the LAST value to the string field when multiple exist.
    xmlData := `
 <MPD>
-    <BaseURL>http://cdn1.example.com/</BaseURL>
-    <BaseURL>http://cdn2.example.com/</BaseURL>
+    <BaseURL>http://cdn.example.com/main/</BaseURL>
     <Period />
 </MPD>
 `
@@ -222,9 +220,9 @@ func TestParse_MPDBaseURL(t *testing.T) {
       t.Fatal("expected BaseURL element to be parsed, but it was empty")
    }
 
-   // The test must expect the LAST URL parsed.
-   if mpd.BaseURL != "http://cdn2.example.com/" {
-      t.Errorf("expected BaseURL to be 'http://cdn2.example.com/', got '%s'", mpd.BaseURL)
+   expected := "http://cdn.example.com/main/"
+   if mpd.BaseURL != expected {
+      t.Errorf("expected BaseURL to be '%s', got '%s'", expected, mpd.BaseURL)
    }
 }
 

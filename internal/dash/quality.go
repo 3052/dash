@@ -15,8 +15,7 @@ type RepresentationContext struct {
 
 // Quality represents a single logical quality level, identified by a unique
 // Representation ID. It contains the core Representation data once, and a slice
-// of all the different contexts in which this quality level appears (e.g.,
-// once in a main content Period, and again in an ad break Period).
+// of all the different contexts in which this quality level appears.
 type Quality struct {
    // The embedded Representation provides direct access to all its fields
    // like ID, Bandwidth, Codecs, etc. This data is shared across all contexts.
@@ -25,13 +24,21 @@ type Quality struct {
    // Contexts is a slice of all the Period/AdaptationSet pairs where this
    // Representation ID was found.
    Contexts []*RepresentationContext
+
+   // parentMPD holds a reference to the top-level MPD object, making this
+   // Quality object fully self-contained for URL resolution.
+   parentMPD *MPD
 }
 
 // effectiveBaseURL calculates the final, resolved Base URL for a specific context
 // by applying the hierarchy: MPD -> Period -> Representation.
-func (q *Quality) effectiveBaseURL(mpdBaseURL string, ctx *RepresentationContext) (*url.URL, error) {
+func (q *Quality) effectiveBaseURL(ctx *RepresentationContext) (*url.URL, error) {
+   if q == nil || q.parentMPD == nil {
+      return nil, errors.New("quality or its parent MPD is nil")
+   }
+
    // 1. Start with the MPD-level BaseURL.
-   base, err := url.Parse(mpdBaseURL)
+   base, err := url.Parse(q.parentMPD.BaseURL)
    if err != nil {
       return nil, err
    }
@@ -59,7 +66,7 @@ func (q *Quality) effectiveBaseURL(mpdBaseURL string, ctx *RepresentationContext
 
 // AbsoluteInitializationURL returns the fully resolved URL for the initialization segment
 // for a given context.
-func (q *Quality) AbsoluteInitializationURL(mpdBaseURL string, ctx *RepresentationContext) (string, error) {
+func (q *Quality) AbsoluteInitializationURL(ctx *RepresentationContext) (string, error) {
    if q == nil || q.Representation == nil {
       return "", errors.New("quality or representation is nil")
    }
@@ -74,7 +81,7 @@ func (q *Quality) AbsoluteInitializationURL(mpdBaseURL string, ctx *Representati
 
    relativeURL := q.Representation.ResolveURL(tpl.Initialization)
 
-   base, err := q.effectiveBaseURL(mpdBaseURL, ctx)
+   base, err := q.effectiveBaseURL(ctx)
    if err != nil {
       return "", err
    }
@@ -89,13 +96,13 @@ func (q *Quality) AbsoluteInitializationURL(mpdBaseURL string, ctx *Representati
 
 // AbsoluteMediaSegmentURLs generates the list of fully resolved, absolute URLs
 // for all media segments for a given context.
-func (q *Quality) AbsoluteMediaSegmentURLs(mpdBaseURL string, ctx *RepresentationContext) ([]string, error) {
+func (q *Quality) AbsoluteMediaSegmentURLs(ctx *RepresentationContext) ([]string, error) {
    relativeURLs, err := q.ListMediaSegmentURLs(ctx)
    if err != nil {
       return nil, err
    }
 
-   base, err := q.effectiveBaseURL(mpdBaseURL, ctx)
+   base, err := q.effectiveBaseURL(ctx)
    if err != nil {
       return nil, err
    }
@@ -114,8 +121,6 @@ func (q *Quality) AbsoluteMediaSegmentURLs(mpdBaseURL string, ctx *Representatio
 
 // ListMediaSegmentURLs generates the list of media segment URLs for this specific
 // Quality object, using the context (Period, AdaptationSet) it was created with.
-// This correctly handles cases where multiple Representations with the same ID
-// exist in different Periods (e.g., main content vs. ad breaks).
 func (q *Quality) ListMediaSegmentURLs(ctx *RepresentationContext) ([]string, error) {
    if q == nil || q.Representation == nil {
       return nil, errors.New("quality or representation is nil")
