@@ -25,34 +25,34 @@ func Parse(data []byte) (*MPD, error) {
    return &m, nil
 }
 
-// GetRepresentations returns all Representations wrapped in their context,
+// GetRepresentations returns all Representations wrapped in their scope,
 // grouped by the Representation ID.
-func (m *MPD) GetRepresentations() map[string][]RepresentationContext {
-   results := make(map[string][]RepresentationContext)
+func (m *MPD) GetRepresentations() map[string][]RepresentationScope {
+   results := make(map[string][]RepresentationScope)
 
    // Iterate using indices to keep stable pointers to the slice elements
    for i := range m.Periods {
       period := &m.Periods[i]
-      pCtx := PeriodContext{
+      pScope := PeriodScope{
          Period: period,
          MPD:    m,
       }
 
       for j := range period.AdaptationSets {
          as := &period.AdaptationSets[j]
-         asCtx := AdaptationSetContext{
+         asScope := AdaptationSetScope{
             AdaptationSet: as,
-            Context:       pCtx,
+            Scope:         pScope,
          }
 
          for k := range as.Representations {
             rep := &as.Representations[k]
-            rCtx := RepresentationContext{
+            rScope := RepresentationScope{
                Representation: rep,
-               Context:        asCtx,
+               Scope:          asScope,
             }
 
-            results[rep.ID] = append(results[rep.ID], rCtx)
+            results[rep.ID] = append(results[rep.ID], rScope)
          }
       }
    }
