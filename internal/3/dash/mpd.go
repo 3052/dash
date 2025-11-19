@@ -24,3 +24,38 @@ func Parse(data []byte) (*MPD, error) {
    }
    return &m, nil
 }
+
+// GetRepresentations returns all Representations wrapped in their context,
+// grouped by the Representation ID.
+func (m *MPD) GetRepresentations() map[string][]RepresentationContext {
+   results := make(map[string][]RepresentationContext)
+
+   // Iterate using indices to keep stable pointers to the slice elements
+   for i := range m.Periods {
+      period := &m.Periods[i]
+      pCtx := PeriodContext{
+         Period: period,
+         MPD:    m,
+      }
+
+      for j := range period.AdaptationSets {
+         as := &period.AdaptationSets[j]
+         asCtx := AdaptationSetContext{
+            AdaptationSet: as,
+            Context:       pCtx,
+         }
+
+         for k := range as.Representations {
+            rep := &as.Representations[k]
+            rCtx := RepresentationContext{
+               Representation: rep,
+               Context:        asCtx,
+            }
+
+            results[rep.ID] = append(results[rep.ID], rCtx)
+         }
+      }
+   }
+
+   return results
+}
