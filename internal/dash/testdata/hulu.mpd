@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:cenc="urn:mpeg:cenc:2013" xmlns:hulu="urn:com:hulu:schema:mpd:2015" xmlns:xlink="http://www.w3.org/1999/xlink" profiles="urn:mpeg:dash:profile:isoff-on-demand:2011" type="static" minBufferTime="PT5.0S" mediaPresentationDuration="PT5399.625S">
+  <Period id="content-0" duration="PT5399.625S" start="PT0.000S">
+    <AssetIdentifier schemeIdUri="urn:com:hulu:asset-id:2016" value="38689bdf-8dd7-44ed-912d-30733f1901f7"></AssetIdentifier>
+    <BaseURL serviceLocation="ak">https://vod-hulu-akc-na.media.dssott.com/</BaseURL>
+    <AdaptationSet mimeType="audio/mp4" segmentAlignment="true" bitstreamSwitching="true" lang="en">
+      <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="fb7c0501327745d3b488a724e091d083"></ContentProtection>
+      <ContentProtection schemeIdUri="urn:uuid:9a04f079-9840-4286-ab92-e65be0885f95">
+        <cenc:pssh>AAAB3nBzc2gAAAAAmgTweZhAQoarkuZb4IhflQAAAb6+AQAAAQABALQBPABXAFIATQBIAEUAQQBEAEUAUgAgAHgAbQBsAG4AcwA9ACIAaAB0AHQAcAA6AC8ALwBzAGMAaABlAG0AYQBzAC4AbQBpAGMAcgBvAHMAbwBmAHQALgBjAG8AbQAvAEQAUgBNAC8AMgAwADAANwAvADAAMwAvAFAAbABhAHkAUgBlAGEAZAB5AEgAZQBhAGQAZQByACIAIAB2AGUAcgBzAGkAbwBuAD0AIgA0AC4AMgAuADAALgAwACIAPgA8AEQAQQBUAEEAPgA8AFAAUgBPAFQARQBDAFQASQBOAEYATwA+ADwASwBJAEQAUwA+ADwASwBJAEQAIABBAEwARwBJAEQAPQAiAEEARQBTAEMAVABSACIAIABWAEEATABVAEUAPQAiAEEAUQBWADgAKwAzAGMAeQAwADAAVwAwAGkASwBjAGsANABKAEgAUQBnAHcAPQA9ACIAPgA8AC8ASwBJAEQAPgA8AC8ASwBJAEQAUwA+ADwALwBQAFIATwBUAEUAQwBUAEkATgBGAE8APgA8AC8ARABBAFQAQQA+ADwALwBXAFIATQBIAEUAQQBEAEUAUgA+AA==</cenc:pssh>
+      </ContentProtection>
+      <ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed">
+        <cenc:pssh>AAAAMnBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABISEPt8BQEyd0XTtIinJOCR0IM=</cenc:pssh>
+      </ContentProtection>
+      <InbandEventStream schemeIdUri="www.nielsen.com:id3:v1" value="1"></InbandEventStream>
+      <SegmentTemplate initialization="dvt1=exp=1763939497~url=%2Fgrn%2Fps01%2Fdisney%2F38689bdf-8dd7-44ed-912d-30733f1901f7%2Fr%2Ff5eaf2cb-8932-4399-8d1b-ab3211cd7da5%2Fb75f-MAIN%2F02~kid=k01~hmac=288212009a1affc25c977a8bf83b1689d54b39d6587ab9a6db1d499da83fb4cb/grn/ps01/disney/38689bdf-8dd7-44ed-912d-30733f1901f7/r/f5eaf2cb-8932-4399-8d1b-ab3211cd7da5/b75f-MAIN/02/$RepresentationID$/5cf6e5ac-0043-4279-a21a-d222af1ad0a2/map.mp4a" media="dvt1=exp=1763939497~url=%2Fgrn%2Fps01%2Fdisney%2F38689bdf-8dd7-44ed-912d-30733f1901f7%2Fr%2Ff5eaf2cb-8932-4399-8d1b-ab3211cd7da5%2Fb75f-MAIN%2F02~kid=k01~hmac=288212009a1affc25c977a8bf83b1689d54b39d6587ab9a6db1d499da83fb4cb/grn/ps01/disney/38689bdf-8dd7-44ed-912d-30733f1901f7/r/f5eaf2cb-8932-4399-8d1b-ab3211cd7da5/b75f-MAIN/02/$RepresentationID$/5cf6e5ac-0043-4279-a21a-d222af1ad0a2/pts_$Time$.mp4a" timescale="48000" presentationTimeOffset="0">
+        <SegmentTimeline>
+          <S t="0" d="384000" r="102"></S>
+          <S d="82944"></S>
+          <S d="384000" r="136"></S>
+          <S d="215040"></S>
+          <S d="384000" r="162"></S>
+          <S d="62976"></S>
+          <S d="384000" r="79"></S>
+          <S d="328704"></S>
+          <S d="384000" r="55"></S>
+          <S d="376320"></S>
+          <S d="384000" r="84"></S>
+          <S d="253440"></S>
+          <S d="384000" r="46"></S>
+          <S d="201216"></S>
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="EC3_1_CMAF_CENC_CTR_256K" codecs="ec-3" bandwidth="258290" startWithSAP="1" audioSamplingRate="48000">
+        <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="6"></AudioChannelConfiguration>
+        <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="fb7c0501327745d3b488a724e091d083"></ContentProtection>
+      </Representation>
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"></Role>
+    </AdaptationSet>
+    <AdaptationSet mimeType="audio/mp4" segmentAlignment="true" bitstreamSwitching="true" lang="en">
+      <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="fb7c0501327745d3b488a724e091d083"></ContentProtection>
+      <ContentProtection schemeIdUri="urn:uuid:9a04f079-9840-4286-ab92-e65be0885f95">
+        <cenc:pssh>AAAB3nBzc2gAAAAAmgTweZhAQoarkuZb4IhflQAAAb6+AQAAAQABALQBPABXAFIATQBIAEUAQQBEAEUAUgAgAHgAbQBsAG4AcwA9ACIAaAB0AHQAcAA6AC8ALwBzAGMAaABlAG0AYQBzAC4AbQBpAGMAcgBvAHMAbwBmAHQALgBjAG8AbQAvAEQAUgBNAC8AMgAwADAANwAvADAAMwAvAFAAbABhAHkAUgBlAGEAZAB5AEgAZQBhAGQAZQByACIAIAB2AGUAcgBzAGkAbwBuAD0AIgA0AC4AMgAuADAALgAwACIAPgA8AEQAQQBUAEEAPgA8AFAAUgBPAFQARQBDAFQASQBOAEYATwA+ADwASwBJAEQAUwA+ADwASwBJAEQAIABBAEwARwBJAEQAPQAiAEEARQBTAEMAVABSACIAIABWAEEATABVAEUAPQAiAEEAUQBWADgAKwAzAGMAeQAwADAAVwAwAGkASwBjAGsANABKAEgAUQBnAHcAPQA9ACIAPgA8AC8ASwBJAEQAPgA8AC8ASwBJAEQAUwA+ADwALwBQAFIATwBUAEUAQwBUAEkATgBGAE8APgA8AC8ARABBAFQAQQA+ADwALwBXAFIATQBIAEUAQQBEAEUAUgA+AA==</cenc:pssh>
+      </ContentProtection>
+      <ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed">
+        <cenc:pssh>AAAAMnBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABISEPt8BQEyd0XTtIinJOCR0IM=</cenc:pssh>
+      </ContentProtection>
+      <InbandEventStream schemeIdUri="www.nielsen.com:id3:v1" value="1"></InbandEventStream>
+      <SegmentTemplate initialization="dvt1=exp=1763939497~url=%2Fgrn%2Fps01%2Fdisney%2F38689bdf-8dd7-44ed-912d-30733f1901f7%2Fr%2F3454f14a-697f-4694-b0db-c73b276e9ffb%2Fb75f-MAIN%2F02~kid=k01~hmac=7742e086e4c43adcab2aa89d2244a9ad48b1a81e0535037c7625fd59e4d576f0/grn/ps01/disney/38689bdf-8dd7-44ed-912d-30733f1901f7/r/3454f14a-697f-4694-b0db-c73b276e9ffb/b75f-MAIN/02/$RepresentationID$/862ab59a-3e34-4abb-be4e-88e521e1eb02/map.mp4a" media="dvt1=exp=1763939497~url=%2Fgrn%2Fps01%2Fdisney%2F38689bdf-8dd7-44ed-912d-30733f1901f7%2Fr%2F3454f14a-697f-4694-b0db-c73b276e9ffb%2Fb75f-MAIN%2F02~kid=k01~hmac=7742e086e4c43adcab2aa89d2244a9ad48b1a81e0535037c7625fd59e4d576f0/grn/ps01/disney/38689bdf-8dd7-44ed-912d-30733f1901f7/r/3454f14a-697f-4694-b0db-c73b276e9ffb/b75f-MAIN/02/$RepresentationID$/862ab59a-3e34-4abb-be4e-88e521e1eb02/pts_$Time$.mp4a" timescale="48000" presentationTimeOffset="0">
+        <SegmentTimeline>
+          <S t="0" d="384000" r="102"></S>
+          <S d="83968"></S>
+          <S d="384000" r="136"></S>
+          <S d="214016"></S>
+          <S d="384000" r="162"></S>
+          <S d="63488"></S>
+          <S d="384000" r="79"></S>
+          <S d="327680"></S>
+          <S d="384000" r="55"></S>
+          <S d="376832"></S>
+          <S d="384000" r="84"></S>
+          <S d="253952"></S>
+          <S d="384000" r="46"></S>
+          <S d="200704"></S>
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="AAC_1_CMAF_CENC_CTR_128K" codecs="mp4a.40.2" bandwidth="130642" startWithSAP="1" audioSamplingRate="48000">
+        <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
+        <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="fb7c0501327745d3b488a724e091d083"></ContentProtection>
+      </Representation>
+      <Representation id="AAC_1_CMAF_CENC_CTR_64K" codecs="mp4a.40.2" bandwidth="66809" startWithSAP="1" audioSamplingRate="48000">
+        <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"></AudioChannelConfiguration>
+        <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="fb7c0501327745d3b488a724e091d083"></ContentProtection>
+      </Representation>
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"></Role>
+    </AdaptationSet>
+    <AdaptationSet mimeType="video/mp4" maxWidth="1920" maxHeight="1080" segmentAlignment="true" bitstreamSwitching="true">
+      <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="fb7c0501327745d3b488a724e091d083"></ContentProtection>
+      <ContentProtection schemeIdUri="urn:uuid:9a04f079-9840-4286-ab92-e65be0885f95">
+        <cenc:pssh>AAACVHBzc2gAAAAAmgTweZhAQoarkuZb4IhflQAAAjQ0AgAAAQABACoCPABXAFIATQBIAEUAQQBEAEUAUgAgAHgAbQBsAG4AcwA9ACIAaAB0AHQAcAA6AC8ALwBzAGMAaABlAG0AYQBzAC4AbQBpAGMAcgBvAHMAbwBmAHQALgBjAG8AbQAvAEQAUgBNAC8AMgAwADAANwAvADAAMwAvAFAAbABhAHkAUgBlAGEAZAB5AEgAZQBhAGQAZQByACIAIAB2AGUAcgBzAGkAbwBuAD0AIgA0AC4AMgAuADAALgAwACIAPgA8AEQAQQBUAEEAPgA8AFAAUgBPAFQARQBDAFQASQBOAEYATwA+ADwASwBJAEQAUwA+ADwASwBJAEQAIABBAEwARwBJAEQAPQAiAEEARQBTAEMAVABSACIAIABWAEEATABVAEUAPQAiAEEAUQBWADgAKwAzAGMAeQAwADAAVwAwAGkASwBjAGsANABKAEgAUQBnAHcAPQA9ACIAPgA8AC8ASwBJAEQAPgA8AEsASQBEACAAQQBMAEcASQBEAD0AIgBBAEUAUwBDAFQAUgAiACAAVgBBAEwAVQBFAD0AIgBpADQAYgAwAFAAbABUAG8AKwBFAGUAVgArAHcAZwAwADMAWgBPAFgASAB3AD0APQAiAD4APAAvAEsASQBEAD4APAAvAEsASQBEAFMAPgA8AC8AUABSAE8AVABFAEMAVABJAE4ARgBPAD4APAAvAEQAQQBUAEEAPgA8AC8AVwBSAE0ASABFAEEARABFAFIAPgA=</cenc:pssh>
+      </ContentProtection>
+      <ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed">
+        <cenc:pssh>AAAARHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAACQSEPt8BQEyd0XTtIinJOCR0IMSED70hovoVEf4lfsINN2Tlx8=</cenc:pssh>
+      </ContentProtection>
+      <SegmentTemplate initialization="dvt1=exp=1763939497~url=%2Fgrn%2Fps01%2Fdisney%2F38689bdf-8dd7-44ed-912d-30733f1901f7%2Fr%2F19752367-ff52-4f3b-9f4d-f4452d48d9b0%2Fb75f-MAIN%2F02~kid=k01~hmac=1b6d9b4295e955b0a5aa8c5f3f1e32a0a2dfa6cdbae94018449598c4ca48cb9e/grn/ps01/disney/38689bdf-8dd7-44ed-912d-30733f1901f7/r/19752367-ff52-4f3b-9f4d-f4452d48d9b0/b75f-MAIN/02/$RepresentationID$/470b6e0e-5718-4a52-b393-da0cfb783bc0/map.mp4" media="dvt1=exp=1763939497~url=%2Fgrn%2Fps01%2Fdisney%2F38689bdf-8dd7-44ed-912d-30733f1901f7%2Fr%2F19752367-ff52-4f3b-9f4d-f4452d48d9b0%2Fb75f-MAIN%2F02~kid=k01~hmac=1b6d9b4295e955b0a5aa8c5f3f1e32a0a2dfa6cdbae94018449598c4ca48cb9e/grn/ps01/disney/38689bdf-8dd7-44ed-912d-30733f1901f7/r/19752367-ff52-4f3b-9f4d-f4452d48d9b0/b75f-MAIN/02/$RepresentationID$/470b6e0e-5718-4a52-b393-da0cfb783bc0/pts_$Time$.mp4" timescale="48000" presentationTimeOffset="0">
+        <SegmentTimeline>
+          <S t="0" d="384000" r="42"></S>
+          <S d="192000"></S>
+          <S d="384000" r="48"></S>
+          <S d="192000"></S>
+          <S d="384000" r="9"></S>
+          <S d="84000"></S>
+          <S d="384000" r="33"></S>
+          <S d="192000"></S>
+          <S d="384000" r="58"></S>
+          <S d="192000"></S>
+          <S d="384000" r="42"></S>
+          <S d="214000"></S>
+          <S d="384000" r="7"></S>
+          <S d="192000"></S>
+          <S d="384000" r="65"></S>
+          <S d="192000"></S>
+          <S d="384000" r="86"></S>
+          <S d="448000"></S>
+          <S d="384000" r="42"></S>
+          <S d="192000"></S>
+          <S d="384000" r="36"></S>
+          <S d="136000"></S>
+          <S d="384000" r="22"></S>
+          <S d="192000"></S>
+          <S d="384000" r="32"></S>
+          <S d="184000"></S>
+          <S d="384000" r="11"></S>
+          <S d="192000"></S>
+          <S d="384000" r="71"></S>
+          <S d="446000"></S>
+          <S d="384000" r="46"></S>
+          <S d="198000"></S>
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="H264_1_CMAF_CENC_CTR_1200K" codecs="avc1.64001f" bandwidth="1923964" startWithSAP="1" width="854" height="480" frameRate="24">
+        <hulu:ProfileBandwidth>1923</hulu:ProfileBandwidth>
+        <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="fb7c0501327745d3b488a724e091d083"></ContentProtection>
+      </Representation>
+      <Representation id="H264_1_CMAF_CENC_CTR_1800K" codecs="avc1.64001f" bandwidth="2845178" startWithSAP="1" width="854" height="480" frameRate="24">
+        <hulu:ProfileBandwidth>2845</hulu:ProfileBandwidth>
+        <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="fb7c0501327745d3b488a724e091d083"></ContentProtection>
+      </Representation>
+      <Representation id="H264_1_CMAF_CENC_CTR_2400K" codecs="avc1.64001f" bandwidth="3650651" startWithSAP="1" width="1280" height="720" frameRate="24">
+        <hulu:ProfileBandwidth>3650</hulu:ProfileBandwidth>
+        <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="fb7c0501327745d3b488a724e091d083"></ContentProtection>
+      </Representation>
+      <Representation id="H264_1_CMAF_CENC_CTR_400K" codecs="avc1.64001f" bandwidth="647795" startWithSAP="1" width="640" height="360" frameRate="24">
+        <hulu:ProfileBandwidth>647</hulu:ProfileBandwidth>
+        <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="fb7c0501327745d3b488a724e091d083"></ContentProtection>
+      </Representation>
+      <Representation id="H264_1_CMAF_CENC_CTR_4250K" codecs="avc1.64001f" bandwidth="6421772" startWithSAP="1" width="1280" height="720" frameRate="24">
+        <hulu:ProfileBandwidth>6421</hulu:ProfileBandwidth>
+        <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="fb7c0501327745d3b488a724e091d083"></ContentProtection>
+      </Representation>
+      <Representation id="H264_1_CMAF_CENC_CTR_5500K" codecs="avc1.640028" bandwidth="8417529" startWithSAP="1" width="1920" height="1080" frameRate="24">
+        <hulu:ProfileBandwidth>8417</hulu:ProfileBandwidth>
+        <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="3ef4868be85447f895fb0834dd93971f"></ContentProtection>
+      </Representation>
+      <Representation id="H264_1_CMAF_CENC_CTR_800K" codecs="avc1.64001f" bandwidth="1283831" startWithSAP="1" width="640" height="360" frameRate="24">
+        <hulu:ProfileBandwidth>1283</hulu:ProfileBandwidth>
+        <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="fb7c0501327745d3b488a724e091d083"></ContentProtection>
+      </Representation>
+      <Representation id="H264_1_CMAF_CENC_CTR_8500K" codecs="avc1.640028" bandwidth="12108377" startWithSAP="1" width="1920" height="1080" frameRate="24">
+        <hulu:ProfileBandwidth>12108</hulu:ProfileBandwidth>
+        <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="3ef4868be85447f895fb0834dd93971f"></ContentProtection>
+      </Representation>
+      <Representation id="H264_1_CMAF_CENC_CTR_ALT_1_5500K" codecs="avc1.640028" bandwidth="8417529" startWithSAP="1" width="1920" height="1080" frameRate="24">
+        <hulu:ProfileBandwidth>8417</hulu:ProfileBandwidth>
+        <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="fb7c0501327745d3b488a724e091d083"></ContentProtection>
+      </Representation>
+      <Representation id="H264_1_CMAF_CENC_CTR_ALT_1_8500K" codecs="avc1.640028" bandwidth="12108377" startWithSAP="1" width="1920" height="1080" frameRate="24">
+        <hulu:ProfileBandwidth>12108</hulu:ProfileBandwidth>
+        <ContentProtection schemeIdUri="urn:mpeg:dash:mp4protection:2011" value="cenc" cenc:default_KID="fb7c0501327745d3b488a724e091d083"></ContentProtection>
+      </Representation>
+      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"></Role>
+    </AdaptationSet>
+  </Period>
+</MPD>

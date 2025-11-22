@@ -2,10 +2,7 @@ package dash
 
 import (
    "encoding/xml"
-   "fmt"
    "net/url"
-   "strconv"
-   "strings"
 )
 
 // MPD represents the root element of the DASH MPD file.
@@ -55,26 +52,6 @@ func (m *MPD) GetAllRepresentations() map[string][]*Representation {
       }
    }
    return grouped
-}
-
-// ParseRange parses a "start-end" range string (e.g. "0-500") into start and end integers.
-func ParseRange(rangeStr string) (int64, int64, error) {
-   if rangeStr == "" {
-      return 0, 0, fmt.Errorf("range attribute is empty")
-   }
-   parts := strings.Split(rangeStr, "-")
-   if len(parts) != 2 {
-      return 0, 0, fmt.Errorf("invalid range format: %s", rangeStr)
-   }
-   start, err := strconv.ParseInt(parts[0], 10, 64)
-   if err != nil {
-      return 0, 0, fmt.Errorf("invalid start byte: %v", err)
-   }
-   end, err := strconv.ParseInt(parts[1], 10, 64)
-   if err != nil {
-      return 0, 0, fmt.Errorf("invalid end byte: %v", err)
-   }
-   return start, end, nil
 }
 
 // link establishes the parent-child relationships for navigation.

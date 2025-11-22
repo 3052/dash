@@ -141,5 +141,4 @@ Go language, I need a package for DASH (MPD) files
    time.ParseDuration(strings.ToLower(
       strings.TrimPrefix(Period@duration, "PT"),
    ))
-40. add function to get start and end from range or indexRange
 
