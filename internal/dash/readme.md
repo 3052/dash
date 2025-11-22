@@ -106,10 +106,15 @@ Go language, I need a package for DASH (MPD) files
    - Representation@bandwidth
    - Role@value
 25. add method to get ContentProtection
-26. add method to replace SegmentTemplate@initialization
+26. add method to get SegmentTemplate
+27. add method to get `Number` values from
+   SegmentTemplate@startNumber to SegmentTemplate@endNumber
+28. add method to get `Number` values from SegmentTimeline
+29. add method to get `Time` values from SegmentTimeline
+30. add method to get `time.Duration` from Period@duration
+31. add method to replace SegmentTemplate@initialization
    - `$RepresentationID$`
-27. add method to get SegmentTemplate
-28. add method to replace SegmentTemplate@media
+32. add method to replace SegmentTemplate@media
    - `$Number$`
    - `$Number%02d$`
    - `$Number%03d$`
@@ -120,11 +125,10 @@ Go language, I need a package for DASH (MPD) files
    - `$Number%08d$`
    - `$Number%09d$`
    - `$RepresentationID$`
+33. add method to replace SegmentTemplate@media
+   - `$RepresentationID$`
    - `$Time$`
-29. SegmentTemplate@startNumber is 1 if missing
-30. add method to get `Number` values from
-   SegmentTemplate@startNumber to SegmentTemplate@endNumber
-31. add method to get `Number` values from SegmentTimeline
-32. add method to get `Time` values from SegmentTimeline
-33. add method to get `time.Duration` from Period@duration
+34. SegmentTemplate@startNumber is 1 if missing
+35. SegmentTemplate@timescale is 1 if missing
+36. Period@duration is MPD@mediaPresentationDuration if missing
 

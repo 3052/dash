@@ -15,8 +15,9 @@ type SegmentTemplate struct {
    Media                  string `xml:"media,attr,omitempty"`
    PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr,omitempty"`
    // StartNumber is a pointer to distinguish between missing (nil) and explicitly 0.
-   StartNumber     *uint            `xml:"startNumber,attr,omitempty"`
-   Timescale       uint             `xml:"timescale,attr,omitempty"`
+   StartNumber *uint `xml:"startNumber,attr,omitempty"`
+   // Timescale is a pointer to distinguish between missing (nil) and explicitly 0.
+   Timescale       *uint            `xml:"timescale,attr,omitempty"`
    SegmentTimeline *SegmentTimeline `xml:"SegmentTimeline"`
 
    // Navigation
@@ -28,6 +29,14 @@ type SegmentTemplate struct {
 func (st *SegmentTemplate) GetStartNumber() uint {
    if st.StartNumber != nil {
       return *st.StartNumber
+   }
+   return 1
+}
+
+// GetTimescale returns the Timescale if present, otherwise returns default 1.
+func (st *SegmentTemplate) GetTimescale() uint {
+   if st.Timescale != nil {
+      return *st.Timescale
    }
    return 1
 }
@@ -128,9 +137,50 @@ func (st *SegmentTemplate) ResolveInitialization(rep *Representation) (*url.URL,
    return resolveRef(base, initStr)
 }
 
-// ResolveMedia resolves the @media attribute against the parent BaseURL.
-// It performs substitutions for $RepresentationID$, $Time$, and $Number$ (including format variants).
-func (st *SegmentTemplate) ResolveMedia(rep *Representation, number, timeVal int) (*url.URL, error) {
+// ResolveMedia resolves the @media attribute for number-based addressing.
+// It performs substitutions for $RepresentationID$ and $Number$ (including format variants).
+func (st *SegmentTemplate) ResolveMedia(rep *Representation, number int) (*url.URL, error) {
+   base, err := st.getParentBaseURL()
+   if err != nil {
+      return nil, err
+   }
+
+   mediaStr := st.Media
+
+   // 1. Replace $RepresentationID$
+   var repID string
+   if rep != nil {
+      repID = rep.ID
+   } else if st.ParentRepresentation != nil {
+      repID = st.ParentRepresentation.ID
+   }
+   if repID != "" {
+      mediaStr = strings.ReplaceAll(mediaStr, "$RepresentationID$", repID)
+   }
+
+   // 2. Replace $Number%0xd$ variants
+   formats := []string{
+      "%02d", "%03d", "%04d", "%05d",
+      "%06d", "%07d", "%08d", "%09d",
+   }
+
+   for _, f := range formats {
+      token := fmt.Sprintf("$Number%s$", f)
+      if strings.Contains(mediaStr, token) {
+         replacement := fmt.Sprintf(f, number)
+         mediaStr = strings.ReplaceAll(mediaStr, token, replacement)
+      }
+   }
+
+   // 3. Replace bare $Number$
+   mediaStr = strings.ReplaceAll(mediaStr, "$Number$", fmt.Sprintf("%d", number))
+
+   return resolveRef(base, mediaStr)
+}
+
+// ResolveMediaTime resolves the @media attribute for time-based addressing.
+// It performs substitutions for $RepresentationID$ and $Time$.
+func (st *SegmentTemplate) ResolveMediaTime(rep *Representation, timeVal int) (*url.URL, error) {
    base, err := st.getParentBaseURL()
    if err != nil {
       return nil, err
@@ -151,23 +201,6 @@ func (st *SegmentTemplate) ResolveMedia(rep *Representation, number, timeVal int
 
    // 2. Replace $Time$
    mediaStr = strings.ReplaceAll(mediaStr, "$Time$", fmt.Sprintf("%d", timeVal))
-
-   // 3. Replace $Number%0xd$ variants
-   formats := []string{
-      "%02d", "%03d", "%04d", "%05d",
-      "%06d", "%07d", "%08d", "%09d",
-   }
-
-   for _, f := range formats {
-      token := fmt.Sprintf("$Number%s$", f)
-      if strings.Contains(mediaStr, token) {
-         replacement := fmt.Sprintf(f, number)
-         mediaStr = strings.ReplaceAll(mediaStr, token, replacement)
-      }
-   }
-
-   // 4. Replace bare $Number$
-   mediaStr = strings.ReplaceAll(mediaStr, "$Number$", fmt.Sprintf("%d", number))
 
    return resolveRef(base, mediaStr)
 }

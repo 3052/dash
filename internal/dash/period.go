@@ -28,12 +28,18 @@ func (p *Period) ResolveBaseURL() (*url.URL, error) {
    return resolveRef(parentBase, p.BaseURL)
 }
 
-// GetDuration parses the ISO 8601 Duration attribute (e.g., "PT10M") into a time.Duration.
+// GetDuration parses the ISO 8601 Duration attribute.
+// If Period@duration is missing, it falls back to MPD@mediaPresentationDuration.
 func (p *Period) GetDuration() (time.Duration, error) {
-   if p.Duration == "" {
+   durStr := p.Duration
+   if durStr == "" && p.Parent != nil {
+      durStr = p.Parent.MediaPresentationDuration
+   }
+
+   if durStr == "" {
       return 0, nil
    }
-   return parseIsoDuration(p.Duration)
+   return parseIsoDuration(durStr)
 }
 
 func (p *Period) link() {
@@ -63,8 +69,6 @@ func parseIsoDuration(iso string) (time.Duration, error) {
    }
 
    // Parse Date Part (Supports D for Days)
-   // Note: Y (Years) and M (Months) in date part are ambiguous in time.Duration (fixed nanoseconds)
-   // and are generally avoided in precise media durations. This parser handles 'D'.
    if len(datePart) > 0 {
       d, err := parseDurationPart(datePart, map[byte]time.Duration{
          'D': 24 * time.Hour,
