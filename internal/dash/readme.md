@@ -1,5 +1,9 @@
 # dash
 
+- <https://f002.backblazeb2.com/file/minerals/ISO_IEC_23009-1_2022(en).pdf>
+- https://dashif.org/Guidelines-TimingModel/Timing-Model.pdf
+- https://dashif.org/docs/DASH-IF-IOP-v4.3.pdf
+
 Go language, I need a package for DASH (MPD) files
 
 1. standard library only
@@ -69,3 +73,20 @@ Go language, I need a package for DASH (MPD) files
    6. from SegmentTemplate to AdaptationSet
    7. from SegmentTemplate to Representation
    8. from SegmentURL to SegmentList
+11. do not skip tests
+12. resolve BaseURL using
+   1. MPD URL
+   2. all parent BaseURL
+13. resolve Initialization@sourceURL using
+   1. MPD URL
+   2. all parent BaseURL
+14. resolve SegmentTemplate@initialization using
+   1. MPD URL
+   2. all parent BaseURL
+15. resolve SegmentTemplate@media using
+   1. MPD URL
+   2. all parent BaseURL
+16. resolve SegmentURL@media using
+   1. MPD URL
+   2. all parent BaseURL
+17. resolve function should return `*url.URL`

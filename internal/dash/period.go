@@ -1,5 +1,7 @@
 package dash
 
+import "net/url"
+
 // Period represents a temporal part of the media content.
 type Period struct {
    Duration       string           `xml:"duration,attr,omitempty"`
@@ -9,6 +11,15 @@ type Period struct {
 
    // Navigation
    Parent *MPD `xml:"-"`
+}
+
+// ResolveBaseURL resolves the Period's BaseURL against the parent MPD's resolved BaseURL.
+func (p *Period) ResolveBaseURL() (*url.URL, error) {
+   parentBase, err := p.Parent.ResolveBaseURL()
+   if err != nil {
+      return nil, err
+   }
+   return resolveRef(parentBase, p.BaseURL)
 }
 
 func (p *Period) link() {

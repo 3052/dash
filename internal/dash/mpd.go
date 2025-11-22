@@ -2,15 +2,18 @@ package dash
 
 import (
    "encoding/xml"
+   "net/url"
 )
 
 // MPD represents the root element of the DASH MPD file.
-// The XMLName field is omitted to avoid linter conflicts with child parent pointers.
-// encoding/xml will automatically match the <MPD> element to this struct name.
+// XMLName is omitted here to prevent SA5008 conflicts.
 type MPD struct {
    MediaPresentationDuration string    `xml:"mediaPresentationDuration,attr,omitempty"`
-   BaseURL                   string    `xml:"BaseURL,omitempty"` // Requirement: Single element
+   BaseURL                   string    `xml:"BaseURL,omitempty"`
    Periods                   []*Period `xml:"Period"`
+
+   // MPDURL is the source URL of the MPD file itself.
+   MPDURL string `xml:"-"`
 }
 
 // Parse takes a byte slice of an MPD file, unmarshals it,
@@ -28,6 +31,15 @@ func Parse(data []byte) (*MPD, error) {
    return &m, nil
 }
 
+// ResolveBaseURL resolves the MPD's BaseURL against the MPDURL.
+func (m *MPD) ResolveBaseURL() (*url.URL, error) {
+   base, err := url.Parse(m.MPDURL)
+   if err != nil {
+      return nil, err
+   }
+   return resolveRef(base, m.BaseURL)
+}
+
 // link establishes the parent-child relationships for navigation.
 func (m *MPD) link() {
    for _, p := range m.Periods {
@@ -35,4 +47,18 @@ func (m *MPD) link() {
       p.Parent = m
       p.link()
    }
+}
+
+// resolveRef is a helper shared within the package to resolve a relative URL string
+// against a base *url.URL using RFC 3986 rules.
+func resolveRef(base *url.URL, relStr string) (*url.URL, error) {
+   // If the relative string is empty, return the base as is.
+   if relStr == "" {
+      return base, nil
+   }
+   rel, err := url.Parse(relStr)
+   if err != nil {
+      return nil, err
+   }
+   return base.ResolveReference(rel), nil
 }

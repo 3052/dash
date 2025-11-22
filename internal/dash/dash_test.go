@@ -8,16 +8,13 @@ import (
 )
 
 // TestParseMpdFiles reads all .mpd files in the testdata folder and verifies
-// that they can be parsed without error.
+// that they can be parsed without error and navigation links are set.
 func TestParseMpdFiles(t *testing.T) {
    testDataDir := "testdata"
 
    files, err := os.ReadDir(testDataDir)
    if err != nil {
-      if os.IsNotExist(err) {
-         t.Logf("testdata folder not found, skipping tests")
-         return
-      }
+      // Changed from Logf/return to Fatalf to ensure tests do not skip silently
       t.Fatalf("Failed to read testdata directory: %v", err)
    }
 
@@ -39,7 +36,6 @@ func TestParseMpdFiles(t *testing.T) {
                t.Fatalf("Failed to parse MPD %s: %v", file.Name(), err)
             }
 
-            // Basic Verification of Navigation Links
             verifyLinks(t, mpd)
          })
       }

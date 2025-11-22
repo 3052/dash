@@ -1,5 +1,7 @@
 package dash
 
+import "net/url"
+
 // AdaptationSet groups Representations.
 type AdaptationSet struct {
    Codecs            string               `xml:"codecs,attr,omitempty"`
@@ -14,6 +16,11 @@ type AdaptationSet struct {
 
    // Navigation
    Parent *Period `xml:"-"`
+}
+
+// getAbsoluteBaseURL returns the resolved BaseURL of the parent Period.
+func (as *AdaptationSet) getAbsoluteBaseURL() (*url.URL, error) {
+   return as.Parent.ResolveBaseURL()
 }
 
 func (as *AdaptationSet) link() {

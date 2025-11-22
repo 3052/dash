@@ -1,5 +1,7 @@
 package dash
 
+import "net/url"
+
 // Representation describes a version of the media content.
 type Representation struct {
    Bandwidth         int                  `xml:"bandwidth,attr,omitempty"`
@@ -16,6 +18,15 @@ type Representation struct {
 
    // Navigation
    Parent *AdaptationSet `xml:"-"`
+}
+
+// ResolveBaseURL resolves the Representation's BaseURL against the parent hierarchy.
+func (r *Representation) ResolveBaseURL() (*url.URL, error) {
+   parentBase, err := r.Parent.getAbsoluteBaseURL()
+   if err != nil {
+      return nil, err
+   }
+   return resolveRef(parentBase, r.BaseURL)
 }
 
 func (r *Representation) link() {

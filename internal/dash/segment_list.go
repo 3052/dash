@@ -1,5 +1,7 @@
 package dash
 
+import "net/url"
+
 // SegmentList contains a list of SegmentURLs.
 type SegmentList struct {
    Initialization *Initialization `xml:"Initialization"`
@@ -7,6 +9,11 @@ type SegmentList struct {
 
    // Navigation
    Parent *Representation `xml:"-"`
+}
+
+// getParentBaseURL retrieves the resolved BaseURL from the parent Representation.
+func (sl *SegmentList) getParentBaseURL() (*url.URL, error) {
+   return sl.Parent.ResolveBaseURL()
 }
 
 func (sl *SegmentList) link() {
