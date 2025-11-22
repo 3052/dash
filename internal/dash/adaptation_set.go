@@ -1,14 +1,14 @@
 package dash
 
-// AdaptationSet represents the AdaptationSet element.
+// AdaptationSet represents a set of interchangeable encoded versions of one or several media content components.
 type AdaptationSet struct {
-   MimeType           string              `xml:"mimeType,attr,omitempty"`
-   Codecs             string              `xml:"codecs,attr,omitempty"`
-   Lang               string              `xml:"lang,attr,omitempty"`
-   Width              int                 `xml:"width,attr,omitempty"`
-   Height             int                 `xml:"height,attr,omitempty"`
-   ContentProtections []ContentProtection `xml:"ContentProtection,omitempty"`
-   Roles              []Role              `xml:"Role,omitempty"`
-   SegmentTemplate    *SegmentTemplate    `xml:"SegmentTemplate,omitempty"`
-   Representations    []Representation    `xml:"Representation,omitempty"`
+   Codecs            string               `xml:"codecs,attr,omitempty"`
+   Height            int                  `xml:"height,attr,omitempty"`
+   Lang              string               `xml:"lang,attr,omitempty"`
+   MimeType          string               `xml:"mimeType,attr,omitempty"`
+   Width             int                  `xml:"width,attr,omitempty"`
+   ContentProtection []*ContentProtection `xml:"ContentProtection"`
+   Role              []*Role              `xml:"Role"`
+   SegmentTemplate   *SegmentTemplate     `xml:"SegmentTemplate"`
+   Representation    []*Representation    `xml:"Representation"`
 }

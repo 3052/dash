@@ -1,10 +1,7 @@
 package dash
 
-// ContentProtection represents the ContentProtection element.
+// ContentProtection specifies information about the content protection schemes used.
 type ContentProtection struct {
    SchemeIdUri string `xml:"schemeIdUri,attr,omitempty"`
-   // Pssh handles the <cenc:pssh> element.
-   // Note: We use the generic tag "pssh" here. If the XML uses namespaces,
-   // encoding/xml usually matches the local name.
-   Pssh string `xml:"pssh,omitempty"`
+   CencPssh    string `xml:"cenc:pssh,omitempty"`
 }

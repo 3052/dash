@@ -1,71 +1,76 @@
 package dash
 
 import (
+   "fmt"
    "os"
    "path/filepath"
-   "strings"
    "testing"
 )
 
 func TestParse(t *testing.T) {
-   // 1. Locate testdata directory
-   testDir := "testdata"
-   entries, err := os.ReadDir(testDir)
+   // Locate mpd files in testdata folder
+   pattern := filepath.Join("testdata", "*.mpd")
+   files, err := filepath.Glob(pattern)
    if err != nil {
-      t.Fatalf("Could not read testdata directory: %v. Make sure the 'testdata' folder exists.", err)
+      t.Fatalf("Failed to glob testdata: %v", err)
    }
 
-   mpdFound := false
+   if len(files) == 0 {
+      t.Log("No .mpd files found in testdata/ to test.")
+      return
+   }
 
-   // 2. Iterate over files
-   for _, entry := range entries {
-      if entry.IsDir() {
-         continue
-      }
-
-      name := entry.Name()
-      if strings.ToLower(filepath.Ext(name)) != ".mpd" {
-         continue
-      }
-
-      mpdFound = true
-      t.Run(name, func(t *testing.T) {
-         path := filepath.Join(testDir, name)
-         data, err := os.ReadFile(path)
+   for _, file := range files {
+      t.Run(filepath.Base(file), func(t *testing.T) {
+         content, err := os.ReadFile(file)
          if err != nil {
-            t.Fatalf("Failed to read file %s: %v", path, err)
+            t.Fatalf("Failed to read file %s: %v", file, err)
          }
 
-         // 3. Parse
-         mpd, err := Parse(data)
+         mpd, err := Parse(content)
          if err != nil {
-            t.Fatalf("Parse failed for %s: %v", name, err)
+            t.Errorf("Failed to parse %s: %v", file, err)
+            return
          }
 
-         // 4. Basic Validation (logging for visual verification)
-         t.Logf("Parsed %s successfully", name)
-         t.Logf("  Duration: %s", mpd.MediaPresentationDuration)
-         t.Logf("  BaseURL: %s", mpd.BaseURL)
-         t.Logf("  Periods: %d", len(mpd.Periods))
+         // Basic Validation to ensure structs are populating
+         if mpd == nil {
+            t.Errorf("Resulting MPD struct is nil for file %s", file)
+            return // Added return to prevent nil pointer dereference
+         }
 
-         for i, p := range mpd.Periods {
-            t.Logf("    Period[%d] ID: %s, AdaptationSets: %d", i, p.ID, len(p.AdaptationSets))
-            for j, as := range p.AdaptationSets {
-               t.Logf("      AS[%d] Mime: %s, Reps: %d", j, as.MimeType, len(as.Representations))
-               // Check for ContentProtection
-               if len(as.ContentProtections) > 0 {
-                  for _, cp := range as.ContentProtections {
-                     if cp.Pssh != "" {
-                        t.Logf("        Found PSSH in AdaptationSet (Scheme: %s)", cp.SchemeIdUri)
-                     }
-                  }
-               }
-            }
+         // Print debug info
+         t.Logf("Parsed %s successfully. Periods: %d", file, len(mpd.Period))
+         for _, p := range mpd.Period {
+            t.Logf("  Period ID: %s, Duration: %s, AdaptationSets: %d", p.ID, p.Duration, len(p.AdaptationSet))
          }
       })
    }
+}
 
-   if !mpdFound {
-      t.Log("No .mpd files found in testdata/. Skipping actual parsing.")
+func ExampleParse() {
+   // Example usage
+   xmlData := []byte(`
+      <MPD mediaPresentationDuration="PT1H30M">
+         <Period duration="PT10M">
+            <AdaptationSet mimeType="video/mp4">
+               <Representation id="1" bandwidth="1000000" width="1920" height="1080" />
+            </AdaptationSet>
+         </Period>
+      </MPD>
+   `)
+
+   mpd, err := Parse(xmlData)
+   if err != nil {
+      panic(err)
    }
+
+   fmt.Printf("MPD Duration: %s\n", mpd.MediaPresentationDuration)
+   if len(mpd.Period) > 0 {
+      fmt.Printf("First Period Duration: %s\n", mpd.Period[0].Duration)
+   }
+
+   // Output:
+   // MPD Duration: PT1H30M
+   // First Period Duration: PT10M
 }

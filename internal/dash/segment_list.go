@@ -1,12 +1,7 @@
 package dash
 
-// SegmentList represents the SegmentList element.
+// SegmentList defines a list of segments.
 type SegmentList struct {
-   Initialization *SegmentInitialization `xml:"Initialization,omitempty"`
-   SegmentURLs    []SegmentURL           `xml:"SegmentURL,omitempty"`
-}
-
-// SegmentURL represents the SegmentURL element.
-type SegmentURL struct {
-   Media string `xml:"media,attr,omitempty"`
+   Initialization *Initialization `xml:"Initialization"`
+   SegmentURL     []*SegmentURL   `xml:"SegmentURL"`
 }
