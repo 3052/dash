@@ -1,6 +1,9 @@
 package dash
 
-import "net/url"
+import (
+   "fmt"
+   "net/url"
+)
 
 // Representation describes a version of the media content.
 type Representation struct {
@@ -27,6 +30,87 @@ func (r *Representation) ResolveBaseURL() (*url.URL, error) {
       return nil, err
    }
    return resolveRef(parentBase, r.BaseURL)
+}
+
+// GetCodecs returns the codecs for this Representation.
+// If the Codecs attribute is empty on the Representation,
+// it returns the Codecs attribute from the parent AdaptationSet.
+func (r *Representation) GetCodecs() string {
+   if r.Codecs != "" {
+      return r.Codecs
+   }
+   if r.Parent != nil {
+      return r.Parent.Codecs
+   }
+   return ""
+}
+
+// GetHeight returns the height for this Representation.
+// If the Height attribute is 0 on the Representation,
+// it returns the Height attribute from the parent AdaptationSet.
+func (r *Representation) GetHeight() int {
+   if r.Height != 0 {
+      return r.Height
+   }
+   if r.Parent != nil {
+      return r.Parent.Height
+   }
+   return 0
+}
+
+// GetWidth returns the width for this Representation.
+// If the Width attribute is 0 on the Representation,
+// it returns the Width attribute from the parent AdaptationSet.
+func (r *Representation) GetWidth() int {
+   if r.Width != 0 {
+      return r.Width
+   }
+   if r.Parent != nil {
+      return r.Parent.Width
+   }
+   return 0
+}
+
+// GetMimeType returns the mimeType for this Representation.
+// If the MimeType attribute is empty on the Representation,
+// it returns the MimeType attribute from the parent AdaptationSet.
+func (r *Representation) GetMimeType() string {
+   if r.MimeType != "" {
+      return r.MimeType
+   }
+   if r.Parent != nil {
+      return r.Parent.MimeType
+   }
+   return ""
+}
+
+// String returns a formatted summary of the Representation, including
+// parent context (Period ID, Language, Role) and inherited attributes.
+func (r *Representation) String() string {
+   var periodID, lang, roleStr string
+
+   if r.Parent != nil {
+      lang = r.Parent.Lang
+
+      if r.Parent.Role != nil {
+         roleStr = r.Parent.Role.Value
+      }
+
+      if r.Parent.Parent != nil {
+         periodID = r.Parent.Parent.ID
+      }
+   }
+
+   return fmt.Sprintf("PeriodID=%s Lang=%s Role=%s Bandwidth=%d MimeType=%s Codecs=%s Width=%d Height=%d",
+      periodID,
+      lang,
+      roleStr,
+      r.Bandwidth,
+      r.GetMimeType(),
+      r.GetCodecs(),
+      r.GetWidth(),
+      r.GetHeight(),
+   )
 }
 
 func (r *Representation) link() {

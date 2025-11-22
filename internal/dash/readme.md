@@ -91,4 +91,18 @@ Go language, I need a package for DASH (MPD) files
    2. all parent BaseURL
 17. resolve function should return `*url.URL`
 18. add method to return all Representation, group by id
+19. add method to get codecs
+20. add method to get height
+21. add method to get width
+22. add method to get mimeType
+23. AdaptationSet.Role is single element not slice
+24. add Representation.String method with
+   - AdaptationSet@lang
+   - Period@id
+   - Representation.GetCodecs
+   - Representation.GetHeight
+   - Representation.GetMimeType
+   - Representation.GetWidth
+   - Representation@bandwidth
+   - Role@value
 

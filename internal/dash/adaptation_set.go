@@ -10,7 +10,7 @@ type AdaptationSet struct {
    MimeType          string               `xml:"mimeType,attr,omitempty"`
    Width             int                  `xml:"width,attr,omitempty"`
    ContentProtection []*ContentProtection `xml:"ContentProtection"`
-   Roles             []*Role              `xml:"Role"`
+   Role              *Role                `xml:"Role"`
    SegmentTemplate   *SegmentTemplate     `xml:"SegmentTemplate"`
    Representations   []*Representation    `xml:"Representation"`
 
