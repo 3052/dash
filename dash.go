@@ -10,136 +10,6 @@ import (
    "time"
 )
 
-// dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
-// SegmentCount = Ceil((AsSeconds(Period@duration)) /
-// (SegmentTemplate@duration / SegmentTemplate@timescale))
-func (p *Period) segment_count(template *SegmentTemplate) int64 {
-   // amc
-   // draken
-   // kanopy
-   // max
-   // paramount
-   duration1 := float64(template.Duration) / float64(*template.Timescale)
-   return int64(math.Ceil(p.Duration[0].Seconds() / duration1))
-}
-
-// SegmentTemplate
-func (r *Representation) Segment() iter.Seq[int] {
-   template := r.SegmentTemplate
-   var address int
-   if template.Media.time_address() {
-      address = template.PresentationTimeOffset
-   } else {
-      address = *template.StartNumber
-   }
-   return func(yield func(int) bool) {
-      if template.EndNumber >= 1 {
-         for address <= template.EndNumber {
-            if !yield(address) {
-               return
-            }
-            address++
-         }
-      } else if template.SegmentTimeline != nil {
-         for _, segment := range template.SegmentTimeline.S {
-            for range 1 + segment.R {
-               if !yield(address) {
-                  return
-               }
-               if template.Media.time_address() {
-                  address += segment.D
-               } else {
-                  address++
-               }
-            }
-         }
-      } else {
-/////////////////////////////////////////////////////////////////////////////////
-         for range r.adaptation_set.period.segment_count(template) {
-            if !yield(address) {
-               return
-            }
-            address++
-         }
-/////////////////////////////////////////////////////////////////////////////////
-      }
-   }
-}
-
-func (s *SegmentTemplate) set() {
-   // dashif.org/Guidelines-TimingModel#addressing-simple
-   if s.StartNumber == nil {
-      start := 1
-      s.StartNumber = &start
-   }
-   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
-   if s.Timescale == nil {
-      scale := 1
-      s.Timescale = &scale
-   }
-}
-
-func (m Media) Url(represent *Representation, address int) (*url.URL, error) {
-   data := replace(string(m), "$RepresentationID$", represent.Id)
-   if m.time_address() {
-      data = replace(data, "$Time$", fmt.Sprint(address))
-   } else {
-      data = replace(data, "$Number$", fmt.Sprint(address))
-      data = replace(data, "$Number%02d$", fmt.Sprintf("%02d", address))
-      data = replace(data, "$Number%03d$", fmt.Sprintf("%03d", address))
-      data = replace(data, "$Number%04d$", fmt.Sprintf("%04d", address))
-      data = replace(data, "$Number%05d$", fmt.Sprintf("%05d", address))
-      data = replace(data, "$Number%06d$", fmt.Sprintf("%06d", address))
-      data = replace(data, "$Number%07d$", fmt.Sprintf("%07d", address))
-      data = replace(data, "$Number%08d$", fmt.Sprintf("%08d", address))
-      data = replace(data, "$Number%09d$", fmt.Sprintf("%09d", address))
-   }
-   url2, err := url.Parse(data)
-   if err != nil {
-      return nil, err
-   }
-   if represent.BaseUrl[0] != nil {
-      url2 = represent.BaseUrl[0].ResolveReference(url2)
-   }
-   return url2, nil
-}
-
-func (r *Representation) set(adapt *AdaptationSet) {
-   r.adaptation_set = adapt
-   if base := r.adaptation_set.period.BaseUrl[0]; base != nil {
-      if r.BaseUrl[0] == nil {
-         r.BaseUrl[0] = &url.URL{}
-      }
-      r.BaseUrl[0] = base.ResolveReference(r.BaseUrl[0])
-   }
-   if r.Codecs == nil {
-      r.Codecs = r.adaptation_set.Codecs
-   }
-   if r.MimeType == nil {
-      r.MimeType = &r.adaptation_set.MimeType
-   }
-   if r.Height == nil {
-      r.Height = r.adaptation_set.Height
-   }
-   if r.Width == nil {
-      r.Width = r.adaptation_set.Width
-   }
-   if len(r.ContentProtection) == 0 {
-      r.ContentProtection = r.adaptation_set.ContentProtection
-   }
-   if r.SegmentList != nil {
-      if r.BaseUrl[0] != nil {
-         r.SegmentList.set(r.BaseUrl[0])
-      }
-   }
-   if r.SegmentTemplate == nil {
-      r.SegmentTemplate = r.adaptation_set.SegmentTemplate
-   }
-   if r.SegmentTemplate != nil {
-      r.SegmentTemplate.set()
-   }
-}
-
 func (m *Mpd) Representation() iter.Seq[*Representation] {
    return func(yield func(*Representation) bool) {
       id := map[string]struct{}{}
@@ -374,6 +244,87 @@ func (r *Representation) String() string {
    return string(b)
 }
 
+// dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
+// SegmentCount = Ceil((AsSeconds(Period@duration)) /
+// (SegmentTemplate@duration / SegmentTemplate@timescale))
+func (p *Period) segment_count(template *SegmentTemplate) int64 {
+   // amc
+   // draken
+   // kanopy
+   // max
+   // paramount
+   duration1 := float64(template.Duration) / float64(*template.Timescale)
+   return int64(math.Ceil(p.Duration[0].Seconds() / duration1))
+}
+
+// SegmentTemplate
+func (r *Representation) Segment() iter.Seq[int] {
+   template := r.SegmentTemplate
+   var address int
+   if template.Media.time_address() {
+      address = template.PresentationTimeOffset
+   } else {
+      address = *template.StartNumber
+   }
+   return func(yield func(int) bool) {
+      if template.EndNumber >= 1 {
+         for address <= template.EndNumber {
+            if !yield(address) {
+               return
+            }
+            address++
+         }
+      } else if template.SegmentTimeline != nil {
+         for _, segment := range template.SegmentTimeline.S {
+            for range 1 + segment.R {
+               if !yield(address) {
+                  return
+               }
+               if template.Media.time_address() {
+                  address += segment.D
+               } else {
+                  address++
+               }
+            }
+         }
+      } else {
+         for range r.adaptation_set.period.segment_count(template) {
+            if !yield(address) {
+               return
+            }
+            address++
+         }
+      }
+   }
+}
+
+func (m Media) Url(represent *Representation, address int) (*url.URL, error) {
+   data := replace(string(m), "$RepresentationID$", represent.Id)
+   if m.time_address() {
+      data = replace(data, "$Time$", fmt.Sprint(address))
+   } else {
+      data = replace(data, "$Number$", fmt.Sprint(address))
+      data = replace(data, "$Number%02d$", fmt.Sprintf("%02d", address))
+      data = replace(data, "$Number%03d$", fmt.Sprintf("%03d", address))
+      data = replace(data, "$Number%04d$", fmt.Sprintf("%04d", address))
+      data = replace(data, "$Number%05d$", fmt.Sprintf("%05d", address))
+      data = replace(data, "$Number%06d$", fmt.Sprintf("%06d", address))
+      data = replace(data, "$Number%07d$", fmt.Sprintf("%07d", address))
+      data = replace(data, "$Number%08d$", fmt.Sprintf("%08d", address))
+      data = replace(data, "$Number%09d$", fmt.Sprintf("%09d", address))
+   }
+   url2, err := url.Parse(data)
+   if err != nil {
+      return nil, err
+   }
+   if represent.BaseUrl[0] != nil {
+      url2 = represent.BaseUrl[0].ResolveReference(url2)
+   }
+   return url2, nil
+}
+
+///
+
 func (p *Period) set(mpd1 *Mpd) {
    p.mpd = mpd1
    if base := p.mpd.BaseUrl[0]; base != nil {
@@ -384,5 +335,54 @@ func (p *Period) set(mpd1 *Mpd) {
    }
    if p.Duration == nil {
       p.Duration = &p.mpd.MediaPresentationDuration
+   }
+}
+
+func (s *SegmentTemplate) set() {
+   // dashif.org/Guidelines-TimingModel#addressing-simple
+   if s.StartNumber == nil {
+      start := 1
+      s.StartNumber = &start
+   }
+   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
+   if s.Timescale == nil {
+      scale := 1
+      s.Timescale = &scale
+   }
+}
+
+func (r *Representation) set(adapt *AdaptationSet) {
+   r.adaptation_set = adapt
+   if base := r.adaptation_set.period.BaseUrl[0]; base != nil {
+      if r.BaseUrl[0] == nil {
+         r.BaseUrl[0] = &url.URL{}
+      }
+      r.BaseUrl[0] = base.ResolveReference(r.BaseUrl[0])
+   }
+   if r.Codecs == nil {
+      r.Codecs = r.adaptation_set.Codecs
+   }
+   if r.MimeType == nil {
+      r.MimeType = &r.adaptation_set.MimeType
+   }
+   if r.Height == nil {
+      r.Height = r.adaptation_set.Height
+   }
+   if r.Width == nil {
+      r.Width = r.adaptation_set.Width
+   }
+   if len(r.ContentProtection) == 0 {
+      r.ContentProtection = r.adaptation_set.ContentProtection
+   }
+   if r.SegmentList != nil {
+      if r.BaseUrl[0] != nil {
+         r.SegmentList.set(r.BaseUrl[0])
+      }
+   }
+   if r.SegmentTemplate == nil {
+      r.SegmentTemplate = r.adaptation_set.SegmentTemplate
+   }
+   if r.SegmentTemplate != nil {
+      r.SegmentTemplate.set()
    }
 }
