@@ -107,14 +107,10 @@ Go language, I need a package for DASH (MPD) files
    - Role@value
 25. add method to get ContentProtection
 26. add method to get SegmentTemplate
-27. add method to get `Number` values from
-   SegmentTemplate@startNumber to SegmentTemplate@endNumber
-28. add method to get `Number` values from SegmentTimeline
-29. add method to get `Time` values from SegmentTimeline
-30. add method to get `time.Duration` from Period@duration
-31. add method to replace SegmentTemplate@initialization
+27. add method to get `time.Duration` from Period@duration
+28. add method to replace SegmentTemplate@initialization
    - `$RepresentationID$`
-32. add method to replace SegmentTemplate@media
+29. add method to replace SegmentTemplate@media
    - `$Number$`
    - `$Number%02d$`
    - `$Number%03d$`
@@ -125,10 +121,18 @@ Go language, I need a package for DASH (MPD) files
    - `$Number%08d$`
    - `$Number%09d$`
    - `$RepresentationID$`
-33. add method to replace SegmentTemplate@media
+30. add method to replace SegmentTemplate@media
    - `$RepresentationID$`
    - `$Time$`
-34. SegmentTemplate@startNumber is 1 if missing
-35. SegmentTemplate@timescale is 1 if missing
-36. Period@duration is MPD@mediaPresentationDuration if missing
-
+31. SegmentTemplate@startNumber is 1 if missing
+32. SegmentTemplate@timescale is 1 if missing
+33. Period@duration is MPD@mediaPresentationDuration if missing
+34. add method to get `Number` values from
+   SegmentTemplate@startNumber to SegmentTemplate@endNumber
+35. add method to get `Number` values from SegmentTimeline
+36. add method to get `Time` values from SegmentTimeline
+37. add method to get `Number` values from
+   Ceil(
+      AsSeconds(Period@duration) /
+      (SegmentTemplate@duration / SegmentTemplate@timescale)
+   )

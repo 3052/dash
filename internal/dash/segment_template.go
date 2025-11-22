@@ -3,6 +3,7 @@ package dash
 import (
    "errors"
    "fmt"
+   "math"
    "net/url"
    "strings"
 )
@@ -109,6 +110,53 @@ func (st *SegmentTemplate) GetTimelineTimes() []uint {
    }
 
    return times
+}
+
+// GetDurationBasedNumbers calculates segment numbers based on Period duration and fixed Segment duration.
+// Formula: Ceil( AsSeconds(Period@duration) / (SegmentTemplate@duration / SegmentTemplate@timescale) )
+func (st *SegmentTemplate) GetDurationBasedNumbers() ([]uint, error) {
+   // 1. Find the parent Period
+   var period *Period
+   if st.ParentRepresentation != nil && st.ParentRepresentation.Parent != nil {
+      period = st.ParentRepresentation.Parent.Parent
+   } else if st.ParentAdaptationSet != nil {
+      period = st.ParentAdaptationSet.Parent
+   }
+
+   if period == nil {
+      return nil, errors.New("SegmentTemplate is not properly linked to a Period")
+   }
+
+   // 2. Get Period Duration (Seconds)
+   pDur, err := period.GetDuration()
+   if err != nil {
+      return nil, err
+   }
+   if pDur == 0 {
+      return nil, errors.New("period duration is zero or missing")
+   }
+   pDurSec := pDur.Seconds()
+
+   // 3. Get Segment Duration parameters
+   if st.Duration == 0 {
+      return nil, errors.New("SegmentTemplate duration is zero")
+   }
+
+   timescale := float64(st.GetTimescale())
+   segDurSec := float64(st.Duration) / timescale
+
+   // 4. Calculate count
+   countFloat := math.Ceil(pDurSec / segDurSec)
+   count := uint(countFloat)
+
+   // 5. Generate numbers
+   start := st.GetStartNumber()
+   numbers := make([]uint, count)
+   for i := uint(0); i < count; i++ {
+      numbers[i] = start + i
+   }
+
+   return numbers, nil
 }
 
 // ResolveInitialization resolves the @initialization attribute against the parent BaseURL.
