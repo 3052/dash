@@ -10,6 +10,98 @@ import (
    "time"
 )
 
+func (r *Representation) set(adapt *AdaptationSet) {
+   r.adaptation_set = adapt
+   if base := r.adaptation_set.period.BaseUrl[0]; base != nil {
+      if r.BaseUrl[0] == nil {
+         r.BaseUrl[0] = &url.URL{}
+      }
+      r.BaseUrl[0] = base.ResolveReference(r.BaseUrl[0])
+   }
+   if r.Codecs == nil {
+      r.Codecs = r.adaptation_set.Codecs
+   }
+   if len(r.ContentProtection) == 0 {
+      r.ContentProtection = r.adaptation_set.ContentProtection
+   }
+   if r.Height == nil {
+      r.Height = r.adaptation_set.Height
+   }
+   if r.MimeType == nil {
+      r.MimeType = &r.adaptation_set.MimeType
+   }
+   if r.SegmentList != nil {
+      if r.BaseUrl[0] != nil {
+         r.SegmentList.set(r.BaseUrl[0])
+      }
+   }
+   if r.SegmentTemplate == nil {
+      r.SegmentTemplate = r.adaptation_set.SegmentTemplate
+   }
+   if r.SegmentTemplate != nil {
+      r.SegmentTemplate.set()
+   }
+   if r.Width == nil {
+      r.Width = r.adaptation_set.Width
+   }
+}
+
+func (r *Representation) String() string {
+   b := fmt.Appendln(nil, "bandwidth =", r.Bandwidth)
+   if r.Width != nil {
+      b = fmt.Appendln(b, "width =", *r.Width)
+   }
+   if r.Height != nil {
+      b = fmt.Appendln(b, "height =", *r.Height)
+   }
+   if r.Codecs != nil {
+      b = fmt.Appendln(b, "codecs =", *r.Codecs)
+   }
+   b = fmt.Appendln(b, "mimeType =", *r.MimeType)
+   if role := r.adaptation_set.Role; role != nil {
+      b = fmt.Appendln(b, "role =", role.Value)
+   }
+   if lang := r.adaptation_set.Lang; lang != "" {
+      b = fmt.Appendln(b, "lang =", lang)
+   }
+   if id := r.adaptation_set.period.Id; id != "" {
+      b = fmt.Appendln(b, "period =", id)
+   }
+   b = fmt.Append(b, "id = ", r.Id)
+   return string(b)
+}
+
+func (m *Mpd) Representation() iter.Seq[*Representation] {
+   return func(yield func(*Representation) bool) {
+      id := map[string]struct{}{}
+      for _, period1 := range m.Period {
+         for _, adapt := range period1.AdaptationSet {
+            for _, represent := range adapt.Representation {
+               _, ok := id[represent.Id]
+               if !ok {
+                  if adapt.period == nil {
+                     period1.set(m)
+                     adapt.set(&period1)
+                  }
+                  represent.set(&adapt)
+                  if !yield(&represent) {
+                     return
+                  }
+                  id[represent.Id] = struct{}{}
+               }
+            }
+         }
+      }
+   }
+}
+
+func (m *Mpd) Set(url2 *url.URL) {
+   if m.BaseUrl[0] == nil {
+      m.BaseUrl[0] = &url.URL{}
+   }
+   m.BaseUrl[0] = url2.ResolveReference(m.BaseUrl[0])
+}
+
 type Representation struct {
    Bandwidth         int     `xml:"bandwidth,attr"`
    BaseUrl           Url     `xml:"BaseURL"`
@@ -109,31 +201,6 @@ type Media string
 
 type Initialization string
 
-func (r *Representation) String() string {
-   b := fmt.Appendln(nil, "bandwidth =", r.Bandwidth)
-   if r.Width != nil {
-      b = fmt.Appendln(b, "width =", *r.Width)
-   }
-   if r.Height != nil {
-      b = fmt.Appendln(b, "height =", *r.Height)
-   }
-   if r.Codecs != nil {
-      b = fmt.Appendln(b, "codecs =", *r.Codecs)
-   }
-   b = fmt.Appendln(b, "mimeType =", *r.MimeType)
-   if role := r.adaptation_set.Role; role != nil {
-      b = fmt.Appendln(b, "role =", role.Value)
-   }
-   if lang := r.adaptation_set.Lang; lang != "" {
-      b = fmt.Appendln(b, "lang =", lang)
-   }
-   if id := r.adaptation_set.period.Id; id != "" {
-      b = fmt.Appendln(b, "period =", id)
-   }
-   b = fmt.Append(b, "id = ", r.Id)
-   return string(b)
-}
-
 func (r *Representation) GetAdaptationSet() *AdaptationSet {
    return r.adaptation_set
 }
@@ -170,13 +237,6 @@ func (u *Url) UnmarshalText(data []byte) error {
    return u[0].UnmarshalBinary(data)
 }
 
-func (m *Mpd) Set(url2 *url.URL) {
-   if m.BaseUrl[0] == nil {
-      m.BaseUrl[0] = &url.URL{}
-   }
-   m.BaseUrl[0] = url2.ResolveReference(m.BaseUrl[0])
-}
-
 func (i Initialization) Url(represent *Representation) (*url.URL, error) {
    data := replace(string(i), "$RepresentationID$", represent.Id)
    url2, err := url.Parse(data)
@@ -187,15 +247,6 @@ func (i Initialization) Url(represent *Representation) (*url.URL, error) {
       url2 = represent.BaseUrl[0].ResolveReference(url2)
    }
    return url2, nil
-}
-
-func (s *SegmentList) set(url2 *url.URL) {
-   s.Initialization.SourceUrl[0] = url2.ResolveReference(
-      s.Initialization.SourceUrl[0],
-   )
-   for _, segment := range s.SegmentUrl {
-      segment.Media[0] = url2.ResolveReference(segment.Media[0])
-   }
 }
 
 // SegmentTemplate
@@ -271,76 +322,12 @@ func (m Media) Url(represent *Representation, address int) (*url.URL, error) {
    return url2, nil
 }
 
-func (p *Period) set(mpd1 *Mpd) {
-   p.mpd = mpd1
-   if base := p.mpd.BaseUrl[0]; base != nil {
-      if p.BaseUrl[0] == nil {
-         p.BaseUrl[0] = &url.URL{}
-      }
-      p.BaseUrl[0] = base.ResolveReference(p.BaseUrl[0])
-   }
-   if p.Duration == nil {
-      p.Duration = &p.mpd.MediaPresentationDuration
-   }
-}
-
-func (r *Representation) set(adapt *AdaptationSet) {
-   r.adaptation_set = adapt
-   if base := r.adaptation_set.period.BaseUrl[0]; base != nil {
-      if r.BaseUrl[0] == nil {
-         r.BaseUrl[0] = &url.URL{}
-      }
-      r.BaseUrl[0] = base.ResolveReference(r.BaseUrl[0])
-   }
-   if r.Codecs == nil {
-      r.Codecs = r.adaptation_set.Codecs
-   }
-   if len(r.ContentProtection) == 0 {
-      r.ContentProtection = r.adaptation_set.ContentProtection
-   }
-   if r.Height == nil {
-      r.Height = r.adaptation_set.Height
-   }
-   if r.MimeType == nil {
-      r.MimeType = &r.adaptation_set.MimeType
-   }
-   if r.SegmentList != nil {
-      if r.BaseUrl[0] != nil {
-         r.SegmentList.set(r.BaseUrl[0])
-      }
-   }
-   if r.SegmentTemplate == nil {
-      r.SegmentTemplate = r.adaptation_set.SegmentTemplate
-   }
-   if r.SegmentTemplate != nil {
-      r.SegmentTemplate.set()
-   }
-   if r.Width == nil {
-      r.Width = r.adaptation_set.Width
-   }
-}
-
-func (m *Mpd) Representation() iter.Seq[*Representation] {
-   return func(yield func(*Representation) bool) {
-      id := map[string]struct{}{}
-      for _, period1 := range m.Period {
-         for _, adapt := range period1.AdaptationSet {
-            for _, represent := range adapt.Representation {
-               _, ok := id[represent.Id]
-               if !ok {
-                  if adapt.period == nil {
-                     period1.set(m)
-                     adapt.set(&period1)
-                  }
-                  represent.set(&adapt)
-                  if !yield(&represent) {
-                     return
-                  }
-                  id[represent.Id] = struct{}{}
-               }
-            }
-         }
-      }
+func (s *SegmentList) set(url2 *url.URL) {
+   s.Initialization.SourceUrl[0] = url2.ResolveReference(
+      s.Initialization.SourceUrl[0],
+   )
+   for _, segment := range s.SegmentUrl {
+      segment.Media[0] = url2.ResolveReference(segment.Media[0])
    }
 }
 
@@ -365,6 +352,13 @@ func (r *Representation) Representation() iter.Seq[*Representation] {
    }
 }
 
+func (a *AdaptationSet) GetRole() string {
+   if a.Role != nil {
+      return a.Role.Value
+   }
+   return ""
+}
+
 func (s *SegmentTemplate) set() {
    // dashif.org/Guidelines-TimingModel#addressing-simple
    if s.StartNumber == nil {
@@ -378,9 +372,15 @@ func (s *SegmentTemplate) set() {
    }
 }
 
-func (a *AdaptationSet) GetRole() string {
-   if a.Role != nil {
-      return a.Role.Value
+func (p *Period) set(mpd1 *Mpd) {
+   p.mpd = mpd1
+   if base := p.mpd.BaseUrl[0]; base != nil {
+      if p.BaseUrl[0] == nil {
+         p.BaseUrl[0] = &url.URL{}
+      }
+      p.BaseUrl[0] = base.ResolveReference(p.BaseUrl[0])
    }
-   return ""
+   if p.Duration == nil {
+      p.Duration = &p.mpd.MediaPresentationDuration
+   }
 }

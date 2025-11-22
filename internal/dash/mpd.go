@@ -40,6 +40,20 @@ func (m *MPD) ResolveBaseURL() (*url.URL, error) {
    return resolveRef(base, m.BaseURL)
 }
 
+// GetAllRepresentations returns a map of all Representations in the MPD,
+// keyed by their ID attribute.
+func (m *MPD) GetAllRepresentations() map[string][]*Representation {
+   grouped := make(map[string][]*Representation)
+   for _, p := range m.Periods {
+      for _, as := range p.AdaptationSets {
+         for _, r := range as.Representations {
+            grouped[r.ID] = append(grouped[r.ID], r)
+         }
+      }
+   }
+   return grouped
+}
+
 // link establishes the parent-child relationships for navigation.
 func (m *MPD) link() {
    for _, p := range m.Periods {

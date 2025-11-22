@@ -90,3 +90,5 @@ Go language, I need a package for DASH (MPD) files
    1. MPD URL
    2. all parent BaseURL
 17. resolve function should return `*url.URL`
+18. add method to return all Representation, group by id
+
