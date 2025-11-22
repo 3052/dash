@@ -60,12 +60,12 @@ Go language, I need a package for DASH (MPD) files
                      - @sourceURL
                   - SegmentURL
                      - @media
-10. add types, which wrap the existing type (no embed) and pointer to parent.
-   do not use these unless instructed
-   1. PeriodNode
-   2. AdaptationSetNode
-   3. RepresentationNode
-   4. SegmentTemplateNode
-   5. SegmentListNode
-   6. InitializationNode
-   7. SegmentURLNode
+10. add navigation
+   1. from AdaptationSet to Period
+   2. from Initialization to SegmentList
+   3. from Period to MPD
+   4. from Representation to AdaptationSet
+   5. from SegmentList to Representation
+   6. from SegmentTemplate to AdaptationSet
+   7. from SegmentTemplate to Representation
+   8. from SegmentURL to SegmentList

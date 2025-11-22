@@ -1,6 +1,6 @@
 package dash
 
-// AdaptationSet represents a set of interchangeable encoded versions of one or several media content components.
+// AdaptationSet groups Representations.
 type AdaptationSet struct {
    Codecs            string               `xml:"codecs,attr,omitempty"`
    Height            int                  `xml:"height,attr,omitempty"`
@@ -8,7 +8,22 @@ type AdaptationSet struct {
    MimeType          string               `xml:"mimeType,attr,omitempty"`
    Width             int                  `xml:"width,attr,omitempty"`
    ContentProtection []*ContentProtection `xml:"ContentProtection"`
-   Role              []*Role              `xml:"Role"`
+   Roles             []*Role              `xml:"Role"`
    SegmentTemplate   *SegmentTemplate     `xml:"SegmentTemplate"`
-   Representation    []*Representation    `xml:"Representation"`
+   Representations   []*Representation    `xml:"Representation"`
+
+   // Navigation
+   Parent *Period `xml:"-"`
+}
+
+func (as *AdaptationSet) link() {
+   if as.SegmentTemplate != nil {
+      // Req 10.6: SegmentTemplate to AdaptationSet
+      as.SegmentTemplate.ParentAdaptationSet = as
+   }
+   for _, rep := range as.Representations {
+      // Req 10.4: Representation to AdaptationSet
+      rep.Parent = as
+      rep.link()
+   }
 }

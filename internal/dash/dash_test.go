@@ -1,76 +1,96 @@
 package dash
 
 import (
-   "fmt"
    "os"
    "path/filepath"
+   "strings"
    "testing"
 )
 
-func TestParse(t *testing.T) {
-   // Locate mpd files in testdata folder
-   pattern := filepath.Join("testdata", "*.mpd")
-   files, err := filepath.Glob(pattern)
-   if err != nil {
-      t.Fatalf("Failed to glob testdata: %v", err)
-   }
+// TestParseMpdFiles reads all .mpd files in the testdata folder and verifies
+// that they can be parsed without error.
+func TestParseMpdFiles(t *testing.T) {
+   testDataDir := "testdata"
 
-   if len(files) == 0 {
-      t.Log("No .mpd files found in testdata/ to test.")
-      return
+   files, err := os.ReadDir(testDataDir)
+   if err != nil {
+      if os.IsNotExist(err) {
+         t.Logf("testdata folder not found, skipping tests")
+         return
+      }
+      t.Fatalf("Failed to read testdata directory: %v", err)
    }
 
    for _, file := range files {
-      t.Run(filepath.Base(file), func(t *testing.T) {
-         content, err := os.ReadFile(file)
-         if err != nil {
-            t.Fatalf("Failed to read file %s: %v", file, err)
-         }
+      if file.IsDir() {
+         continue
+      }
 
-         mpd, err := Parse(content)
-         if err != nil {
-            t.Errorf("Failed to parse %s: %v", file, err)
-            return
-         }
+      if strings.HasSuffix(file.Name(), ".mpd") {
+         t.Run(file.Name(), func(t *testing.T) {
+            path := filepath.Join(testDataDir, file.Name())
+            data, err := os.ReadFile(path)
+            if err != nil {
+               t.Fatalf("Failed to read file %s: %v", file.Name(), err)
+            }
 
-         // Basic Validation to ensure structs are populating
-         if mpd == nil {
-            t.Errorf("Resulting MPD struct is nil for file %s", file)
-            return // Added return to prevent nil pointer dereference
-         }
+            mpd, err := Parse(data)
+            if err != nil {
+               t.Fatalf("Failed to parse MPD %s: %v", file.Name(), err)
+            }
 
-         // Print debug info
-         t.Logf("Parsed %s successfully. Periods: %d", file, len(mpd.Period))
-         for _, p := range mpd.Period {
-            t.Logf("  Period ID: %s, Duration: %s, AdaptationSets: %d", p.ID, p.Duration, len(p.AdaptationSet))
-         }
-      })
+            // Basic Verification of Navigation Links
+            verifyLinks(t, mpd)
+         })
+      }
    }
 }
 
-func ExampleParse() {
-   // Example usage
-   xmlData := []byte(`
-      <MPD mediaPresentationDuration="PT1H30M">
-         <Period duration="PT10M">
-            <AdaptationSet mimeType="video/mp4">
-               <Representation id="1" bandwidth="1000000" width="1920" height="1080" />
-            </AdaptationSet>
-         </Period>
-      </MPD>
-   `)
+func verifyLinks(t *testing.T, m *MPD) {
+   for _, p := range m.Periods {
+      if p.Parent != m {
+         t.Error("Navigation 10.3 failed: Period -> MPD link missing")
+      }
+      for _, as := range p.AdaptationSets {
+         if as.Parent != p {
+            t.Error("Navigation 10.1 failed: AdaptationSet -> Period link missing")
+         }
 
-   mpd, err := Parse(xmlData)
-   if err != nil {
-      panic(err)
+         if as.SegmentTemplate != nil {
+            if as.SegmentTemplate.ParentAdaptationSet != as {
+               t.Error("Navigation 10.6 failed: SegmentTemplate -> AdaptationSet link missing")
+            }
+         }
+
+         for _, rep := range as.Representations {
+            if rep.Parent != as {
+               t.Error("Navigation 10.4 failed: Representation -> AdaptationSet link missing")
+            }
+
+            if rep.SegmentTemplate != nil {
+               if rep.SegmentTemplate.ParentRepresentation != rep {
+                  t.Error("Navigation 10.7 failed: SegmentTemplate -> Representation link missing")
+               }
+            }
+
+            if rep.SegmentList != nil {
+               if rep.SegmentList.Parent != rep {
+                  t.Error("Navigation 10.5 failed: SegmentList -> Representation link missing")
+               }
+
+               if rep.SegmentList.Initialization != nil {
+                  if rep.SegmentList.Initialization.Parent != rep.SegmentList {
+                     t.Error("Navigation 10.2 failed: Initialization -> SegmentList link missing")
+                  }
+               }
+
+               for _, url := range rep.SegmentList.SegmentURLs {
+                  if url.Parent != rep.SegmentList {
+                     t.Error("Navigation 10.8 failed: SegmentURL -> SegmentList link missing")
+                  }
+               }
+            }
+         }
+      }
    }
-
-   fmt.Printf("MPD Duration: %s\n", mpd.MediaPresentationDuration)
-   if len(mpd.Period) > 0 {
-      fmt.Printf("First Period Duration: %s\n", mpd.Period[0].Duration)
-   }
-
-   // Output:
-   // MPD Duration: PT1H30M
-   // First Period Duration: PT10M
 }

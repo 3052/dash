@@ -1,7 +1,8 @@
 package dash
 
-// ContentProtection specifies information about the content protection schemes used.
+// ContentProtection specifies DRM schemes.
 type ContentProtection struct {
    SchemeIdUri string `xml:"schemeIdUri,attr,omitempty"`
-   CencPssh    string `xml:"cenc:pssh,omitempty"`
+   // cenc:pssh requires the specific namespace mapping
+   Pssh string `xml:"urn:mpeg:cenc:2013 pssh,omitempty"`
 }

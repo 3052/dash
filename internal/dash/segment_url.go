@@ -1,6 +1,9 @@
 package dash
 
-// SegmentURL specifies the URL of a segment.
+// SegmentURL defines a specific media segment source.
 type SegmentURL struct {
    Media string `xml:"media,attr,omitempty"`
+
+   // Navigation
+   Parent *SegmentList `xml:"-"`
 }

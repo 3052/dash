@@ -1,29 +1,38 @@
 package dash
 
 import (
-   "bytes"
    "encoding/xml"
 )
 
-// MPD represents the root element of the DASH Manifest.
+// MPD represents the root element of the DASH MPD file.
+// The XMLName field is omitted to avoid linter conflicts with child parent pointers.
+// encoding/xml will automatically match the <MPD> element to this struct name.
 type MPD struct {
-   XMLName                   xml.Name `xml:"MPD"`
-   MediaPresentationDuration string   `xml:"mediaPresentationDuration,attr,omitempty"`
-   BaseURL                   string   `xml:"BaseURL,omitempty"`
-   Period                    []*Period
+   MediaPresentationDuration string    `xml:"mediaPresentationDuration,attr,omitempty"`
+   BaseURL                   string    `xml:"BaseURL,omitempty"` // Requirement: Single element
+   Periods                   []*Period `xml:"Period"`
 }
 
-// Parse parses a DASH MPD file from a byte slice.
+// Parse takes a byte slice of an MPD file, unmarshals it,
+// and populates the navigation parent pointers.
 func Parse(data []byte) (*MPD, error) {
    var m MPD
-   reader := bytes.NewReader(data)
-   decoder := xml.NewDecoder(reader)
-
-   // Handle charset encodings if necessary, though standard utf-8 is default
-   err := decoder.Decode(&m)
+   err := xml.Unmarshal(data, &m)
    if err != nil {
       return nil, err
    }
 
+   // Initialize navigation links
+   m.link()
+
    return &m, nil
+}
+
+// link establishes the parent-child relationships for navigation.
+func (m *MPD) link() {
+   for _, p := range m.Periods {
+      // Req 10.3: Period to MPD
+      p.Parent = m
+      p.link()
+   }
 }

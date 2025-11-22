@@ -1,8 +1,12 @@
 package dash
 
-// Initialization specifies the initialization segment info.
-// Note: This type merges attributes used in both SegmentBase (range) and SegmentList (sourceURL).
+// Initialization contains URL and byte range information for initialization segments.
 type Initialization struct {
-   Range     string `xml:"range,attr,omitempty"`
+   // Used in SegmentBase
+   Range string `xml:"range,attr,omitempty"`
+   // Used in SegmentList
    SourceURL string `xml:"sourceURL,attr,omitempty"`
+
+   // Navigation
+   Parent *SegmentList `xml:"-"`
 }
