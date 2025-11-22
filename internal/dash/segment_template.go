@@ -88,14 +88,15 @@ func (st *SegmentTemplate) GetTimelineNumbers() []uint {
 }
 
 // GetTimelineTimes returns a slice of start times for segments derived from the SegmentTimeline.
-// Since 't' is not stored, it assumes the timeline starts at 0 and accumulates durations ('d').
+// It starts at PresentationTimeOffset and accumulates durations ('d').
 func (st *SegmentTemplate) GetTimelineTimes() []uint {
    if st.SegmentTimeline == nil {
       return nil
    }
 
    var times []uint
-   var currentTime uint = 0
+   // Req 39: Initialize with PresentationTimeOffset
+   var currentTime uint = st.PresentationTimeOffset
 
    for _, s := range st.SegmentTimeline.S {
       count := 1
@@ -157,6 +158,72 @@ func (st *SegmentTemplate) GetDurationBasedNumbers() ([]uint, error) {
    }
 
    return numbers, nil
+}
+
+// GetSegmentURLs returns all segment URLs defined by this template.
+// It determines the generation strategy (Time-based vs Number-based)
+// and the source of the segment list (Timeline, Range, or Duration).
+func (st *SegmentTemplate) GetSegmentURLs(rep *Representation) ([]*url.URL, error) {
+   if st.Media == "" {
+      return nil, nil
+   }
+
+   // Strategy 1: Time-based addressing ($Time$ present in template)
+   if strings.Contains(st.Media, "$Time$") {
+      times := st.GetTimelineTimes()
+      if len(times) == 0 {
+         // If $Time$ is required but no timeline exists, we cannot generate URLs reliably.
+         return nil, errors.New("media template requires $Time$ but no SegmentTimeline found")
+      }
+
+      var urls []*url.URL
+      for _, t := range times {
+         u, err := st.ResolveMediaTime(rep, int(t))
+         if err != nil {
+            return nil, err
+         }
+         urls = append(urls, u)
+      }
+      return urls, nil
+   }
+
+   // Strategy 2: Number-based addressing
+   var numbers []uint
+
+   // Source A: SegmentTimeline
+   if st.SegmentTimeline != nil {
+      numbers = st.GetTimelineNumbers()
+   }
+
+   // Source B: explicit EndNumber range
+   if len(numbers) == 0 && st.EndNumber > 0 {
+      numbers = st.GetNumberRange()
+   }
+
+   // Source C: Duration-based calculation
+   if len(numbers) == 0 && st.Duration > 0 {
+      var err error
+      numbers, err = st.GetDurationBasedNumbers()
+      if err != nil {
+         // If calculation fails (e.g. unlinked parent), return error
+         return nil, err
+      }
+   }
+
+   if len(numbers) == 0 {
+      return nil, nil
+   }
+
+   var urls []*url.URL
+   for _, n := range numbers {
+      u, err := st.ResolveMedia(rep, int(n))
+      if err != nil {
+         return nil, err
+      }
+      urls = append(urls, u)
+   }
+
+   return urls, nil
 }
 
 // ResolveInitialization resolves the @initialization attribute against the parent BaseURL.
