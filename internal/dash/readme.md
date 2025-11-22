@@ -106,5 +106,19 @@ Go language, I need a package for DASH (MPD) files
    - Representation@bandwidth
    - Role@value
 25. add method to get ContentProtection
-26. add method to replace `$RepresentationID$` in SegmentTemplate@initialization
+26. add method to replace SegmentTemplate@initialization
+   - `$RepresentationID$`
+27. add method to get SegmentTemplate
+28. add method to replace SegmentTemplate@media
+   - `$Number$`
+   - `$Number%02d$`
+   - `$Number%03d$`
+   - `$Number%04d$`
+   - `$Number%05d$`
+   - `$Number%06d$`
+   - `$Number%07d$`
+   - `$Number%08d$`
+   - `$Number%09d$`
+   - `$RepresentationID$`
+   - `$Time$`
 

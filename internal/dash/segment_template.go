@@ -2,6 +2,7 @@ package dash
 
 import (
    "errors"
+   "fmt"
    "net/url"
    "strings"
 )
@@ -24,7 +25,6 @@ type SegmentTemplate struct {
 
 // ResolveInitialization resolves the @initialization attribute against the parent BaseURL.
 // It replaces the literal "$RepresentationID$" with the ID of the provided Representation.
-// If rep is nil, it attempts to use the SegmentTemplate's direct parent Representation.
 func (st *SegmentTemplate) ResolveInitialization(rep *Representation) (*url.URL, error) {
    base, err := st.getParentBaseURL()
    if err != nil {
@@ -50,12 +50,48 @@ func (st *SegmentTemplate) ResolveInitialization(rep *Representation) (*url.URL,
 }
 
 // ResolveMedia resolves the @media attribute against the parent BaseURL.
-func (st *SegmentTemplate) ResolveMedia() (*url.URL, error) {
+// It performs substitutions for $RepresentationID$, $Time$, and $Number$ (including format variants).
+func (st *SegmentTemplate) ResolveMedia(rep *Representation, number, timeVal int) (*url.URL, error) {
    base, err := st.getParentBaseURL()
    if err != nil {
       return nil, err
    }
-   return resolveRef(base, st.Media)
+
+   mediaStr := st.Media
+
+   // 1. Replace $RepresentationID$
+   var repID string
+   if rep != nil {
+      repID = rep.ID
+   } else if st.ParentRepresentation != nil {
+      repID = st.ParentRepresentation.ID
+   }
+   if repID != "" {
+      mediaStr = strings.ReplaceAll(mediaStr, "$RepresentationID$", repID)
+   }
+
+   // 2. Replace $Time$
+   mediaStr = strings.ReplaceAll(mediaStr, "$Time$", fmt.Sprintf("%d", timeVal))
+
+   // 3. Replace $Number%0xd$ variants
+   // We iterate through the specific formats requested
+   formats := []string{
+      "%02d", "%03d", "%04d", "%05d",
+      "%06d", "%07d", "%08d", "%09d",
+   }
+
+   for _, f := range formats {
+      token := fmt.Sprintf("$Number%s$", f)
+      if strings.Contains(mediaStr, token) {
+         replacement := fmt.Sprintf(f, number)
+         mediaStr = strings.ReplaceAll(mediaStr, token, replacement)
+      }
+   }
+
+   // 4. Replace bare $Number$
+   mediaStr = strings.ReplaceAll(mediaStr, "$Number$", fmt.Sprintf("%d", number))
+
+   return resolveRef(base, mediaStr)
 }
 
 func (st *SegmentTemplate) getParentBaseURL() (*url.URL, error) {

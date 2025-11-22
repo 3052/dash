@@ -96,6 +96,19 @@ func (r *Representation) GetContentProtection() []*ContentProtection {
    return nil
 }
 
+// GetSegmentTemplate returns the SegmentTemplate for this Representation.
+// If the SegmentTemplate is nil on the Representation,
+// it returns the SegmentTemplate from the parent AdaptationSet.
+func (r *Representation) GetSegmentTemplate() *SegmentTemplate {
+   if r.SegmentTemplate != nil {
+      return r.SegmentTemplate
+   }
+   if r.Parent != nil {
+      return r.Parent.SegmentTemplate
+   }
+   return nil
+}
+
 // String returns a multi-line summary of the Representation.
 func (r *Representation) String() string {
    var periodID, lang, roleVal string
