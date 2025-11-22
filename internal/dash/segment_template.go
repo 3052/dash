@@ -9,18 +9,72 @@ import (
 
 // SegmentTemplate defines specific rules for generating segment URLs.
 type SegmentTemplate struct {
-   Duration               uint             `xml:"duration,attr,omitempty"`
-   EndNumber              uint             `xml:"endNumber,attr,omitempty"`
-   Initialization         string           `xml:"initialization,attr,omitempty"`
-   Media                  string           `xml:"media,attr,omitempty"`
-   PresentationTimeOffset uint             `xml:"presentationTimeOffset,attr,omitempty"`
-   StartNumber            uint             `xml:"startNumber,attr,omitempty"`
-   Timescale              uint             `xml:"timescale,attr,omitempty"`
-   SegmentTimeline        *SegmentTimeline `xml:"SegmentTimeline"`
+   Duration               uint   `xml:"duration,attr,omitempty"`
+   EndNumber              uint   `xml:"endNumber,attr,omitempty"`
+   Initialization         string `xml:"initialization,attr,omitempty"`
+   Media                  string `xml:"media,attr,omitempty"`
+   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr,omitempty"`
+   // StartNumber is a pointer to distinguish between missing (nil) and explicitly 0.
+   StartNumber     *uint            `xml:"startNumber,attr,omitempty"`
+   Timescale       uint             `xml:"timescale,attr,omitempty"`
+   SegmentTimeline *SegmentTimeline `xml:"SegmentTimeline"`
 
    // Navigation
    ParentAdaptationSet  *AdaptationSet  `xml:"-"`
    ParentRepresentation *Representation `xml:"-"`
+}
+
+// GetStartNumber returns the StartNumber if present, otherwise returns default 1.
+func (st *SegmentTemplate) GetStartNumber() uint {
+   if st.StartNumber != nil {
+      return *st.StartNumber
+   }
+   return 1
+}
+
+// GetNumberRange returns a slice of numbers from StartNumber to EndNumber (inclusive).
+// If EndNumber is less than StartNumber, it returns nil.
+func (st *SegmentTemplate) GetNumberRange() []uint {
+   start := st.GetStartNumber()
+   end := st.EndNumber
+
+   if end < start {
+      return nil
+   }
+
+   size := end - start + 1
+   nums := make([]uint, size)
+   for i := uint(0); i < size; i++ {
+      nums[i] = start + i
+   }
+   return nums
+}
+
+// GetTimelineNumbers returns a slice of segment numbers derived from the SegmentTimeline.
+// It starts at StartNumber and iterates through the S elements, accounting for repetitions (@r).
+func (st *SegmentTemplate) GetTimelineNumbers() []uint {
+   if st.SegmentTimeline == nil {
+      return nil
+   }
+
+   var numbers []uint
+   current := st.GetStartNumber()
+
+   for _, s := range st.SegmentTimeline.S {
+      // Each 'S' element represents a segment duration, repeated 'r' times.
+      // Total segments described by this S element = 1 + r.
+      count := 1
+      if s.R > 0 {
+         count += s.R
+      }
+
+      for i := 0; i < count; i++ {
+         numbers = append(numbers, current)
+         current++
+      }
+   }
+
+   return numbers
 }
 
 // ResolveInitialization resolves the @initialization attribute against the parent BaseURL.
@@ -74,7 +128,6 @@ func (st *SegmentTemplate) ResolveMedia(rep *Representation, number, timeVal int
    mediaStr = strings.ReplaceAll(mediaStr, "$Time$", fmt.Sprintf("%d", timeVal))
 
    // 3. Replace $Number%0xd$ variants
-   // We iterate through the specific formats requested
    formats := []string{
       "%02d", "%03d", "%04d", "%05d",
       "%06d", "%07d", "%08d", "%09d",

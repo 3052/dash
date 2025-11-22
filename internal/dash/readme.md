@@ -121,4 +121,7 @@ Go language, I need a package for DASH (MPD) files
    - `$Number%09d$`
    - `$RepresentationID$`
    - `$Time$`
+29. SegmentTemplate@startNumber is 1 if missing
+30. add method to return SegmentTemplate@startNumber to SegmentTemplate@endNumber
+31. add method to return numbers from SegmentTimeline
 
