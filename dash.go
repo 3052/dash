@@ -10,6 +10,19 @@ import (
    "time"
 )
 
+// dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
+// SegmentCount = Ceil((AsSeconds(Period@duration)) /
+// (SegmentTemplate@duration / SegmentTemplate@timescale))
+func (p *Period) segment_count(template *SegmentTemplate) int64 {
+   // amc
+   // draken
+   // kanopy
+   // max
+   // paramount
+   duration1 := float64(template.Duration) / float64(*template.Timescale)
+   return int64(math.Ceil(p.Duration[0].Seconds() / duration1))
+}
+
 // SegmentTemplate
 func (r *Representation) Segment() iter.Seq[int] {
    template := r.SegmentTemplate
@@ -27,7 +40,6 @@ func (r *Representation) Segment() iter.Seq[int] {
             }
             address++
          }
-/////////////////////////////////////////////////////////////////////////////////
       } else if template.SegmentTimeline != nil {
          for _, segment := range template.SegmentTimeline.S {
             for range 1 + segment.R {
@@ -42,6 +54,7 @@ func (r *Representation) Segment() iter.Seq[int] {
             }
          }
       } else {
+/////////////////////////////////////////////////////////////////////////////////
          for range r.adaptation_set.period.segment_count(template) {
             if !yield(address) {
                return
@@ -220,19 +233,6 @@ type Mpd struct {
    BaseUrl                   Url      `xml:"BaseURL"`
    MediaPresentationDuration Duration `xml:"mediaPresentationDuration,attr"`
    Period                    []Period
-}
-
-// dashif.org/Guidelines-TimingModel#addressing-simple-to-explicit
-// SegmentCount = Ceil((AsSeconds(Period@duration)) /
-// (SegmentTemplate@duration / SegmentTemplate@timescale))
-func (p *Period) segment_count(template *SegmentTemplate) int64 {
-   // amc
-   // draken
-   // kanopy
-   // max
-   // paramount
-   duration1 := float64(template.Duration) / float64(*template.Timescale)
-   return int64(math.Ceil(p.Duration[0].Seconds() / duration1))
 }
 
 type Media string

@@ -90,7 +90,7 @@ Go language, I need a package for DASH (MPD) files
    1. MPD URL
    2. all parent BaseURL
 17. resolve function should return `*url.URL`
-18. add method to return all Representation, group by id
+18. add method to get all Representation, group by id
 19. add method to get codecs
 20. add method to get height
 21. add method to get width
@@ -122,6 +122,9 @@ Go language, I need a package for DASH (MPD) files
    - `$RepresentationID$`
    - `$Time$`
 29. SegmentTemplate@startNumber is 1 if missing
-30. add method to return SegmentTemplate@startNumber to SegmentTemplate@endNumber
-31. add method to return numbers from SegmentTimeline
+30. add method to get `Number` values from
+   SegmentTemplate@startNumber to SegmentTemplate@endNumber
+31. add method to get `Number` values from SegmentTimeline
+32. add method to get `Time` values from SegmentTimeline
+33. add method to get `time.Duration` from Period@duration
 

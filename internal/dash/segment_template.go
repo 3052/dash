@@ -77,6 +77,31 @@ func (st *SegmentTemplate) GetTimelineNumbers() []uint {
    return numbers
 }
 
+// GetTimelineTimes returns a slice of start times for segments derived from the SegmentTimeline.
+// Since 't' is not stored, it assumes the timeline starts at 0 and accumulates durations ('d').
+func (st *SegmentTemplate) GetTimelineTimes() []uint {
+   if st.SegmentTimeline == nil {
+      return nil
+   }
+
+   var times []uint
+   var currentTime uint = 0
+
+   for _, s := range st.SegmentTimeline.S {
+      count := 1
+      if s.R > 0 {
+         count += s.R
+      }
+
+      for i := 0; i < count; i++ {
+         times = append(times, currentTime)
+         currentTime += s.D
+      }
+   }
+
+   return times
+}
+
 // ResolveInitialization resolves the @initialization attribute against the parent BaseURL.
 // It replaces the literal "$RepresentationID$" with the ID of the provided Representation.
 func (st *SegmentTemplate) ResolveInitialization(rep *Representation) (*url.URL, error) {
