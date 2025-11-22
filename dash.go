@@ -10,31 +10,6 @@ import (
    "time"
 )
 
-func (r *Representation) String() string {
-   b := fmt.Appendln(nil, "bandwidth =", r.Bandwidth)
-   if r.Width != nil {
-      b = fmt.Appendln(b, "width =", *r.Width)
-   }
-   if r.Height != nil {
-      b = fmt.Appendln(b, "height =", *r.Height)
-   }
-   if r.Codecs != nil {
-      b = fmt.Appendln(b, "codecs =", *r.Codecs)
-   }
-   b = fmt.Appendln(b, "mimeType =", *r.MimeType)
-   if role := r.adaptation_set.Role; role != nil {
-      b = fmt.Appendln(b, "role =", role.Value)
-   }
-   if lang := r.adaptation_set.Lang; lang != "" {
-      b = fmt.Appendln(b, "lang =", lang)
-   }
-   if id := r.adaptation_set.period.Id; id != "" {
-      b = fmt.Appendln(b, "period =", id)
-   }
-   b = fmt.Append(b, "id = ", r.Id)
-   return string(b)
-}
-
 func (r *Representation) set(adapt *AdaptationSet) {
    r.adaptation_set = adapt
    if base := r.adaptation_set.period.BaseUrl[0]; base != nil {
@@ -131,24 +106,6 @@ type SegmentList struct {
    } `xml:"SegmentURL"`
 }
 
-type SegmentTemplate struct {
-   EndNumber              int            `xml:"endNumber,attr"`
-   Initialization         Initialization `xml:"initialization,attr"`
-   Media                  Media          `xml:"media,attr"`
-   PresentationTimeOffset int            `xml:"presentationTimeOffset,attr"`
-   SegmentTimeline        *struct {
-      S []struct {
-         D int `xml:"d,attr"` // duration
-         R int `xml:"r,attr"` // repeat
-      }
-   }
-   StartNumber *int `xml:"startNumber,attr"`
-   Duration    int  `xml:"duration,attr"`
-   // This can be any frequency but typically is the media clock frequency of
-   // one of the media streams (or a positive integer multiple thereof).
-   Timescale *int `xml:"timescale,attr"`
-}
-
 type ContentProtection struct {
    Pssh        string `xml:"pssh"`
    SchemeIdUri string `xml:"schemeIdUri,attr"`
@@ -205,10 +162,6 @@ func (r *Representation) GetAdaptationSet() *AdaptationSet {
    return r.adaptation_set
 }
 
-func replace(s, old, newVar string) string {
-   return strings.Replace(s, old, newVar, 1)
-}
-
 func (a *AdaptationSet) set(period1 *Period) {
    a.period = period1
 }
@@ -235,18 +188,6 @@ type Url [1]*url.URL
 func (u *Url) UnmarshalText(data []byte) error {
    u[0] = &url.URL{}
    return u[0].UnmarshalBinary(data)
-}
-
-func (i Initialization) Url(represent *Representation) (*url.URL, error) {
-   data := replace(string(i), "$RepresentationID$", represent.Id)
-   url2, err := url.Parse(data)
-   if err != nil {
-      return nil, err
-   }
-   if represent.BaseUrl[0] != nil {
-      url2 = represent.BaseUrl[0].ResolveReference(url2)
-   }
-   return url2, nil
 }
 
 // SegmentTemplate
@@ -359,17 +300,63 @@ func (a *AdaptationSet) GetRole() string {
    return ""
 }
 
-func (s *SegmentTemplate) set() {
-   // dashif.org/Guidelines-TimingModel#addressing-simple
-   if s.StartNumber == nil {
-      start := 1
-      s.StartNumber = &start
+func (i Initialization) Url(represent *Representation) (*url.URL, error) {
+   data := replace(string(i), "$RepresentationID$", represent.Id)
+   url2, err := url.Parse(data)
+   if err != nil {
+      return nil, err
    }
-   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
-   if s.Timescale == nil {
-      scale := 1
-      s.Timescale = &scale
+   if represent.BaseUrl[0] != nil {
+      url2 = represent.BaseUrl[0].ResolveReference(url2)
    }
+   return url2, nil
+}
+
+type SegmentTemplate struct {
+   EndNumber              int            `xml:"endNumber,attr"`
+   Initialization         Initialization `xml:"initialization,attr"`
+   Media                  Media          `xml:"media,attr"`
+   PresentationTimeOffset int            `xml:"presentationTimeOffset,attr"`
+   SegmentTimeline        *struct {
+      S []struct {
+         D int `xml:"d,attr"` // duration
+         R int `xml:"r,attr"` // repeat
+      }
+   }
+   StartNumber *int `xml:"startNumber,attr"`
+   Duration    int  `xml:"duration,attr"`
+   // This can be any frequency but typically is the media clock frequency of
+   // one of the media streams (or a positive integer multiple thereof).
+   Timescale *int `xml:"timescale,attr"`
+}
+
+func replace(s, old, newVar string) string {
+   return strings.Replace(s, old, newVar, 1)
+}
+
+func (r *Representation) String() string {
+   b := fmt.Appendln(nil, "bandwidth =", r.Bandwidth)
+   if r.Width != nil {
+      b = fmt.Appendln(b, "width =", *r.Width)
+   }
+   if r.Height != nil {
+      b = fmt.Appendln(b, "height =", *r.Height)
+   }
+   if r.Codecs != nil {
+      b = fmt.Appendln(b, "codecs =", *r.Codecs)
+   }
+   b = fmt.Appendln(b, "mimeType =", *r.MimeType)
+   if role := r.adaptation_set.Role; role != nil {
+      b = fmt.Appendln(b, "role =", role.Value)
+   }
+   if lang := r.adaptation_set.Lang; lang != "" {
+      b = fmt.Appendln(b, "lang =", lang)
+   }
+   if id := r.adaptation_set.period.Id; id != "" {
+      b = fmt.Appendln(b, "period =", id)
+   }
+   b = fmt.Append(b, "id = ", r.Id)
+   return string(b)
 }
 
 func (p *Period) set(mpd1 *Mpd) {
@@ -382,5 +369,18 @@ func (p *Period) set(mpd1 *Mpd) {
    }
    if p.Duration == nil {
       p.Duration = &p.mpd.MediaPresentationDuration
+   }
+}
+
+func (s *SegmentTemplate) set() {
+   // dashif.org/Guidelines-TimingModel#addressing-simple
+   if s.StartNumber == nil {
+      start := 1
+      s.StartNumber = &start
+   }
+   // dashif.org/Guidelines-TimingModel#timing-sampletimeline
+   if s.Timescale == nil {
+      scale := 1
+      s.Timescale = &scale
    }
 }

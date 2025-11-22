@@ -3,6 +3,7 @@ package dash
 import (
    "errors"
    "net/url"
+   "strings"
 )
 
 // SegmentTemplate defines specific rules for generating segment URLs.
@@ -22,12 +23,30 @@ type SegmentTemplate struct {
 }
 
 // ResolveInitialization resolves the @initialization attribute against the parent BaseURL.
-func (st *SegmentTemplate) ResolveInitialization() (*url.URL, error) {
+// It replaces the literal "$RepresentationID$" with the ID of the provided Representation.
+// If rep is nil, it attempts to use the SegmentTemplate's direct parent Representation.
+func (st *SegmentTemplate) ResolveInitialization(rep *Representation) (*url.URL, error) {
    base, err := st.getParentBaseURL()
    if err != nil {
       return nil, err
    }
-   return resolveRef(base, st.Initialization)
+
+   initStr := st.Initialization
+
+   // Determine the ID to use for replacement
+   var repID string
+   if rep != nil {
+      repID = rep.ID
+   } else if st.ParentRepresentation != nil {
+      repID = st.ParentRepresentation.ID
+   }
+
+   // Perform replacement if an ID was found
+   if repID != "" {
+      initStr = strings.ReplaceAll(initStr, "$RepresentationID$", repID)
+   }
+
+   return resolveRef(base, initStr)
 }
 
 // ResolveMedia resolves the @media attribute against the parent BaseURL.

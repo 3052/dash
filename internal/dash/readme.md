@@ -96,7 +96,7 @@ Go language, I need a package for DASH (MPD) files
 21. add method to get width
 22. add method to get mimeType
 23. AdaptationSet.Role is single element not slice
-24. add Representation.String method with
+24. add Representation.String method. each value on its own line
    - AdaptationSet@lang
    - Period@id
    - Representation.GetCodecs
@@ -105,4 +105,6 @@ Go language, I need a package for DASH (MPD) files
    - Representation.GetWidth
    - Representation@bandwidth
    - Role@value
+25. add method to get ContentProtection
+26. add method to replace `$RepresentationID$` in SegmentTemplate@initialization
 

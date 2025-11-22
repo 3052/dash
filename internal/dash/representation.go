@@ -84,32 +84,49 @@ func (r *Representation) GetMimeType() string {
    return ""
 }
 
-// String returns a formatted summary of the Representation, including
-// parent context (Period ID, Language, Role) and inherited attributes.
+// GetContentProtection returns the ContentProtection elements for this Representation.
+// If the slice is empty on the Representation, it returns the slice from the parent AdaptationSet.
+func (r *Representation) GetContentProtection() []*ContentProtection {
+   if len(r.ContentProtection) > 0 {
+      return r.ContentProtection
+   }
+   if r.Parent != nil {
+      return r.Parent.ContentProtection
+   }
+   return nil
+}
+
+// String returns a multi-line summary of the Representation.
 func (r *Representation) String() string {
-   var periodID, lang, roleStr string
+   var periodID, lang, roleVal string
 
    if r.Parent != nil {
       lang = r.Parent.Lang
-
       if r.Parent.Role != nil {
-         roleStr = r.Parent.Role.Value
+         roleVal = r.Parent.Role.Value
       }
-
       if r.Parent.Parent != nil {
          periodID = r.Parent.Parent.ID
       }
    }
 
-   return fmt.Sprintf("PeriodID=%s Lang=%s Role=%s Bandwidth=%d MimeType=%s Codecs=%s Width=%d Height=%d",
-      periodID,
+   return fmt.Sprintf(
+      "Lang: %s\n"+
+         "PeriodID: %s\n"+
+         "Codecs: %s\n"+
+         "Height: %d\n"+
+         "MimeType: %s\n"+
+         "Width: %d\n"+
+         "Bandwidth: %d\n"+
+         "Role: %s",
       lang,
-      roleStr,
-      r.Bandwidth,
-      r.GetMimeType(),
+      periodID,
       r.GetCodecs(),
-      r.GetWidth(),
       r.GetHeight(),
+      r.GetMimeType(),
+      r.GetWidth(),
+      r.Bandwidth,
+      roleVal,
    )
 }
 
