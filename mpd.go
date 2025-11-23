@@ -2,7 +2,10 @@ package dash
 
 import (
    "encoding/xml"
+   "fmt"
    "net/url"
+   "strconv"
+   "strings"
 )
 
 // MPD represents the root element of the DASH MPD file.
@@ -13,7 +16,8 @@ type MPD struct {
    Periods                   []*Period `xml:"Period"`
 
    // MPDURL is the source URL of the MPD file itself.
-   MPDURL string `xml:"-"`
+   // It is used as the root for resolving relative BaseURLs.
+   MPDURL *url.URL `xml:"-"`
 }
 
 // Parse takes a byte slice of an MPD file, unmarshals it,
@@ -33,11 +37,8 @@ func Parse(data []byte) (*MPD, error) {
 
 // ResolveBaseURL resolves the MPD's BaseURL against the MPDURL.
 func (m *MPD) ResolveBaseURL() (*url.URL, error) {
-   base, err := url.Parse(m.MPDURL)
-   if err != nil {
-      return nil, err
-   }
-   return resolveRef(base, m.BaseURL)
+   // No parsing needed, MPDURL is already *url.URL
+   return resolveRef(m.MPDURL, m.BaseURL)
 }
 
 // GetAllRepresentations returns a map of all Representations in the MPD,
@@ -52,6 +53,26 @@ func (m *MPD) GetAllRepresentations() map[string][]*Representation {
       }
    }
    return grouped
+}
+
+// ParseRange parses a "start-end" range string (e.g. "0-500") into start and end integers.
+func ParseRange(rangeStr string) (int64, int64, error) {
+   if rangeStr == "" {
+      return 0, 0, fmt.Errorf("range attribute is empty")
+   }
+   parts := strings.Split(rangeStr, "-")
+   if len(parts) != 2 {
+      return 0, 0, fmt.Errorf("invalid range format: %s", rangeStr)
+   }
+   start, err := strconv.ParseInt(parts[0], 10, 64)
+   if err != nil {
+      return 0, 0, fmt.Errorf("invalid start byte: %v", err)
+   }
+   end, err := strconv.ParseInt(parts[1], 10, 64)
+   if err != nil {
+      return 0, 0, fmt.Errorf("invalid end byte: %v", err)
+   }
+   return start, end, nil
 }
 
 // link establishes the parent-child relationships for navigation.
@@ -73,6 +94,10 @@ func resolveRef(base *url.URL, relStr string) (*url.URL, error) {
    rel, err := url.Parse(relStr)
    if err != nil {
       return nil, err
+   }
+   // Handle case where base is nil (e.g. MPDURL not set)
+   if base == nil {
+      return rel, nil
    }
    return base.ResolveReference(rel), nil
 }
