@@ -3,6 +3,7 @@ package dash
 import (
    "fmt"
    "net/url"
+   "strings"
 )
 
 // Representation describes a version of the media content.
@@ -84,9 +85,9 @@ func (r *Representation) GetMimeType() string {
    return ""
 }
 
-// GetUniqueContentProtection returns a set of unique ContentProtection values
+// GetContentProtection returns a set of unique ContentProtection values
 // from both the AdaptationSet and the Representation.
-func (r *Representation) GetUniqueContentProtection() map[ContentProtection]struct{} {
+func (r *Representation) GetContentProtection() map[ContentProtection]struct{} {
    unique := make(map[ContentProtection]struct{})
 
    // 1. Add from Parent AdaptationSet
@@ -122,6 +123,7 @@ func (r *Representation) GetSegmentTemplate() *SegmentTemplate {
 }
 
 // String returns a multi-line summary of the Representation.
+// Lang, Height, and Width are omitted if they are empty/zero.
 func (r *Representation) String() string {
    var periodID, lang, roleVal string
 
@@ -135,24 +137,29 @@ func (r *Representation) String() string {
       }
    }
 
-   return fmt.Sprintf(
-      "Lang: %s\n"+
-         "PeriodID: %s\n"+
-         "Codecs: %s\n"+
-         "Height: %d\n"+
-         "MimeType: %s\n"+
-         "Width: %d\n"+
-         "Bandwidth: %d\n"+
-         "Role: %s",
-      lang,
-      periodID,
-      r.GetCodecs(),
-      r.GetHeight(),
-      r.GetMimeType(),
-      r.GetWidth(),
-      r.Bandwidth,
-      roleVal,
-   )
+   var parts []string
+
+   if lang != "" {
+      parts = append(parts, fmt.Sprintf("Lang: %s", lang))
+   }
+
+   parts = append(parts, fmt.Sprintf("PeriodID: %s", periodID))
+   parts = append(parts, fmt.Sprintf("Codecs: %s", r.GetCodecs()))
+
+   if h := r.GetHeight(); h != 0 {
+      parts = append(parts, fmt.Sprintf("Height: %d", h))
+   }
+
+   parts = append(parts, fmt.Sprintf("MimeType: %s", r.GetMimeType()))
+
+   if w := r.GetWidth(); w != 0 {
+      parts = append(parts, fmt.Sprintf("Width: %d", w))
+   }
+
+   parts = append(parts, fmt.Sprintf("Bandwidth: %d", r.Bandwidth))
+   parts = append(parts, fmt.Sprintf("Role: %s", roleVal))
+
+   return strings.Join(parts, "\n")
 }
 
 func (r *Representation) link() {
