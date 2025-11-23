@@ -7,86 +7,75 @@ import (
    "testing"
 )
 
-// TestParseMpdFiles reads all .mpd files in the testdata folder and verifies
-// that they can be parsed without error and navigation links are set.
-func TestParseMpdFiles(t *testing.T) {
+// TestSegmentGeneration reads all .mpd files in "testdata", parses them,
+// and generates segment URLs for each Representation found.
+func TestSegmentGeneration(t *testing.T) {
    testDataDir := "testdata"
 
    files, err := os.ReadDir(testDataDir)
    if err != nil {
-      // Changed from Logf/return to Fatalf to ensure tests do not skip silently
       t.Fatalf("Failed to read testdata directory: %v", err)
    }
 
    for _, file := range files {
-      if file.IsDir() {
+      if file.IsDir() || !strings.HasSuffix(file.Name(), ".mpd") {
          continue
       }
 
-      if strings.HasSuffix(file.Name(), ".mpd") {
-         t.Run(file.Name(), func(t *testing.T) {
-            path := filepath.Join(testDataDir, file.Name())
-            data, err := os.ReadFile(path)
-            if err != nil {
-               t.Fatalf("Failed to read file %s: %v", file.Name(), err)
-            }
-
-            mpd, err := Parse(data)
-            if err != nil {
-               t.Fatalf("Failed to parse MPD %s: %v", file.Name(), err)
-            }
-
-            verifyLinks(t, mpd)
-         })
-      }
-   }
-}
-
-func verifyLinks(t *testing.T, m *MPD) {
-   for _, p := range m.Periods {
-      if p.Parent != m {
-         t.Error("Navigation 10.3 failed: Period -> MPD link missing")
-      }
-      for _, as := range p.AdaptationSets {
-         if as.Parent != p {
-            t.Error("Navigation 10.1 failed: AdaptationSet -> Period link missing")
+      t.Run(file.Name(), func(t *testing.T) {
+         path := filepath.Join(testDataDir, file.Name())
+         data, err := os.ReadFile(path)
+         if err != nil {
+            t.Fatalf("Failed to read file %s: %v", file.Name(), err)
          }
 
-         if as.SegmentTemplate != nil {
-            if as.SegmentTemplate.ParentAdaptationSet != as {
-               t.Error("Navigation 10.6 failed: SegmentTemplate -> AdaptationSet link missing")
-            }
+         mpd, err := Parse(data)
+         if err != nil {
+            t.Fatalf("Failed to parse MPD %s: %v", file.Name(), err)
          }
 
-         for _, rep := range as.Representations {
-            if rep.Parent != as {
-               t.Error("Navigation 10.4 failed: Representation -> AdaptationSet link missing")
-            }
+         // Set a dummy base URL to simulate the file being hosted,
+         // ensuring relative BaseURLs resolve correctly.
+         mpd.MPDURL = "http://localhost/dash/" + file.Name()
 
-            if rep.SegmentTemplate != nil {
-               if rep.SegmentTemplate.ParentRepresentation != rep {
-                  t.Error("Navigation 10.7 failed: SegmentTemplate -> Representation link missing")
-               }
-            }
+         count := 0
+         for _, p := range mpd.Periods {
+            for _, as := range p.AdaptationSets {
+               for _, rep := range as.Representations {
 
-            if rep.SegmentList != nil {
-               if rep.SegmentList.Parent != rep {
-                  t.Error("Navigation 10.5 failed: SegmentList -> Representation link missing")
-               }
-
-               if rep.SegmentList.Initialization != nil {
-                  if rep.SegmentList.Initialization.Parent != rep.SegmentList {
-                     t.Error("Navigation 10.2 failed: Initialization -> SegmentList link missing")
+                  // 1. Get the active SegmentTemplate (direct or inherited)
+                  tmpl := rep.GetSegmentTemplate()
+                  if tmpl == nil {
+                     continue
                   }
-               }
 
-               for _, url := range rep.SegmentList.SegmentURLs {
-                  if url.Parent != rep.SegmentList {
-                     t.Error("Navigation 10.8 failed: SegmentURL -> SegmentList link missing")
+                  // 2. Get the slice of replaced URLs
+                  urls, err := tmpl.GetSegmentURLs(rep)
+                  if err != nil {
+                     t.Errorf("Failed to generate URLs for Representation %s: %v", rep.ID, err)
+                     continue
+                  }
+
+                  count++
+                  t.Logf("Representation ID: %s", rep.ID)
+
+                  // 3. Print slice length
+                  t.Logf("  Slice Length: %d", len(urls))
+
+                  // 4. Print first and last URLs
+                  if len(urls) > 0 {
+                     t.Logf("  First URL: %s", urls[0].String())
+                     if len(urls) > 1 {
+                        t.Logf("  Last URL:  %s", urls[len(urls)-1].String())
+                     }
                   }
                }
             }
          }
-      }
+
+         if count == 0 {
+            t.Log("No Representations with SegmentTemplates found in this MPD.")
+         }
+      })
    }
 }

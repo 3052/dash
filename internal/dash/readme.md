@@ -12,9 +12,7 @@ Go language, I need a package for DASH (MPD) files
 4. package is named "dash"
 5. package will include a parse method, byte slice input
 6. BaseURL is a single element not a slice
-7. include test Go file in same package
-8. test will read all ".mpd" files in the "testdata" folder. user will provide
-9. support these elements and attributes
+7. support these elements and attributes
    - MPD
       - @mediaPresentationDuration
       - BaseURL
@@ -64,7 +62,7 @@ Go language, I need a package for DASH (MPD) files
                      - @sourceURL
                   - SegmentURL
                      - @media
-10. add navigation
+8. add navigation
    1. from AdaptationSet to Period
    2. from Initialization to SegmentList
    3. from Period to MPD
@@ -73,30 +71,30 @@ Go language, I need a package for DASH (MPD) files
    6. from SegmentTemplate to AdaptationSet
    7. from SegmentTemplate to Representation
    8. from SegmentURL to SegmentList
-11. do not skip tests
-12. resolve BaseURL using
+
+9. resolve BaseURL using
    1. MPD URL
    2. all parent BaseURL
-13. resolve Initialization@sourceURL using
+10. resolve Initialization@sourceURL using
    1. MPD URL
    2. all parent BaseURL
-14. resolve SegmentTemplate@initialization using
+11. resolve SegmentTemplate@initialization using
    1. MPD URL
    2. all parent BaseURL
-15. resolve SegmentTemplate@media using
+12. resolve SegmentTemplate@media using
    1. MPD URL
    2. all parent BaseURL
-16. resolve SegmentURL@media using
+13. resolve SegmentURL@media using
    1. MPD URL
    2. all parent BaseURL
-17. resolve function should return `*url.URL`
-18. add method to get all Representation, group by id
-19. add method to get codecs
-20. add method to get height
-21. add method to get width
-22. add method to get mimeType
-23. AdaptationSet.Role is single element not slice
-24. add Representation.String method. each value on its own line
+14. resolve function should return `*url.URL`
+15. add method to get all Representation, group by id
+16. add method to get codecs
+17. add method to get height
+18. add method to get width
+19. add method to get mimeType
+20. AdaptationSet.Role is single element not slice
+21. add Representation.String method. each value on its own line
    - AdaptationSet@lang
    - Period@id
    - Representation.GetCodecs
@@ -105,11 +103,10 @@ Go language, I need a package for DASH (MPD) files
    - Representation.GetWidth
    - Representation@bandwidth
    - Role@value
-25. add method to get ContentProtection
-26. add method to get SegmentTemplate
-27. add method to replace SegmentTemplate@initialization
+22. add method to get SegmentTemplate
+23. add method to replace SegmentTemplate@initialization
    - `$RepresentationID$`
-28. add method to replace SegmentTemplate@media
+24. add method to replace SegmentTemplate@media
    - `$Number$`
    - `$Number%02d$`
    - `$Number%03d$`
@@ -120,25 +117,34 @@ Go language, I need a package for DASH (MPD) files
    - `$Number%08d$`
    - `$Number%09d$`
    - `$RepresentationID$`
-29. add method to replace SegmentTemplate@media
+25. add method to replace SegmentTemplate@media
    - `$RepresentationID$`
    - `$Time$`
-30. SegmentTemplate@startNumber is 1 if missing
-31. SegmentTemplate@timescale is 1 if missing
-32. Period@duration is MPD@mediaPresentationDuration if missing
-33. add method to get `Time` values from SegmentTimeline
-34. add method to get `Number` values from SegmentTimeline
-35. add method to get `Number` values from
+26. SegmentTemplate@startNumber is 1 if missing
+27. SegmentTemplate@timescale is 1 if missing
+28. Period@duration is MPD@mediaPresentationDuration if missing
+29. add method to get `Time` values from SegmentTimeline
+30. add method to get `Number` values from SegmentTimeline
+31. add method to get `Number` values from
    SegmentTemplate@startNumber to SegmentTemplate@endNumber
-36. add method to get `Number` values from
+32. add method to get `Number` values from
    Ceil(
       AsSeconds(Period@duration) /
       (SegmentTemplate@duration / SegmentTemplate@timescale)
    )
-37. add a method that returns the SegmentTemplate URLs
-38. use SegmentTemplate@presentationTimeOffset as inital `$Time$`
-39. add method to get `time.Duration`
+33. add a method that returns the SegmentTemplate URLs
+34. use SegmentTemplate@presentationTimeOffset as inital `$Time$`
+35. add method to get `time.Duration`
    time.ParseDuration(strings.ToLower(
       strings.TrimPrefix(Period@duration, "PT"),
    ))
+36. add method to get unique ContentProtection from
+   - AdaptationSet
+   - Representation
+
+37. include test file in same package
+   - test will read all ".mpd" files in the "testdata" folder
+   - user will provide test files
+   - for each file, get the slice of replaced `SegmentTemplate@media` URLs
+   - print slice length, and first and last URLs
 
