@@ -77,7 +77,6 @@ Go language, I need a package for DASH (MPD) files
    6. from SegmentTemplate to AdaptationSet
    7. from SegmentTemplate to Representation
    8. from SegmentURL to SegmentList
-
 9. resolve BaseURL using
    1. MPD URL
    2. all parent BaseURL
@@ -100,19 +99,10 @@ Go language, I need a package for DASH (MPD) files
 18. add method to get width
 19. add method to get mimeType
 20. AdaptationSet.Role is single element not slice
-21. add Representation.String method. each value on its own line
-   - AdaptationSet@lang
-   - Period@id
-   - Representation.GetCodecs
-   - Representation.GetHeight
-   - Representation.GetMimeType
-   - Representation.GetWidth
-   - Representation@bandwidth
-   - Role@value
-22. add method to get SegmentTemplate
-23. add method to replace SegmentTemplate@initialization
+21. add method to get SegmentTemplate
+22. add method to replace SegmentTemplate@initialization
    - `$RepresentationID$`
-24. add method to replace SegmentTemplate@media
+23. add method to replace SegmentTemplate@media
    - `$Number$`
    - `$Number%02d$`
    - `$Number%03d$`
@@ -123,38 +113,48 @@ Go language, I need a package for DASH (MPD) files
    - `$Number%08d$`
    - `$Number%09d$`
    - `$RepresentationID$`
-25. add method to replace SegmentTemplate@media
+24. add method to replace SegmentTemplate@media
    - `$RepresentationID$`
    - `$Time$`
-26. SegmentTemplate@startNumber is 1 if missing
-27. SegmentTemplate@timescale is 1 if missing
-28. Period@duration is MPD@mediaPresentationDuration if missing
-29. add method to get `Time` values from SegmentTimeline
-30. add method to get `Number` values from SegmentTimeline
-31. add method to get `Number` values from
+25. SegmentTemplate@startNumber is 1 if missing
+26. SegmentTemplate@timescale is 1 if missing
+27. Period@duration is MPD@mediaPresentationDuration if missing
+28. add method to get `Time` values from SegmentTimeline
+29. add method to get `Number` values from SegmentTimeline
+30. add method to get `Number` values from
    SegmentTemplate@startNumber to SegmentTemplate@endNumber
-32. add method to get `Number` values from
+31. add method to get `Number` values from
    Ceil(
       AsSeconds(Period@duration) /
       (SegmentTemplate@duration / SegmentTemplate@timescale)
    )
-33. add a method that returns the SegmentTemplate URLs
-34. use SegmentTemplate@presentationTimeOffset as inital `$Time$`
-35. add method to get `time.Duration`
+32. add a method that returns the SegmentTemplate URLs
+33. use SegmentTemplate@presentationTimeOffset as initial `$Time$`
+34. add method to get `time.Duration`
     ```
     time.ParseDuration(strings.ToLower(
        strings.TrimPrefix(Period@duration, "PT"),
     ))
     ```
-36. add method to get unique ContentProtection from
+35. add method to get unique ContentProtection from
    - AdaptationSet
    - Representation
-37. include test file in same package
+36. include test file in same package
    - test will read all ".mpd" files in the "testdata" folder
    - user will provide test files
    - for each file, get the slice of replaced `SegmentTemplate@media` URLs
    - only get one slice of URLs per mimeType
    - print slice length, and first and last URLs
+37. add Representation.String method. each value on its own line
+   1. Representation@bandwidth
+   2. Representation.GetWidth
+   3. Representation.GetHeight
+   4. Representation.GetCodecs
+   5. Representation.GetMimeType
+   6. AdaptationSet@lang
+   7. Role@value
+   8. Period@id
+   9. Representation@id
 
 ## contact
 
@@ -164,3 +164,4 @@ Go language, I need a package for DASH (MPD) files
    <dt>Discord username</dt>
    <dd>10308</dd>
 </dl>
+
