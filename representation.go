@@ -84,9 +84,9 @@ func (r *Representation) GetMimeType() string {
    return ""
 }
 
-// GetUniqueContentProtection returns a set of unique ContentProtection values
+// GetContentProtection returns a set of unique ContentProtection values
 // from both the AdaptationSet and the Representation.
-func (r *Representation) GetUniqueContentProtection() map[ContentProtection]struct{} {
+func (r *Representation) GetContentProtection() map[ContentProtection]struct{} {
    unique := make(map[ContentProtection]struct{})
 
    // 1. Add from Parent AdaptationSet
