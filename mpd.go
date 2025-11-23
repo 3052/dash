@@ -13,7 +13,8 @@ type MPD struct {
    Periods                   []*Period `xml:"Period"`
 
    // MPDURL is the source URL of the MPD file itself.
-   MPDURL string `xml:"-"`
+   // It is used as the root for resolving relative BaseURLs.
+   MPDURL *url.URL `xml:"-"`
 }
 
 // Parse takes a byte slice of an MPD file, unmarshals it,
@@ -33,11 +34,8 @@ func Parse(data []byte) (*MPD, error) {
 
 // ResolveBaseURL resolves the MPD's BaseURL against the MPDURL.
 func (m *MPD) ResolveBaseURL() (*url.URL, error) {
-   base, err := url.Parse(m.MPDURL)
-   if err != nil {
-      return nil, err
-   }
-   return resolveRef(base, m.BaseURL)
+   // No parsing needed, MPDURL is already *url.URL
+   return resolveRef(m.MPDURL, m.BaseURL)
 }
 
 // GetAllRepresentations returns a map of all Representations in the MPD,
@@ -73,6 +71,10 @@ func resolveRef(base *url.URL, relStr string) (*url.URL, error) {
    rel, err := url.Parse(relStr)
    if err != nil {
       return nil, err
+   }
+   // Handle case where base is nil (e.g. MPDURL not set)
+   if base == nil {
+      return rel, nil
    }
    return base.ResolveReference(rel), nil
 }
