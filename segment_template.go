@@ -43,7 +43,6 @@ func (st *SegmentTemplate) GetTimescale() uint {
 }
 
 // GetNumberRange returns a slice of numbers from StartNumber to EndNumber (inclusive).
-// If EndNumber is less than StartNumber, it returns nil.
 func (st *SegmentTemplate) GetNumberRange() []uint {
    start := st.GetStartNumber()
    end := st.EndNumber
@@ -61,7 +60,6 @@ func (st *SegmentTemplate) GetNumberRange() []uint {
 }
 
 // GetTimelineNumbers returns a slice of segment numbers derived from the SegmentTimeline.
-// It starts at StartNumber and iterates through the S elements, accounting for repetitions (@r).
 func (st *SegmentTemplate) GetTimelineNumbers() []uint {
    if st.SegmentTimeline == nil {
       return nil
@@ -71,24 +69,19 @@ func (st *SegmentTemplate) GetTimelineNumbers() []uint {
    current := st.GetStartNumber()
 
    for _, s := range st.SegmentTimeline.S {
-      // Each 'S' element represents a segment duration, repeated 'r' times.
-      // Total segments described by this S element = 1 + r.
       count := 1
       if s.R > 0 {
          count += s.R
       }
-
       for i := 0; i < count; i++ {
          numbers = append(numbers, current)
          current++
       }
    }
-
    return numbers
 }
 
 // GetTimelineTimes returns a slice of start times for segments derived from the SegmentTimeline.
-// It starts at PresentationTimeOffset and accumulates durations ('d').
 func (st *SegmentTemplate) GetTimelineTimes() []uint {
    if st.SegmentTimeline == nil {
       return nil
@@ -96,25 +89,22 @@ func (st *SegmentTemplate) GetTimelineTimes() []uint {
 
    var times []uint
    // Req 39: Initialize with PresentationTimeOffset
-   var currentTime uint = st.PresentationTimeOffset
+   currentTime := st.PresentationTimeOffset
 
    for _, s := range st.SegmentTimeline.S {
       count := 1
       if s.R > 0 {
          count += s.R
       }
-
       for i := 0; i < count; i++ {
          times = append(times, currentTime)
          currentTime += s.D
       }
    }
-
    return times
 }
 
-// GetDurationBasedNumbers calculates segment numbers based on Period duration and fixed Segment duration.
-// Formula: Ceil( AsSeconds(Period@duration) / (SegmentTemplate@duration / SegmentTemplate@timescale) )
+// GetDurationBasedNumbers calculates segment numbers based on Period duration.
 func (st *SegmentTemplate) GetDurationBasedNumbers() ([]uint, error) {
    // 1. Find the parent Period
    var period *Period
@@ -136,19 +126,16 @@ func (st *SegmentTemplate) GetDurationBasedNumbers() ([]uint, error) {
    if pDur == 0 {
       return nil, errors.New("period duration is zero or missing")
    }
-   pDurSec := pDur.Seconds()
 
    // 3. Get Segment Duration parameters
    if st.Duration == 0 {
       return nil, errors.New("SegmentTemplate duration is zero")
    }
 
-   timescale := float64(st.GetTimescale())
-   segDurSec := float64(st.Duration) / timescale
-
    // 4. Calculate count
-   countFloat := math.Ceil(pDurSec / segDurSec)
-   count := uint(countFloat)
+   // Formula: Ceil( AsSeconds(Period@duration) / (SegmentTemplate@duration / SegmentTemplate@timescale) )
+   segDurSec := float64(st.Duration) / float64(st.GetTimescale())
+   count := uint(math.Ceil(pDur.Seconds() / segDurSec))
 
    // 5. Generate numbers
    start := st.GetStartNumber()
@@ -161,21 +148,17 @@ func (st *SegmentTemplate) GetDurationBasedNumbers() ([]uint, error) {
 }
 
 // GetSegmentURLs returns all segment URLs defined by this template.
-// It determines the generation strategy (Time-based vs Number-based)
-// and the source of the segment list (Timeline, Range, or Duration).
 func (st *SegmentTemplate) GetSegmentURLs(rep *Representation) ([]*url.URL, error) {
    if st.Media == "" {
       return nil, nil
    }
 
-   // Strategy 1: Time-based addressing ($Time$ present in template)
+   // Strategy 1: Time-based addressing
    if strings.Contains(st.Media, "$Time$") {
       times := st.GetTimelineTimes()
       if len(times) == 0 {
-         // If $Time$ is required but no timeline exists, we cannot generate URLs reliably.
          return nil, errors.New("media template requires $Time$ but no SegmentTimeline found")
       }
-
       var urls []*url.URL
       for _, t := range times {
          u, err := st.ResolveMediaTime(rep, int(t))
@@ -189,29 +172,18 @@ func (st *SegmentTemplate) GetSegmentURLs(rep *Representation) ([]*url.URL, erro
 
    // Strategy 2: Number-based addressing
    var numbers []uint
-
-   // Source A: SegmentTimeline
    if st.SegmentTimeline != nil {
       numbers = st.GetTimelineNumbers()
    }
-
-   // Source B: explicit EndNumber range
    if len(numbers) == 0 && st.EndNumber > 0 {
       numbers = st.GetNumberRange()
    }
-
-   // Source C: Duration-based calculation
    if len(numbers) == 0 && st.Duration > 0 {
       var err error
       numbers, err = st.GetDurationBasedNumbers()
       if err != nil {
-         // If calculation fails (e.g. unlinked parent), return error
          return nil, err
       }
-   }
-
-   if len(numbers) == 0 {
-      return nil, nil
    }
 
    var urls []*url.URL
@@ -222,102 +194,75 @@ func (st *SegmentTemplate) GetSegmentURLs(rep *Representation) ([]*url.URL, erro
       }
       urls = append(urls, u)
    }
-
    return urls, nil
 }
 
-// ResolveInitialization resolves the @initialization attribute against the parent BaseURL.
-// It replaces the literal "$RepresentationID$" with the ID of the provided Representation.
+// ResolveInitialization resolves the @initialization attribute.
 func (st *SegmentTemplate) ResolveInitialization(rep *Representation) (*url.URL, error) {
-   base, err := st.getParentBaseURL()
+   base, initStr, err := st.prepareTemplateString(rep, st.Initialization)
    if err != nil {
       return nil, err
    }
-
-   initStr := st.Initialization
-
-   // Determine the ID to use for replacement
-   var repID string
-   if rep != nil {
-      repID = rep.ID
-   } else if st.ParentRepresentation != nil {
-      repID = st.ParentRepresentation.ID
-   }
-
-   // Perform replacement if an ID was found
-   if repID != "" {
-      initStr = strings.ReplaceAll(initStr, "$RepresentationID$", repID)
-   }
-
    return resolveRef(base, initStr)
 }
 
 // ResolveMedia resolves the @media attribute for number-based addressing.
-// It performs substitutions for $RepresentationID$ and $Number$ (including format variants).
 func (st *SegmentTemplate) ResolveMedia(rep *Representation, number int) (*url.URL, error) {
-   base, err := st.getParentBaseURL()
+   base, mediaStr, err := st.prepareTemplateString(rep, st.Media)
    if err != nil {
       return nil, err
    }
 
-   mediaStr := st.Media
-
-   // 1. Replace $RepresentationID$
-   var repID string
-   if rep != nil {
-      repID = rep.ID
-   } else if st.ParentRepresentation != nil {
-      repID = st.ParentRepresentation.ID
-   }
-   if repID != "" {
-      mediaStr = strings.ReplaceAll(mediaStr, "$RepresentationID$", repID)
-   }
-
-   // 2. Replace $Number%0xd$ variants
-   formats := []string{
-      "%02d", "%03d", "%04d", "%05d",
-      "%06d", "%07d", "%08d", "%09d",
-   }
-
+   // Replace $Number%0xd$ variants
+   formats := []string{"%02d", "%03d", "%04d", "%05d", "%06d", "%07d", "%08d", "%09d"}
    for _, f := range formats {
       token := fmt.Sprintf("$Number%s$", f)
       if strings.Contains(mediaStr, token) {
-         replacement := fmt.Sprintf(f, number)
-         mediaStr = strings.ReplaceAll(mediaStr, token, replacement)
+         mediaStr = strings.ReplaceAll(mediaStr, token, fmt.Sprintf(f, number))
       }
    }
 
-   // 3. Replace bare $Number$
+   // Replace bare $Number$
    mediaStr = strings.ReplaceAll(mediaStr, "$Number$", fmt.Sprintf("%d", number))
 
    return resolveRef(base, mediaStr)
 }
 
 // ResolveMediaTime resolves the @media attribute for time-based addressing.
-// It performs substitutions for $RepresentationID$ and $Time$.
 func (st *SegmentTemplate) ResolveMediaTime(rep *Representation, timeVal int) (*url.URL, error) {
-   base, err := st.getParentBaseURL()
+   base, mediaStr, err := st.prepareTemplateString(rep, st.Media)
    if err != nil {
       return nil, err
    }
 
-   mediaStr := st.Media
+   // Replace $Time$
+   mediaStr = strings.ReplaceAll(mediaStr, "$Time$", fmt.Sprintf("%d", timeVal))
 
-   // 1. Replace $RepresentationID$
+   return resolveRef(base, mediaStr)
+}
+
+// prepareTemplateString resolves the base URL and performs $RepresentationID$ replacement.
+// This is a helper to remove duplication from the Resolve* methods.
+func (st *SegmentTemplate) prepareTemplateString(rep *Representation, tmpl string) (*url.URL, string, error) {
+   base, err := st.getParentBaseURL()
+   if err != nil {
+      return nil, "", err
+   }
+
+   // Determine ID
    var repID string
    if rep != nil {
       repID = rep.ID
    } else if st.ParentRepresentation != nil {
       repID = st.ParentRepresentation.ID
    }
+
+   // Replace $RepresentationID$
    if repID != "" {
-      mediaStr = strings.ReplaceAll(mediaStr, "$RepresentationID$", repID)
+      tmpl = strings.ReplaceAll(tmpl, "$RepresentationID$", repID)
    }
 
-   // 2. Replace $Time$
-   mediaStr = strings.ReplaceAll(mediaStr, "$Time$", fmt.Sprintf("%d", timeVal))
-
-   return resolveRef(base, mediaStr)
+   return base, tmpl, nil
 }
 
 func (st *SegmentTemplate) getParentBaseURL() (*url.URL, error) {
