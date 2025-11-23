@@ -141,9 +141,11 @@ Go language, I need a package for DASH (MPD) files
 33. add a method that returns the SegmentTemplate URLs
 34. use SegmentTemplate@presentationTimeOffset as inital `$Time$`
 35. add method to get `time.Duration`
-   time.ParseDuration(strings.ToLower(
-      strings.TrimPrefix(Period@duration, "PT"),
-   ))
+    ```
+    time.ParseDuration(strings.ToLower(
+       strings.TrimPrefix(Period@duration, "PT"),
+    ))
+    ```
 36. add method to get unique ContentProtection from
    - AdaptationSet
    - Representation

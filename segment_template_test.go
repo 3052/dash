@@ -1,6 +1,7 @@
 package dash
 
 import (
+   "net/url"
    "os"
    "path/filepath"
    "strings"
@@ -38,8 +39,12 @@ func TestSegmentGeneration(t *testing.T) {
             t.Fatalf("Failed to parse MPD %s: %v", file.Name(), err)
          }
 
-         // Set the MPDURL as requested
-         mpd.MPDURL = "http://hello.test"
+         // Set the MPDURL as requested, now parsing it into a *url.URL
+         u, err := url.Parse("http://hello.test")
+         if err != nil {
+            t.Fatalf("Failed to parse base URL: %v", err)
+         }
+         mpd.MPDURL = u
 
          // Track processed mimeTypes to ensure we only get one slice per type
          processedMimes := make(map[string]bool)
