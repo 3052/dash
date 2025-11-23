@@ -8,8 +8,8 @@ import (
 // MPD represents the root element of the DASH MPD file.
 // XMLName is omitted here to prevent SA5008 conflicts.
 type MPD struct {
-   MediaPresentationDuration string    `xml:"mediaPresentationDuration,attr,omitempty"`
-   BaseURL                   string    `xml:"BaseURL,omitempty"`
+   MediaPresentationDuration string    `xml:"mediaPresentationDuration,attr"`
+   BaseURL                   string    `xml:"BaseURL"`
    Periods                   []*Period `xml:"Period"`
 
    // MPDURL is the source URL of the MPD file itself.

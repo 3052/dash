@@ -3,17 +3,18 @@ package dash
 import (
    "fmt"
    "net/url"
+   "strings"
 )
 
 // Representation describes a version of the media content.
 type Representation struct {
-   Bandwidth         int                  `xml:"bandwidth,attr,omitempty"`
-   Codecs            string               `xml:"codecs,attr,omitempty"`
-   Height            int                  `xml:"height,attr,omitempty"`
-   ID                string               `xml:"id,attr,omitempty"`
-   MimeType          string               `xml:"mimeType,attr,omitempty"`
-   Width             int                  `xml:"width,attr,omitempty"`
-   BaseURL           string               `xml:"BaseURL,omitempty"`
+   Bandwidth         int                  `xml:"bandwidth,attr"`
+   Codecs            string               `xml:"codecs,attr"`
+   Height            int                  `xml:"height,attr"`
+   ID                string               `xml:"id,attr"`
+   MimeType          string               `xml:"mimeType,attr"`
+   Width             int                  `xml:"width,attr"`
+   BaseURL           string               `xml:"BaseURL"`
    SegmentTemplate   *SegmentTemplate     `xml:"SegmentTemplate"`
    ContentProtection []*ContentProtection `xml:"ContentProtection"`
    SegmentBase       *SegmentBase         `xml:"SegmentBase"`
@@ -84,9 +85,9 @@ func (r *Representation) GetMimeType() string {
    return ""
 }
 
-// GetUniqueContentProtection returns a set of unique ContentProtection values
+// GetContentProtection returns a set of unique ContentProtection values
 // from both the AdaptationSet and the Representation.
-func (r *Representation) GetUniqueContentProtection() map[ContentProtection]struct{} {
+func (r *Representation) GetContentProtection() map[ContentProtection]struct{} {
    unique := make(map[ContentProtection]struct{})
 
    // 1. Add from Parent AdaptationSet
@@ -122,6 +123,8 @@ func (r *Representation) GetSegmentTemplate() *SegmentTemplate {
 }
 
 // String returns a multi-line summary of the Representation.
+// Fields: bandwidth, width, height, codecs, mimeType, lang, role, period, id.
+// Optional fields are omitted if empty/zero.
 func (r *Representation) String() string {
    var periodID, lang, roleVal string
 
@@ -135,24 +138,48 @@ func (r *Representation) String() string {
       }
    }
 
-   return fmt.Sprintf(
-      "Lang: %s\n"+
-         "PeriodID: %s\n"+
-         "Codecs: %s\n"+
-         "Height: %d\n"+
-         "MimeType: %s\n"+
-         "Width: %d\n"+
-         "Bandwidth: %d\n"+
-         "Role: %s",
-      lang,
-      periodID,
-      r.GetCodecs(),
-      r.GetHeight(),
-      r.GetMimeType(),
-      r.GetWidth(),
-      r.Bandwidth,
-      roleVal,
-   )
+   var parts []string
+
+   // 1. Representation@bandwidth
+   parts = append(parts, fmt.Sprintf("bandwidth = %d", r.Bandwidth))
+
+   // 2. Representation.GetWidth
+   if w := r.GetWidth(); w != 0 {
+      parts = append(parts, fmt.Sprintf("width = %d", w))
+   }
+
+   // 3. Representation.GetHeight
+   if h := r.GetHeight(); h != 0 {
+      parts = append(parts, fmt.Sprintf("height = %d", h))
+   }
+
+   // 4. Representation.GetCodecs
+   if c := r.GetCodecs(); c != "" {
+      parts = append(parts, fmt.Sprintf("codecs = %s", c))
+   }
+
+   // 5. Representation.GetMimeType
+   parts = append(parts, fmt.Sprintf("mimeType = %s", r.GetMimeType()))
+
+   // 6. AdaptationSet@lang
+   if lang != "" {
+      parts = append(parts, fmt.Sprintf("lang = %s", lang))
+   }
+
+   // 7. Role@value
+   if roleVal != "" {
+      parts = append(parts, fmt.Sprintf("role = %s", roleVal))
+   }
+
+   // 8. Period@id
+   if periodID != "" {
+      parts = append(parts, fmt.Sprintf("period = %s", periodID))
+   }
+
+   // 9. Representation@id
+   parts = append(parts, fmt.Sprintf("id = %s", r.ID))
+
+   return strings.Join(parts, "\n")
 }
 
 func (r *Representation) link() {

@@ -8,9 +8,9 @@ import (
 
 // Period represents a temporal part of the media content.
 type Period struct {
-   Duration       string           `xml:"duration,attr,omitempty"`
-   ID             string           `xml:"id,attr,omitempty"`
-   BaseURL        string           `xml:"BaseURL,omitempty"`
+   Duration       string           `xml:"duration,attr"`
+   ID             string           `xml:"id,attr"`
+   BaseURL        string           `xml:"BaseURL"`
    AdaptationSets []*AdaptationSet `xml:"AdaptationSet"`
 
    // Navigation

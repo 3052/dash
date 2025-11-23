@@ -10,15 +10,15 @@ import (
 
 // SegmentTemplate defines specific rules for generating segment URLs.
 type SegmentTemplate struct {
-   Duration               uint   `xml:"duration,attr,omitempty"`
-   EndNumber              uint   `xml:"endNumber,attr,omitempty"`
-   Initialization         string `xml:"initialization,attr,omitempty"`
-   Media                  string `xml:"media,attr,omitempty"`
-   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr,omitempty"`
+   Duration               uint   `xml:"duration,attr"`
+   EndNumber              uint   `xml:"endNumber,attr"`
+   Initialization         string `xml:"initialization,attr"`
+   Media                  string `xml:"media,attr"`
+   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
    // StartNumber is a pointer to distinguish between missing (nil) and explicitly 0.
-   StartNumber *uint `xml:"startNumber,attr,omitempty"`
+   StartNumber *uint `xml:"startNumber,attr"`
    // Timescale is a pointer to distinguish between missing (nil) and explicitly 0.
-   Timescale       *uint            `xml:"timescale,attr,omitempty"`
+   Timescale       *uint            `xml:"timescale,attr"`
    SegmentTimeline *SegmentTimeline `xml:"SegmentTimeline"`
 
    // Navigation

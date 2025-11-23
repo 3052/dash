@@ -1,13 +1,15 @@
 package dash
 
-import "net/url"
+import (
+   "net/url"
+)
 
 // Initialization contains URL and byte range information for initialization segments.
 type Initialization struct {
    // Used in SegmentBase
-   Range string `xml:"range,attr,omitempty"`
+   Range string `xml:"range,attr"`
    // Used in SegmentList
-   SourceURL string `xml:"sourceURL,attr,omitempty"`
+   SourceURL string `xml:"sourceURL,attr"`
 
    // Navigation
    Parent *SegmentList `xml:"-"`
