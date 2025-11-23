@@ -45,7 +45,7 @@ func TestPrintPSSH(t *testing.T) {
                for _, rep := range as.Representations {
 
                   // Get unique ContentProtection elements (merged from AS and Rep)
-                  cps := rep.GetUniqueContentProtection()
+                  cps := rep.GetContentProtection()
 
                   if len(cps) > 0 {
                      t.Logf("Representation: %s (Mime: %s)", rep.ID, rep.GetMimeType())
