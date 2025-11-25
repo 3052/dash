@@ -44,13 +44,13 @@ func TestPrintPSSH(t *testing.T) {
             for _, as := range p.AdaptationSets {
                for _, rep := range as.Representations {
 
-                  // Get unique ContentProtection elements (merged from AS and Rep)
+                  // Get ContentProtection elements (Rep overrides AS)
                   cps := rep.GetContentProtection()
 
                   if len(cps) > 0 {
                      t.Logf("Representation: %s (Mime: %s)", rep.ID, rep.GetMimeType())
 
-                     for cp := range cps {
+                     for _, cp := range cps {
                         if cp.Pssh != "" {
                            foundPssh = true
                            t.Logf("  Scheme: %s", cp.SchemeIdUri)

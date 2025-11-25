@@ -85,28 +85,17 @@ func (r *Representation) GetMimeType() string {
    return ""
 }
 
-// GetContentProtection returns a set of unique ContentProtection values
-// from both the AdaptationSet and the Representation.
-func (r *Representation) GetContentProtection() map[ContentProtection]struct{} {
-   unique := make(map[ContentProtection]struct{})
-
-   // 1. Add from Parent AdaptationSet
+// GetContentProtection returns the ContentProtection elements for this Representation.
+// If the Representation has its own ContentProtection elements, they are returned.
+// Otherwise, it returns the ContentProtection elements from the parent AdaptationSet.
+func (r *Representation) GetContentProtection() []*ContentProtection {
+   if len(r.ContentProtection) > 0 {
+      return r.ContentProtection
+   }
    if r.Parent != nil {
-      for _, cp := range r.Parent.ContentProtection {
-         if cp != nil {
-            unique[*cp] = struct{}{}
-         }
-      }
+      return r.Parent.ContentProtection
    }
-
-   // 2. Add from Self Representation
-   for _, cp := range r.ContentProtection {
-      if cp != nil {
-         unique[*cp] = struct{}{}
-      }
-   }
-
-   return unique
+   return nil
 }
 
 // GetSegmentTemplate returns the SegmentTemplate for this Representation.
