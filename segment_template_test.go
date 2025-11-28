@@ -9,7 +9,7 @@ import (
 )
 
 // TestSegmentGeneration reads all .mpd files in "testdata", parses them,
-// and generates segment URLs. It processes only one Representation per unique MimeType.
+// and generates segment URLs. It processes only one Representation per unique MimeType per Period.
 func TestSegmentGeneration(t *testing.T) {
    testDataDir := "testdata"
 
@@ -46,16 +46,17 @@ func TestSegmentGeneration(t *testing.T) {
          }
          mpd.MPDURL = u
 
-         // Track processed mimeTypes to ensure we only get one slice per type
-         processedMimes := make(map[string]bool)
          count := 0
 
          for _, p := range mpd.Periods {
+            // Track processed mimeTypes per Period
+            processedMimes := make(map[string]bool)
+
             for _, as := range p.AdaptationSets {
                for _, rep := range as.Representations {
                   mime := rep.GetMimeType()
 
-                  // Skip if we have already processed this mimeType for this file
+                  // Skip if we have already processed this mimeType for this Period
                   if processedMimes[mime] {
                      continue
                   }
@@ -73,11 +74,11 @@ func TestSegmentGeneration(t *testing.T) {
                      continue
                   }
 
-                  // Mark this mimeType as processed so we don't repeat it
+                  // Mark this mimeType as processed so we don't repeat it within this Period
                   processedMimes[mime] = true
                   count++
 
-                  t.Logf("MimeType: %s (Rep ID: %s)", mime, rep.ID)
+                  t.Logf("Period: %s MimeType: %s (Rep ID: %s)", p.ID, mime, rep.ID)
 
                   // 3. Print slice length
                   t.Logf("  Slice Length: %d", len(urls))
