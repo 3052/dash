@@ -4,11 +4,20 @@ import "net/url"
 
 // SegmentList contains a list of SegmentURLs.
 type SegmentList struct {
+   Duration       uint            `xml:"duration,attr"`
+   Timescale      *uint           `xml:"timescale,attr"`
    Initialization *Initialization `xml:"Initialization"`
    SegmentURLs    []*SegmentURL   `xml:"SegmentURL"`
-
    // Navigation
    Parent *Representation `xml:"-"`
+}
+
+// GetTimescale returns the Timescale if present, otherwise returns default 1.
+func (sl *SegmentList) GetTimescale() uint {
+   if sl.Timescale != nil {
+      return *sl.Timescale
+   }
+   return 1
 }
 
 // getParentBaseURL retrieves the resolved BaseURL from the parent Representation.
