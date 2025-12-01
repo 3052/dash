@@ -5,18 +5,6 @@ import (
    "net/url"
 )
 
-// MPD represents the root element of the DASH MPD file.
-// XMLName is omitted here to prevent SA5008 conflicts.
-type MPD struct {
-   MediaPresentationDuration string    `xml:"mediaPresentationDuration,attr"`
-   BaseURL                   string    `xml:"BaseURL"`
-   Periods                   []*Period `xml:"Period"`
-
-   // MPDURL is the source URL of the MPD file itself.
-   // It is used as the root for resolving relative BaseURLs.
-   MPDURL *url.URL `xml:"-"`
-}
-
 // Parse takes a byte slice of an MPD file, unmarshals it,
 // and populates the navigation parent pointers.
 func Parse(data []byte) (*MPD, error) {
@@ -30,6 +18,18 @@ func Parse(data []byte) (*MPD, error) {
    m.link()
 
    return &m, nil
+}
+
+// MPD represents the root element of the DASH MPD file.
+// XMLName is omitted here to prevent SA5008 conflicts.
+type MPD struct {
+   MediaPresentationDuration string    `xml:"mediaPresentationDuration,attr"`
+   BaseURL                   string    `xml:"BaseURL"`
+   Periods                   []*Period `xml:"Period"`
+
+   // MPDURL is the source URL of the MPD file itself.
+   // It is used as the root for resolving relative BaseURLs.
+   MPDURL *url.URL `xml:"-"`
 }
 
 // ResolveBaseURL resolves the MPD's BaseURL against the MPDURL.
