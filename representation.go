@@ -19,7 +19,6 @@ type Representation struct {
    ContentProtection []*ContentProtection `xml:"ContentProtection"`
    SegmentBase       *SegmentBase         `xml:"SegmentBase"`
    SegmentList       *SegmentList         `xml:"SegmentList"`
-
    // Navigation
    Parent *AdaptationSet `xml:"-"`
 }
@@ -31,6 +30,33 @@ func (r *Representation) ResolveBaseURL() (*url.URL, error) {
       return nil, err
    }
    return resolveRef(parentBase, r.BaseURL)
+}
+
+// GetInitializationKey returns the raw initialization string.
+// For SegmentTemplate, it returns the @initialization attribute with $RepresentationID$ replaced.
+// For SegmentList/SegmentBase, it returns the @sourceURL.
+// It does NOT resolve absolute BaseURLs.
+func (r *Representation) GetInitializationKey() string {
+   // 1. Check SegmentTemplate
+   // We use GetSegmentTemplate() to handle potential inheritance from AdaptationSet
+   if st := r.GetSegmentTemplate(); st != nil && st.Initialization != "" {
+      // We must replace $RepresentationID$, otherwise different Representations
+      // sharing the same template (e.g. "init_$RepresentationID$.mp4")
+      // would end up with the same key.
+      return strings.ReplaceAll(st.Initialization, "$RepresentationID$", r.ID)
+   }
+
+   // 2. Check SegmentList
+   if r.SegmentList != nil && r.SegmentList.Initialization != nil {
+      return r.SegmentList.Initialization.SourceURL
+   }
+
+   // 3. Check SegmentBase
+   if r.SegmentBase != nil && r.SegmentBase.Initialization != nil {
+      return r.SegmentBase.Initialization.SourceURL
+   }
+
+   return ""
 }
 
 // GetCodecs returns the codecs for this Representation.
@@ -115,8 +141,9 @@ func (r *Representation) GetSegmentTemplate() *SegmentTemplate {
 // Fields: bandwidth, width, height, codecs, mimeType, lang, role, period, id.
 // Optional fields are omitted if empty/zero.
 func (r *Representation) String() string {
-   var periodID, lang, roleVal string
+   var b []byte
 
+   var periodID, lang, roleVal string
    if r.Parent != nil {
       lang = r.Parent.Lang
       if r.Parent.Role != nil {
@@ -127,48 +154,46 @@ func (r *Representation) String() string {
       }
    }
 
-   var parts []string
-
    // 1. Representation@bandwidth
-   parts = append(parts, fmt.Sprintf("bandwidth = %d", r.Bandwidth))
+   b = fmt.Appendf(b, "bandwidth = %d", r.Bandwidth)
 
    // 2. Representation.GetWidth
    if w := r.GetWidth(); w != 0 {
-      parts = append(parts, fmt.Sprintf("width = %d", w))
+      b = fmt.Appendf(b, "\nwidth = %d", w)
    }
 
    // 3. Representation.GetHeight
    if h := r.GetHeight(); h != 0 {
-      parts = append(parts, fmt.Sprintf("height = %d", h))
+      b = fmt.Appendf(b, "\nheight = %d", h)
    }
 
    // 4. Representation.GetCodecs
    if c := r.GetCodecs(); c != "" {
-      parts = append(parts, fmt.Sprintf("codecs = %s", c))
+      b = fmt.Appendf(b, "\ncodecs = %s", c)
    }
 
    // 5. Representation.GetMimeType
-   parts = append(parts, fmt.Sprintf("mimeType = %s", r.GetMimeType()))
+   b = fmt.Appendf(b, "\nmimeType = %s", r.GetMimeType())
 
    // 6. AdaptationSet@lang
    if lang != "" {
-      parts = append(parts, fmt.Sprintf("lang = %s", lang))
+      b = fmt.Appendf(b, "\nlang = %s", lang)
    }
 
    // 7. Role@value
    if roleVal != "" {
-      parts = append(parts, fmt.Sprintf("role = %s", roleVal))
+      b = fmt.Appendf(b, "\nrole = %s", roleVal)
    }
 
    // 8. Period@id
    if periodID != "" {
-      parts = append(parts, fmt.Sprintf("period = %s", periodID))
+      b = fmt.Appendf(b, "\nperiod = %s", periodID)
    }
 
    // 9. Representation@id
-   parts = append(parts, fmt.Sprintf("id = %s", r.ID))
+   b = fmt.Appendf(b, "\nid = %s", r.ID)
 
-   return strings.Join(parts, "\n")
+   return string(b)
 }
 
 func (r *Representation) link() {

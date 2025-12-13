@@ -13,10 +13,8 @@ func Parse(data []byte) (*MPD, error) {
    if err != nil {
       return nil, err
    }
-
    // Initialize navigation links
    m.link()
-
    return &m, nil
 }
 
@@ -26,7 +24,6 @@ type MPD struct {
    MediaPresentationDuration string    `xml:"mediaPresentationDuration,attr"`
    BaseURL                   string    `xml:"BaseURL"`
    Periods                   []*Period `xml:"Period"`
-
    // MPDURL is the source URL of the MPD file itself.
    // It is used as the root for resolving relative BaseURLs.
    MPDURL *url.URL `xml:"-"`
@@ -39,13 +36,20 @@ func (m *MPD) ResolveBaseURL() (*url.URL, error) {
 }
 
 // GetRepresentations returns a map of all Representations in the MPD,
-// keyed by their ID attribute.
+// keyed by their Initialization value.
 func (m *MPD) GetRepresentations() map[string][]*Representation {
    grouped := make(map[string][]*Representation)
    for _, p := range m.Periods {
       for _, as := range p.AdaptationSets {
          for _, r := range as.Representations {
-            grouped[r.ID] = append(grouped[r.ID], r)
+            key := r.GetInitializationKey()
+
+            // Fallback to ID if no initialization information exists
+            if key == "" {
+               key = r.ID
+            }
+
+            grouped[key] = append(grouped[key], r)
          }
       }
    }
