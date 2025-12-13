@@ -36,13 +36,13 @@ func (m *MPD) ResolveBaseURL() (*url.URL, error) {
 }
 
 // GetRepresentations returns a map of all Representations in the MPD,
-// keyed by their Initialization value.
+// keyed by their continuity key (usually the ID, or a specific template string).
 func (m *MPD) GetRepresentations() map[string][]*Representation {
    grouped := make(map[string][]*Representation)
    for _, p := range m.Periods {
       for _, as := range p.AdaptationSets {
          for _, r := range as.Representations {
-            key := r.GetInitializationKey()
+            key := r.GetContinuityKey()
             grouped[key] = append(grouped[key], r)
          }
       }
