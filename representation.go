@@ -2,7 +2,6 @@ package dash
 
 import (
    "fmt"
-   "hash/crc32"
    "net/url"
    "strings"
 )
@@ -20,8 +19,7 @@ type Representation struct {
    ContentProtection []*ContentProtection `xml:"ContentProtection"`
    SegmentBase       *SegmentBase         `xml:"SegmentBase"`
    SegmentList       *SegmentList         `xml:"SegmentList"`
-   // Navigation
-   Parent *AdaptationSet `xml:"-"`
+   Parent            *AdaptationSet       `xml:"-"`
 }
 
 // ResolveBaseURL resolves the Representation's BaseURL against the parent hierarchy.
@@ -33,33 +31,32 @@ func (r *Representation) ResolveBaseURL() (*url.URL, error) {
    return resolveRef(parentBase, r.BaseURL)
 }
 
-// GetInitializationKey returns the raw initialization string.
-// For SegmentTemplate, it returns the @initialization attribute with $RepresentationID$ replaced.
-// For SegmentList, it returns the @sourceURL.
-// Otherwise, it returns the BaseURL.
-// It does NOT resolve absolute BaseURLs.
-func (r *Representation) GetInitializationKey() string {
-   // 1. Check SegmentTemplate
-   // We use GetSegmentTemplate() to handle potential inheritance from AdaptationSet
-   if st := r.GetSegmentTemplate(); st != nil && st.Initialization != "" {
-      // We must replace $RepresentationID$, otherwise different Representations
-      // sharing the same template (e.g. "init_$RepresentationID$.mp4")
-      // would end up with the same key.
-      return strings.ReplaceAll(st.Initialization, "$RepresentationID$", r.ID)
+// requiresOriginalID checks if the Representation ID should be preserved.
+// We only allow renaming (Returning false) if:
+// 1. A SegmentTemplate exists.
+// 2. That Media attribute does NOT use the $RepresentationID$ variable.
+// In all other cases (SegmentList, SegmentBase, explicit ID dependency), we keep the original ID.
+func (r *Representation) requiresOriginalID() bool {
+   st := r.GetSegmentTemplate()
+   if st == nil {
+      return true
    }
+   return strings.Contains(st.Media, "$RepresentationID$")
+}
 
-   // 2. Check SegmentList
-   if r.SegmentList != nil && r.SegmentList.Initialization != nil {
-      return r.SegmentList.Initialization.SourceURL
+// getContinuityPattern returns the string used to group streams when IDs are ignored.
+// The Media template is the authoritative source of uniqueness.
+func (r *Representation) getContinuityPattern() string {
+   st := r.GetSegmentTemplate()
+   if st != nil {
+      return st.Media
    }
-
-   // 3. Fallback to BaseURL (handles SegmentBase and single-segment Representations)
-   return r.BaseURL
+   // Fallback should rarely be reached if requiresOriginalID is checked first,
+   // but strictly speaking, the ID is the pattern for non-template reps.
+   return r.ID
 }
 
 // GetCodecs returns the codecs for this Representation.
-// If the Codecs attribute is empty on the Representation,
-// it returns the Codecs attribute from the parent AdaptationSet.
 func (r *Representation) GetCodecs() string {
    if r.Codecs != "" {
       return r.Codecs
@@ -71,8 +68,6 @@ func (r *Representation) GetCodecs() string {
 }
 
 // GetHeight returns the height for this Representation.
-// If the Height attribute is 0 on the Representation,
-// it returns the Height attribute from the parent AdaptationSet.
 func (r *Representation) GetHeight() int {
    if r.Height != 0 {
       return r.Height
@@ -84,8 +79,6 @@ func (r *Representation) GetHeight() int {
 }
 
 // GetWidth returns the width for this Representation.
-// If the Width attribute is 0 on the Representation,
-// it returns the Width attribute from the parent AdaptationSet.
 func (r *Representation) GetWidth() int {
    if r.Width != 0 {
       return r.Width
@@ -97,8 +90,6 @@ func (r *Representation) GetWidth() int {
 }
 
 // GetMimeType returns the mimeType for this Representation.
-// If the MimeType attribute is empty on the Representation,
-// it returns the MimeType attribute from the parent AdaptationSet.
 func (r *Representation) GetMimeType() string {
    if r.MimeType != "" {
       return r.MimeType
@@ -109,9 +100,7 @@ func (r *Representation) GetMimeType() string {
    return ""
 }
 
-// GetContentProtection returns the ContentProtection elements for this Representation.
-// If the Representation has its own ContentProtection elements, they are returned.
-// Otherwise, it returns the ContentProtection elements from the parent AdaptationSet.
+// GetContentProtection returns the ContentProtection elements.
 func (r *Representation) GetContentProtection() []*ContentProtection {
    if len(r.ContentProtection) > 0 {
       return r.ContentProtection
@@ -123,8 +112,6 @@ func (r *Representation) GetContentProtection() []*ContentProtection {
 }
 
 // GetSegmentTemplate returns the SegmentTemplate for this Representation.
-// If the SegmentTemplate is nil on the Representation,
-// it returns the SegmentTemplate from the parent AdaptationSet.
 func (r *Representation) GetSegmentTemplate() *SegmentTemplate {
    if r.SegmentTemplate != nil {
       return r.SegmentTemplate
@@ -136,8 +123,7 @@ func (r *Representation) GetSegmentTemplate() *SegmentTemplate {
 }
 
 // String returns a multi-line summary of the Representation.
-// Fields: bandwidth, width, height, codecs, mimeType, lang, role, period, initialization (32-bit CRC hash).
-// Optional fields are omitted if empty/zero.
+// Since IDs are normalized in Parse(), 'id' will display the clean values ("0, 1") or original IDs.
 func (r *Representation) String() string {
    var b []byte
 
@@ -152,60 +138,46 @@ func (r *Representation) String() string {
       }
    }
 
-   // 1. Representation@bandwidth
+   // 1. Bandwidth
    b = fmt.Appendf(b, "bandwidth = %d", r.Bandwidth)
 
-   // 2. Representation.GetWidth
    if w := r.GetWidth(); w != 0 {
       b = fmt.Appendf(b, "\nwidth = %d", w)
    }
 
-   // 3. Representation.GetHeight
    if h := r.GetHeight(); h != 0 {
       b = fmt.Appendf(b, "\nheight = %d", h)
    }
 
-   // 4. Representation.GetCodecs
    if c := r.GetCodecs(); c != "" {
       b = fmt.Appendf(b, "\ncodecs = %s", c)
    }
 
-   // 5. Representation.GetMimeType
    b = fmt.Appendf(b, "\nmimeType = %s", r.GetMimeType())
 
-   // 6. AdaptationSet@lang
    if lang != "" {
       b = fmt.Appendf(b, "\nlang = %s", lang)
    }
 
-   // 7. Role@value
    if roleVal != "" {
       b = fmt.Appendf(b, "\nrole = %s", roleVal)
    }
 
-   // 8. Period@id
    if periodID != "" {
       b = fmt.Appendf(b, "\nperiod = %s", periodID)
    }
 
-   // 9. Initialization (32-bit CRC32 Hash of the key)
-   if key := r.GetInitializationKey(); key != "" {
-      hash := crc32.ChecksumIEEE([]byte(key))
-      b = fmt.Appendf(b, "\ninitialization = %x", hash)
-   } else {
-      b = fmt.Appendf(b, "\ninitialization =")
-   }
+   // Last. ID (Normalized or Original)
+   b = fmt.Appendf(b, "\nid = %s", r.ID)
 
    return string(b)
 }
 
 func (r *Representation) link() {
    if r.SegmentTemplate != nil {
-      // Req 10.7: SegmentTemplate to Representation
       r.SegmentTemplate.ParentRepresentation = r
    }
    if r.SegmentList != nil {
-      // Req 10.5: SegmentList to Representation
       r.SegmentList.Parent = r
       r.SegmentList.link()
    }
