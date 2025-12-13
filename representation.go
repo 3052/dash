@@ -33,6 +33,16 @@ func (r *Representation) ResolveBaseURL() (*url.URL, error) {
    return resolveRef(parentBase, r.BaseURL)
 }
 
+// GetInitializationHash returns the CRC32 checksum of the initialization key.
+// It returns 0 if no initialization key can be determined.
+func (r *Representation) GetInitializationHash() uint32 {
+   key := r.GetInitializationKey()
+   if key == "" {
+      return 0
+   }
+   return crc32.ChecksumIEEE([]byte(key))
+}
+
 // GetInitializationKey returns the raw initialization string.
 // For SegmentTemplate, it returns the @initialization attribute with $RepresentationID$ replaced.
 // For SegmentList, it returns the @sourceURL.
@@ -189,9 +199,8 @@ func (r *Representation) String() string {
    }
 
    // 9. Initialization (32-bit CRC32 Hash of the key)
-   if key := r.GetInitializationKey(); key != "" {
-      hash := crc32.ChecksumIEEE([]byte(key))
-      b = fmt.Appendf(b, "\ninitialization = %x", hash)
+   if h := r.GetInitializationHash(); h != 0 {
+      b = fmt.Appendf(b, "\ninitialization = %x", h)
    } else {
       b = fmt.Appendf(b, "\ninitialization =")
    }
