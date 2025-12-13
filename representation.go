@@ -33,19 +33,34 @@ func (r *Representation) ResolveBaseURL() (*url.URL, error) {
    return resolveRef(parentBase, r.BaseURL)
 }
 
+// GetInitializationHash returns the CRC32 checksum of the initialization key.
+// It returns 0 if no initialization key can be determined.
+func (r *Representation) GetInitializationHash() uint32 {
+   key := r.GetInitializationKey()
+   if key == "" {
+      return 0
+   }
+   return crc32.ChecksumIEEE([]byte(key))
+}
+
 // GetInitializationKey returns the raw initialization string.
-// For SegmentTemplate, it returns the @initialization attribute with $RepresentationID$ replaced.
+// For SegmentTemplate:
+//   - If @initialization exists, returns it (with $RepresentationID$ replaced).
+//   - Fallback: returns @media (with $RepresentationID$ replaced).
+//
 // For SegmentList, it returns the @sourceURL.
 // Otherwise, it returns the BaseURL.
 // It does NOT resolve absolute BaseURLs.
 func (r *Representation) GetInitializationKey() string {
    // 1. Check SegmentTemplate
-   // We use GetSegmentTemplate() to handle potential inheritance from AdaptationSet
-   if st := r.GetSegmentTemplate(); st != nil && st.Initialization != "" {
-      // We must replace $RepresentationID$, otherwise different Representations
-      // sharing the same template (e.g. "init_$RepresentationID$.mp4")
-      // would end up with the same key.
-      return strings.ReplaceAll(st.Initialization, "$RepresentationID$", r.ID)
+   if st := r.GetSegmentTemplate(); st != nil {
+      if st.Initialization != "" {
+         return strings.ReplaceAll(st.Initialization, "$RepresentationID$", r.ID)
+      }
+      // Fallback to Media template if Initialization is missing
+      if st.Media != "" {
+         return strings.ReplaceAll(st.Media, "$RepresentationID$", r.ID)
+      }
    }
 
    // 2. Check SegmentList
@@ -189,9 +204,8 @@ func (r *Representation) String() string {
    }
 
    // 9. Initialization (32-bit CRC32 Hash of the key)
-   if key := r.GetInitializationKey(); key != "" {
-      hash := crc32.ChecksumIEEE([]byte(key))
-      b = fmt.Appendf(b, "\ninitialization = %x", hash)
+   if h := r.GetInitializationHash(); h != 0 {
+      b = fmt.Appendf(b, "\ninitialization = %x", h)
    } else {
       b = fmt.Appendf(b, "\ninitialization =")
    }
