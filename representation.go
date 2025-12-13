@@ -33,28 +33,40 @@ func (r *Representation) ResolveBaseURL() (*url.URL, error) {
    return resolveRef(parentBase, r.BaseURL)
 }
 
-// GetInitializationKey returns the raw initialization string.
-// For SegmentTemplate, it returns the @initialization attribute with $RepresentationID$ replaced.
-// For SegmentList, it returns the @sourceURL.
-// Otherwise, it returns the BaseURL.
-// It does NOT resolve absolute BaseURLs.
-func (r *Representation) GetInitializationKey() string {
-   // 1. Check SegmentTemplate
-   // We use GetSegmentTemplate() to handle potential inheritance from AdaptationSet
-   if st := r.GetSegmentTemplate(); st != nil && st.Initialization != "" {
-      // We must replace $RepresentationID$, otherwise different Representations
-      // sharing the same template (e.g. "init_$RepresentationID$.mp4")
-      // would end up with the same key.
-      return strings.ReplaceAll(st.Initialization, "$RepresentationID$", r.ID)
+// GetContinuityKey returns the 32-bit CRC32 hash of the identity string.
+// This hash is used to group Representations across Periods on a simplified logical timeline.
+func (r *Representation) GetContinuityKey() uint32 {
+   return crc32.ChecksumIEEE([]byte(r.getContinuityString()))
+}
+
+// getContinuityString returns the raw string used for grouping.
+//
+// Logic:
+// 1. If using SegmentTemplate:
+//   - If 'initialization' or 'media' contains "$RepresentationID$", the Representation.ID is sufficient for uniqueness.
+//   - Otherwise, the template string itself ('initialization' or fallback to 'media') is the key.
+//
+// 2. All other cases (SegmentList, SegmentBase, simple BaseURL):
+//   - The Representation.ID is used as the key.
+func (r *Representation) getContinuityString() string {
+   if st := r.GetSegmentTemplate(); st != nil {
+      // If the template explicitly relies on the ID variable, the ID is the continuity key.
+      if strings.Contains(st.Initialization, "$RepresentationID$") ||
+         strings.Contains(st.Media, "$RepresentationID$") {
+         return r.ID
+      }
+
+      // If the template does not use the ID variable, the template string itself defines the stream.
+      if st.Initialization != "" {
+         return st.Initialization
+      }
+      if st.Media != "" {
+         return st.Media
+      }
    }
 
-   // 2. Check SegmentList
-   if r.SegmentList != nil && r.SegmentList.Initialization != nil {
-      return r.SegmentList.Initialization.SourceURL
-   }
-
-   // 3. Fallback to BaseURL (handles SegmentBase and single-segment Representations)
-   return r.BaseURL
+   // For SegmentList, SegmentBase, or implicit BaseURL, we assume the Representation ID implies continuity.
+   return r.ID
 }
 
 // GetCodecs returns the codecs for this Representation.
@@ -136,7 +148,7 @@ func (r *Representation) GetSegmentTemplate() *SegmentTemplate {
 }
 
 // String returns a multi-line summary of the Representation.
-// Fields: bandwidth, width, height, codecs, mimeType, lang, role, period, initialization (32-bit CRC hash).
+// Fields: bandwidth, width, height, codecs, mimeType, lang, role, period, key (hex encoded hash).
 // Optional fields are omitted if empty/zero.
 func (r *Representation) String() string {
    var b []byte
@@ -188,13 +200,9 @@ func (r *Representation) String() string {
       b = fmt.Appendf(b, "\nperiod = %s", periodID)
    }
 
-   // 9. Initialization (32-bit CRC32 Hash of the key)
-   if key := r.GetInitializationKey(); key != "" {
-      hash := crc32.ChecksumIEEE([]byte(key))
-      b = fmt.Appendf(b, "\ninitialization = %x", hash)
-   } else {
-      b = fmt.Appendf(b, "\ninitialization =")
-   }
+   // 9. Continuity Key (Hexadecimal Hash)
+   // We print the hex value to ensure it is always safe for command line usage.
+   b = fmt.Appendf(b, "\nkey = %x", r.GetContinuityKey())
 
    return string(b)
 }

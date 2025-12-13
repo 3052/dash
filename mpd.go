@@ -36,13 +36,13 @@ func (m *MPD) ResolveBaseURL() (*url.URL, error) {
 }
 
 // GetRepresentations returns a map of all Representations in the MPD,
-// keyed by their Initialization value.
-func (m *MPD) GetRepresentations() map[string][]*Representation {
-   grouped := make(map[string][]*Representation)
+// keyed by the 32-bit hash of their continuity identity.
+func (m *MPD) GetRepresentations() map[uint32][]*Representation {
+   grouped := make(map[uint32][]*Representation)
    for _, p := range m.Periods {
       for _, as := range p.AdaptationSets {
          for _, r := range as.Representations {
-            key := r.GetInitializationKey()
+            key := r.GetContinuityKey()
             grouped[key] = append(grouped[key], r)
          }
       }
