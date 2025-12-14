@@ -86,7 +86,8 @@ func (m *MPD) normalizeIDs() {
                continue
             }
 
-            pattern := r.getContinuityPattern()
+            // Since requiresOriginalID returned false, we know SegmentTemplate exists.
+            pattern := r.GetSegmentTemplate().Media
 
             // Have we assigned an ID to this pattern (stream) yet?
             if existingID, ok := patternToID[pattern]; ok {
@@ -100,6 +101,8 @@ func (m *MPD) normalizeIDs() {
                newID = strconv.Itoa(counter)
                counter++
                // If this number "0" is already taken by a preserved ID "0", skip it.
+               // We need this check to prevent converting a renamable stream into a
+               // reserved stream's name.
                if !reservedIDs[newID] {
                   break
                }

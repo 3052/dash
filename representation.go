@@ -44,18 +44,6 @@ func (r *Representation) requiresOriginalID() bool {
    return strings.Contains(st.Media, "$RepresentationID$")
 }
 
-// getContinuityPattern returns the string used to group streams when IDs are ignored.
-// The Media template is the authoritative source of uniqueness.
-func (r *Representation) getContinuityPattern() string {
-   st := r.GetSegmentTemplate()
-   if st != nil {
-      return st.Media
-   }
-   // Fallback should rarely be reached if requiresOriginalID is checked first,
-   // but strictly speaking, the ID is the pattern for non-template reps.
-   return r.ID
-}
-
 // GetCodecs returns the codecs for this Representation.
 func (r *Representation) GetCodecs() string {
    if r.Codecs != "" {
