@@ -17,7 +17,7 @@ type Period struct {
    Parent *Mpd `xml:"-"`
 }
 
-// ResolveBaseUrl resolves the Period's BaseURL against the parent MPD's resolved BaseURL.
+// ResolveBaseUrl resolves the Period's BaseURL against the parent Mpd's resolved BaseUrl.
 func (p *Period) ResolveBaseUrl() (*url.URL, error) {
    parentBase, err := p.Parent.ResolveBaseUrl()
    if err != nil {
@@ -41,8 +41,8 @@ func (p *Period) GetDuration() (time.Duration, error) {
 }
 
 func (p *Period) link() {
-   for _, as := range p.AdaptationSets {
-      as.Parent = p
-      as.link()
+   for _, currentSet := range p.AdaptationSets {
+      currentSet.Parent = p
+      currentSet.link()
    }
 }
