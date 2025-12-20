@@ -10,23 +10,20 @@ import (
 
 // SegmentTemplate defines specific rules for generating segment URLs.
 type SegmentTemplate struct {
-   Duration               uint   `xml:"duration,attr"`
-   EndNumber              uint   `xml:"endNumber,attr"`
-   Initialization         string `xml:"initialization,attr"`
-   Media                  string `xml:"media,attr"`
-   PresentationTimeOffset uint   `xml:"presentationTimeOffset,attr"`
-   // StartNumber is a pointer to distinguish between missing (nil) and explicitly 0.
-   StartNumber *uint `xml:"startNumber,attr"`
-   // Timescale is a pointer to distinguish between missing (nil) and explicitly 0.
-   Timescale       *uint            `xml:"timescale,attr"`
-   SegmentTimeline *SegmentTimeline `xml:"SegmentTimeline"`
+   Duration               uint             `xml:"duration,attr"`
+   EndNumber              uint             `xml:"endNumber,attr"`
+   Initialization         string           `xml:"initialization,attr"`
+   Media                  string           `xml:"media,attr"`
+   PresentationTimeOffset uint             `xml:"presentationTimeOffset,attr"`
+   StartNumber            *uint            `xml:"startNumber,attr"`
+   Timescale              *uint            `xml:"timescale,attr"`
+   SegmentTimeline        *SegmentTimeline `xml:"SegmentTimeline"`
 
    // Navigation
    ParentAdaptationSet  *AdaptationSet  `xml:"-"`
    ParentRepresentation *Representation `xml:"-"`
 }
 
-// GetStartNumber returns the StartNumber if present, otherwise returns default 1.
 func (st *SegmentTemplate) GetStartNumber() uint {
    if st.StartNumber != nil {
       return *st.StartNumber
@@ -34,7 +31,6 @@ func (st *SegmentTemplate) GetStartNumber() uint {
    return 1
 }
 
-// GetTimescale returns the Timescale if present, otherwise returns default 1.
 func (st *SegmentTemplate) GetTimescale() uint {
    if st.Timescale != nil {
       return *st.Timescale
@@ -42,15 +38,12 @@ func (st *SegmentTemplate) GetTimescale() uint {
    return 1
 }
 
-// GetNumberRange returns a slice of numbers from StartNumber to EndNumber (inclusive).
 func (st *SegmentTemplate) GetNumberRange() []uint {
    start := st.GetStartNumber()
    end := st.EndNumber
-
    if end < start {
       return nil
    }
-
    size := end - start + 1
    nums := make([]uint, size)
    for i := uint(0); i < size; i++ {
@@ -59,15 +52,12 @@ func (st *SegmentTemplate) GetNumberRange() []uint {
    return nums
 }
 
-// GetTimelineNumbers returns a slice of segment numbers derived from the SegmentTimeline.
 func (st *SegmentTemplate) GetTimelineNumbers() []uint {
    if st.SegmentTimeline == nil {
       return nil
    }
-
    var numbers []uint
    current := st.GetStartNumber()
-
    for _, s := range st.SegmentTimeline.S {
       count := 1
       if s.R > 0 {
@@ -81,16 +71,12 @@ func (st *SegmentTemplate) GetTimelineNumbers() []uint {
    return numbers
 }
 
-// GetTimelineTimes returns a slice of start times for segments derived from the SegmentTimeline.
 func (st *SegmentTemplate) GetTimelineTimes() []uint {
    if st.SegmentTimeline == nil {
       return nil
    }
-
    var times []uint
-   // Req 39: Initialize with PresentationTimeOffset
    currentTime := st.PresentationTimeOffset
-
    for _, s := range st.SegmentTimeline.S {
       count := 1
       if s.R > 0 {
@@ -104,9 +90,7 @@ func (st *SegmentTemplate) GetTimelineTimes() []uint {
    return times
 }
 
-// GetDurationBasedNumbers calculates segment numbers based on Period duration.
 func (st *SegmentTemplate) GetDurationBasedNumbers() ([]uint, error) {
-   // 1. Find the parent Period
    var period *Period
    if st.ParentRepresentation != nil && st.ParentRepresentation.Parent != nil {
       period = st.ParentRepresentation.Parent.Parent
@@ -118,7 +102,6 @@ func (st *SegmentTemplate) GetDurationBasedNumbers() ([]uint, error) {
       return nil, errors.New("SegmentTemplate is not properly linked to a Period")
    }
 
-   // 2. Get Period Duration (Seconds)
    pDur, err := period.GetDuration()
    if err != nil {
       return nil, err
@@ -127,33 +110,26 @@ func (st *SegmentTemplate) GetDurationBasedNumbers() ([]uint, error) {
       return nil, errors.New("period duration is zero or missing")
    }
 
-   // 3. Get Segment Duration parameters
    if st.Duration == 0 {
       return nil, errors.New("SegmentTemplate duration is zero")
    }
 
-   // 4. Calculate count
-   // Formula: Ceil( AsSeconds(Period@duration) / (SegmentTemplate@duration / SegmentTemplate@timescale) )
    segDurSec := float64(st.Duration) / float64(st.GetTimescale())
    count := uint(math.Ceil(pDur.Seconds() / segDurSec))
 
-   // 5. Generate numbers
    start := st.GetStartNumber()
    numbers := make([]uint, count)
    for i := uint(0); i < count; i++ {
       numbers[i] = start + i
    }
-
    return numbers, nil
 }
 
-// GetSegmentURLs returns all segment URLs defined by this template.
-func (st *SegmentTemplate) GetSegmentURLs(rep *Representation) ([]*url.URL, error) {
+func (st *SegmentTemplate) GetSegmentUrls(rep *Representation) ([]*url.URL, error) {
    if st.Media == "" {
       return nil, nil
    }
 
-   // Strategy 1: Time-based addressing
    if strings.Contains(st.Media, "$Time$") {
       times := st.GetTimelineTimes()
       if len(times) == 0 {
@@ -170,7 +146,6 @@ func (st *SegmentTemplate) GetSegmentURLs(rep *Representation) ([]*url.URL, erro
       return urls, nil
    }
 
-   // Strategy 2: Number-based addressing
    var numbers []uint
    if st.SegmentTimeline != nil {
       numbers = st.GetTimelineNumbers()
@@ -197,7 +172,6 @@ func (st *SegmentTemplate) GetSegmentURLs(rep *Representation) ([]*url.URL, erro
    return urls, nil
 }
 
-// ResolveInitialization resolves the @initialization attribute.
 func (st *SegmentTemplate) ResolveInitialization(rep *Representation) (*url.URL, error) {
    base, initStr, err := st.prepareTemplateString(rep, st.Initialization)
    if err != nil {
@@ -206,14 +180,12 @@ func (st *SegmentTemplate) ResolveInitialization(rep *Representation) (*url.URL,
    return resolveRef(base, initStr)
 }
 
-// ResolveMedia resolves the @media attribute for number-based addressing.
 func (st *SegmentTemplate) ResolveMedia(rep *Representation, number int) (*url.URL, error) {
    base, mediaStr, err := st.prepareTemplateString(rep, st.Media)
    if err != nil {
       return nil, err
    }
 
-   // Replace $Number%0xd$ variants
    formats := []string{"%02d", "%03d", "%04d", "%05d", "%06d", "%07d", "%08d", "%09d"}
    for _, f := range formats {
       token := fmt.Sprintf("$Number%s$", f)
@@ -222,55 +194,45 @@ func (st *SegmentTemplate) ResolveMedia(rep *Representation, number int) (*url.U
       }
    }
 
-   // Replace bare $Number$
    mediaStr = strings.ReplaceAll(mediaStr, "$Number$", fmt.Sprintf("%d", number))
-
    return resolveRef(base, mediaStr)
 }
 
-// ResolveMediaTime resolves the @media attribute for time-based addressing.
 func (st *SegmentTemplate) ResolveMediaTime(rep *Representation, timeVal int) (*url.URL, error) {
    base, mediaStr, err := st.prepareTemplateString(rep, st.Media)
    if err != nil {
       return nil, err
    }
-
-   // Replace $Time$
    mediaStr = strings.ReplaceAll(mediaStr, "$Time$", fmt.Sprintf("%d", timeVal))
-
    return resolveRef(base, mediaStr)
 }
 
-// prepareTemplateString resolves the base URL and performs $RepresentationID$ replacement.
-// This is a helper to remove duplication from the Resolve* methods.
 func (st *SegmentTemplate) prepareTemplateString(rep *Representation, tmpl string) (*url.URL, string, error) {
-   base, err := st.getParentBaseURL()
+   base, err := st.getParentBaseUrl()
    if err != nil {
       return nil, "", err
    }
 
-   // Determine ID
-   var repID string
+   var repId string
    if rep != nil {
-      repID = rep.ID
+      repId = rep.Id
    } else if st.ParentRepresentation != nil {
-      repID = st.ParentRepresentation.ID
+      repId = st.ParentRepresentation.Id
    }
 
-   // Replace $RepresentationID$
-   if repID != "" {
-      tmpl = strings.ReplaceAll(tmpl, "$RepresentationID$", repID)
+   if repId != "" {
+      tmpl = strings.ReplaceAll(tmpl, "$RepresentationID$", repId)
    }
 
    return base, tmpl, nil
 }
 
-func (st *SegmentTemplate) getParentBaseURL() (*url.URL, error) {
+func (st *SegmentTemplate) getParentBaseUrl() (*url.URL, error) {
    if st.ParentRepresentation != nil {
-      return st.ParentRepresentation.ResolveBaseURL()
+      return st.ParentRepresentation.ResolveBaseUrl()
    }
    if st.ParentAdaptationSet != nil {
-      return st.ParentAdaptationSet.getAbsoluteBaseURL()
+      return st.ParentAdaptationSet.getAbsoluteBaseUrl()
    }
    return nil, errors.New("SegmentTemplate has no parent linked")
 }

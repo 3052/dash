@@ -13,14 +13,13 @@ type AdaptationSet struct {
    Role              *Role                `xml:"Role"`
    SegmentTemplate   *SegmentTemplate     `xml:"SegmentTemplate"`
    Representations   []*Representation    `xml:"Representation"`
-
    // Navigation
    Parent *Period `xml:"-"`
 }
 
-// getAbsoluteBaseURL returns the resolved BaseURL of the parent Period.
-func (as *AdaptationSet) getAbsoluteBaseURL() (*url.URL, error) {
-   return as.Parent.ResolveBaseURL()
+// getAbsoluteBaseUrl returns the resolved BaseUrl of the parent Period.
+func (as *AdaptationSet) getAbsoluteBaseUrl() (*url.URL, error) {
+   return as.Parent.ResolveBaseUrl()
 }
 
 func (as *AdaptationSet) link() {
