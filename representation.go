@@ -6,6 +6,70 @@ import (
    "strings"
 )
 
+// String returns a multi-line summary of the Representation.
+// Since IDs are normalized in Parse(), 'id' will display the clean values ("0, 1") or original IDs.
+func (r *Representation) String() string {
+   var b []byte
+
+   var periodID, lang, roleVal string
+   if r.Parent != nil {
+      lang = r.Parent.Lang
+      if r.Parent.Role != nil {
+         roleVal = r.Parent.Role.Value
+      }
+      if r.Parent.Parent != nil {
+         periodID = r.Parent.Parent.ID
+      }
+   }
+
+   // 1. Bandwidth
+   b = fmt.Appendf(b, "bandwidth = %d", r.Bandwidth)
+
+   if w := r.GetWidth(); w != 0 {
+      b = fmt.Appendf(b, "\nwidth = %d", w)
+   }
+
+   if h := r.GetHeight(); h != 0 {
+      b = fmt.Appendf(b, "\nheight = %d", h)
+   }
+
+   if c := r.GetCodecs(); c != "" {
+      b = fmt.Appendf(b, "\ncodecs = %s", c)
+   }
+
+   b = fmt.Appendf(b, "\nmimeType = %s", r.GetMimeType())
+
+   if lang != "" {
+      b = fmt.Appendf(b, "\nlang = %s", lang)
+   }
+
+   if roleVal != "" {
+      b = fmt.Appendf(b, "\nrole = %s", roleVal)
+   }
+
+   if periodID != "" {
+      b = fmt.Appendf(b, "\nperiod = %s", periodID)
+   }
+
+   // Last. ID (Normalized or Original)
+   b = fmt.Appendf(b, "\nid = %s", r.ID)
+
+   return string(b)
+}
+
+func (r *Representation) link() {
+   if r.SegmentTemplate != nil {
+      r.SegmentTemplate.ParentRepresentation = r
+   }
+   if r.SegmentList != nil {
+      r.SegmentList.Parent = r
+      r.SegmentList.link()
+   }
+   if r.SegmentBase != nil {
+      r.SegmentBase.link()
+   }
+}
+
 // Representation describes a version of the media content.
 type Representation struct {
    Bandwidth         int                  `xml:"bandwidth,attr"`
@@ -108,68 +172,4 @@ func (r *Representation) GetSegmentTemplate() *SegmentTemplate {
       return r.Parent.SegmentTemplate
    }
    return nil
-}
-
-// String returns a multi-line summary of the Representation.
-// Since IDs are normalized in Parse(), 'id' will display the clean values ("0, 1") or original IDs.
-func (r *Representation) String() string {
-   var b []byte
-
-   var periodID, lang, roleVal string
-   if r.Parent != nil {
-      lang = r.Parent.Lang
-      if r.Parent.Role != nil {
-         roleVal = r.Parent.Role.Value
-      }
-      if r.Parent.Parent != nil {
-         periodID = r.Parent.Parent.ID
-      }
-   }
-
-   // 1. Bandwidth
-   b = fmt.Appendf(b, "bandwidth = %d", r.Bandwidth)
-
-   if w := r.GetWidth(); w != 0 {
-      b = fmt.Appendf(b, "\nwidth = %d", w)
-   }
-
-   if h := r.GetHeight(); h != 0 {
-      b = fmt.Appendf(b, "\nheight = %d", h)
-   }
-
-   if c := r.GetCodecs(); c != "" {
-      b = fmt.Appendf(b, "\ncodecs = %s", c)
-   }
-
-   b = fmt.Appendf(b, "\nmimeType = %s", r.GetMimeType())
-
-   if lang != "" {
-      b = fmt.Appendf(b, "\nlang = %s", lang)
-   }
-
-   if roleVal != "" {
-      b = fmt.Appendf(b, "\nrole = %s", roleVal)
-   }
-
-   if periodID != "" {
-      b = fmt.Appendf(b, "\nperiod = %s", periodID)
-   }
-
-   // Last. ID (Normalized or Original)
-   b = fmt.Appendf(b, "\nid = %s", r.ID)
-
-   return string(b)
-}
-
-func (r *Representation) link() {
-   if r.SegmentTemplate != nil {
-      r.SegmentTemplate.ParentRepresentation = r
-   }
-   if r.SegmentList != nil {
-      r.SegmentList.Parent = r
-      r.SegmentList.link()
-   }
-   if r.SegmentBase != nil {
-      r.SegmentBase.link()
-   }
 }
