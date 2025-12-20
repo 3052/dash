@@ -7,6 +7,6 @@ type SegmentTimeline struct {
 
 // S represents a segment within the timeline.
 type S struct {
-   D uint `xml:"d,attr"` // Duration
-   R int  `xml:"r,attr"` // Repeat count
+   Duration uint `xml:"d,attr"` // Duration
+   Repeat   int  `xml:"r,attr"` // Repeat count
 }

@@ -24,12 +24,10 @@ func (as *AdaptationSet) getAbsoluteBaseUrl() (*url.URL, error) {
 
 func (as *AdaptationSet) link() {
    if as.SegmentTemplate != nil {
-      // Req 10.6: SegmentTemplate to AdaptationSet
       as.SegmentTemplate.ParentAdaptationSet = as
    }
-   for _, rep := range as.Representations {
-      // Req 10.4: Representation to AdaptationSet
-      rep.Parent = as
-      rep.link()
+   for _, mediaRep := range as.Representations {
+      mediaRep.Parent = as
+      mediaRep.link()
    }
 }

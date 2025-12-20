@@ -7,7 +7,4 @@ type SegmentBase struct {
 }
 
 func (sb *SegmentBase) link() {
-   // Note: Req 10.2 specifies Initialization -> SegmentList
-   // Logic for Initialization inside SegmentBase is not strictly required by Req 10,
-   // but structure is provided here for completeness of parsing.
 }
