@@ -46,8 +46,8 @@ func (st *SegmentTemplate) GetNumberRange() []uint {
    }
    size := end - start + 1
    nums := make([]uint, size)
-   for i := uint(0); i < size; i++ {
-      nums[i] = start + i
+   for idx := uint(0); idx < size; idx++ {
+      nums[idx] = start + idx
    }
    return nums
 }
@@ -58,12 +58,12 @@ func (st *SegmentTemplate) GetTimelineNumbers() []uint {
    }
    var numbers []uint
    current := st.GetStartNumber()
-   for _, s := range st.SegmentTimeline.S {
+   for _, segment := range st.SegmentTimeline.S {
       count := 1
-      if s.R > 0 {
-         count += s.R
+      if segment.Repeat > 0 {
+         count += segment.Repeat
       }
-      for i := 0; i < count; i++ {
+      for idx := 0; idx < count; idx++ {
          numbers = append(numbers, current)
          current++
       }
@@ -77,36 +77,36 @@ func (st *SegmentTemplate) GetTimelineTimes() []uint {
    }
    var times []uint
    currentTime := st.PresentationTimeOffset
-   for _, s := range st.SegmentTimeline.S {
+   for _, segment := range st.SegmentTimeline.S {
       count := 1
-      if s.R > 0 {
-         count += s.R
+      if segment.Repeat > 0 {
+         count += segment.Repeat
       }
-      for i := 0; i < count; i++ {
+      for idx := 0; idx < count; idx++ {
          times = append(times, currentTime)
-         currentTime += s.D
+         currentTime += segment.Duration
       }
    }
    return times
 }
 
 func (st *SegmentTemplate) GetDurationBasedNumbers() ([]uint, error) {
-   var period *Period
+   var currentPeriod *Period
    if st.ParentRepresentation != nil && st.ParentRepresentation.Parent != nil {
-      period = st.ParentRepresentation.Parent.Parent
+      currentPeriod = st.ParentRepresentation.Parent.Parent
    } else if st.ParentAdaptationSet != nil {
-      period = st.ParentAdaptationSet.Parent
+      currentPeriod = st.ParentAdaptationSet.Parent
    }
 
-   if period == nil {
+   if currentPeriod == nil {
       return nil, errors.New("SegmentTemplate is not properly linked to a Period")
    }
 
-   pDur, err := period.GetDuration()
+   pDuration, err := currentPeriod.GetDuration()
    if err != nil {
       return nil, err
    }
-   if pDur == 0 {
+   if pDuration == 0 {
       return nil, errors.New("period duration is zero or missing")
    }
 
@@ -115,12 +115,12 @@ func (st *SegmentTemplate) GetDurationBasedNumbers() ([]uint, error) {
    }
 
    segDurSec := float64(st.Duration) / float64(st.GetTimescale())
-   count := uint(math.Ceil(pDur.Seconds() / segDurSec))
+   count := uint(math.Ceil(pDuration.Seconds() / segDurSec))
 
    start := st.GetStartNumber()
    numbers := make([]uint, count)
-   for i := uint(0); i < count; i++ {
-      numbers[i] = start + i
+   for idx := uint(0); idx < count; idx++ {
+      numbers[idx] = start + idx
    }
    return numbers, nil
 }
@@ -136,12 +136,12 @@ func (st *SegmentTemplate) GetSegmentUrls(rep *Representation) ([]*url.URL, erro
          return nil, errors.New("media template requires $Time$ but no SegmentTimeline found")
       }
       var urls []*url.URL
-      for _, t := range times {
-         u, err := st.ResolveMediaTime(rep, int(t))
+      for _, timeVal := range times {
+         parsedUrl, err := st.ResolveMediaTime(rep, int(timeVal))
          if err != nil {
             return nil, err
          }
-         urls = append(urls, u)
+         urls = append(urls, parsedUrl)
       }
       return urls, nil
    }
@@ -162,12 +162,12 @@ func (st *SegmentTemplate) GetSegmentUrls(rep *Representation) ([]*url.URL, erro
    }
 
    var urls []*url.URL
-   for _, n := range numbers {
-      u, err := st.ResolveMedia(rep, int(n))
+   for _, num := range numbers {
+      parsedUrl, err := st.ResolveMedia(rep, int(num))
       if err != nil {
          return nil, err
       }
-      urls = append(urls, u)
+      urls = append(urls, parsedUrl)
    }
    return urls, nil
 }
@@ -187,10 +187,10 @@ func (st *SegmentTemplate) ResolveMedia(rep *Representation, number int) (*url.U
    }
 
    formats := []string{"%02d", "%03d", "%04d", "%05d", "%06d", "%07d", "%08d", "%09d"}
-   for _, f := range formats {
-      token := fmt.Sprintf("$Number%s$", f)
+   for _, format := range formats {
+      token := fmt.Sprintf("$Number%s$", format)
       if strings.Contains(mediaStr, token) {
-         mediaStr = strings.ReplaceAll(mediaStr, token, fmt.Sprintf(f, number))
+         mediaStr = strings.ReplaceAll(mediaStr, token, fmt.Sprintf(format, number))
       }
    }
 
@@ -207,7 +207,7 @@ func (st *SegmentTemplate) ResolveMediaTime(rep *Representation, timeVal int) (*
    return resolveRef(base, mediaStr)
 }
 
-func (st *SegmentTemplate) prepareTemplateString(rep *Representation, tmpl string) (*url.URL, string, error) {
+func (st *SegmentTemplate) prepareTemplateString(rep *Representation, templateStr string) (*url.URL, string, error) {
    base, err := st.getParentBaseUrl()
    if err != nil {
       return nil, "", err
@@ -221,10 +221,10 @@ func (st *SegmentTemplate) prepareTemplateString(rep *Representation, tmpl strin
    }
 
    if repId != "" {
-      tmpl = strings.ReplaceAll(tmpl, "$RepresentationID$", repId)
+      templateStr = strings.ReplaceAll(templateStr, "$RepresentationID$", repId)
    }
 
-   return base, tmpl, nil
+   return base, templateStr, nil
 }
 
 func (st *SegmentTemplate) getParentBaseUrl() (*url.URL, error) {

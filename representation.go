@@ -8,48 +8,55 @@ import (
 
 // String returns a multi-line summary of the Representation.
 func (r *Representation) String() string {
-   sb := &strings.Builder{}
-   var periodId, lang, roleVal string
+   builder := &strings.Builder{}
+   var periodId, lang, roleValue string
+
    if r.Parent != nil {
       lang = r.Parent.Lang
       if r.Parent.Role != nil {
-         roleVal = r.Parent.Role.Value
+         roleValue = r.Parent.Role.Value
       }
       if r.Parent.Parent != nil {
          periodId = r.Parent.Parent.Id
       }
    }
-   sb.WriteString("bandwidth = ")
-   fmt.Fprint(sb, r.Bandwidth)
-   if w := r.GetWidth(); w != 0 {
-      sb.WriteString("\nwidth = ")
-      fmt.Fprint(sb, w)
+
+   builder.WriteString("bandwidth = ")
+   fmt.Fprint(builder, r.Bandwidth)
+
+   if width := r.GetWidth(); width != 0 {
+      builder.WriteString("\nwidth = ")
+      fmt.Fprint(builder, width)
    }
-   if h := r.GetHeight(); h != 0 {
-      sb.WriteString("\nheight = ")
-      fmt.Fprint(sb, h)
+   if height := r.GetHeight(); height != 0 {
+      builder.WriteString("\nheight = ")
+      fmt.Fprint(builder, height)
    }
-   if c := r.GetCodecs(); c != "" {
-      sb.WriteString("\ncodecs = ")
-      sb.WriteString(c)
+   if codecs := r.GetCodecs(); codecs != "" {
+      builder.WriteString("\ncodecs = ")
+      builder.WriteString(codecs)
    }
-   sb.WriteString("\nmimeType = ")
-   sb.WriteString(r.GetMimeType())
+
+   builder.WriteString("\nmimeType = ")
+   builder.WriteString(r.GetMimeType())
+
    if lang != "" {
-      sb.WriteString("\nlang = ")
-      sb.WriteString(lang)
+      builder.WriteString("\nlang = ")
+      builder.WriteString(lang)
    }
-   if roleVal != "" {
-      sb.WriteString("\nrole = ")
-      sb.WriteString(roleVal)
+   if roleValue != "" {
+      builder.WriteString("\nrole = ")
+      builder.WriteString(roleValue)
    }
    if periodId != "" {
-      sb.WriteString("\nperiod = ")
-      sb.WriteString(periodId)
+      builder.WriteString("\nperiod = ")
+      builder.WriteString(periodId)
    }
-   sb.WriteString("\nid = ")
-   sb.WriteString(r.Id)
-   return sb.String()
+
+   builder.WriteString("\nid = ")
+   builder.WriteString(r.Id)
+
+   return builder.String()
 }
 
 func (r *Representation) link() {
@@ -92,11 +99,11 @@ func (r *Representation) ResolveBaseUrl() (*url.URL, error) {
 
 // requiresOriginalId checks if the Representation ID should be preserved.
 func (r *Representation) requiresOriginalId() bool {
-   st := r.GetSegmentTemplate()
-   if st == nil {
+   repTemplate := r.GetSegmentTemplate()
+   if repTemplate == nil {
       return true
    }
-   return strings.Contains(st.Media, "$RepresentationID$")
+   return strings.Contains(repTemplate.Media, "$RepresentationID$")
 }
 
 func (r *Representation) GetCodecs() string {

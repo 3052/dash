@@ -27,7 +27,7 @@ func (sl *SegmentList) link() {
    if sl.Initialization != nil {
       sl.Initialization.Parent = sl
    }
-   for _, u := range sl.SegmentUrls {
-      u.Parent = sl
+   for _, segmentUrl := range sl.SegmentUrls {
+      segmentUrl.Parent = sl
    }
 }

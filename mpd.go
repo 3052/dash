@@ -9,16 +9,16 @@ import (
 // Parse takes a byte slice of an MPD file, unmarshals it,
 // links navigation parents, and normalizes Representation IDs.
 func Parse(data []byte) (*Mpd, error) {
-   var m Mpd
-   err := xml.Unmarshal(data, &m)
+   var manifest Mpd
+   err := xml.Unmarshal(data, &manifest)
    if err != nil {
       return nil, err
    }
 
-   m.link()
-   m.normalizeIds()
+   manifest.link()
+   manifest.normalizeIds()
 
-   return &m, nil
+   return &manifest, nil
 }
 
 // Mpd represents the root element of the DASH MPD file.
@@ -37,24 +37,25 @@ func (m *Mpd) ResolveBaseUrl() (*url.URL, error) {
 // GetRepresentations returns a map of all Representations keyed by their Id.
 func (m *Mpd) GetRepresentations() map[string][]*Representation {
    grouped := make(map[string][]*Representation)
-   for _, p := range m.Periods {
-      for _, as := range p.AdaptationSets {
-         for _, r := range as.Representations {
-            grouped[r.Id] = append(grouped[r.Id], r)
+   for _, manifestPeriod := range m.Periods {
+      for _, currentSet := range manifestPeriod.AdaptationSets {
+         for _, mediaRep := range currentSet.Representations {
+            grouped[mediaRep.Id] = append(grouped[mediaRep.Id], mediaRep)
          }
       }
    }
    return grouped
 }
 
+// normalizeIds iterates through the MPD and rewrites Representation IDs.
 func (m *Mpd) normalizeIds() {
    reservedIds := make(map[string]bool)
 
-   for _, p := range m.Periods {
-      for _, as := range p.AdaptationSets {
-         for _, r := range as.Representations {
-            if r.requiresOriginalId() {
-               reservedIds[r.Id] = true
+   for _, manifestPeriod := range m.Periods {
+      for _, currentSet := range manifestPeriod.AdaptationSets {
+         for _, mediaRep := range currentSet.Representations {
+            if mediaRep.requiresOriginalId() {
+               reservedIds[mediaRep.Id] = true
             }
          }
       }
@@ -63,16 +64,17 @@ func (m *Mpd) normalizeIds() {
    counter := 0
    patternToId := make(map[string]string)
 
-   for _, p := range m.Periods {
-      for _, as := range p.AdaptationSets {
-         for _, r := range as.Representations {
-            if r.requiresOriginalId() {
+   for _, manifestPeriod := range m.Periods {
+      for _, currentSet := range manifestPeriod.AdaptationSets {
+         for _, mediaRep := range currentSet.Representations {
+            if mediaRep.requiresOriginalId() {
                continue
             }
 
-            pattern := r.GetSegmentTemplate().Media
+            pattern := mediaRep.GetSegmentTemplate().Media
+
             if existingId, ok := patternToId[pattern]; ok {
-               r.Id = existingId
+               mediaRep.Id = existingId
                continue
             }
 
@@ -86,16 +88,16 @@ func (m *Mpd) normalizeIds() {
             }
 
             patternToId[pattern] = newId
-            r.Id = newId
+            mediaRep.Id = newId
          }
       }
    }
 }
 
 func (m *Mpd) link() {
-   for _, p := range m.Periods {
-      p.Parent = m
-      p.link()
+   for _, manifestPeriod := range m.Periods {
+      manifestPeriod.Parent = m
+      manifestPeriod.link()
    }
 }
 
