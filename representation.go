@@ -8,7 +8,6 @@ import (
 
 // String returns a multi-line summary of the Representation.
 func (r *Representation) String() string {
-   data := &strings.Builder{}
    var periodId, lang, roleValue string
    if r.Parent != nil {
       lang = r.Parent.Lang
@@ -19,6 +18,7 @@ func (r *Representation) String() string {
          periodId = r.Parent.Parent.Id
       }
    }
+   var data strings.Builder
    data.WriteString("bandwidth = ")
    data.WriteString(strconv.Itoa(r.Bandwidth))
    if width := r.GetWidth(); width != 0 {
@@ -153,8 +153,5 @@ func (r *Representation) link() {
    if r.SegmentList != nil {
       r.SegmentList.Parent = r
       r.SegmentList.link()
-   }
-   if r.SegmentBase != nil {
-      r.SegmentBase.link()
    }
 }
