@@ -17,6 +17,11 @@ type AdaptationSet struct {
    Parent *Period `xml:"-"`
 }
 
+// Role defines the role of the media content.
+type Role struct {
+   Value string `xml:"value,attr"`
+}
+
 // getAbsoluteBaseUrl returns the resolved BaseUrl of the parent Period.
 func (as *AdaptationSet) getAbsoluteBaseUrl() (*url.URL, error) {
    return as.Parent.ResolveBaseUrl()

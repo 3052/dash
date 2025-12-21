@@ -1,16 +1,15 @@
 package dash
 
 import (
-   "fmt"
    "net/url"
+   "strconv"
    "strings"
 )
 
 // String returns a multi-line summary of the Representation.
 func (r *Representation) String() string {
-   builder := &strings.Builder{}
+   data := &strings.Builder{}
    var periodId, lang, roleValue string
-
    if r.Parent != nil {
       lang = r.Parent.Lang
       if r.Parent.Role != nil {
@@ -20,56 +19,37 @@ func (r *Representation) String() string {
          periodId = r.Parent.Parent.Id
       }
    }
-
-   builder.WriteString("bandwidth = ")
-   fmt.Fprint(builder, r.Bandwidth)
-
+   data.WriteString("bandwidth = ")
+   data.WriteString(strconv.Itoa(r.Bandwidth))
    if width := r.GetWidth(); width != 0 {
-      builder.WriteString("\nwidth = ")
-      fmt.Fprint(builder, width)
+      data.WriteString("\nwidth = ")
+      data.WriteString(strconv.Itoa(width))
    }
    if height := r.GetHeight(); height != 0 {
-      builder.WriteString("\nheight = ")
-      fmt.Fprint(builder, height)
+      data.WriteString("\nheight = ")
+      data.WriteString(strconv.Itoa(height))
    }
    if codecs := r.GetCodecs(); codecs != "" {
-      builder.WriteString("\ncodecs = ")
-      builder.WriteString(codecs)
+      data.WriteString("\ncodecs = ")
+      data.WriteString(codecs)
    }
-
-   builder.WriteString("\nmimeType = ")
-   builder.WriteString(r.GetMimeType())
-
+   data.WriteString("\nmimeType = ")
+   data.WriteString(r.GetMimeType())
    if lang != "" {
-      builder.WriteString("\nlang = ")
-      builder.WriteString(lang)
+      data.WriteString("\nlang = ")
+      data.WriteString(lang)
    }
    if roleValue != "" {
-      builder.WriteString("\nrole = ")
-      builder.WriteString(roleValue)
+      data.WriteString("\nrole = ")
+      data.WriteString(roleValue)
    }
    if periodId != "" {
-      builder.WriteString("\nperiod = ")
-      builder.WriteString(periodId)
+      data.WriteString("\nperiod = ")
+      data.WriteString(periodId)
    }
-
-   builder.WriteString("\nid = ")
-   builder.WriteString(r.Id)
-
-   return builder.String()
-}
-
-func (r *Representation) link() {
-   if r.SegmentTemplate != nil {
-      r.SegmentTemplate.ParentRepresentation = r
-   }
-   if r.SegmentList != nil {
-      r.SegmentList.Parent = r
-      r.SegmentList.link()
-   }
-   if r.SegmentBase != nil {
-      r.SegmentBase.link()
-   }
+   data.WriteString("\nid = ")
+   data.WriteString(r.Id)
+   return data.String()
 }
 
 // Representation describes a version of the media content.
@@ -164,4 +144,17 @@ func (r *Representation) GetSegmentTemplate() *SegmentTemplate {
       return r.Parent.SegmentTemplate
    }
    return nil
+}
+
+func (r *Representation) link() {
+   if r.SegmentTemplate != nil {
+      r.SegmentTemplate.ParentRepresentation = r
+   }
+   if r.SegmentList != nil {
+      r.SegmentList.Parent = r
+      r.SegmentList.link()
+   }
+   if r.SegmentBase != nil {
+      r.SegmentBase.link()
+   }
 }

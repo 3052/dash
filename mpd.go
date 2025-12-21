@@ -14,10 +14,8 @@ func Parse(data []byte) (*Mpd, error) {
    if err != nil {
       return nil, err
    }
-
    manifest.link()
    manifest.normalizeIds()
-
    return &manifest, nil
 }
 
@@ -50,7 +48,6 @@ func (m *Mpd) GetRepresentations() map[string][]*Representation {
 // normalizeIds iterates through the MPD and rewrites Representation IDs.
 func (m *Mpd) normalizeIds() {
    reservedIds := make(map[string]bool)
-
    for _, manifestPeriod := range m.Periods {
       for _, currentSet := range manifestPeriod.AdaptationSets {
          for _, mediaRep := range currentSet.Representations {
@@ -60,28 +57,23 @@ func (m *Mpd) normalizeIds() {
          }
       }
    }
-
    counter := 0
    patternToId := make(map[string]string)
-
    for _, manifestPeriod := range m.Periods {
       for _, currentSet := range manifestPeriod.AdaptationSets {
          for _, mediaRep := range currentSet.Representations {
             if mediaRep.requiresOriginalId() {
                continue
             }
-
             currentTemplate := mediaRep.GetSegmentTemplate()
             if currentTemplate == nil {
                continue
             }
             pattern := currentTemplate.Media
-
             if existingId, ok := patternToId[pattern]; ok {
                mediaRep.Id = existingId
                continue
             }
-
             var newId string
             for {
                newId = strconv.Itoa(counter)
@@ -90,7 +82,6 @@ func (m *Mpd) normalizeIds() {
                   break
                }
             }
-
             patternToId[pattern] = newId
             mediaRep.Id = newId
          }

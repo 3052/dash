@@ -12,7 +12,6 @@ type Period struct {
    Id             string           `xml:"id,attr"`
    BaseUrl        string           `xml:"BaseURL"`
    AdaptationSets []*AdaptationSet `xml:"AdaptationSet"`
-
    // Navigation
    Parent *Mpd `xml:"-"`
 }
@@ -32,11 +31,9 @@ func (p *Period) GetDuration() (time.Duration, error) {
    if durStr == "" && p.Parent != nil {
       durStr = p.Parent.MediaPresentationDuration
    }
-
    if durStr == "" {
       return 0, nil
    }
-
    return time.ParseDuration(strings.ToLower(strings.TrimPrefix(durStr, "PT")))
 }
 
