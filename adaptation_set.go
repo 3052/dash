@@ -5,14 +5,15 @@ import "net/url"
 // AdaptationSet groups Representations.
 type AdaptationSet struct {
    Codecs            string               `xml:"codecs,attr"`
+   ContentProtection []*ContentProtection `xml:"ContentProtection"`
    Height            int                  `xml:"height,attr"`
+   Label             string               `xml:"Label"`
    Lang              string               `xml:"lang,attr"`
    MimeType          string               `xml:"mimeType,attr"`
-   Width             int                  `xml:"width,attr"`
-   ContentProtection []*ContentProtection `xml:"ContentProtection"`
+   Representations   []*Representation    `xml:"Representation"`
    Role              *Role                `xml:"Role"`
    SegmentTemplate   *SegmentTemplate     `xml:"SegmentTemplate"`
-   Representations   []*Representation    `xml:"Representation"`
+   Width             int                  `xml:"width,attr"`
    // Navigation
    Parent *Period `xml:"-"`
 }

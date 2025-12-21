@@ -8,17 +8,7 @@ import (
 
 // String returns a multi-line summary of the Representation.
 func (r *Representation) String() string {
-   data := &strings.Builder{}
-   var periodId, lang, roleValue string
-   if r.Parent != nil {
-      lang = r.Parent.Lang
-      if r.Parent.Role != nil {
-         roleValue = r.Parent.Role.Value
-      }
-      if r.Parent.Parent != nil {
-         periodId = r.Parent.Parent.Id
-      }
-   }
+   var data strings.Builder
    data.WriteString("bandwidth = ")
    data.WriteString(strconv.Itoa(r.Bandwidth))
    if width := r.GetWidth(); width != 0 {
@@ -35,15 +25,20 @@ func (r *Representation) String() string {
    }
    data.WriteString("\nmimeType = ")
    data.WriteString(r.GetMimeType())
-   if lang != "" {
+
+   if label := r.GetLabel(); label != "" {
+      data.WriteString("\nlabel = ")
+      data.WriteString(label)
+   } else if lang := r.GetLang(); lang != "" {
       data.WriteString("\nlang = ")
       data.WriteString(lang)
    }
-   if roleValue != "" {
+
+   if role := r.GetRole(); role != "" {
       data.WriteString("\nrole = ")
-      data.WriteString(roleValue)
+      data.WriteString(role)
    }
-   if periodId != "" {
+   if periodId := r.GetPeriodId(); periodId != "" {
       data.WriteString("\nperiod = ")
       data.WriteString(periodId)
    }
@@ -126,6 +121,34 @@ func (r *Representation) GetMimeType() string {
    return ""
 }
 
+func (r *Representation) GetLang() string {
+   if r.Parent != nil {
+      return r.Parent.Lang
+   }
+   return ""
+}
+
+func (r *Representation) GetLabel() string {
+   if r.Parent != nil {
+      return r.Parent.Label
+   }
+   return ""
+}
+
+func (r *Representation) GetRole() string {
+   if r.Parent != nil && r.Parent.Role != nil {
+      return r.Parent.Role.Value
+   }
+   return ""
+}
+
+func (r *Representation) GetPeriodId() string {
+   if r.Parent != nil && r.Parent.Parent != nil {
+      return r.Parent.Parent.Id
+   }
+   return ""
+}
+
 func (r *Representation) GetContentProtection() []*ContentProtection {
    if len(r.ContentProtection) > 0 {
       return r.ContentProtection
@@ -153,8 +176,5 @@ func (r *Representation) link() {
    if r.SegmentList != nil {
       r.SegmentList.Parent = r
       r.SegmentList.link()
-   }
-   if r.SegmentBase != nil {
-      r.SegmentBase.link()
    }
 }
