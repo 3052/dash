@@ -39,8 +39,8 @@ type Segment struct {
    URI      *url.URL
    Duration float64
    Title    string
-   Key      *Key // Encrypt key specific to this segment (if any)
-   Map      *Map // Init segment specific to this segment (if any)
+   Key      *Key     // Encrypt key specific to this segment (if any)
+   Map      *url.URL // Init segment URI specific to this segment (if any)
 }
 
 // resolve updates the Segment's URI and its nested Key/Map URIs to be absolute.
@@ -52,7 +52,7 @@ func (s *Segment) resolve(base *url.URL) {
       s.Key.resolve(base)
    }
    if s.Map != nil {
-      s.Map.resolve(base)
+      s.Map = base.ResolveReference(s.Map)
    }
 }
 
@@ -61,32 +61,32 @@ func parseMedia(lines []string) (*MediaPlaylist, error) {
 
    // State trackers
    var currentKey *Key
-   var currentMap *Map
+   var currentMapURL *url.URL
 
    for i := 0; i < len(lines); i++ {
       line := lines[i]
 
       switch {
       case strings.HasPrefix(line, "#EXT-X-VERSION:"):
-         val, err := strconv.Atoi(strings.TrimPrefix(line, "#EXT-X-VERSION:"))
+         version, err := strconv.Atoi(strings.TrimPrefix(line, "#EXT-X-VERSION:"))
          if err != nil {
             return nil, fmt.Errorf("invalid EXT-X-VERSION: %w", err)
          }
-         mediaPlaylist.Version = val
+         mediaPlaylist.Version = version
 
       case strings.HasPrefix(line, "#EXT-X-TARGETDURATION:"):
-         val, err := strconv.Atoi(strings.TrimPrefix(line, "#EXT-X-TARGETDURATION:"))
+         duration, err := strconv.Atoi(strings.TrimPrefix(line, "#EXT-X-TARGETDURATION:"))
          if err != nil {
             return nil, fmt.Errorf("invalid EXT-X-TARGETDURATION: %w", err)
          }
-         mediaPlaylist.TargetDuration = val
+         mediaPlaylist.TargetDuration = duration
 
       case strings.HasPrefix(line, "#EXT-X-MEDIA-SEQUENCE:"):
-         val, err := strconv.Atoi(strings.TrimPrefix(line, "#EXT-X-MEDIA-SEQUENCE:"))
+         sequence, err := strconv.Atoi(strings.TrimPrefix(line, "#EXT-X-MEDIA-SEQUENCE:"))
          if err != nil {
             return nil, fmt.Errorf("invalid EXT-X-MEDIA-SEQUENCE: %w", err)
          }
-         mediaPlaylist.MediaSequence = val
+         mediaPlaylist.MediaSequence = sequence
 
       case strings.HasPrefix(line, "#EXT-X-PLAYLIST-TYPE:"):
          mediaPlaylist.PlaylistType = strings.TrimPrefix(line, "#EXT-X-PLAYLIST-TYPE:")
@@ -103,7 +103,13 @@ func parseMedia(lines []string) (*MediaPlaylist, error) {
          currentKey = newKey // Apply this key to subsequent segments
 
       case strings.HasPrefix(line, "#EXT-X-MAP:"):
-         currentMap = parseMap(line)
+         // Parse EXT-X-MAP attributes inline since it is just a URL now
+         attrs := parseAttributes(line, "#EXT-X-MAP:")
+         if value, ok := attrs["URI"]; ok && value != "" {
+            if parsedURL, err := url.Parse(value); err == nil {
+               currentMapURL = parsedURL
+            }
+         }
 
       case strings.HasPrefix(line, "#EXTINF:"):
          // Parse duration and title
@@ -118,7 +124,7 @@ func parseMedia(lines []string) (*MediaPlaylist, error) {
 
          newSegment := &Segment{
             Key:      currentKey,
-            Map:      currentMap,
+            Map:      currentMapURL,
             Duration: duration,
             Title:    strings.TrimSpace(title),
          }

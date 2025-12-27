@@ -121,11 +121,11 @@ func parseVariant(line string) (*Variant, error) {
    // AVERAGE-BANDWIDTH is optional
    var averageBandwidth int
    if avgStr := attrs["AVERAGE-BANDWIDTH"]; avgStr != "" {
-      val, err := strconv.Atoi(avgStr)
+      average, err := strconv.Atoi(avgStr)
       if err != nil {
          return nil, fmt.Errorf("invalid AVERAGE-BANDWIDTH %q: %w", avgStr, err)
       }
-      averageBandwidth = val
+      averageBandwidth = average
    }
 
    return &Variant{

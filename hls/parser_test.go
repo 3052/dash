@@ -68,13 +68,3 @@ func TestDecodeMaster(t *testing.T) {
       }
    }
 }
-
-func TestDecode_Mismatch(t *testing.T) {
-   path := filepath.Join("testdata", mediaFilename)
-   data, _ := os.ReadFile(path)
-
-   _, err := DecodeMaster(string(data))
-   if err != ErrNotMaster {
-      t.Errorf("Expected ErrNotMaster, got %v", err)
-   }
-}

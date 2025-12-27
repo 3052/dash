@@ -48,17 +48,6 @@ func (k *Key) DecodeData() ([]byte, error) {
    return base64.StdEncoding.DecodeString(dataString)
 }
 
-// Map represents fMP4 initialization segments (#EXT-X-MAP)
-type Map struct {
-   URI *url.URL
-}
-
-func (m *Map) resolve(base *url.URL) {
-   if m.URI != nil {
-      m.URI = base.ResolveReference(m.URI)
-   }
-}
-
 // DateRange represents metadata time spans (#EXT-X-DATERANGE)
 type DateRange struct {
    ID        string
@@ -90,18 +79,6 @@ func parseKey(line string) *Key {
       }
    }
    return newKey
-}
-
-func parseMap(line string) *Map {
-   attrs := parseAttributes(line, "#EXT-X-MAP:")
-   segmentMap := &Map{}
-
-   if value, ok := attrs["URI"]; ok && value != "" {
-      if parsedURL, err := url.Parse(value); err == nil {
-         segmentMap.URI = parsedURL
-      }
-   }
-   return segmentMap
 }
 
 func parseDateRange(line string) *DateRange {
