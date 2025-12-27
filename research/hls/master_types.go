@@ -7,9 +7,8 @@ import (
 
 type MasterPlaylist struct {
    Variants    []Variant
-   Medias      []Rendition    // #EXT-X-MEDIA
-   IFrames     []IFrameStream // #EXT-X-I-FRAME-STREAM-INF
-   SessionKeys []Key          // #EXT-X-SESSION-KEY
+   Medias      []Rendition // #EXT-X-MEDIA
+   SessionKeys []Key       // #EXT-X-SESSION-KEY
 }
 
 type Variant struct {
@@ -36,13 +35,6 @@ type Rendition struct {
    Characteristics string
 }
 
-type IFrameStream struct {
-   URI        string
-   Bandwidth  int
-   Codecs     string
-   Resolution string
-}
-
 func parseMaster(lines []string) *MasterPlaylist {
    masterPlaylist := &MasterPlaylist{}
 
@@ -53,8 +45,6 @@ func parseMaster(lines []string) *MasterPlaylist {
          masterPlaylist.Medias = append(masterPlaylist.Medias, parseRendition(line))
       } else if strings.HasPrefix(line, "#EXT-X-SESSION-KEY:") {
          masterPlaylist.SessionKeys = append(masterPlaylist.SessionKeys, *parseKey(line))
-      } else if strings.HasPrefix(line, "#EXT-X-I-FRAME-STREAM-INF:") {
-         masterPlaylist.IFrames = append(masterPlaylist.IFrames, parseIFrame(line))
       } else if strings.HasPrefix(line, "#EXT-X-STREAM-INF:") {
          // Parsing a Variant. The URI is on the *next* line.
          variant := parseVariant(line)
@@ -97,16 +87,5 @@ func parseRendition(line string) Rendition {
       AutoSelect:      attrs["AUTOSELECT"] == "YES",
       Default:         attrs["DEFAULT"] == "YES",
       Forced:          attrs["FORCED"] == "YES",
-   }
-}
-
-func parseIFrame(line string) IFrameStream {
-   attrs := parseAttributes(line, "#EXT-X-I-FRAME-STREAM-INF:")
-   bandwidth, _ := strconv.Atoi(attrs["BANDWIDTH"])
-   return IFrameStream{
-      URI:        attrs["URI"],
-      Codecs:     attrs["CODECS"],
-      Resolution: attrs["RESOLUTION"],
-      Bandwidth:  bandwidth,
    }
 }

@@ -1,6 +1,8 @@
 package hls
 
-import "strings"
+import (
+   "strings"
+)
 
 // Playlist is a container that holds either a Master or Media playlist.
 // Check IsMaster to determine which field to access.
@@ -35,8 +37,7 @@ func Decode(content string) (*Playlist, error) {
       if !isMaster {
          if strings.HasPrefix(line, "#EXT-X-STREAM-INF") ||
             strings.HasPrefix(line, "#EXT-X-MEDIA:") ||
-            strings.HasPrefix(line, "#EXT-X-SESSION-KEY") ||
-            strings.HasPrefix(line, "#EXT-X-I-FRAME-STREAM-INF") {
+            strings.HasPrefix(line, "#EXT-X-SESSION-KEY") {
             isMaster = true
          }
       }
