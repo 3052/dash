@@ -25,7 +25,6 @@ func (r *Representation) String() string {
    }
    data.WriteString("\nmimeType = ")
    data.WriteString(r.GetMimeType())
-
    if label := r.GetLabel(); label != "" {
       data.WriteString("\nlabel = ")
       data.WriteString(label)
@@ -33,7 +32,6 @@ func (r *Representation) String() string {
       data.WriteString("\nlang = ")
       data.WriteString(lang)
    }
-
    if role := r.GetRole(); role != "" {
       data.WriteString("\nrole = ")
       data.WriteString(role)

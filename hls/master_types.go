@@ -40,16 +40,24 @@ type Variant struct {
    FrameRate        string
    Audio            string // ID linking to Media Group
    Subtitles        string // ID linking to Media Group
+   ID               string // A simple, unique ID assigned during parsing.
 }
 
+// String returns a multi-line summary of the Variant.
 func (v *Variant) String() string {
    var builder strings.Builder
-   builder.WriteString("Bandwidth: ")
+   builder.WriteString("bandwidth = ")
    builder.WriteString(strconv.Itoa(v.Bandwidth))
-   builder.WriteString("\nResolution: ")
-   builder.WriteString(v.Resolution)
-   builder.WriteString("\nCodecs: ")
-   builder.WriteString(strconv.Quote(v.Codecs))
+   if v.Resolution != "" {
+      builder.WriteString("\nresolution = ")
+      builder.WriteString(v.Resolution)
+   }
+   if v.Codecs != "" {
+      builder.WriteString("\ncodecs = ")
+      builder.WriteString(strconv.Quote(v.Codecs))
+   }
+   builder.WriteString("\nid = ")
+   builder.WriteString(v.ID)
    return builder.String()
 }
 
@@ -68,10 +76,8 @@ type Rendition struct {
 
 func parseMaster(lines []string) (*MasterPlaylist, error) {
    masterPlaylist := &MasterPlaylist{}
-
    for i := 0; i < len(lines); i++ {
       line := lines[i]
-
       if strings.HasPrefix(line, "#EXT-X-MEDIA:") {
          masterPlaylist.Medias = append(masterPlaylist.Medias, parseRendition(line))
       } else if strings.HasPrefix(line, "#EXT-X-SESSION-KEY:") {
@@ -82,7 +88,6 @@ func parseMaster(lines []string) (*MasterPlaylist, error) {
          if err != nil {
             return nil, err
          }
-
          // Check if next line is a URI (doesn't start with # or is empty)
          if i+1 < len(lines) {
             nextLine := lines[i+1]
@@ -93,6 +98,8 @@ func parseMaster(lines []string) (*MasterPlaylist, error) {
                i++ // Advance loop since we consumed the URI line
             }
          }
+         // Assign a simple numeric ID based on its order in the playlist.
+         newVariant.ID = strconv.Itoa(len(masterPlaylist.Variants))
          masterPlaylist.Variants = append(masterPlaylist.Variants, newVariant)
       }
    }
@@ -101,7 +108,6 @@ func parseMaster(lines []string) (*MasterPlaylist, error) {
 
 func parseVariant(line string) (*Variant, error) {
    attrs := parseAttributes(line, "#EXT-X-STREAM-INF:")
-
    // BANDWIDTH is required
    bwStr := attrs["BANDWIDTH"]
    if bwStr == "" {
@@ -111,7 +117,6 @@ func parseVariant(line string) (*Variant, error) {
    if err != nil {
       return nil, fmt.Errorf("invalid BANDWIDTH %q: %w", bwStr, err)
    }
-
    // AVERAGE-BANDWIDTH is optional
    var averageBandwidth int
    if avgStr := attrs["AVERAGE-BANDWIDTH"]; avgStr != "" {
@@ -121,7 +126,6 @@ func parseVariant(line string) (*Variant, error) {
       }
       averageBandwidth = average
    }
-
    return &Variant{
       Bandwidth:        bandwidth,
       AverageBandwidth: averageBandwidth,
@@ -135,7 +139,6 @@ func parseVariant(line string) (*Variant, error) {
 
 func parseRendition(line string) *Rendition {
    attrs := parseAttributes(line, "#EXT-X-MEDIA:")
-
    newRendition := &Rendition{
       Type:            attrs["TYPE"],
       GroupID:         attrs["GROUP-ID"],
@@ -147,7 +150,6 @@ func parseRendition(line string) *Rendition {
       Default:         attrs["DEFAULT"] == "YES",
       Forced:          attrs["FORCED"] == "YES",
    }
-
    if value, ok := attrs["URI"]; ok && value != "" {
       if parsedURL, err := url.Parse(value); err == nil {
          newRendition.URI = parsedURL
