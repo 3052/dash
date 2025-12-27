@@ -10,7 +10,7 @@ func parseAttributes(line string, tagPrefix string) map[string]string {
    line = strings.TrimPrefix(line, tagPrefix)
    attributes := make(map[string]string)
 
-   var keyBuilder, valBuilder strings.Builder
+   var keyBuilder, valueBuilder strings.Builder
    inKey := true
    inQuote := false
 
@@ -33,15 +33,15 @@ func parseAttributes(line string, tagPrefix string) map[string]string {
          // If we hit a comma and we are NOT in a quote, it's the end of the pair
          if char == ',' && !inQuote {
             keyString := strings.TrimSpace(keyBuilder.String())
-            valueString := valBuilder.String()
+            valueString := valueBuilder.String()
             attributes[keyString] = valueString
 
             // Reset
             keyBuilder.Reset()
-            valBuilder.Reset()
+            valueBuilder.Reset()
             inKey = true
          } else {
-            valBuilder.WriteByte(char)
+            valueBuilder.WriteByte(char)
          }
       }
    }
@@ -49,7 +49,7 @@ func parseAttributes(line string, tagPrefix string) map[string]string {
    // Flush the final pair
    if keyBuilder.Len() > 0 {
       keyString := strings.TrimSpace(keyBuilder.String())
-      valueString := valBuilder.String()
+      valueString := valueBuilder.String()
       attributes[keyString] = valueString
    }
 

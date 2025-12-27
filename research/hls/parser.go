@@ -17,7 +17,7 @@ func DecodeMaster(content string) (*MasterPlaylist, error) {
    if !isMaster(lines) {
       return nil, ErrNotMaster
    }
-   return parseMaster(lines), nil
+   return parseMaster(lines)
 }
 
 // DecodeMedia parses a Media Playlist.
@@ -27,7 +27,7 @@ func DecodeMedia(content string) (*MediaPlaylist, error) {
    if isMaster(lines) {
       return nil, ErrNotMedia
    }
-   return parseMedia(lines), nil
+   return parseMedia(lines)
 }
 
 // Helper to split and trim lines

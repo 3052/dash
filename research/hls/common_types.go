@@ -17,40 +17,34 @@ type Key struct {
    Characteristics   string // For session keys
 }
 
-func (key *Key) resolve(base *url.URL) {
-   if key.URI != nil {
-      key.URI = base.ResolveReference(key.URI)
+func (k *Key) resolve(base *url.URL) {
+   if k.URI != nil {
+      k.URI = base.ResolveReference(k.URI)
    }
 }
 
-// DecodeData extracts and decodes the Base64 data from the URI if it is a Data URI.
-func (key *Key) DecodeData() ([]byte, error) {
-   if key.URI == nil {
+// DecodeData extracts and decodes the Base64 data directly from the URL Opaque field.
+func (k *Key) DecodeData() ([]byte, error) {
+   if k.URI == nil {
       return nil, errors.New("URI is nil")
    }
 
-   // Reconstruct the string to parse it manually as a data URI string.
-   // net/url puts the content in Opaque for opaque schemes like "data",
-   // but using String() provides a consistent view.
-   uriString := key.URI.String()
-
-   if !strings.HasPrefix(uriString, "data:") {
+   if k.URI.Scheme != "data" {
       return nil, errors.New("URI is not a data URI")
    }
 
-   // The format is data:[<mediatype>][;base64],<data>
-   commaIndex := strings.IndexByte(uriString, ',')
-   if commaIndex == -1 {
+   // For data URIs, net/url stores the content (mime+encoding+data) in Opaque.
+   // Format: [<mediatype>][;base64],<data>
+   meta, dataString, found := strings.Cut(k.URI.Opaque, ",")
+   if !found {
       return nil, errors.New("invalid data URI: missing comma separator")
    }
 
-   // Ensure it specifies base64 encoding in the metadata prefix
-   meta := uriString[:commaIndex]
+   // Verify base64 encoding is specified in the metadata (before the comma)
    if !strings.Contains(meta, ";base64") {
       return nil, errors.New("data URI does not contain base64 indicator")
    }
 
-   dataString := uriString[commaIndex+1:]
    return base64.StdEncoding.DecodeString(dataString)
 }
 
@@ -82,7 +76,7 @@ func parseKey(line string) *Key {
    }
    attrs := parseAttributes(line, prefix)
 
-   k := &Key{
+   newKey := &Key{
       Method:            attrs["METHOD"],
       KeyFormat:         attrs["KEYFORMAT"],
       KeyFormatVersions: attrs["KEYFORMATVERSIONS"],
@@ -90,25 +84,24 @@ func parseKey(line string) *Key {
       Characteristics:   attrs["CHARACTERISTICS"],
    }
 
-   if val, ok := attrs["URI"]; ok && val != "" {
-      // Ignore error, keep nil if invalid
-      if u, err := url.Parse(val); err == nil {
-         k.URI = u
+   if value, ok := attrs["URI"]; ok && value != "" {
+      if parsedURL, err := url.Parse(value); err == nil {
+         newKey.URI = parsedURL
       }
    }
-   return k
+   return newKey
 }
 
 func parseMap(line string) *Map {
    attrs := parseAttributes(line, "#EXT-X-MAP:")
-   m := &Map{}
+   segmentMap := &Map{}
 
-   if val, ok := attrs["URI"]; ok && val != "" {
-      if u, err := url.Parse(val); err == nil {
-         m.URI = u
+   if value, ok := attrs["URI"]; ok && value != "" {
+      if parsedURL, err := url.Parse(value); err == nil {
+         segmentMap.URI = parsedURL
       }
    }
-   return m
+   return segmentMap
 }
 
 func parseDateRange(line string) *DateRange {
