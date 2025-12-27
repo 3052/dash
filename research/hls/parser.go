@@ -1,76 +1,66 @@
 package hls
 
 import (
-   "net/url"
+   "errors"
    "strings"
 )
 
-// Playlist is a container that holds either a Master or Media playlist.
-// Check IsMaster to determine which field to access.
-type Playlist struct {
-   IsMaster bool
-   Master   *MasterPlaylist
-   Media    *MediaPlaylist
+var (
+   ErrNotMaster = errors.New("content appears to be a media playlist, not a master playlist")
+   ErrNotMedia  = errors.New("content appears to be a master playlist, not a media playlist")
+)
+
+// Decode detects the playlist type and parses it.
+// It returns a MasterPlaylist OR a MediaPlaylist (one will be nil).
+func Decode(content string) (*MasterPlaylist, *MediaPlaylist, error) {
+   lines := splitLines(content)
+   if isMaster(lines) {
+      return parseMaster(lines), nil, nil
+   }
+   return nil, parseMedia(lines), nil
 }
 
-// ResolveURIs converts all relative URLs in the playlist to absolute URLs
-// using the provided baseURL.
-func (p *Playlist) ResolveURIs(baseURL string) error {
-   base, err := url.Parse(baseURL)
-   if err != nil {
-      return err
+// DecodeMaster parses a Master Playlist.
+// Returns an error if the content looks like a Media Playlist.
+func DecodeMaster(content string) (*MasterPlaylist, error) {
+   lines := splitLines(content)
+   if !isMaster(lines) {
+      return nil, ErrNotMaster
    }
-
-   if p.IsMaster && p.Master != nil {
-      p.Master.resolve(base)
-   }
-   if !p.IsMaster && p.Media != nil {
-      p.Media.resolve(base)
-   }
-   return nil
+   return parseMaster(lines), nil
 }
 
-// Decode parses the raw string content of an m3u8 file into a Playlist struct.
-func Decode(content string) (*Playlist, error) {
-   // Split the content by newline.
-   // strings.Split is optimized and simpler than manual byte scanning.
+// DecodeMedia parses a Media Playlist.
+// Returns an error if the content looks like a Master Playlist.
+func DecodeMedia(content string) (*MediaPlaylist, error) {
+   lines := splitLines(content)
+   if isMaster(lines) {
+      return nil, ErrNotMedia
+   }
+   return parseMedia(lines), nil
+}
+
+// Helper to split and trim lines
+func splitLines(content string) []string {
    rawLines := strings.Split(content, "\n")
-
-   // Allocate slice for cleaned lines
    lines := make([]string, 0, len(rawLines))
-
-   isMaster := false
-
-   for _, rawLine := range rawLines {
-      // Trim whitespace (including \r from Windows line endings)
-      line := strings.TrimSpace(rawLine)
-
-      if line == "" {
-         continue
-      }
-
-      lines = append(lines, line)
-
-      // Detect if this is a Master Playlist based on specific tags
-      if !isMaster {
-         if strings.HasPrefix(line, "#EXT-X-STREAM-INF") ||
-            strings.HasPrefix(line, "#EXT-X-MEDIA:") ||
-            strings.HasPrefix(line, "#EXT-X-SESSION-KEY") {
-            isMaster = true
-         }
+   for _, raw := range rawLines {
+      line := strings.TrimSpace(raw)
+      if line != "" {
+         lines = append(lines, line)
       }
    }
+   return lines
+}
 
-   result := &Playlist{
-      IsMaster: isMaster,
+// Heuristic to check for Master Playlist tags
+func isMaster(lines []string) bool {
+   for _, line := range lines {
+      if strings.HasPrefix(line, "#EXT-X-STREAM-INF") ||
+         strings.HasPrefix(line, "#EXT-X-MEDIA:") ||
+         strings.HasPrefix(line, "#EXT-X-SESSION-KEY") {
+         return true
+      }
    }
-
-   // Route to the specific parser functions (defined in master_types.go and media_types.go)
-   if isMaster {
-      result.Master = parseMaster(lines)
-   } else {
-      result.Media = parseMedia(lines)
-   }
-
-   return result, nil
+   return false
 }
