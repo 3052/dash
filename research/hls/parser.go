@@ -1,6 +1,7 @@
 package hls
 
 import (
+   "net/url"
    "strings"
 )
 
@@ -10,6 +11,23 @@ type Playlist struct {
    IsMaster bool
    Master   *MasterPlaylist
    Media    *MediaPlaylist
+}
+
+// ResolveURIs converts all relative URLs in the playlist to absolute URLs
+// using the provided baseURL.
+func (p *Playlist) ResolveURIs(baseURL string) error {
+   base, err := url.Parse(baseURL)
+   if err != nil {
+      return err
+   }
+
+   if p.IsMaster && p.Master != nil {
+      p.Master.resolve(base)
+   }
+   if !p.IsMaster && p.Media != nil {
+      p.Media.resolve(base)
+   }
+   return nil
 }
 
 // Decode parses the raw string content of an m3u8 file into a Playlist struct.

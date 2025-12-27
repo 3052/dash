@@ -1,8 +1,10 @@
 package hls
 
 import (
+   "encoding/base64"
+   "errors"
+   "net/url"
    "strings"
-   "time"
 )
 
 // Key represents encryption info (#EXT-X-KEY or #EXT-X-SESSION-KEY)
@@ -15,17 +17,52 @@ type Key struct {
    Characteristics   string // For session keys
 }
 
+func (key *Key) resolve(base *url.URL) {
+   if key.URI != "" {
+      key.URI = resolveReference(base, key.URI)
+   }
+}
+
+// DecodeData extracts and decodes the Base64 data from the URI if it is a Data URI.
+func (key *Key) DecodeData() ([]byte, error) {
+   if !strings.HasPrefix(key.URI, "data:") {
+      return nil, errors.New("URI is not a data URI")
+   }
+
+   // The format is data:[<mediatype>][;base64],<data>
+   commaIndex := strings.IndexByte(key.URI, ',')
+   if commaIndex == -1 {
+      return nil, errors.New("invalid data URI: missing comma separator")
+   }
+
+   // Ensure it specifies base64 encoding in the metadata prefix
+   meta := key.URI[:commaIndex]
+   if !strings.Contains(meta, ";base64") {
+      return nil, errors.New("data URI does not contain base64 indicator")
+   }
+
+   dataString := key.URI[commaIndex+1:]
+   return base64.StdEncoding.DecodeString(dataString)
+}
+
 // Map represents fMP4 initialization segments (#EXT-X-MAP)
 type Map struct {
    URI string
 }
 
+func (m *Map) resolve(base *url.URL) {
+   if m.URI != "" {
+      m.URI = resolveReference(base, m.URI)
+   }
+}
+
 // DateRange represents metadata time spans (#EXT-X-DATERANGE)
+// StartDate and EndDate are stored as raw strings to avoid "time" package dependency.
 type DateRange struct {
    ID        string
    Class     string
-   StartDate time.Time
-   EndDate   time.Time
+   StartDate string
+   EndDate   string
    Cue       string
    AssetList string
 }
@@ -55,16 +92,12 @@ func parseMap(line string) *Map {
 
 func parseDateRange(line string) *DateRange {
    attrs := parseAttributes(line, "#EXT-X-DATERANGE:")
-   dateRange := &DateRange{
+   return &DateRange{
       ID:        attrs["ID"],
       Class:     attrs["CLASS"],
+      StartDate: attrs["START-DATE"], // Kept as string
+      EndDate:   attrs["END-DATE"],   // Kept as string
       Cue:       attrs["CUE"],
       AssetList: attrs["X-ASSET-LIST"],
    }
-   // Swallow errors for simplicity
-   dateRange.StartDate, _ = time.Parse(time.RFC3339, attrs["START-DATE"])
-   if dateString, ok := attrs["END-DATE"]; ok {
-      dateRange.EndDate, _ = time.Parse(time.RFC3339, dateString)
-   }
-   return dateRange
 }

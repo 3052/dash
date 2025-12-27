@@ -1,6 +1,8 @@
 package hls
 
 import (
+   "fmt"
+   "net/url"
    "strconv"
    "strings"
 )
@@ -9,6 +11,22 @@ type MasterPlaylist struct {
    Variants    []Variant
    Medias      []Rendition // #EXT-X-MEDIA
    SessionKeys []Key       // #EXT-X-SESSION-KEY
+}
+
+func (mp *MasterPlaylist) resolve(base *url.URL) {
+   for i := range mp.Variants {
+      if mp.Variants[i].URI != "" {
+         mp.Variants[i].URI = resolveReference(base, mp.Variants[i].URI)
+      }
+   }
+   for i := range mp.Medias {
+      if mp.Medias[i].URI != "" {
+         mp.Medias[i].URI = resolveReference(base, mp.Medias[i].URI)
+      }
+   }
+   for i := range mp.SessionKeys {
+      mp.SessionKeys[i].resolve(base)
+   }
 }
 
 type Variant struct {
@@ -20,6 +38,10 @@ type Variant struct {
    FrameRate        string
    Audio            string // ID linking to Media Group
    Subtitles        string // ID linking to Media Group
+}
+
+func (v Variant) String() string {
+   return fmt.Sprintf("Variant{Bandwidth: %d, Resolution: %s, Codecs: %q, URI: %s}", v.Bandwidth, v.Resolution, v.Codecs, v.URI)
 }
 
 type Rendition struct {

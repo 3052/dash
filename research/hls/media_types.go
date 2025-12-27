@@ -1,6 +1,7 @@
 package hls
 
 import (
+   "net/url"
    "strconv"
    "strings"
 )
@@ -14,6 +15,23 @@ type MediaPlaylist struct {
    Keys           []Key       // Global keys or keys rotating
    DateRanges     []DateRange // Interstitials/Ads
    EndList        bool
+}
+
+func (mp *MediaPlaylist) resolve(base *url.URL) {
+   for i := range mp.Keys {
+      mp.Keys[i].resolve(base)
+   }
+   for i := range mp.Segments {
+      if mp.Segments[i].URI != "" {
+         mp.Segments[i].URI = resolveReference(base, mp.Segments[i].URI)
+      }
+      if mp.Segments[i].Key != nil {
+         mp.Segments[i].Key.resolve(base)
+      }
+      if mp.Segments[i].Map != nil {
+         mp.Segments[i].Map.resolve(base)
+      }
+   }
 }
 
 type Segment struct {
