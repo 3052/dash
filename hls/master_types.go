@@ -13,13 +13,8 @@ type MasterPlaylist struct {
    SessionKeys []*Key
 }
 
-// ResolveURIs converts relative URLs to absolute URLs using the baseURL.
-func (mp *MasterPlaylist) ResolveURIs(baseURL string) error {
-   base, err := url.Parse(baseURL)
-   if err != nil {
-      return err
-   }
-
+// ResolveURIs converts relative URLs to absolute URLs using the base URL.
+func (mp *MasterPlaylist) ResolveURIs(base *url.URL) {
    // Because we are iterating over pointers, we can modify items directly
    for _, variantItem := range mp.Variants {
       if variantItem.URI != nil {
@@ -34,7 +29,6 @@ func (mp *MasterPlaylist) ResolveURIs(baseURL string) error {
    for _, keyItem := range mp.SessionKeys {
       keyItem.resolve(base)
    }
-   return nil
 }
 
 type Variant struct {

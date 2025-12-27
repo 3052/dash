@@ -1,6 +1,7 @@
 package hls
 
 import (
+   "net/url"
    "os"
    "path/filepath"
    "testing"
@@ -12,7 +13,7 @@ const (
 )
 
 func TestDecodeMedia(t *testing.T) {
-   path := filepath.Join("testdata", mediaFilename)
+   path := filepath.Join("../testdata", mediaFilename)
    data, err := os.ReadFile(path)
    if err != nil {
       t.Fatalf("Failed to read file from %s: %v", path, err)
@@ -28,10 +29,13 @@ func TestDecodeMedia(t *testing.T) {
    }
 
    // Test ResolveURIs
-   err = media.ResolveURIs("https://example.com/video/")
+   baseURL, err := url.Parse("https://example.com/video/")
    if err != nil {
-      t.Errorf("ResolveURIs failed: %v", err)
+      t.Fatalf("Failed to parse base URL: %v", err)
    }
+
+   media.ResolveURIs(baseURL)
+
    expectedURI := "https://example.com/video/H264_1_CMAF_CENC_CTR_8500K/95fe4117-98fe-4ab7-8895-b2eec69b2b63/pts_0.mp4"
 
    if media.Segments[0].URI == nil {
@@ -43,7 +47,7 @@ func TestDecodeMedia(t *testing.T) {
 }
 
 func TestDecodeMaster(t *testing.T) {
-   path := filepath.Join("testdata", masterFilename)
+   path := filepath.Join("../testdata", masterFilename)
    data, err := os.ReadFile(path)
    if err != nil {
       t.Fatalf("Failed to read file from %s: %v", path, err)

@@ -18,13 +18,8 @@ type MediaPlaylist struct {
    EndList        bool
 }
 
-// ResolveURIs converts relative URLs to absolute URLs using the baseURL.
-func (mp *MediaPlaylist) ResolveURIs(baseURL string) error {
-   base, err := url.Parse(baseURL)
-   if err != nil {
-      return err
-   }
-
+// ResolveURIs converts relative URLs to absolute URLs using the base URL.
+func (mp *MediaPlaylist) ResolveURIs(base *url.URL) {
    for _, keyItem := range mp.Keys {
       keyItem.resolve(base)
    }
@@ -32,7 +27,6 @@ func (mp *MediaPlaylist) ResolveURIs(baseURL string) error {
    for _, segmentItem := range mp.Segments {
       segmentItem.resolve(base)
    }
-   return nil
 }
 
 type Segment struct {
