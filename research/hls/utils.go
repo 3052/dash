@@ -1,19 +1,8 @@
 package hls
 
 import (
-   "net/url"
    "strings"
 )
-
-// resolveReference resolves a relative URI against a base URL.
-// If the relative URI is already absolute (or invalid), it returns it as-is.
-func resolveReference(base *url.URL, relative string) string {
-   rel, err := url.Parse(relative)
-   if err != nil {
-      return relative
-   }
-   return base.ResolveReference(rel).String()
-}
 
 // parseAttributes parses HLS attribute lists (e.g., KEY="VAL",KEY2=VAL).
 // It handles quoted strings containing commas.

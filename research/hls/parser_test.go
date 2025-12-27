@@ -12,20 +12,17 @@ const (
 )
 
 func TestDecodeMedia(t *testing.T) {
-   // 1. Read from disk
    path := filepath.Join("testdata", mediaFilename)
    data, err := os.ReadFile(path)
    if err != nil {
       t.Fatalf("Failed to read file from %s: %v", path, err)
    }
 
-   // 2. Decode using explicit DecodeMedia
    media, err := DecodeMedia(string(data))
    if err != nil {
       t.Fatalf("DecodeMedia failed: %v", err)
    }
 
-   // 3. Validate
    if media.TargetDuration != 9 {
       t.Errorf("Expected TargetDuration 9, got %d", media.TargetDuration)
    }
@@ -36,51 +33,43 @@ func TestDecodeMedia(t *testing.T) {
       t.Errorf("ResolveURIs failed: %v", err)
    }
    expectedURI := "https://example.com/video/H264_1_CMAF_CENC_CTR_8500K/95fe4117-98fe-4ab7-8895-b2eec69b2b63/pts_0.mp4"
-   if media.Segments[0].URI != expectedURI {
-      t.Errorf("Expected Absolute URI %s, got %s", expectedURI, media.Segments[0].URI)
+
+   if media.Segments[0].URI == nil {
+      t.Fatal("Expected URI, got nil")
+   }
+   if media.Segments[0].URI.String() != expectedURI {
+      t.Errorf("Expected Absolute URI %s, got %s", expectedURI, media.Segments[0].URI.String())
    }
 }
 
 func TestDecodeMaster(t *testing.T) {
-   // 1. Read from disk
    path := filepath.Join("testdata", masterFilename)
    data, err := os.ReadFile(path)
    if err != nil {
       t.Fatalf("Failed to read file from %s: %v", path, err)
    }
 
-   // 2. Decode using explicit DecodeMaster
    master, err := DecodeMaster(string(data))
    if err != nil {
       t.Fatalf("DecodeMaster failed: %v", err)
    }
 
-   // 3. Validate
    if len(master.Variants) != 16 {
       t.Errorf("Expected 16 variants, got %d", len(master.Variants))
    }
-}
 
-func TestDecode_Generic(t *testing.T) {
-   // Test the generic Decode function on the Master file
-   path := filepath.Join("testdata", masterFilename)
-   data, _ := os.ReadFile(path)
-
-   master, media, err := Decode(string(data))
-   if err != nil {
-      t.Fatalf("Generic Decode failed: %v", err)
-   }
-
-   if master == nil {
-      t.Fatal("Expected Master to be non-nil")
-   }
-   if media != nil {
-      t.Fatal("Expected Media to be nil")
+   // Check URI of first variant
+   if master.Variants[0].URI == nil {
+      t.Error("Expected variant to have a valid URI")
+   } else {
+      // Just ensuring it parsed correctly (relative path)
+      if master.Variants[0].URI.Path == "" {
+         t.Error("Expected variant URI path to be populated")
+      }
    }
 }
 
 func TestDecode_Mismatch(t *testing.T) {
-   // Try to decode Media file as Master
    path := filepath.Join("testdata", mediaFilename)
    data, _ := os.ReadFile(path)
 

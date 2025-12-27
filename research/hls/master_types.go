@@ -21,13 +21,13 @@ func (mp *MasterPlaylist) ResolveURIs(baseURL string) error {
    }
 
    for i := range mp.Variants {
-      if mp.Variants[i].URI != "" {
-         mp.Variants[i].URI = resolveReference(base, mp.Variants[i].URI)
+      if mp.Variants[i].URI != nil {
+         mp.Variants[i].URI = base.ResolveReference(mp.Variants[i].URI)
       }
    }
    for i := range mp.Medias {
-      if mp.Medias[i].URI != "" {
-         mp.Medias[i].URI = resolveReference(base, mp.Medias[i].URI)
+      if mp.Medias[i].URI != nil {
+         mp.Medias[i].URI = base.ResolveReference(mp.Medias[i].URI)
       }
    }
    for i := range mp.SessionKeys {
@@ -37,7 +37,7 @@ func (mp *MasterPlaylist) ResolveURIs(baseURL string) error {
 }
 
 type Variant struct {
-   URI              string
+   URI              *url.URL
    Bandwidth        int
    AverageBandwidth int
    Codecs           string
@@ -48,7 +48,11 @@ type Variant struct {
 }
 
 func (v Variant) String() string {
-   return fmt.Sprintf("Variant{Bandwidth: %d, Resolution: %s, Codecs: %q, URI: %s}", v.Bandwidth, v.Resolution, v.Codecs, v.URI)
+   uriStr := "<nil>"
+   if v.URI != nil {
+      uriStr = v.URI.String()
+   }
+   return fmt.Sprintf("Variant{Bandwidth: %d, Resolution: %s, Codecs: %q, URI: %s}", v.Bandwidth, v.Resolution, v.Codecs, uriStr)
 }
 
 type Rendition struct {
@@ -56,7 +60,7 @@ type Rendition struct {
    GroupID         string
    Name            string
    Language        string
-   URI             string
+   URI             *url.URL
    AutoSelect      bool
    Default         bool
    Forced          bool
@@ -77,9 +81,16 @@ func parseMaster(lines []string) *MasterPlaylist {
       } else if strings.HasPrefix(line, "#EXT-X-STREAM-INF:") {
          // Parsing a Variant. The URI is on the *next* line.
          variant := parseVariant(line)
-         if i+1 < len(lines) && !strings.HasPrefix(lines[i+1], "#") {
-            variant.URI = lines[i+1]
-            i++ // Advance loop since we consumed the URI line
+
+         // Check if next line is a URI (doesn't start with # or is empty)
+         if i+1 < len(lines) {
+            nextLine := lines[i+1]
+            if !strings.HasPrefix(nextLine, "#") && nextLine != "" {
+               if u, err := url.Parse(nextLine); err == nil {
+                  variant.URI = u
+               }
+               i++ // Advance loop since we consumed the URI line
+            }
          }
          masterPlaylist.Variants = append(masterPlaylist.Variants, variant)
       }
@@ -105,16 +116,23 @@ func parseVariant(line string) Variant {
 
 func parseRendition(line string) Rendition {
    attrs := parseAttributes(line, "#EXT-X-MEDIA:")
-   return Rendition{
+
+   rendition := Rendition{
       Type:            attrs["TYPE"],
       GroupID:         attrs["GROUP-ID"],
       Name:            attrs["NAME"],
       Language:        attrs["LANGUAGE"],
-      URI:             attrs["URI"],
       Channels:        attrs["CHANNELS"],
       Characteristics: attrs["CHARACTERISTICS"],
       AutoSelect:      attrs["AUTOSELECT"] == "YES",
       Default:         attrs["DEFAULT"] == "YES",
       Forced:          attrs["FORCED"] == "YES",
    }
+
+   if val, ok := attrs["URI"]; ok && val != "" {
+      if u, err := url.Parse(val); err == nil {
+         rendition.URI = u
+      }
+   }
+   return rendition
 }

@@ -10,16 +10,6 @@ var (
    ErrNotMedia  = errors.New("content appears to be a master playlist, not a media playlist")
 )
 
-// Decode detects the playlist type and parses it.
-// It returns a MasterPlaylist OR a MediaPlaylist (one will be nil).
-func Decode(content string) (*MasterPlaylist, *MediaPlaylist, error) {
-   lines := splitLines(content)
-   if isMaster(lines) {
-      return parseMaster(lines), nil, nil
-   }
-   return nil, parseMedia(lines), nil
-}
-
 // DecodeMaster parses a Master Playlist.
 // Returns an error if the content looks like a Media Playlist.
 func DecodeMaster(content string) (*MasterPlaylist, error) {

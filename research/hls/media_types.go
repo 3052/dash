@@ -27,26 +27,32 @@ func (mp *MediaPlaylist) ResolveURIs(baseURL string) error {
    for i := range mp.Keys {
       mp.Keys[i].resolve(base)
    }
+
    for i := range mp.Segments {
-      if mp.Segments[i].URI != "" {
-         mp.Segments[i].URI = resolveReference(base, mp.Segments[i].URI)
-      }
-      if mp.Segments[i].Key != nil {
-         mp.Segments[i].Key.resolve(base)
-      }
-      if mp.Segments[i].Map != nil {
-         mp.Segments[i].Map.resolve(base)
-      }
+      mp.Segments[i].resolve(base)
    }
    return nil
 }
 
 type Segment struct {
-   URI      string
+   URI      *url.URL
    Duration float64
    Title    string
    Key      *Key // Encrypt key specific to this segment (if any)
    Map      *Map // Init segment specific to this segment (if any)
+}
+
+// resolve updates the Segment's URI and its nested Key/Map URIs to be absolute.
+func (s *Segment) resolve(base *url.URL) {
+   if s.URI != nil {
+      s.URI = base.ResolveReference(s.URI)
+   }
+   if s.Key != nil {
+      s.Key.resolve(base)
+   }
+   if s.Map != nil {
+      s.Map.resolve(base)
+   }
 }
 
 func parseMedia(lines []string) *MediaPlaylist {
@@ -104,9 +110,14 @@ func parseMedia(lines []string) *MediaPlaylist {
          }
 
          // The URI is on the next line
-         if i+1 < len(lines) && !strings.HasPrefix(lines[i+1], "#") {
-            segment.URI = lines[i+1]
-            i++
+         if i+1 < len(lines) {
+            nextLine := lines[i+1]
+            if !strings.HasPrefix(nextLine, "#") && nextLine != "" {
+               if u, err := url.Parse(nextLine); err == nil {
+                  segment.URI = u
+               }
+               i++
+            }
          }
          mediaPlaylist.Segments = append(mediaPlaylist.Segments, segment)
       }
