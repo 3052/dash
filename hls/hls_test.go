@@ -4,6 +4,7 @@ import (
    "net/url"
    "os"
    "path/filepath"
+   "strings"
    "testing"
 )
 
@@ -58,17 +59,48 @@ func TestDecodeMaster(t *testing.T) {
       t.Fatalf("DecodeMaster failed: %v", err)
    }
 
-   if len(master.Variants) != 16 {
-      t.Errorf("Expected 16 variants, got %d", len(master.Variants))
+   // The sample manifest has 8 unique video stream URIs, not 16 variants.
+   if len(master.Streams) != 8 {
+      t.Errorf("Expected 8 unique streams, got %d", len(master.Streams))
    }
 
-   // Check URI of first variant
-   if master.Variants[0].URI == nil {
-      t.Error("Expected variant to have a valid URI")
+   // Check URI of first stream before sorting
+   if master.Streams[0].URI == nil {
+      t.Error("Expected stream to have a valid URI")
    } else {
-      // Just ensuring it parsed correctly (relative path)
-      if master.Variants[0].URI.Path == "" {
-         t.Error("Expected variant URI path to be populated")
+      if master.Streams[0].URI.Path == "" {
+         t.Error("Expected stream URI path to be populated")
       }
+   }
+
+   // Find a specific stream to verify grouping
+   var foundStream *Stream
+   for _, stream := range master.Streams {
+      if strings.Contains(stream.URI.Path, "8500_complete") {
+         foundStream = stream
+         break
+      }
+   }
+   if foundStream == nil {
+      t.Fatal("Could not find expected stream '8500_complete' to test grouping")
+   }
+   // This specific stream has two #EXT-X-STREAM-INF tags pointing to it.
+   if len(foundStream.Variants) != 2 {
+      t.Errorf("Expected stream to have 2 variants, got %d", len(foundStream.Variants))
+   }
+
+   // Sort the renditions and streams
+   master.Sort()
+
+   // Print all renditions (Medias) first
+   t.Log("--- Renditions (sorted by GroupID) ---")
+   for _, rendition := range master.Medias {
+      t.Logf("Rendition:\n%s\n---", rendition)
+   }
+
+   // Print all streams and their grouped variants
+   t.Log("\n--- Streams (sorted by Max Bandwidth) ---")
+   for _, stream := range master.Streams {
+      t.Logf("%s\n---", stream.String())
    }
 }
